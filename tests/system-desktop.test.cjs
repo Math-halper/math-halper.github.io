@@ -1,9 +1,11 @@
-/* The current build keeps its five core System apps plus a Calculator and
- * Web Retro (a vendored webretro emulator, no ROMs included), plus Celeste
- * Classic as a sandboxed embed of its existing GitHub Pages site. No game
- * content is copied here. The one built-in website is Test Page, the Browser
- * smoke test. These tests keep the catalog, wrappers, generated file-system
- * manifest and running desktop in sync. */
+/* The current build keeps its five desktop System apps plus the file system
+ * suite (Files, Text Editor, Image Viewer, Media, PDF Viewer — copied from
+ * main), a Calculator and Web Retro (a vendored webretro emulator, no ROMs
+ * included), plus Celeste Classic as a sandboxed embed of its existing
+ * GitHub Pages site. No game content is copied here. The one built-in
+ * website is Test Page, the Browser smoke test. These tests keep the
+ * catalog, wrappers, generated file-system manifest and running desktop in
+ * sync. */
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -13,7 +15,8 @@ const { JSDOM, VirtualConsole } = require('jsdom');
 
 const ROOT = path.resolve(__dirname, '..');
 const source = (p) => fs.readFileSync(path.join(ROOT, p), 'utf8');
-const SYSTEM_APPS = ['appcenter', 'customize', 'settings', 'about', 'calculator', 'browser', 'celeste-classic', 'web-retro'];
+const SYSTEM_APPS = ['appcenter', 'customize', 'settings', 'about', 'calculator', 'browser',
+  'files', 'text-editor', 'image-viewer', 'media', 'pdf', 'celeste-classic', 'web-retro'];
 const EMBED_URLS = {
   'celeste-classic': 'https://math-halper.github.io/Celeste/1/index.html',
 };
@@ -46,7 +49,7 @@ function catalog() {
   };
 }
 
-test('the catalog is five core apps, a calculator, web retro, one embedded game and the built-in test site', () => {
+test('the catalog is the desktop apps, the file system suite, a calculator, web retro, one embedded game and the built-in test site', () => {
   const { apps, sites, warnings, icons, render, renderCatalogIcon, validIconPath } = catalog();
   assert.deepEqual(Array.from(warnings), [], 'catalog parses without warnings');
   /* Array.from everywhere: the catalogs come from a vm context, so their
@@ -155,7 +158,7 @@ test('every catalog entry points at a real, syntactically valid app module', () 
   /* apps/ holds only the shipped apps plus the developer templates. */
   const folders = fs.readdirSync(path.join(ROOT, 'apps'), { withFileTypes: true })
     .filter((e) => e.isDirectory()).map((e) => e.name).sort();
-  assert.deepEqual(folders, ['_embed', '_template', 'about', 'app-center', 'browser', 'calculator', 'celeste-classic', 'customize', 'settings', 'web-retro']);
+  assert.deepEqual(folders, ['_embed', '_template', 'about', 'app-center', 'browser', 'calculator', 'celeste-classic', 'customize', 'files', 'image-viewer', 'media', 'pdf', 'settings', 'text-editor', 'web-retro']);
 });
 
 test('the system manifest still matches the repository exactly', () => {
@@ -196,7 +199,7 @@ test('the system manifest still matches the repository exactly', () => {
     'Manifest and repository disagree — re-run python3 tools/gen-fs-manifest.py');
 });
 
-test('the desktop boots, lists and opens all eight catalogued apps', async () => {
+test('the desktop boots, lists and opens all thirteen catalogued apps', async () => {
   const virtualConsole = new VirtualConsole(), errors = [];
   virtualConsole.on('jsdomError', (err) => errors.push(err.message));
   const dom = new JSDOM('<!doctype html><main id="auth" hidden></main><div id="desktop" hidden></div><div id="toasts"></div>', {
@@ -206,6 +209,19 @@ test('the desktop boots, lists and opens all eight catalogued apps', async () =>
   const { window: w } = dom;
   w.URL.createObjectURL = () => 'blob:mock';
   w.URL.revokeObjectURL = () => {};
+  /* jsdom leaves TextEncoder/TextDecoder off the window (fs-archive.js needs
+   * one to build a ZIP) and its Blob has no arrayBuffer()/text(), which
+   * FS.readBlob/writeBlob use. Every browser has had both since 2015. */
+  w.TextEncoder = TextEncoder;
+  w.TextDecoder = TextDecoder;
+  w.Blob.prototype.arrayBuffer = function () {
+    return new Promise((resolve, reject) => {
+      const reader = new w.FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(new Error('FileReader could not read the blob'));
+      reader.readAsArrayBuffer(this);
+    });
+  };
   const run = (text) => {
     const script = w.document.createElement('script');
     script.textContent = text; w.document.body.appendChild(script); script.remove();
@@ -222,13 +238,17 @@ test('the desktop boots, lists and opens all eight catalogued apps', async () =>
     w.eval("currentUser = {username:'Ada',usernameLower:'ada',displayName:'Ada',createdAt:Date.now()}; userData = MH.defaultData('Ada','ada'); enterDesktop();");
     const wins = w.eval('wins'), APPS = w.eval('APPS');
 
-    // The account defaults point at apps that still exist.
+    // The account defaults point at apps that still exist (plus the home link).
     assert.deepEqual(Array.from(w.eval('userData.settings.pinned')), ['settings', 'appcenter', 'browser']);
     const shortcuts = Array.from(w.eval('userData.desktopIcons'));
-    assert.deepEqual(shortcuts.map((s) => s.target), ['settings', 'browser']);
-    for (const s of shortcuts) assert.ok(APPS[s.target], `default shortcut to a removed app: ${s.target}`);
+    assert.deepEqual(shortcuts.map((s) => s.target),
+      ['settings', 'browser', 'files', w.eval('FS.home()')]);
+    for (const s of shortcuts) {
+      if (s.kind === 'app') assert.ok(APPS[s.target], `default shortcut to a removed app: ${s.target}`);
+      else assert.ok(w.eval('FS').stat(s.target), `default shortcut to a missing path: ${s.target}`);
+    }
 
-    // The start menu shows one System section holding all eight apps.
+    // The start menu shows one System section holding all thirteen apps.
     const menu = w.document.querySelector('#startmenu');
     assert.deepEqual([...menu.querySelectorAll('.sm-cat')].map((e) => e.textContent), ['System']);
     assert.deepEqual([...menu.querySelectorAll('.sm-item')].map((e) => e.dataset.app), SYSTEM_APPS);
@@ -292,6 +312,14 @@ test('the desktop boots, lists and opens all eight catalogued apps', async () =>
     assert.match(w.document.querySelector('#toasts').textContent, /Choose a ROM file/);
     w.closeWin('web-retro', true);
 
+    // Files lists the account's home folder places from the virtual file system.
+    w.openApp('files');
+    const filesBody = wins.get('files').body;
+    for (const dir of ['Desktop', 'Documents', 'Downloads', 'Pictures']) {
+      assert.match(filesBody.textContent, new RegExp(dir), `Files should list ${dir}`);
+    }
+    w.closeWin('files', true);
+
     // The Browser registers the catalogued site and offers it on its home page.
     w.openApp('browser');
     const browserBody = wins.get('browser').body;
@@ -307,10 +335,37 @@ test('the desktop boots, lists and opens all eight catalogued apps', async () =>
     assert.ok(browserBody.querySelector('iframe.site-frame').src.endsWith('/websites/test-page/site.html'));
     w.closeWin('browser', true);
 
-    // A file shortcut from an older account is reported, not fatal.
+    // A system text file opens in the Text Editor — locked, read-only. proton's
+    // own files are fetched over HTTP, so serve them out of the repository (the
+    // test page lives one folder down, like the real GitHub Pages site).
+    const served = (url) => {
+      const rel = new URL(url).pathname.replace(/^\/+/, '');
+      return source(fs.existsSync(path.join(ROOT, rel)) ? rel : rel.split('/').slice(1).join('/'));
+    };
+    w.fetch = async (url) => ({
+      ok: true, status: 200,
+      text: async () => served(url),
+      blob: async () => new w.Blob([served(url)]),
+    });
     w.eval("openFSItem('/README.md')");
-    assert.equal(wins.size, 0);
-    assert.match(w.document.querySelector('#toasts').textContent, /No app can open README\.md/);
+    assert.ok(wins.has('text-editor'), 'a system text file opens in the Text Editor');
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    const editor = wins.get('text-editor').body;
+    assert.match(editor.querySelector('#te-note').textContent, /read-only proton system/);
+    assert.equal(editor.querySelector('#te-text').readOnly, true);
+    assert.match(editor.querySelector('#te-text').value, /^# proton/);
+    assert.equal(editor.querySelector('#te-save').disabled, true, 'a read-only file cannot be saved in place');
+    w.closeWin('text-editor', true);
+
+    // A file with no viewer of its own is shown in Files, selected.
+    await w.eval("FS.writeBlob('/home/ada/backup.zip', new Blob([new Uint8Array([1, 2, 3])]))");
+    w.eval("openFSItem('/home/ada/backup.zip')");
+    assert.ok(wins.has('files'), 'Files is the fallback');
+    assert.match(w.document.querySelector('#toasts').textContent, /No viewer for backup\.zip/);
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    assert.ok(wins.get('files').body.querySelector('.sel[data-path="/home/ada/backup.zip"]'),
+      'the fallback selects the file');
+    w.closeWin('files', true);
 
     assert.deepEqual(errors, []);
   } finally { dom.window.close(); }
@@ -360,7 +415,7 @@ test('Customize saves, displays and resets uploaded app icon images', async () =
     const browserWindow = w.eval('wins').get('browser');
     assert.equal(body.querySelector('#cust-files-shortcut'), null, 'Customize still offers a Files shortcut');
     assert.deepEqual([...body.querySelectorAll('#cust-modlist .card b')].map((b) => b.textContent).slice(0, SYSTEM_APPS.length),
-      ['App Center', 'Customize', 'Settings', 'About', 'Calculator', 'Browser', 'Celeste Classic', 'Web Retro']);
+      ['App Center', 'Customize', 'Settings', 'About', 'Calculator', 'Browser', 'Files', 'Text Editor', 'Image Viewer', 'Media', 'PDF Viewer', 'Celeste Classic', 'Web Retro']);
 
     const uploadBrowserIcon = async () => {
       const input = body.querySelector('[data-micon-file="browser"]');
@@ -413,7 +468,8 @@ test('Customize saves, displays and resets uploaded app icon images', async () =
     assert.equal(w.document.querySelector('#startmenu .sm-item[data-app="browser"] img.app-icon-image')?.getAttribute('src'),
       'data/icons/catalog-browser.png', 'reset returns to the configured default icon');
     assert.deepEqual(Array.from(w.eval('userData.settings.pinned')), ['settings', 'appcenter', 'browser']);
-    assert.deepEqual(Array.from(w.eval('userData.desktopIcons'), (s) => s.target), ['settings', 'browser']);
+    assert.deepEqual(Array.from(w.eval('userData.desktopIcons'), (s) => s.target),
+      ['settings', 'browser', 'files', w.eval('FS.home()')]);
   } finally { w.close(); }
 });
 

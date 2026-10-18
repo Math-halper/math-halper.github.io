@@ -2,9 +2,10 @@
  * Every app lives in its own apps/<name>/app.html module (loaded via
  * assets/html-loader.js); the list of apps and all their metadata (name,
  * icon, category, description, window size) live in the catalog
- * data/applications.js, parsed by assets/config-loader.js. proton ships five
- * core System apps, a Calculator, Web Retro (a vendored webretro emulator)
- * and one sandboxed GitHub Pages game embed.
+ * data/applications.js, parsed by assets/config-loader.js. proton ships the
+ * five desktop System apps, the file system suite (Files, Text Editor, Image
+ * Viewer, Media, PDF Viewer — copied from main), a Calculator, Web Retro (a
+ * vendored webretro emulator) and one sandboxed GitHub Pages game embed.
  * Built-in websites use the same catalog system (data/websites.js) and are
  * framed by the Browser app (Test Page is the only built-in site).
  * Window chrome/panel styling follows Mixt's Mint-Y theme.
@@ -352,20 +353,32 @@ function openApp(id, options = {}) {
   renderPanelApps();
 }
 
-/* Open a virtual file or folder. proton ships no file-manager or viewer app
- * any more, so this reports what is missing instead of failing silently; it
- * still honours any viewer an account adds back to the catalog. */
+/* Open a virtual file or folder: the single entry point the desktop, the
+ * desktop shortcuts and the apps all use.
+ *   folder            → Files, at that folder
+ *   file              → the app FS.appFor() names (Browser for .html, PDF
+ *                       Viewer for .pdf, Image Viewer for images, Media for
+ *                       audio/video, Text Editor for other text)
+ *   file, no viewer   → Files with the file selected, so it can still show its
+ *                       properties and download it (a binary .zip has no app of
+ *                       its own here)
+ * Only when Files itself is missing/removed does this just report the problem. */
 function openFSItem(path) {
   const st = FS.stat(path);
   if (!st) { MH.toast(`File not found: ${path}`); return; }
   if (st.type === 'dir') {
     if (APPS.files) openApp('files', { path: st.path });
-    else MH.toast(`Folders cannot be opened: this proton build ships no Files app.`);
+    else MH.toast(`Folders cannot be opened: the Files app is not available on this account.`);
     return;
   }
   const appId = FS.appFor(st.path);
-  if (appId && APPS[appId]) openApp(appId, { path: st.path });
-  else MH.toast(`No app can open ${st.name} in this build.`);
+  if (appId && APPS[appId]) { openApp(appId, { path: st.path }); return; }
+  if (APPS.files) {
+    openApp('files', { path: FS.dirname(st.path), select: st.path });
+    MH.toast(`No viewer for ${st.name} — showing it in Files.`);
+    return;
+  }
+  MH.toast(`No app can open ${st.name} in this build.`);
 }
 
 /* ---------------- desktop ---------------- */

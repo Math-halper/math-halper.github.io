@@ -1,9 +1,10 @@
 /* proton — virtual file system (VFS).
  *
- * One real, hierarchical file system rooted at "/". This build ships no
- * Files app or Terminal, so the tree is what the Browser opens HTML files
- * from (file:///path) and what every account's own data lives in; it stays
- * a complete, documented API for apps added back later.
+ * One real, hierarchical file system rooted at "/". The file system suite
+ * sits on top of it: Files (apps/files) browses and manages the whole
+ * tree, Text Editor writes the text files, Image Viewer / Media / PDF Viewer
+ * display the rest, and the Browser opens HTML pages (file:///path). Every
+ * account's own data lives here too.
  *
  * Two layers:
  *   - System layer (READ-ONLY): every single file of this website, listed in
@@ -48,8 +49,9 @@ const FS = {
   MAX_BLOB_SIZE: 2 * 1024 * 1024,
   /* the first home directory seeded for every account */
   HOME_DIRS: ['Desktop', 'Documents', 'Pictures', 'Downloads'],
-  /* Other apps (Terminal, Text Editor) can change the same tree while Files
-   * stays open. Notify listeners only after a successful persisted mutation. */
+  /* Other apps (the Text Editor, an import running in a second window) can
+   * change the same tree while Files stays open. Notify listeners only after a
+   * successful persisted mutation. */
   _listeners: new Set(),
   watch(listener) { this._listeners.add(listener); return () => this._listeners.delete(listener); },
   _changed(...paths) {

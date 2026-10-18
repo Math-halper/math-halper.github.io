@@ -19,11 +19,14 @@ icon, category, description and default window size all live here.
   - The app itself still lives in apps/<folder>/app.html; its render()
     code runs from there (apps/_template is the starting point).
 
-proton ships the five core System apps, a Calculator, Web Retro (a vendored
-webretro emulator build; bring your own ROMs) and one embedded game
-page: Celeste Classic. Its app folder contains only an iframe wrapper for the
-existing GitHub Pages site; no game files or assets are copied into this
-repository.
+proton ships the five desktop System apps (App Center, Customize, Settings,
+About, Browser), the file system suite from main (Files, Text Editor, Image
+Viewer, Media, PDF Viewer — their ids are exactly the ones FS.appFor()
+returns, so double-clicking a file opens it in the right one), a Calculator,
+Web Retro (a vendored webretro emulator build; bring your own ROMs) and one
+embedded game page: Celeste Classic. Its app folder contains only an iframe
+wrapper for the existing GitHub Pages site; no game files or assets are
+copied into this repository.
 
 Template (named SVG; for an image use `icon=data/icons/my-app.png` and
 `svg-icon=false` instead):
@@ -107,6 +110,61 @@ cat=System
 desc=Visit web addresses and any built-in websites from data/websites.js
 w=940
 h=600
+
+[application]
+id=files
+name=Files
+path=apps/files/app.html
+icon=folder
+svg-icon=true
+cat=System
+desc=Browse your home folder and the read-only proton system tree - create, rename, move, import, search and download
+w=1000
+h=640
+
+[application]
+id=text-editor
+name=Text Editor
+path=apps/text-editor/app.html
+icon=file-text
+svg-icon=true
+cat=System
+desc=Open, edit and save text files in your home folder; proton's own files open read-only
+w=880
+h=620
+
+[application]
+id=image-viewer
+name=Image Viewer
+path=apps/image-viewer/app.html
+icon=image
+svg-icon=true
+cat=System
+desc=View PNG, JPG, GIF, WebP, AVIF, BMP, ICO and SVG files with zoom and a folder playlist
+w=920
+h=640
+
+[application]
+id=media
+name=Media
+path=apps/media/app.html
+icon=film
+svg-icon=true
+cat=System
+desc=Play audio and video files stored in your home folder, with your browser's own codecs
+w=940
+h=620
+
+[application]
+id=pdf
+name=PDF Viewer
+path=apps/pdf/app.html
+icon=book
+svg-icon=true
+cat=System
+desc=Read PDF files in your browser's own viewer - no extra library, nothing uploaded
+w=920
+h=680
 
 [application]
 id=celeste-classic

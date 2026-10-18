@@ -47,9 +47,13 @@ authors.
 
 ## What this build ships
 
-Everything above describes how proton was built. The current base is trimmed
-to five core System apps: App Center, Customize, Settings, About and Browser.
-Celeste Classic is added as an iframe-only wrapper around its separately
+Everything above describes how proton was built. The current base keeps the
+five desktop System apps — App Center, Customize, Settings, About and
+Browser — and copies the **file system suite** back in from `main`'s
+`apps/inbuilt/` layout (re-homed to `apps/<name>/` here): Files, Text Editor,
+Image Viewer, Media and PDF Viewer, whose ids are exactly the ones
+`FS.appFor()` returns. Celeste Classic is added as an iframe-only wrapper
+around its separately
 hosted Math-halper GitHub Pages; no game content is copied into this
 repository. A small Calculator ships again too — new, self-contained code
 (`apps/calculator/`), not a restore of the removed bundle below — and Web Retro
@@ -60,7 +64,9 @@ bundled apps and game catalogs remain removed:
 - **19 bundled apps** — Files, Text Editor, Image Viewer, Notes, Calendar,
   Contacts, Calculator, Spreadsheet, Presentation, Whiteboard, Logic Sim,
   Terminal, Media, PDF Viewer and the five local games (Chess, Checkers,
-  Sudoku, Klondike, Backgammon).
+  Sudoku, Klondike, Backgammon). (Files, Text Editor, Image Viewer, Media
+  and PDF Viewer have since returned, copied from `main`; Calculator returned
+  as new code.)
 - **92 game entries from the older build** — the 19 Proton Arcade titles,
   68 Gams Offline titles and the five local games above (the local five were
   not streamed), catalogued in `data/applications.js` before trimming.
@@ -81,7 +87,7 @@ bundled apps and game catalogs remain removed:
   with an empty catalog if it is removed.
 - **The styles, icons and tests that only those apps used** —
   `assets/styles.css` carries the shell's chrome plus the classes used by the
-  eight shipped app wrappers, and `tests/` is a single suite for this trimmed build.
+  thirteen shipped app wrappers, and `tests/` is a single suite for this trimmed build.
 
 Nothing in the desktop shell was removed: accounts, the window manager, the
 panel and start menu, per-account desktop shortcuts, the customisation layer,

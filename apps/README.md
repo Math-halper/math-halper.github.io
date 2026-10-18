@@ -16,10 +16,12 @@ appears in the proton menu, App Center and Customize.
 > web-address apps — everything is part of this static website. "Add your own
 > app" below is the *developer* workflow for changing the site's code.
 
-The current base keeps its five core System apps plus a small Calculator
-(new code in `apps/calculator/`) and Web Retro (`apps/web-retro/`, a vendored
-webretro emulator build in `apps/web-retro/webretro/` — see `CREDITS.md`; no
-ROMs ship with it). Celeste Classic is added as a wrapper
+The current base keeps its five desktop System apps plus the file system
+suite copied from `main` (Files, Text Editor, Image Viewer, Media, PDF
+Viewer), a small Calculator (new code in `apps/calculator/`) and Web Retro
+(`apps/web-retro/`, a vendored webretro emulator build in
+`apps/web-retro/webretro/` — see `CREDITS.md`; no ROMs ship with it).
+Celeste Classic is added as a wrapper
 around its existing GitHub Pages site, loaded live in a sandboxed iframe.
 This repository does not contain its game code, assets or copies of the
 source repository.

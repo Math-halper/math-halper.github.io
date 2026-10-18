@@ -60,15 +60,22 @@ const MH = {
   },
 
   /* Desktop entries are links, not copies of apps or files. Return fresh
-   * objects so accounts can rearrange/remove them independently. proton
-   * ships its System apps only, so a new account starts with two shortcuts:
-   * Settings and the Browser. (The old Files/Documents links pointed at the
-   * Files app, which is no longer part of this build.) */
+   * objects so accounts can rearrange/remove them independently. A new account
+   * starts with four shortcuts: Settings, the Browser, Files, and a link to
+   * that account's own home folder in the virtual file system. */
   defaultDesktopIcons() {
-    return [
+    const icons = [
       { id: 'desktop-settings', kind: 'app', target: 'settings', col: 0, row: 0 },
       { id: 'desktop-browser', kind: 'app', target: 'browser', col: 0, row: 1 },
+      { id: 'desktop-files', kind: 'app', target: 'files', col: 0, row: 2 },
     ];
+    /* The home-folder link needs FS.home(), and assets/fs.js loads after this
+     * file — so ask carefully and simply leave the link out if FS is not
+     * ready yet (the desktop then starts with its three app shortcuts). */
+    let home = '';
+    try { home = typeof FS !== 'undefined' && FS.home ? FS.home() : ''; } catch { home = ''; }
+    if (home) icons.push({ id: 'desktop-home', kind: 'path', target: home, col: 0, row: 3 });
+    return icons;
   },
 
   /* ---- seeded state for a brand-new account ---- */
@@ -82,7 +89,7 @@ const MH = {
       desktopIcons: MH.defaultDesktopIcons(),
       notes: [{
         id: MH.uid(), title: 'Welcome to proton',
-        html: `<p>This desktop is a <b>static clone of Mixt</b> (from <i>proton-arcade/mlp</i>), rebranded and rebuilt to run with <b>no server at all</b>.</p><h2><span style="font-size:19px">Things to try</span></h2><ul><li>The five core System apps are joined by one sandboxed GitHub Pages embed: Celeste Classic. No game files are copied here.</li><li>Everything you type here is <b>saved on this device</b>, under your account</li><li>Drag windows, pin apps to the panel, change the wallpaper in Settings</li></ul><p>Have fun!</p>`,
+        html: `<p>This desktop is a <b>static clone of Mixt</b> (from <i>proton-arcade/mlp</i>), rebranded and rebuilt to run with <b>no server at all</b>.</p><h2><span style="font-size:19px">Things to try</span></h2><ul><li><b>Files</b> browses your own folders and proton's read-only system tree; text, pictures, audio, video and PDFs open in their own apps</li><li>The <b>Calculator</b> does quick maths, <b>Web Retro</b> plays your own retro ROMs, and Celeste Classic is one sandboxed GitHub Pages embed — no game files are copied here</li><li>Everything you type here is <b>saved on this device</b>, under your account</li><li>Drag windows, pin apps to the panel, change the wallpaper in Settings</li></ul><p>Have fun!</p>`,
         updated: Date.now(),
       }],
       events: [{ id: MH.uid(), date: today, time: '09:00', title: 'First day on proton', notes: 'Created my account today.' }],
@@ -95,7 +102,7 @@ const MH = {
        * /home/<user> is the read-only system tree. */
       dirs: [home + '/Desktop', home + '/Documents', home + '/Pictures', home + '/Downloads'],
       files: [
-        { path: home + '/Documents/Welcome.txt', content: 'Welcome to proton!\n\nThe five core System apps are joined by Celeste Classic, embedded from its\nexternal GitHub Pages site. No game files or assets are copied into this\nproject. Your account still has a virtual file system rooted at / :\n- /  holds every single file of the proton system (read-only)\n- /home/<you>  is yours\n\nThe Browser can open any HTML file in it, and Settings exports\nyour whole account as a backup.', updated: Date.now() },
+        { path: home + '/Documents/Welcome.txt', content: 'Welcome to proton!\n\nYour account has a real file system, rooted at / :\n- /            every file of the proton system (read-only)\n- /home/<you>  yours: Desktop, Documents, Downloads, Pictures\n\nOpen it from the Files app on your desktop: create folders, edit text\nfiles in the Text Editor, import pictures, audio, video and PDFs from\nyour computer, and download anything back out (folders as a ZIP).\nHTML files open in the Browser, and Celeste Classic is embedded from\nits external GitHub Pages site — no game files are copied here.\n\nEverything lives in this browser only. Settings exports your whole\naccount, files included, as a backup.', updated: Date.now() },
         { path: home + '/Documents/Ideas.txt', content: 'Ideas:\n- Try a new wallpaper in Settings\n- Rename an app in Customize\n- ', updated: Date.now() },
         { path: home + '/README.txt', content: 'proton — static clone of Mixt (proton-arcade/mlp @ arena/170861f7-mlp), rebranded.\nLicensed AGPL-3.0-only. See CREDITS.md in the project repo.', updated: Date.now() },
       ],
