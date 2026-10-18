@@ -24,7 +24,7 @@ and look wherever a browser-only equivalent exists:
 | `src/apps/sudoku/logic.js`, `checkers`, `chess`, `klondike`, `backgammon` | Sudoku generator/checker was adapted from the original pure-logic file, the other games reimplemented to the same rules — **removed** |
 | `src/apps/team-chat`, `g-talk`, `meetings` | On-device channels/direct chat with a local helper bot; meeting planner — removed earlier (real calls need a server) |
 | `src/apps/admin-vault`, dashboard Admin tab | Vault app that re-checked your account password (removed earlier); account/device stats survive in **Settings** |
-| `src/app-center`, Files/dashboard | **App Center** (hide/restore built-ins; previously saved user apps and sites remain openable/removable per account, the add-from-URL flow is disabled). The virtual Files drive is gone — the file system (`assets/fs.js`) stays, but no app ships to browse it |
+| `src/app-center`, Files/dashboard | **App Center** (hide/restore built-ins; previously saved user apps and sites remain openable/removable per account, the add-from-URL flow is disabled). The virtual Files drive is back: **Files** browses and manages the same file system (`assets/fs.js`), and Text Editor / Image Viewer / Media / PDF Viewer open what it finds |
 | — (modular layer) | **Customize** app: every built-in module's name/icon/category/order is editable and resettable, custom themes & wallpapers can be added/edited/removed/applied, and desktop parts (clock, hint, tray buttons, menu search, panel labels) toggle live — all per-account state with migration |
 | `internet/*` sites | Built-in websites as separate modules loaded into the Browser's SITES registry — **removed** except Test Page, the one entry left in `data/websites.js` |
 | `internet/world-history`, `internet/mixt-guide` | Built-in Browser pages — **removed** with the other websites |
@@ -47,15 +47,21 @@ authors.
 
 ## What this build ships
 
-Everything above describes how proton was built. The current base is trimmed
-to five core System apps: App Center, Customize, Settings, About and Browser.
-Celeste Classic is added as an iframe-only wrapper around its separately
-hosted Math-halper GitHub Pages; no game content is copied into this repository. The older bundled apps and game catalogs remain removed:
+Everything above describes how proton was built. The current base keeps five
+core desktop apps — App Center, Customize, Settings, About and Browser — plus
+the five-app file system suite that sits on `assets/fs.js`: **Files**, **Text
+Editor**, **Image Viewer**, **Media** and **PDF Viewer**. All ten live in
+`apps/inbuilt/`. Celeste Classic is added as an iframe-only wrapper around its
+separately hosted Math-halper GitHub Pages; no game content is copied into this
+repository. The rest of the older bundled apps and the game catalogs remain
+removed:
 
-- **19 bundled apps** — Files, Text Editor, Image Viewer, Notes, Calendar,
-  Contacts, Calculator, Spreadsheet, Presentation, Whiteboard, Logic Sim,
-  Terminal, Media, PDF Viewer and the five local games (Chess, Checkers,
-  Sudoku, Klondike, Backgammon).
+- **14 of the 19 bundled apps** — Notes, Calendar, Contacts, Calculator,
+  Spreadsheet, Presentation, Whiteboard, Logic Sim, Terminal and the five local
+  games (Chess, Checkers, Sudoku, Klondike, Backgammon). The other five —
+  Files, Text Editor, Image Viewer, Media and PDF Viewer — are back, rewritten
+  as static single-file modules on the virtual file system that was kept all
+  along (no Terminal: it needs a shell, and a static page has none).
 - **92 game entries from the older build** — the 19 Proton Arcade titles,
   68 Gams Offline titles and the five local games above (the local five were
   not streamed), catalogued in `data/applications.js` before trimming.
@@ -75,17 +81,20 @@ hosted Math-halper GitHub Pages; no game content is copied into this repository.
   `data/websites.js` still holds one `[website]` block; the Browser also copes
   with an empty catalog if it is removed.
 - **The styles, icons and tests that only those apps used** —
-  `assets/styles.css` carries the shell's chrome plus the classes used by the
-  six shipped app wrappers, and `tests/` is a single suite for this trimmed build.
+  `assets/styles.css` carries the shell's chrome, the classes the shipped apps
+  use, and the file manager/viewer block at the end; `tests/` is a single suite
+  for this build, including three tests that drive the Files suite end to end.
 
 Nothing in the desktop shell was removed: accounts, the window manager, the
 panel and start menu, per-account desktop shortcuts, the customisation layer,
 the virtual file system (`assets/fs.js`, `data/fs-manifest.js`,
 `assets/fs-archive.js`) and the Browser's ability to open an HTML page from it
-all still work, and the account data model in `assets/store.js` still carries
-the removed apps' data (notes, files, events, contacts, sheets, slides,
-boards), so an older backup still imports and any of these apps can be added
-back with a folder under `apps/inbuilt/` and one catalog block.
+all still work — and the file system now has its apps back, so it is browsable,
+editable and exportable from the desktop itself. The account data model in
+`assets/store.js` still carries the removed apps' data (notes, events,
+contacts, sheets, slides, boards), so an older backup still imports and any of
+those apps can be added back with a folder under `apps/inbuilt/` and one
+catalog block.
 
 The provenance table above and the sections that used to follow it (Digital
 Logic Sim, the streamed Proton Arcade and Gams Offline catalogs) are historical:

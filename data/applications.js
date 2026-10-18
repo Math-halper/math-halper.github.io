@@ -22,11 +22,16 @@ icon, category, description and default window size all live here.
     apps/inbuilt/ holds every app built into this site; the one exception
     is the Celeste Classic wrapper, which stays at apps/celeste-classic/.
 
-proton ships the five core System apps — all under apps/inbuilt/ — plus
-one embedded game page: Celeste Classic, which stays in its own
-apps/celeste-classic/ folder. That folder contains only an iframe wrapper
-for the existing GitHub Pages site; no game files or assets are copied into
-this repository.
+proton ships ten System apps — all under apps/inbuilt/ — plus one embedded
+game page: Celeste Classic, which stays in its own apps/celeste-classic/
+folder. That folder contains only an iframe wrapper for the existing GitHub
+Pages site; no game files or assets are copied into this repository.
+
+Five of the ten are the desktop's own apps (App Center, Customize, Settings,
+About, Browser); the other five are the file system suite that sits on
+assets/fs.js: Files (the manager), Text Editor, Image Viewer, Media and PDF
+Viewer. Their ids are exactly the ones FS.appFor() returns, so double-clicking
+a file anywhere opens it in the right one.
 
 Template (named SVG; for an image use `icon=data/icons/my-app.png` and
 `svg-icon=false` instead):
@@ -99,6 +104,61 @@ cat=System
 desc=Visit web addresses and any built-in websites from data/websites.js
 w=940
 h=600
+
+[application]
+id=files
+name=Files
+path=apps/inbuilt/files/app.html
+icon=folder
+svg-icon=true
+cat=System
+desc=Browse your home folder and the read-only proton system tree — create, rename, move, import, search and download
+w=1000
+h=640
+
+[application]
+id=text-editor
+name=Text Editor
+path=apps/inbuilt/text-editor/app.html
+icon=file-text
+svg-icon=true
+cat=System
+desc=Open, edit and save text files in your home folder; proton's own files open read-only
+w=880
+h=620
+
+[application]
+id=image-viewer
+name=Image Viewer
+path=apps/inbuilt/image-viewer/app.html
+icon=image
+svg-icon=true
+cat=System
+desc=View PNG, JPG, GIF, WebP, AVIF, BMP, ICO and SVG files with zoom and a folder playlist
+w=920
+h=640
+
+[application]
+id=media
+name=Media
+path=apps/inbuilt/media/app.html
+icon=film
+svg-icon=true
+cat=System
+desc=Play audio and video files stored in your home folder, with your browser's own codecs
+w=940
+h=620
+
+[application]
+id=pdf
+name=PDF Viewer
+path=apps/inbuilt/pdf/app.html
+icon=book
+svg-icon=true
+cat=System
+desc=Read PDF files in your browser's own viewer — no extra library, nothing uploaded
+w=920
+h=680
 
 [application]
 id=celeste-classic

@@ -3,9 +3,13 @@
  * grid is laid out at render time, so a narrower window cannot overlap icons
  * or overwrite the positions saved for a larger screen.
  *
- * proton ships no Files app, so shortcuts to files and folders can no longer
- * be created here; the ones an older account saved still render (and report
- * that nothing can open them) until they are removed. */
+ * Shortcuts come in two kinds: 'app' (a catalog app id) and 'path' (anywhere in
+ * the virtual file system). A path shortcut is created from the desktop menu
+ * ("Add file or folder…"), by dragging an entry out of the Files app onto the
+ * wallpaper, or from a file's right-click menu in Files — and opening one goes
+ * through openFSItem(), so folders land in Files and files in whichever app
+ * FS.appFor() names. Deleting or renaming the target never breaks the icon: it
+ * follows renames (FS.watch) and a missing target is marked and removable. */
 'use strict';
 
 const DesktopIcons = (() => {
@@ -123,6 +127,23 @@ const DesktopIcons = (() => {
     if (commit([...userData.desktopIcons, entry], entry.id)) { MH.toast(`${APPS[id].name} added to the desktop.`); return true; }
     return false;
   }
+  /* A shortcut to a file or folder: a link to a VFS path, never a copy of it. */
+  function addPath(rawPath, preferred = null) {
+    if (!currentUser || !userData) return false;
+    const path = FS.normalize(rawPath);
+    const st = FS.stat(path);
+    if (!st) { MH.toast(`Nothing at ${path} — shortcuts point at real files and folders.`); return false; }
+    const existing = userData.desktopIcons.find((x) => x.kind === 'path' && x.target === path);
+    if (existing) { selected = existing.id; highlight(); focusIcon(existing.id); MH.toast('That item is already on your desktop.'); return false; }
+    if (userData.desktopIcons.length >= LIMIT) { MH.toast('Your desktop has reached its shortcut limit.'); return false; }
+    const { g, occupied } = placements(), { col, row } = freeCell(preferred, occupied, g);
+    const entry = { id: 'desktop-' + MH.uid(), kind: 'path', target: path, col, row };
+    if (commit([...userData.desktopIcons, entry], entry.id)) {
+      MH.toast(`${st.type === 'dir' ? 'Folder' : 'File'} shortcut added: ${st.name}`);
+      return true;
+    }
+    return false;
+  }
   function remove(id) {
     if (!userData?.desktopIcons.some((x) => x.id === id)) return false;
     const before = userData.desktopIcons;
@@ -187,6 +208,7 @@ const DesktopIcons = (() => {
       add(existing ? 'Remove from desktop' : 'Add to desktop', () => existing ? remove(existing.id) : addApp(appId));
     } else {
       add('Add application…', showPicker);
+      add('Add file or folder…', showPathPicker);
       actions.push(null);
       add('Arrange icons', arrange);
     }
@@ -240,6 +262,52 @@ const DesktopIcons = (() => {
     host.hidden = false;
     draw();
     host.querySelector('.desktop-picker-search').focus();
+  }
+  /* Same dialog, for a shortcut to a file or folder instead of an app: type a
+   * path or pick one from your home folder. Everything else in the VFS is
+   * reachable by typing its path (the proton system tree is read-only but can
+   * still be linked). */
+  function showPathPicker() {
+    closeMenu();
+    const host = picker(); if (!host) return;
+    returnFocus = document.activeElement;
+    const home = FS.home();
+    let candidates = [];
+    try { candidates = FS.find('', home).map((e) => e.path); } catch { candidates = []; }
+    host.innerHTML = `<div class="desktop-picker-dialog" role="dialog" aria-modal="true" aria-label="Add a file or folder shortcut">
+      <div class="desktop-picker-head"><div><strong>Add file or folder</strong><small>Link anything from your home folder — or type any path, including proton's own read-only files</small></div><button type="button" class="desktop-picker-close" aria-label="Close">${iconSvg('x')}</button></div>
+      <input type="text" class="desktop-picker-search" placeholder="${MH.esc(home)}/Documents/notes.txt" aria-label="File or folder path" autocomplete="off" spellcheck="false">
+      <div class="desktop-picker-list"></div>
+      <p class="desktop-picker-help">A shortcut is a link: removing it never deletes the file, and it follows renames. You can also right-click anything in <b>Files</b> and choose <b>Add desktop shortcut</b>, or drag an entry out of Files onto the wallpaper.</p>
+    </div>`;
+    const input = host.querySelector('.desktop-picker-search');
+    const results = host.querySelector('.desktop-picker-list');
+    function draw(query = '') {
+      const needle = query.trim().toLowerCase();
+      const items = candidates.filter((path) => !needle || path.toLowerCase().includes(needle)).slice(0, 60);
+      results.innerHTML = items.length ? items.map((path) => {
+        const st = FS.stat(path);
+        const present = userData.desktopIcons.some((x) => x.kind === 'path' && x.target === path);
+        return `<button type="button" class="desktop-picker-item" data-path="${MH.esc(path)}"><span class="desktop-picker-glyph">${iconSvg(st?.type === 'dir' ? 'folder' : 'file-text')}</span><span><b>${MH.esc(st?.name || path)}</b><small>${MH.esc(path)}</small></span>${present ? '<em>On desktop</em>' : iconSvg('plus')}</button>`;
+      }).join('') : '<p class="desktop-picker-empty">Nothing matches. Type a full path such as /README.md and press Enter.</p>';
+      results.querySelectorAll('[data-path]').forEach((button) => button.onclick = () => {
+        const path = button.dataset.path;
+        closePicker(); addPath(path);
+      });
+    }
+    input.oninput = (e) => draw(e.target.value);
+    input.onkeydown = (e) => {
+      if (e.key !== 'Enter') return;
+      e.preventDefault();
+      const typed = input.value.trim();
+      if (!typed) return;
+      closePicker(); addPath(typed);
+    };
+    host.querySelector('.desktop-picker-close').onclick = closePicker;
+    host.onclick = (e) => { if (e.target === host) closePicker(); };
+    host.hidden = false;
+    draw();
+    input.focus();
   }
   function cellFromPointer(e) {
     const rect = area().getBoundingClientRect(), g = grid();
@@ -336,15 +404,26 @@ const DesktopIcons = (() => {
           row: +button.dataset.row + (e.key === 'ArrowDown' ? 1 : e.key === 'ArrowUp' ? -1 : 0) });
       }
     });
+    /* Two drag sources: an app dragged out of the proton menu, and a file or
+     * folder dragged out of the Files app. */
+    const dragKind = (e) => {
+      const types = Array.from(e.dataTransfer?.types || []);
+      if (types.includes('application/x-proton-app')) return 'app';
+      if (types.includes('application/x-proton-path')) return 'path';
+      return null;
+    };
     host.addEventListener('dragover', (e) => {
-      if (!Array.from(e.dataTransfer?.types || []).includes('application/x-proton-app')) return;
+      if (!dragKind(e)) return;
       e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; host.classList.add('desktop-drop');
     });
     host.addEventListener('dragleave', (e) => { if (!e.relatedTarget || !host.contains(e.relatedTarget)) host.classList.remove('desktop-drop'); });
     host.addEventListener('drop', (e) => {
       host.classList.remove('desktop-drop');
-      if (!Array.from(e.dataTransfer?.types || []).includes('application/x-proton-app')) return;
-      e.preventDefault(); addApp(e.dataTransfer.getData('application/x-proton-app'), cellFromPointer(e));
+      const kind = dragKind(e);
+      if (!kind) return;
+      e.preventDefault();
+      if (kind === 'path') addPath(e.dataTransfer.getData('application/x-proton-path'), cellFromPointer(e));
+      else addApp(e.dataTransfer.getData('application/x-proton-app'), cellFromPointer(e));
     });
     MH.$('desktop-add').onclick = showPicker;
     MH.$('desktop-open').onclick = () => { if (selected) activate(selected); };
@@ -373,5 +452,5 @@ const DesktopIcons = (() => {
     closeMenu(); closePicker();
     selected = null; suppressClick = null;
   }
-  return { mount, unmount, render, addApp, remove, move, arrange, menu, showPicker };
+  return { mount, unmount, render, addApp, addPath, remove, move, arrange, menu, showPicker, showPathPicker };
 })();

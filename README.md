@@ -1,4 +1,4 @@
-# proton — a browser desktop (static Mixt clone), System apps plus a game embed
+# proton — a browser desktop (static Mixt clone), System apps, a file system and a game embed
 
 A desktop shell in your browser: Mint-style bottom panel and proton menu,
 draggable/resizable windows, per-account customisation — cloned and rebranded
@@ -7,11 +7,14 @@ and rebuilt to run as a **pure static website** (no server, no build step, no
 dependencies). It ships a **black-and-white theme: black backgrounds, white
 text, and white/grey accents** (no colour in the UI).
 
-This build keeps the five core System apps from `main`. Celeste Classic is
-added as a small wrapper around its existing GitHub Pages site. Its app folder
-contains only a sandboxed iframe wrapper; no game source, assets or repository
-contents are copied here. The other bundled apps, game bundles and earlier
-built-in sites remain removed (except Test Page).
+This build keeps the five core desktop apps from `main` and puts the **file
+system suite** back on top of them: Files, Text Editor, Image Viewer, Media and
+PDF Viewer, all driven by the virtual file system in `assets/fs.js`. Celeste
+Classic is added as a small wrapper around its existing GitHub Pages site. Its
+app folder contains only a sandboxed iframe wrapper; no game source, assets or
+repository contents are copied here. The remaining bundled apps (Notes,
+Calendar, Spreadsheet, Whiteboard, Terminal, the games), the game bundles and
+the earlier built-in sites stay removed (except Test Page).
 
 | App (id) | What it does |
 | --- | --- |
@@ -20,6 +23,11 @@ built-in sites remain removed (except Test Page).
 | **Settings** (`settings`) | Account, wallpaper & accent, password, backup, other accounts |
 | **About** (`about`) | What this is, credits, licence |
 | **Browser** (`browser`) | Visit any address, open HTML files from the virtual file system, and the one built-in site |
+| **Files** (`files`) | Browse `/` and your own `/home/<you>`: create, rename, move, copy, import, search, download (folders as ZIP) |
+| **Text Editor** (`text-editor`) | Edit text files in your home folder; proton's own files open read-only with *Save a copy…* |
+| **Image Viewer** (`image-viewer`) | PNG, JPG, GIF, WebP, AVIF, BMP, ICO and SVG, with zoom and a folder playlist |
+| **Media** (`media`) | Audio and video from your home folder, played by your browser's own codecs |
+| **PDF Viewer** (`pdf`) | PDFs in your browser's built-in viewer — no library, nothing uploaded |
 | [**Celeste Classic**](https://math-halper.github.io/Celeste/1/index.html) (`celeste-classic`) | Open the Celeste Classic GitHub Pages game in a sandboxed frame |
 
 One built-in website ships with them: **Test Page** (`proton://test-page`), the
@@ -78,13 +86,17 @@ runtime dependencies or build step. Optional regression tests use jsdom:
   `assets/desktop-icons.js` (shortcut layout, drag/drop and menus),
   `assets/html-loader.js` (loads the app modules at boot, or a `streamed=true`
   app's module on first launch), `assets/styles.css`, `assets/boot.js`.
-- **Tests:** `tests/system-desktop.test.cjs` — the catalogs are exactly the
-  five core System apps, one embedded game page and the one test site; every
-  module is present, the five inbuilt apps sit in `apps/inbuilt/` with only the
-  Celeste wrapper outside it, the generated manifest matches the repository,
-  and a jsdom desktop boots and opens each app. The tests also verify the
-  embedded URL, sandbox settings and absence of copied game files; Test Page
-  passes its own checks.
+- **Tests:** `tests/system-desktop.test.cjs` — the catalogs are exactly the ten
+  System apps, one embedded game page and the one test site; every module is
+  present, the inbuilt apps sit in `apps/inbuilt/` with only the Celeste
+  wrapper outside it, the generated manifest matches the repository, and a
+  jsdom desktop boots and opens each app. Three of them drive the file system
+  suite end to end: Files creating/renaming/moving/importing/searching/zipping
+  real account data, every file kind landing in the app `FS.appFor()` names
+  (and falling back to Files when nothing else claims it), and desktop
+  shortcuts to files and folders. The tests also verify the embedded URL,
+  sandbox settings and absence of copied game files; Test Page passes its own
+  checks.
 
 ## Math Helper cover page
 
@@ -112,8 +124,8 @@ export a backup from **Settings → Backup** first.
 
 ## Desktop shortcuts
 
-Every account starts with **Settings** and **Browser** shortcuts (the old
-Files/Documents shortcuts pointed at the removed Files app). Double-click an
+Every account starts with **Settings**, **Browser** and **Files** shortcuts,
+plus a link to its own home folder. Double-click an
 icon to open it; click once to select it, then drag to another spot to move it
 (dropping on another icon swaps them). Use **Add icon** on the desktop to
 search the apps, drag an app from the proton menu, right-click a menu app, or
@@ -125,16 +137,20 @@ removes the link. A shortcut is only a link — removing it never deletes the
 app. The layout is saved with the account, included in Settings backups and
 reset by **Customize → Reset customisations**.
 
-Shortcuts to files and folders can no longer be created (they needed the Files
-app). One saved by an older account still renders and can be removed; opening
-it reports that no app can open it.
+Shortcuts to **files and folders** work again: right-click the wallpaper and
+choose **Add file or folder…** (type a path or pick one from your home folder),
+right-click anything in Files and choose **Add desktop shortcut**, or drag an
+entry out of Files onto the wallpaper. A shortcut is a link, never a copy — it
+follows renames, is marked when its target goes missing, and removing it never
+deletes the file.
 
 ## What's inside
 
 - **Desktop** — movable, per-account shortcuts, a Mint-Y panel with pinned &
   running apps, clock, searchable start menu (one **System** section), window
   manager (drag/resize/minimise/maximise), toasts.
-- **System** — App Center, Customize, Settings, About, Browser and Celeste Classic.
+- **System** — App Center, Customize, Settings, About and Browser; Files, Text
+  Editor, Image Viewer, Media and PDF Viewer; and Celeste Classic.
 - **Customize — everything is modular.** Rename any app, change its vector
   icon or upload a raster image for it, move it to another (or a brand-new)
   menu category, reorder it, pin it, remove it and add it back, or reset it —
@@ -154,19 +170,27 @@ it reports that no app can open it.
   into its bar without saving it, and anything already saved on an account
   (custom apps, websites) stays openable and removable in App Center and the
   Browser. Mail, Team Chat, Meetings, G-Talk and Admin Vault were removed
-  earlier; all the other bundled apps were removed with them. All saved per
-  account.
-- **Virtual file system** — `assets/fs.js` still builds the full read-only `/`
-  tree of this repository from `data/fs-manifest.js` plus each account's
-  writable `/home/<user>/`, and Settings still counts and exports those files
-  in a backup. With no Files app or Terminal shipped, the Browser is the only
-  consumer: it opens any HTML page in the tree at `file:///path/to/page.html`.
-  The API (`FS.read`, `FS.write`, `FS.list`, `FS.appFor`, …) is unchanged, so
-  an app added back later can use it.
+  earlier, and the other bundled apps (Notes, Calendar, Spreadsheet,
+  Whiteboard, Presentation, Terminal and the games) remain removed. All saved
+  per account.
+- **Virtual file system** — `assets/fs.js` builds the full read-only `/` tree
+  of this repository from `data/fs-manifest.js` plus each account's writable
+  `/home/<user>/`, and Settings still counts and exports those files in a
+  backup. **Files** is its manager (two layers in one tree: proton's own code
+  above, your folders below), and the Browser opens any HTML page in it at
+  `file:///path/to/page.html`. `FS.appFor()` maps an extension to the app that
+  opens it — Browser, PDF Viewer, Image Viewer, Media or Text Editor — and
+  Files is the fallback for anything no viewer claims (a `.zip`, say): it
+  opens with that file selected so you can still inspect or download it.
+  Storage is this browser's localStorage: text files save as text, imports as
+  base64 bytes up to 2 MB each (`FS.MAX_BLOB_SIZE`), and folders download as a
+  dependency-free ZIP (`assets/fs-archive.js`).
 
 Account data keeps its full shape (notes, files, events, contacts, sheets,
 slides, boards), so a backup exported by an earlier version of proton still
-imports; the apps that edited those parts are simply not in this build.
+imports. Files and folders have their apps back; the parts that still have none
+(notes, calendar, spreadsheet, whiteboard, presentation) stay in the backup and
+can be picked up by an app added later.
 
 ## Credits & licence
 

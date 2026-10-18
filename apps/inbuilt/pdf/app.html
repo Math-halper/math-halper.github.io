@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PDF Viewer - proton app</title>
+</head>
+<body>
+<p>This file is a proton app. It is not meant to be opened on its own:
+open <a href="../../../index.html">proton</a> and launch <b>PDF Viewer</b>
+from the proton menu. The script below is fetched and run by proton's HTML
+loader (assets/html-loader.js) at boot.</p>
+<!-- proton app: everything that registers and renders this app lives in
+     this one script block. Edit it, then reload proton. -->
+<script data-proton-app>
+/* proton app module: pdf — PDF reader for the virtual file system.
+ * Loaded by index.html; calls registerApp() (see apps/README.md).
+ *
+ * FS.appFor() sends every .pdf here. Rendering is deliberately left to the
+ * browser's own built-in PDF viewer inside a frame: this site has no
+ * dependencies, so it ships no PDF library and parses nothing itself. Your own
+ * files are handed over as a blob URL (bytes from FS.readBlob(), never uploaded
+ * anywhere) and read-only system files by their real site URL. Where a browser
+ * has no PDF viewer at all, the frame stays blank — the note bar always offers
+ * "Open in a new tab" and "Download" for exactly that case.
+ *
+ * The old id for this app was "pdf-viewer"; normalizeUserData() in
+ * assets/core.js still maps it to "pdf", so old pins and shortcuts resolve.
+ */
+'use strict';
+
+registerApp({
+  render(body, options) {
+    const HOME = FS.home();
+    const isPdf = (p) => FS.extname(p) === 'pdf';
+    let path = null, url = null, token = 0;
+    const esc = MH.esc;
+    const q = (s) => body.querySelector(s);
+
+    function revoke() {
+      if (url) { URL.revokeObjectURL(url); url = null; }
+    }
+    function siblings(p) {
+      try {
+        const list = FS.list(FS.dirname(p)).filter((e) => e.type === 'file' && isPdf(e.path)).map((e) => e.path);
+        return list.length ? list : [p];
+      } catch { return [p]; }
+    }
+    function myPdfs() {
+      try { return FS.find('', HOME).filter((e) => e.type === 'file' && isPdf(e.path)).map((e) => e.path).sort(); }
+      catch { return []; }
+    }
+
+    body.innerHTML = `${bar('PDF Viewer', `<button class="btn sm" type="button" id="pdf-open">${iconSvg('folder-open')} Open…</button>
+        <button class="btn sm" type="button" id="pdf-prev" title="Previous PDF in this folder" disabled>${iconSvg('chevron-left')}</button>
+        <button class="btn sm" type="button" id="pdf-next" title="Next PDF in this folder" disabled>${iconSvg('chevron-right')}</button>
+        <button class="btn sm" type="button" id="pdf-tab" disabled>${iconSvg('external')} New tab</button>
+        <button class="btn sm" type="button" id="pdf-download" disabled>${iconSvg('download')} Download</button>
+        <button class="btn sm" type="button" id="pdf-files" disabled>${iconSvg('folder')} Show in Files</button>`)}
+      <div class="viewer-note" id="pdf-note" hidden></div>
+      <div class="app-main viewer" id="pdf-main"></div>
+      <div class="fm-status" id="pdf-status"></div>`;
+
+    const main = q('#pdf-main'), note = q('#pdf-note'), status = q('#pdf-status');
+
+    function say(html) {
+      note.hidden = !html;
+      note.innerHTML = html || '';
+      const action = note.querySelector('[data-tab]');
+      if (action) action.onclick = () => openTab();
+    }
+    function sync() {
+      const many = path ? siblings(path) : [];
+      for (const id of ['pdf-tab', 'pdf-download', 'pdf-files']) q('#' + id).disabled = !path;
+      q('#pdf-prev').disabled = !path || many.length < 2;
+      q('#pdf-next').disabled = !path || many.length < 2;
+      const st = path ? FS.stat(path) : null;
+      status.innerHTML = st
+        ? `<span>${esc(st.path)}</span><span>${MH.fmtBytes(st.size)}</span>
+           <span>${st.user ? 'your account' : 'read-only system file'}</span>
+           <span style="margin-left:auto">Rendered by your browser's own PDF viewer</span>`
+        : `<span>No PDF open</span><span style="margin-left:auto">Import one with Files → Import (up to ${Math.round(FS.MAX_BLOB_SIZE / 1048576)} MB)</span>`;
+    }
+    function startScreen(message = '') {
+      path = null;
+      revoke();
+      sync();
+      const list = myPdfs();
+      say(message || `<b>PDF Viewer</b> — open a PDF from your home folder, or double-click one in <b>Files</b>.
+        proton has no PDF library of its own: your browser renders the page.`);
+      main.innerHTML = `<div class="pad" style="overflow:auto;height:100%;width:100%">
+        <h2 style="margin:0 0 4px">${iconSvg('book')} No PDF open</h2>
+        <p class="muted" style="margin-top:0">Nothing is uploaded or converted: the file's own bytes are handed to the
+        browser's built-in viewer. If a frame stays blank, your browser has no PDF viewer — use <b>New tab</b> or
+        <b>Download</b>.</p>
+        ${list.length
+          ? `<h3>Your PDFs</h3><div class="listrows viewer-list">${list.slice(0, 40).map((p) => `<button type="button" class="rowitem" data-open="${esc(p)}">${iconSvg('book')}<span class="fm-name">${esc(FS.basename(p))}</span><span class="fm-meta">${MH.fmtBytes(FS.stat(p)?.size || 0)}</span></button>`).join('')}</div>`
+          : '<p class="muted">No PDFs in your home folder yet.</p>'}
+      </div>`;
+      main.querySelectorAll('[data-open]').forEach((b) => { b.onclick = () => load(b.dataset.open); });
+    }
+    async function load(p) {
+      const target = FS.normalize(p);
+      const st = FS.stat(target);
+      if (!st || st.type !== 'file') { MH.toast(`No such file: ${target}`); return; }
+      if (!isPdf(target)) { MH.toast(`${FS.basename(target)} is not a PDF — Files opens it with the right app.`); return; }
+      const mine = ++token;
+      path = target;
+      say(`Opening <b>${esc(target)}</b>…`);
+      sync();
+      try {
+        /* System PDFs keep their real URL (relative links inside them still
+         * work); account files become a blob URL from their stored bytes. */
+        let src;
+        if (st.user) {
+          const blob = await FS.readBlob(target);
+          if (mine !== token) return;
+          revoke();
+          url = URL.createObjectURL(new Blob([blob], { type: 'application/pdf' }));
+          src = url;
+        } else {
+          src = new URL(target.slice(1), document.baseURI).href;
+        }
+        if (mine !== token) return;
+        main.innerHTML = `<iframe class="viewer-frame" id="pdf-frame" title="${esc(FS.basename(target))}" src="${esc(src)}"></iframe>`;
+        say(`<b>${esc(target)}</b> — if it stays blank, your browser has no built-in PDF viewer.
+             <button class="btn sm" type="button" data-tab>${iconSvg('external')} Open in a new tab</button>`);
+        sync();
+      } catch (err) {
+        if (mine !== token) return;
+        path = null;
+        startScreen('');
+        MH.toast(`Could not open ${FS.basename(target)}: ${err.message}`);
+      }
+    }
+    function step(delta) {
+      if (!path) return;
+      const many = siblings(path);
+      if (many.length < 2) return;
+      const at = many.indexOf(path);
+      load(many[(at + delta + many.length) % many.length]);
+    }
+    /* The current document, as a URL the browser can open on its own. */
+    function frameSrc() {
+      return url || (path && !FS.stat(path)?.user ? new URL(path.slice(1), document.baseURI).href : null);
+    }
+    function openTab() {
+      const src = frameSrc();
+      if (!src) { MH.toast('No PDF is open.'); return; }
+      window.open(src, '_blank', 'noopener');
+    }
+    function askOpen() {
+      const list = myPdfs();
+      say(`<div class="field" style="margin:0"><label for="pdf-ask"><b>Open a PDF</b></label>
+        <div class="fm-ask-row"><input id="pdf-ask" type="text" placeholder="${esc(HOME + '/Documents/paper.pdf')}" list="pdf-ask-list" autocomplete="off" spellcheck="false">
+        <datalist id="pdf-ask-list">${list.map((p) => `<option value="${esc(p)}"></option>`).join('')}</datalist>
+        <button class="btn sm primary" type="button" id="pdf-ask-ok">Open</button>
+        <button class="btn sm" type="button" id="pdf-ask-browse">${iconSvg('folder')} Browse…</button>
+        <button class="btn sm" type="button" id="pdf-ask-cancel">Cancel</button></div></div>`);
+      const input = q('#pdf-ask');
+      q('#pdf-ask-ok').onclick = () => {
+        const typed = input.value.trim();
+        if (!typed) { input.focus(); return; }
+        load(typed);
+      };
+      q('#pdf-ask-browse').onclick = () => openApp('files', { path: path ? FS.dirname(path) : HOME });
+      q('#pdf-ask-cancel').onclick = () => (path ? load(path) : startScreen());
+      input.onkeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); q('#pdf-ask-ok').click(); } };
+      input.focus();
+    }
+
+    q('#pdf-open').onclick = askOpen;
+    q('#pdf-prev').onclick = () => step(-1);
+    q('#pdf-next').onclick = () => step(1);
+    q('#pdf-tab').onclick = openTab;
+    q('#pdf-download').onclick = async () => {
+      if (!path) return;
+      try {
+        const blob = await FS.readBlob(path);
+        const href = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = href; a.download = FS.basename(path); a.rel = 'noopener';
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(href), 4000);
+      } catch (err) { MH.toast(err.message); }
+    };
+    q('#pdf-files').onclick = () => openApp('files', { path: path ? FS.dirname(path) : HOME, select: path || undefined });
+    body.openPath = ({ path: p } = {}) => { if (p) load(p); };
+    body.onDestroy = () => { token++; revoke(); };
+
+    if (options.path) load(options.path);
+    else startScreen();
+  },
+});
+</script>
+</body>
+</html>
