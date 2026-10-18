@@ -1012,6 +1012,28 @@ test('proton’s search engine answers from the repository itself', async () => 
       assert.ok(result.score > 0 && Array.isArray(result.matched) && result.matched.length > 0);
     }
 
+    /* An ANSWER is a file this repository is about the word in; a MENTION is a
+     * file the word merely turns up in. proton is not a dictionary, so a word
+     * nothing here defines must not come back wearing a top result. */
+    const defined = results('definition');
+    assert.equal(defined.answer, false, 'nothing in this repository defines "definition"');
+    assert.equal(defined.answers, 0);
+    assert.ok(defined.mentions >= 1, 'but the word does turn up, and that is reported honestly');
+    assert.equal(defined.results[0].answer, false);
+    assert.ok(defined.results.some((r) => r.path === '/LICENSE.txt'),
+      'the word does occur — in the licence, in passing, like every mention here');
+    assert.ok(defined.results.every((r) => !r.answer), 'and no file is claimed as an answer for it');
+    assert.ok(defined.nearby.length > 0, 'and the engine offers the nearest words the index does hold');
+    assert.equal(results('warranty').answer, true,
+      'a document that really is about a word still answers it, however long it is');
+    assert.equal(results('zip').answer, true, 'the code that builds ZIPs answers "zip"');
+    assert.equal(results('zip').results[0].answer, true);
+    assert.equal(results('zip').mentions > 0 && results('zip').answers > 0, true,
+      'and the two are kept apart rather than ranked as one list');
+    for (const query of ['files', 'celeste', 'test page', 'search index', 'wallpaper', 'licence']) {
+      assert.equal(results(query).answer, true, `"${query}" has a real answer in this repository`);
+    }
+
     /* Nonsense finds nothing, and the engine never reaches the network: it
      * only reads the index it was given. */
     assert.equal(results('zzzqqxx').total, 0);
@@ -1082,21 +1104,6 @@ test('the Browser searches this repository and reads what it finds', async () =>
     assert.ok(page().querySelectorAll('.brw-hit-snippet mark').length > 0,
       'with the matched word marked in it');
 
-    /* Kind chips narrow the list without searching again. */
-    const chips = [...page().querySelectorAll('#b-kinds .brw-chip')];
-    if (chips.length > 1) {
-      const code = chips.find((c) => c.dataset.kind === 'code');
-      assert.ok(code, 'the ZIP results include code');
-      code.click();
-      await settle();
-      const shown = [...page().querySelectorAll('.brw-hit')];
-      assert.ok(shown.length > 0 && shown.length < hits.length, 'filtering narrows the list');
-      assert.ok(shown.every((li) => li.querySelector('.brw-kind').textContent === 'Code'));
-      chips.find((c) => c.dataset.kind === '').click();
-      await settle();
-      assert.equal(page().querySelectorAll('.brw-hit').length, hits.length, 'and All brings it back');
-    }
-
     /* Opening a documentation result reads it here, with the matches marked. */
     const readme = [...page().querySelectorAll('.brw-hit')]
       .find((li) => li.querySelector('.brw-path').textContent === '/README.md');
@@ -1126,8 +1133,22 @@ test('the Browser searches this repository and reads what it finds', async () =>
     await settle();
     assert.equal(bar.value, 'proton://search?q=zip', 'Forward walks back into the results');
 
-    /* An app result launches the app; the Browser stays where it was. */
+    /* Kind chips narrow the answers without searching again. */
     await type('files');
+    const chips = [...page().querySelectorAll('#b-kinds .brw-chip')];
+    assert.ok(chips.length > 1, '"files" is answered by more than one kind of file');
+    const docs = chips.find((c) => c.dataset.kind === 'doc');
+    assert.ok(docs, 'the documentation is among them');
+    docs.click();
+    await settle();
+    const shown = [...page().querySelectorAll('#b-hits .brw-hit')];
+    assert.ok(shown.length > 0, 'filtering keeps the answers of that kind');
+    assert.ok(shown.every((li) => li.querySelector('.brw-kind').textContent === 'Documents'));
+    chips.find((c) => c.dataset.kind === '').click();
+    await settle();
+    assert.ok(page().querySelectorAll('#b-hits .brw-hit').length > shown.length, 'and All brings the rest back');
+
+    /* An app result launches the app; the Browser stays where it was. */
     const filesHit = page().querySelector('.brw-hit');
     assert.equal(filesHit.querySelector('.brw-hit-title').textContent.trim(), 'Files');
     assert.ok(filesHit.querySelector('.brw-hit-title mark'), 'the matched word is marked in the headline');
@@ -1160,7 +1181,29 @@ test('the Browser searches this repository and reads what it finds', async () =>
     await type('/README.md');
     assert.match(bar.value, /^proton:\/\/read\?path=%2FREADME\.md/, 'typed as an address, the Browser reads it');
 
-    /* A search that finds nothing says so, and offers a way out. */
+    /* A word nothing in this repository defines gets no first result: the page
+     * says so plainly, and the file that merely mentions it is listed as a
+     * mention, under the explanation rather than above it. */
+    await type('definition');
+    assert.match(page().querySelector('.brw-count').textContent, /Nothing in this repository answers/);
+    assert.equal(page().querySelector('#b-hits'), null, 'nothing is presented as a result');
+    assert.match(page().querySelector('.brw-none h3').textContent,
+      /Nothing in this repository defines or explains “definition”/);
+    assert.match(page().querySelector('.brw-none p').textContent,
+      /proton searches this repository, not the English language/,
+      'and it says why: proton searches the repository, not the language');
+    const passing = page().querySelector('#b-mentions');
+    assert.ok(passing, 'the mention is still there — hidden nothing, claimed nothing');
+    assert.match(page().querySelector('.brw-mention-h').textContent, /Mentioned in passing/);
+    assert.ok(passing.querySelectorAll('.brw-hit').length >= 1);
+    assert.ok([...passing.querySelectorAll('.brw-path')].some((el) => /LICENSE\.txt/.test(el.textContent)),
+      'the licence is where the word really occurs');
+    await flush();
+    assert.ok(passing.querySelector('.brw-hit-snippet mark'),
+      'and its quote shows the word where it really occurs');
+    assert.ok(page().querySelector('.brw-none .brw-chip'), 'with something to try instead');
+
+    /* A search that finds nothing at all says so, and offers a way out. */
     await type('zzzqqxx');
     assert.match(page().querySelector('.brw-none').textContent, /Nothing in this repository matches/);
     assert.match(page().querySelector('.brw-none').textContent, /never sends your words anywhere/);

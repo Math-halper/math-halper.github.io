@@ -534,6 +534,10 @@ select option{background:#ffffff;color:#000000}
 .brw-hit-snippet{margin:0;font-size:13px;line-height:1.55;color:#dddddd}
 .brw-hit-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
 .brw-none{margin-top:12px}
+.brw-none h3{margin:0 0 6px}
+.brw-mention-h{display:flex;align-items:baseline;gap:7px;margin:24px 0 0;font-size:13.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.brw-mentions{margin-top:9px;padding-left:12px;border-left:2px solid var(--line);opacity:.85}
+.brw-chips-label{align-self:center;margin-right:3px;font-size:12px}
 .brw-engine{margin-top:20px}
 .brw-list{display:flex;flex-direction:column;gap:4px;margin-top:10px}
 .brw-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--card)}

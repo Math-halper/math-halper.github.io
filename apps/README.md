@@ -78,6 +78,15 @@ indexes an app module's own `/* … */` comments, so the paragraph you write at
 the top of the module is what a search result quotes. Write it for a reader,
 not for yourself.
 
+Search also decides whether a file **answers** a word or merely **mentions** it:
+a catalogued app or website answers its own name, and any file answers words in
+its title, file name or description. The Browser lists answers as results and
+relegates the rest to a *Mentioned in passing* list, so a word your app is about
+belongs in its name or description — not only somewhere in the code. When
+nothing in the repository answers a word, the Browser says so instead of
+promoting a file that uses it once: proton searches the repository, it is not a
+dictionary.
+
 Your app can use: `userData` (the account's saved data), `saveData()`,
 `openApp(id)`, `MH.toast(...)`, `MH.download(...)`, `FS` (the virtual file
 system — `FS.read`, `FS.write`, `FS.list`, `FS.appFor`, …) and the CSS classes
@@ -108,7 +117,7 @@ two `_`-prefixed starting points sit next to it, directly under `apps/`.
 | `inbuilt/customize/` | Customize (`customize`) — app modules, vector or uploaded image icons, themes, wallpapers, desktop parts, reset |
 | `inbuilt/settings/` | Settings (`settings`) — account, wallpaper & accent, password, backup, accounts on this device |
 | `inbuilt/about/` | About (`about`) — provenance, licence, what's inside |
-| `inbuilt/browser/` | Browser (`browser`) — tabs, back/forward, bookmarks and history; searches this repository when you type words, visits an address when you type one; Test Page, saved websites, external addresses, VFS HTML files and a reader that marks your matches |
+| `inbuilt/browser/` | Browser (`browser`) — tabs, back/forward, bookmarks and history; searches this repository when you type words — files that answer them as results, files that merely mention them below, and no result at all when nothing here defines the word — and visits an address when you type one; Test Page, saved websites, external addresses, VFS HTML files and a reader that marks your matches |
 | `inbuilt/files/` | Files (`files`) — the file manager: `/` (read-only system tree) and `/home/<you>` (yours); create, rename, move, copy, import, search, download as ZIP, desktop shortcuts |
 | `inbuilt/text-editor/` | Text Editor (`text-editor`) — edit the text files in your home folder; system files open read-only with *Save a copy…* |
 | `inbuilt/image-viewer/` | Image Viewer (`image-viewer`) — PNG, JPG, GIF, WebP, AVIF, BMP, ICO, SVG, with zoom and prev/next through the folder |

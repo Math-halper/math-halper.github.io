@@ -494,50 +494,89 @@ registerApp({
         return;
       }
       const found = PROTON_SEARCH.search(trimmed, { limit: 60, pages: PAGES });
-      const kinds = [...new Set(found.results.map((r) => r.kind))];
+      /* An ANSWER is a file this repository is actually about the word in: its
+       * name, title or summary carries it, the catalogs name an app or website
+       * with it, or the file uses it often enough to own it. A MENTION is a
+       * file the word merely turns up in. Only answers are shown as results —
+       * proton is not a dictionary, so one incidental occurrence ("definition"
+       * inside LICENSE.txt) does not get to be the first result. */
+      const answers = found.results.filter((r) => r.answer);
+      const mentions = found.results.filter((r) => !r.answer);
+      const kinds = [...new Set(answers.map((r) => r.kind))];
       const stats = PROTON_SEARCH.stats();
+      const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
+      const chips = (words) => `<div class="brw-chips">${words.map((word) =>
+        `<button class="chip brw-chip" type="button" data-q="${MH.esc(word)}">${MH.esc(word)}</button>`).join('')}</div>`;
+      const nearby = found.nearby.length
+        ? `<div class="brw-chips"><span class="muted brw-chips-label">Nearest words in the index:</span>${chips(found.nearby.map((n) => n.word)).replace(/^<div class="brw-chips">|<\/div>$/g, '')}</div>`
+        : '';
+      const searchedFor = found.tokens.length > 1
+        ? ` · searched for ${found.tokens.map((t) => `<span class="kbd">${MH.esc(t)}</span>`).join(' ')}` : '';
+      const countLine = !found.results.length ? '' : found.answer
+        ? `${plural(answers.length, 'result')} for <b>“${MH.esc(trimmed)}”</b> in ${found.ms} ms${mentions.length ? ` · plus ${plural(mentions.length, 'file')} that only mention${mentions.length === 1 ? 's' : ''} it` : ''}${searchedFor}`
+        : `Nothing in this repository answers <b>“${MH.esc(trimmed)}”</b> · ${found.ms} ms`;
+      const noAnswer = `<div class="card brw-none"><h3>Nothing in this repository defines or explains “${MH.esc(trimmed)}”</h3>
+        <p class="muted">proton searches this repository, not the English language, and it is not a
+        dictionary: no file here defines, explains or is about <b>“${MH.esc(trimmed)}”</b>, so there is no
+        first result to show. ${mentions.length === 1 ? 'One file mentions' : `${mentions.length} files mention`}
+        the word in passing, and ${mentions.length === 1 ? 'it is' : 'they are'} listed below as
+        <b>mentions</b> — not as an answer.</p>
+        ${nearby}${chips(STARTERS)}</div>`;
+      const noMatches = `<div class="card brw-none"><h3>Nothing in this repository matches “${MH.esc(trimmed)}”</h3>
+        <p class="muted">proton's search covers this repository only — its documentation, apps, built-in
+        websites and files — and never sends your words anywhere. It is not a dictionary, so a word this
+        repository does not use has nothing to show. Check the spelling, try one word instead of a
+        sentence, or type an address (<span class="kbd">https://…</span>) in the bar to visit a site.</p>
+        ${nearby}${chips(STARTERS)}</div>`;
       tab.el.innerHTML = `<div class="pad brw-results">
-        <p class="muted brw-count">${found.total} result${found.total === 1 ? '' : 's'} for
-          <b>“${MH.esc(trimmed)}”</b> in ${found.ms} ms${found.tokens.length > 1 ? ` · searched for ${found.tokens.map((t) => `<span class="kbd">${MH.esc(t)}</span>`).join(' ')}` : ''}</p>
+        ${countLine ? `<p class="muted brw-count">${countLine}</p>` : ''}
         ${kinds.length > 1 ? `<div class="brw-chips" id="b-kinds">
-          <button class="chip brw-chip on" type="button" data-kind="">All ${found.results.length}</button>
-          ${kinds.map((kind) => `<button class="chip brw-chip" type="button" data-kind="${kind}">${MH.esc(KIND_LABELS[kind] || kind)} ${found.results.filter((r) => r.kind === kind).length}</button>`).join('')}
+          <button class="chip brw-chip on" type="button" data-kind="">All ${answers.length}</button>
+          ${kinds.map((kind) => `<button class="chip brw-chip" type="button" data-kind="${kind}">${MH.esc(KIND_LABELS[kind] || kind)} ${answers.filter((r) => r.kind === kind).length}</button>`).join('')}
         </div>` : ''}
-        ${found.results.length ? '<ol class="brw-hits" id="b-hits"></ol>' : `
-          <div class="card brw-none"><h3>Nothing in this repository matches “${MH.esc(trimmed)}”</h3>
-          <p class="muted">proton's search covers this repository only — its documentation, apps, built-in
-          websites and files — and never sends your words anywhere. Check the spelling, try one word
-          instead of a sentence, or type an address (<span class="kbd">https://…</span>) in the bar to visit a site.</p>
-          <div class="brw-chips">${STARTERS.map((word) => `<button class="chip brw-chip" type="button" data-q="${MH.esc(word)}">${MH.esc(word)}</button>`).join('')}</div></div>`}
+        ${answers.length ? '<ol class="brw-hits" id="b-hits"></ol>' : ''}
+        ${found.results.length ? '' : noMatches}
+        ${found.results.length && !found.answer ? noAnswer : ''}
+        ${mentions.length ? `<h3 class="brw-mention-h">${found.answer ? 'Also mentioned in passing' : 'Mentioned in passing'} <span class="muted">${mentions.length}</span></h3>
+        <ol class="brw-hits brw-mentions" id="b-mentions"></ol>` : ''}
         <details class="help brw-engine"><summary>About this search engine</summary>
           <p class="muted">The index is generated from this repository by
           <span class="kbd">tools/gen-search-index.py</span> into <span class="kbd">data/search-index.js</span>:
           ${stats.docs} documents, ${stats.terms} words. <span class="kbd">assets/search.js</span> scores it with
           tf–idf, boosts words in titles and file names, folds plurals and -ise/-ize spellings together, and adds
-          every path in the file system plus the app and website catalogs at run time. Your own files under
-          <span class="kbd">/home/</span> are searched by the Files app, not here.</p></details>
+          every path in the file system plus the app and website catalogs at run time. It separates answers from
+          mentions, because a word turning up once in a file is not that file being about the word — and it is not
+          a dictionary: your own files under <span class="kbd">/home/</span> are searched by the Files app.</p></details>
       </div>`;
       tab.el.querySelectorAll('[data-q]').forEach((b) => b.onclick = () => navigate(tab, searchUrl(b.dataset.q)));
       const list = tab.el.querySelector('#b-hits');
+      const mentionList = tab.el.querySelector('#b-mentions');
+      const paintInto = (host, rows) => {
+        if (!host) return;
+        host.innerHTML = rows.map((row, i) => hitHtml(row, i, trimmed)).join('');
+        wireHits(host, rows, trimmed, tab);
+      };
       const paint = (kind) => {
-        if (!list) return;
-        const shown = found.results.filter((r) => !kind || r.kind === kind);
-        list.innerHTML = shown.map((r, i) => hitHtml(r, i, trimmed)).join('');
-        wireHits(list, shown, trimmed, tab);
+        paintInto(list, answers.filter((r) => !kind || r.kind === kind));
+        paintInto(mentionList, mentions);
       };
       paint('');
       tab.el.querySelectorAll('#b-kinds [data-kind]').forEach((chip) => chip.onclick = () => {
         tab.el.querySelectorAll('#b-kinds [data-kind]').forEach((c) => c.classList.toggle('on', c === chip));
         paint(chip.dataset.kind);
       });
-      /* Then replace the top summaries with real quotes from each file. */
+      /* Then replace the top summaries with real quotes from each file. A
+       * mention needs one even more than an answer does: its summary is about
+       * the file, not about your word, so the quote is the only thing that
+       * shows where — and whether — the word really turns up. */
       const token = tab.token;
-      found.results.slice(0, SNIPPETS).forEach(async (result) => {
+      const quoteThese = [...answers.slice(0, SNIPPETS), ...mentions.slice(0, SNIPPETS)];
+      quoteThese.forEach(async (result) => {
         const text = await readForSnippet(result.path);
         if (text === null || token !== tab.token) return;
-        /* Found by path, not by position: filtering the list re-renders it in
-         * a different order while these reads are still in flight. */
-        const row = [...(list?.querySelectorAll('.brw-hit') || [])]
+        /* Found by path, not by position: filtering re-renders the list in a
+         * different order while these reads are still in flight. */
+        const row = [...tab.el.querySelectorAll('.brw-hit')]
           .find((li) => li.dataset.path === result.path)?.querySelector('.brw-hit-snippet');
         if (!row) return;
         const quote = PROTON_SEARCH.snippet(text, found.tokens);

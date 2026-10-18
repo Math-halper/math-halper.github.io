@@ -102,7 +102,12 @@ corpus it can honestly search is its own repository. `tools/gen-search-index.py`
 generates `data/search-index.js` from the prose of every deployed file,
 `assets/search.js` scores it, and the Browser (`apps/inbuilt/browser/`) grew the
 chrome around it — tabs, back/forward, bookmarks, history, suggestions and a
-reader. No search API is called and no query leaves the browser.
+reader. No search API is called and no query leaves the browser. It also refuses
+to bluff: a hit is either an **answer** (the repository is about that word here)
+or a **mention** (the word only turns up), the Browser lists answers as results
+and mentions beneath them, and when nothing answers it says so plainly rather
+than promoting an incidental match. proton has no dictionary, so it does not
+pretend to have one.
 
 The provenance table above and the sections that used to follow it (Digital
 Logic Sim, the streamed Proton Arcade and Gams Offline catalogs) are historical:

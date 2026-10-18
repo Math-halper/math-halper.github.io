@@ -34,9 +34,19 @@
  *   PROTON_SEARCH.tokenize(text) / stemToken(word)
  *
  * A result looks like:
- *   { path, title, kind, summary, score, coverage, matched, appId, siteId }
+ *   { path, title, kind, summary, score, coverage, matched, appId, siteId,
+ *     answer, occurrences, inTitle, inName, inSummary, fromPath, fromCatalog }
  * where kind is app | site | page | doc | code | path, and appId/siteId say
  * the result can be launched or visited instead of merely opened.
+ *
+ * `answer` is the important one. This engine searches a repository, not the
+ * language: a word can turn up once in the middle of LICENSE.txt without
+ * anything here defining, explaining or being about it. Presenting that as the
+ * top result is how a search lies, so every result is classified — an answer
+ * is a file whose name, title or summary carries the word, an app or website
+ * the catalogs name with it, a path that matches it, or a document that uses it
+ * more than a couple of times. Everything else is a mention, and the Browser
+ * shows mentions as mentions (see search().answer).
  */
 'use strict';
 
@@ -203,6 +213,13 @@ const PROTON_SEARCH = (function () {
   /* ---------------- scoring ---------------- */
 
   const KIND_ORDER = { app: 0, site: 1, page: 2, doc: 3, code: 4, path: 5 };
+  /* A body-only match still counts as an answer once the document uses the
+   * word enough times — but "enough" has to scale with the document, or a
+   * 3,000-word licence answers every word in the language. Three mentions is
+   * the floor; beyond that a document has to use the word about once per 200
+   * words of its own before it can claim to be about it. */
+  const ANSWER_MIN_OCCURRENCES = 3;
+  const answerThreshold = (doc) => Math.max(ANSWER_MIN_OCCURRENCES, Math.round((doc?.n || 0) / 200));
 
   function search(rawQuery, options = {}) {
     const began = Date.now();
@@ -213,6 +230,7 @@ const PROTON_SEARCH = (function () {
 
     const pages = Array.isArray(options.pages) ? options.pages : [];
     const docs = corpus().docs;
+    let answers = 0;
     const byPath = new Map(docs.map((doc) => [doc.p, doc]));
     const found = new Map();
 
@@ -222,6 +240,10 @@ const PROTON_SEARCH = (function () {
         result = {
           path, title: basename(path), kind: fallbackKind || 'path', summary: '',
           score: 0, coverage: 0, matched: [], appId: null, siteId: null, perToken: new Map(),
+          /* How the word was found, which is what separates an answer from a
+           * mention: see the header comment. */
+          occurrences: 0, inTitle: false, inName: false, inSummary: false,
+          fromPath: false, fromCatalog: false, answer: false,
         };
         found.set(path, result);
       }
@@ -239,7 +261,8 @@ const PROTON_SEARCH = (function () {
       let fields = fieldCache.get(doc.p);
       if (!fields) {
         fields = {
-          title: new Set(tokenize(doc.t)), path: new Set(tokenize(doc.p)), summary: new Set(tokenize(doc.d)),
+          title: new Set(tokenize(doc.t)), name: new Set(tokenize(basename(doc.p))),
+          path: new Set(tokenize(doc.p)), summary: new Set(tokenize(doc.d)),
         };
         fieldCache.set(doc.p, fields);
       }
@@ -261,6 +284,10 @@ const PROTON_SEARCH = (function () {
           const fields = fieldsOf(doc);
           const boost = fields.title.has(token) ? 4 : fields.path.has(token) ? 2.6
             : fields.summary.has(token) ? 1.6 : 1;
+          result.occurrences += count;
+          if (fields.title.has(token)) result.inTitle = true;
+          if (fields.name.has(token)) result.inName = true;
+          if (fields.summary.has(token)) result.inSummary = true;
           credit(result, token, idf * (1 + Math.log(count)) * weight * boost);
         }
       }
@@ -298,6 +325,7 @@ const PROTON_SEARCH = (function () {
       if (complete || substring) {
         tokens.forEach((token) => mark(result, token));
         result.coverage = 1;
+        result.fromPath = true;      // the file's own name or path says it
       }
     }
 
@@ -323,6 +351,7 @@ const PROTON_SEARCH = (function () {
       result.score += points * (hits === tokens.length ? 1.6 : 0.7);
       for (const token of tokens) if (name.has(token) || id.has(token) || desc.has(token)) mark(result, token);
       result.coverage = Math.max(result.coverage, hits / tokens.length);
+      result.fromCatalog = true;     // an app or website the catalog names
     };
     catalogApps().forEach((app) => catalogHit(app, 'app', 'appId'));
     catalogSites().forEach((site) => catalogHit(site, 'site', 'siteId'));
@@ -345,10 +374,14 @@ const PROTON_SEARCH = (function () {
       result.score += points * (hits === tokens.length ? 1.5 : 0.7);
       tokens.forEach((token) => mark(result, token));
       result.coverage = Math.max(result.coverage, hits / tokens.length);
+      result.fromCatalog = true;     // one of proton's own pages, by name
     }
 
     const results = [...found.values()].map((result) => {
       delete result.perToken;
+      result.answer = result.fromCatalog || result.fromPath || result.inTitle
+        || result.inName || result.inSummary
+        || result.occurrences >= answerThreshold(byPath.get(result.path));
       return result;
     });
     /* Every word accounted for beats a higher score on part of the query. */
@@ -358,10 +391,50 @@ const PROTON_SEARCH = (function () {
       || (KIND_ORDER[a.kind] ?? 9) - (KIND_ORDER[b.kind] ?? 9)
       || String(a.title).localeCompare(String(b.title))
       || a.path.localeCompare(b.path));
+    const shown = results.slice(0, limit);
+    answers = shown.filter((result) => result.answer).length;
     return {
-      query, tokens, results: results.slice(0, limit), total: results.length,
+      query, tokens, results: shown, total: results.length,
+      /* False when the word only turns up in passing: nothing in this
+       * repository defines, explains or is about it. The Browser says so
+       * instead of handing over a top result that only looks like an answer. */
+      answer: answers > 0, answers, mentions: shown.length - answers,
+      nearby: answers ? [] : nearby(query),
       ms: Date.now() - began,
     };
+  }
+
+  /* The closest words this repository does use, for the times it has nothing
+   * to say about the one you typed: same opening letters, commonest first.
+   * It is a word list, not a thesaurus — proton has no definitions to offer
+   * and does not pretend to. */
+  function nearby(query, limit = 8) {
+    const terms = Object.keys(corpus().terms || {});
+    const tokens = queryTokens(query);
+    if (!tokens.length) return [];
+    const out = [];
+    for (const token of tokens) {
+      /* Shorten the opening until the repository has something to offer:
+       * "indemnify" finds "indemnification", "definition" finds whatever else
+       * starts "defin…", then "def…", then "de…". */
+      for (const length of [Math.max(3, token.length - 2), 5, 4, 3]) {
+        if (length > token.length) continue;
+        const seed = token.slice(0, length);
+        const hits = [];
+        for (const term of terms) {
+          if (!term.startsWith(seed) || tokens.includes(term)) continue;
+          hits.push({ word: term, docs: postings(term).size });
+        }
+        if (!hits.length) continue;
+        for (const hit of hits) {
+          const at = out.findIndex((item) => item.word === hit.word);
+          if (at >= 0) out[at].docs += hit.docs;
+          else out.push(hit);
+        }
+        break;                       // the longest opening that found anything
+      }
+    }
+    return out.sort((a, b) => b.docs - a.docs || a.word.localeCompare(b.word)).slice(0, limit);
   }
 
   /* ---------------- address bar suggestions ---------------- */
@@ -500,10 +573,12 @@ const PROTON_SEARCH = (function () {
   }
 
   /* Markup and comment punctuation stripped, whitespace collapsed: what a
-   * person reading the file would see, which is what a snippet should quote. */
-  function readable(text) {
+   * person reading the file would see, which is what a snippet should quote.
+   * keepScripts is for the second pass below — an app module IS its script
+   * block, so dropping it would leave nothing but boilerplate to quote. */
+  function readable(text, { keepScripts = false } = {}) {
     return decodeEntities(String(text || '')
-      .replace(/<(script|style|textarea)\b[\s\S]*?<\/\1>/gi, ' ')
+      .replace(keepScripts ? /<style\b[\s\S]*?<\/style>/gi : /<(script|style|textarea)\b[\s\S]*?<\/\1>/gi, ' ')
       .replace(/<!--[\s\S]*?-->/g, ' ')
       .replace(/```[\s\S]*?```/g, ' ')
       .replace(/<[^>]+>/g, ' ')
@@ -545,12 +620,23 @@ const PROTON_SEARCH = (function () {
    * result is a result. Falls back to the start of the file. */
   function snippet(text, tokens, radius = 120) {
     const wanted = new Set(tokens || []);
-    const clean = readable(text);
-    if (!clean) return [];
-    let at = -1;
-    for (const match of clean.matchAll(/[A-Za-z0-9]+/g)) {
-      if (wanted.has(stemToken(match[0].toLowerCase()))) { at = match.index; break; }
+    const firstMatch = (clean) => {
+      for (const match of clean.matchAll(/[A-Za-z0-9]+/g)) {
+        if (wanted.has(stemToken(match[0].toLowerCase()))) return match.index;
+      }
+      return -1;
+    };
+    let clean = readable(text);
+    let at = firstMatch(clean);
+    if (at < 0) {
+      /* No match in the visible text, so the word the index matched on lives
+       * in the script or comment blocks — quote those instead of falling back
+       * to a page's boilerplate. */
+      const loose = readable(text, { keepScripts: true });
+      const looseAt = firstMatch(loose);
+      if (looseAt >= 0) { clean = loose; at = looseAt; }
     }
+    if (!clean) return [];
     if (at < 0) return highlight(clean.slice(0, radius * 2), wanted);
     const from = Math.max(0, at - radius);
     const to = Math.min(clean.length, at + radius);
@@ -566,7 +652,7 @@ const PROTON_SEARCH = (function () {
   }
 
   return {
-    search, suggest, highlight, snippet, readable, stats,
+    search, suggest, nearby, highlight, snippet, readable, stats,
     tokenize, stemToken, queryTokens, basename,
     catalogApps, catalogSites, vfsPaths, isStopword: (word) => STOPWORDS.has(String(word || '').toLowerCase()),
   };

@@ -163,7 +163,7 @@ you type never leaves the browser.
 `python3 tools/gen-search-index.py` reads the prose of every deployed file —
 the documentation, each app module's own comments, the built-in website pages
 and the source comments — and writes one inverted index to
-`data/search-index.js` (34 documents, ~1,760 terms, ~54 KB). Like
+`data/search-index.js` (34 documents, ~1,800 terms, ~55 KB). Like
 `data/fs-manifest.js` it is generated and committed: re-run it after changing
 documentation or an app's prose, then commit. Its output is deterministic (no
 timestamps, sorted documents and terms), so re-running writes the same bytes,
@@ -178,14 +178,27 @@ system, the app catalog and the website catalog — using the live names, so a
 rename in Customize is what you see. Results that account for every word you
 typed always outrank partial ones.
 
+Every hit is also classified as an **answer** or a **mention**. A file answers a
+word when the repository is *about* that word there — it is a catalogued app or
+website with that name, the word is in its title, file name or description, or
+the word occurs often enough relative to the file's length to be a subject
+rather than a passing remark. Anything else is a mention: the word turns up, but
+nothing here explains it. The Browser only lists answers as results, and puts
+mentions in a subordinate **Mentioned in passing** list. When *no* file answers,
+the results page leads with that fact — *nothing in this repository defines or
+explains the word, proton is not a dictionary* — and offers the nearest words
+the index does hold, so a search for "definition" never hands you a licence
+file as if it were one.
+
 In the Browser that becomes:
 
 - **suggestions** under the bar while you type — apps, built-in websites,
   proton's own pages, your bookmarks and history, file names, and the words
   this repository actually uses, commonest first;
-- **a results page** (`proton://search?q=…`) with ranked hits, the matched word
-  marked in each headline, kind filters, and a real quote fetched from each of
-  the top files after the list is drawn;
+- **a results page** (`proton://search?q=…`) with ranked answers, the matched
+  word marked in each headline, kind filters, mentions kept in a clearly lesser
+  list below them, and a real quote fetched from each of the top files after the
+  list is drawn;
 - **a reader** (`proton://read?path=…&q=…`) that shows any text file in the
   repository with every match marked, buttons to walk them one by one, and ways
   to hand the file to its own app or to Files.
