@@ -17,7 +17,9 @@ appears in the proton menu, App Center and Customize.
 > app" below is the *developer* workflow for changing the site's code.
 
 The current base keeps its five core System apps plus a small Calculator
-(new code in `apps/calculator/`). Celeste Classic is added as a wrapper
+(new code in `apps/calculator/`) and Web Retro (`apps/web-retro/`, a vendored
+webretro emulator build in `apps/web-retro/webretro/` — see `CREDITS.md`; no
+ROMs ship with it). Celeste Classic is added as a wrapper
 around its existing GitHub Pages site, loaded live in a sandboxed iframe.
 This repository does not contain its game code, assets or copies of the
 source repository.

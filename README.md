@@ -11,8 +11,11 @@ This build keeps the five core System apps from `main`. Celeste Classic is
 added as a small wrapper around its existing GitHub Pages site. Its app folder
 contains only a sandboxed iframe wrapper; no game source, assets or repository
 contents are copied here. A small **Calculator** (new, self-contained code in
-`apps/calculator/`) ships again too. The other bundled apps, game bundles and
-earlier built-in sites remain removed (except Test Page).
+`apps/calculator/`) ships again too, and **Web Retro** vendors the
+[webretro](https://github.com/BinBashBanana/webretro) emulator build from
+[Gams-Offline/Gams](https://github.com/Gams-Offline/Gams) so you can play your
+own ROM files (no ROMs ship with this repository). The other bundled apps,
+game bundles and earlier built-in sites remain removed (except Test Page).
 
 | App (id) | What it does |
 | --- | --- |
@@ -23,6 +26,7 @@ earlier built-in sites remain removed (except Test Page).
 | **Calculator** (`calculator`) | Do quick maths from the keypad or your keyboard |
 | **Browser** (`browser`) | Visit any address, open HTML files from the virtual file system, and the one built-in site |
 | [**Celeste Classic**](https://math-halper.github.io/Celeste/1/index.html) (`celeste-classic`) | Open the Celeste Classic GitHub Pages game in a sandboxed frame |
+| **Web Retro** (`web-retro`) | Play your own retro ROMs — N64, SNES, NES and Game Boy (webretro) |
 
 One built-in website ships with them: **Test Page** (`proton://test-page`), the
 smoke test for a build — it runs automated checks (scripts, shared stylesheet,
@@ -50,7 +54,7 @@ runtime dependencies or build step. Optional regression tests use jsdom:
 
 ## Project layout (everything is a module)
 
-- **Apps:** one folder + HTML file each — `apps/<name>/app.html` (7 apps, plus
+- **Apps:** one folder + HTML file each — `apps/<name>/app.html` (8 apps, plus
   two starting points: `apps/_template/` for a normal app and `apps/_embed/`
   for one that is only a framed page — change its single `EMBED_URL` constant).
   Every app's name,
@@ -77,10 +81,11 @@ runtime dependencies or build step. Optional regression tests use jsdom:
   `assets/html-loader.js` (loads the app modules at boot, or a `streamed=true`
   app's module on first launch), `assets/styles.css`, `assets/boot.js`.
 - **Tests:** `tests/system-desktop.test.cjs` — the catalogs are exactly the
-  five core System apps plus a Calculator, one embedded game page and the one
-  test site; every module is present, the generated manifest matches the
-  repository, and a jsdom desktop boots and opens each app (the Calculator is
-  driven through real sums). The tests also verify the embedded URL, sandbox
+  five core System apps plus a Calculator and Web Retro, one embedded game
+  page and the one test site; every module is present, the generated manifest
+  matches the repository, and a jsdom desktop boots and opens each app (the
+  Calculator is driven through real sums; Web Retro's launcher is walked
+  through its core picker). The tests also verify the embedded URL, sandbox
   settings and absence of copied game files; Test Page passes its own checks.
 
 ## Math Helper cover page
@@ -131,7 +136,7 @@ it reports that no app can open it.
 - **Desktop** — movable, per-account shortcuts, a Mint-Y panel with pinned &
   running apps, clock, searchable start menu (one **System** section), window
   manager (drag/resize/minimise/maximise), toasts.
-- **System** — App Center, Customize, Settings, About, Calculator, Browser and Celeste Classic.
+- **System** — App Center, Customize, Settings, About, Calculator, Browser, Celeste Classic and Web Retro.
 - **Customize — everything is modular.** Rename any app, change its vector
   icon or upload a raster image for it, move it to another (or a brand-new)
   menu category, reorder it, pin it, remove it and add it back, or reset it —
@@ -174,6 +179,9 @@ is documented in [`CREDITS.md`](CREDITS.md). Licensed **AGPL-3.0-only**
 © Puter Technologies Inc.). Not affiliated with Linux Mint, Cinnamon, Puter, or
 the Mixt authors.
 
-No game build is copied into this repository. Celeste Classic loads live
-from its linked GitHub Pages URL inside a sandboxed frame, with an **Open in
-new tab** control if the page refuses to frame.
+Celeste Classic's game build is not copied into this repository — it loads
+live from its linked GitHub Pages URL inside a sandboxed frame, with an
+**Open in new tab** control if the page refuses to frame. Web Retro does ship
+its emulator files (webretro, vendored from Gams-Offline/Gams under
+GPL-3.0 — see [`CREDITS.md`](CREDITS.md)), but **no game ROMs** are included:
+you bring your own.

@@ -1,8 +1,9 @@
-/* The current build keeps its five core System apps plus a Calculator,
- * plus Celeste Classic as a sandboxed embed of its existing GitHub Pages
- * site. No game content is copied here. The one built-in website is Test
- * Page, the Browser smoke test. These tests keep the catalog, wrapper,
- * generated file-system manifest and running desktop in sync. */
+/* The current build keeps its five core System apps plus a Calculator and
+ * Web Retro (a vendored webretro emulator, no ROMs included), plus Celeste
+ * Classic as a sandboxed embed of its existing GitHub Pages site. No game
+ * content is copied here. The one built-in website is Test Page, the Browser
+ * smoke test. These tests keep the catalog, wrappers, generated file-system
+ * manifest and running desktop in sync. */
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -12,7 +13,7 @@ const { JSDOM, VirtualConsole } = require('jsdom');
 
 const ROOT = path.resolve(__dirname, '..');
 const source = (p) => fs.readFileSync(path.join(ROOT, p), 'utf8');
-const SYSTEM_APPS = ['appcenter', 'customize', 'settings', 'about', 'calculator', 'browser', 'celeste-classic'];
+const SYSTEM_APPS = ['appcenter', 'customize', 'settings', 'about', 'calculator', 'browser', 'celeste-classic', 'web-retro'];
 const EMBED_URLS = {
   'celeste-classic': 'https://math-halper.github.io/Celeste/1/index.html',
 };
@@ -45,14 +46,16 @@ function catalog() {
   };
 }
 
-test('the catalog is five core apps, a calculator, one embedded game and the built-in test site', () => {
+test('the catalog is five core apps, a calculator, web retro, one embedded game and the built-in test site', () => {
   const { apps, sites, warnings, icons, render, renderCatalogIcon, validIconPath } = catalog();
   assert.deepEqual(Array.from(warnings), [], 'catalog parses without warnings');
   /* Array.from everywhere: the catalogs come from a vm context, so their
    * arrays are not reference-equal to this realm's. */
   assert.deepEqual(Array.from(apps, (a) => a.id), SYSTEM_APPS);
   assert.deepEqual(Array.from(apps, (a) => a.cat), SYSTEM_APPS.map(() => 'System'));
-  assert.deepEqual(Array.from(apps, (a) => a.svgIcon), SYSTEM_APPS.map(() => true));
+  /* Every app uses a built-in SVG icon except Web Retro, whose default is
+   * Gams' raster webretro.png under data/icons/. */
+  assert.deepEqual(Array.from(apps, (a) => a.svgIcon), SYSTEM_APPS.map((id) => id !== 'web-retro'));
   assert.deepEqual(Array.from(sites, (s) => s.id), ['test-page']);
   const page = { ...sites[0] };
   assert.equal(page.name, 'Test Page');
@@ -72,6 +75,7 @@ test('the catalog is five core apps, a calculator, one embedded game and the bui
       assert.ok(!svg.includes('<image'), `${app.id} icon embeds a raster image`);
     } else {
       assert.ok(validIconPath(app.icon), `${app.id} has an unsafe default image path`);
+      assert.ok(fs.existsSync(path.join(ROOT, app.icon)), `${app.id} icon file is missing: ${app.icon}`);
       assert.match(renderCatalogIcon(app.icon, false), /^<img class="icn app-icon-image" src="data\/icons\//);
     }
   }
@@ -151,7 +155,7 @@ test('every catalog entry points at a real, syntactically valid app module', () 
   /* apps/ holds only the shipped apps plus the developer templates. */
   const folders = fs.readdirSync(path.join(ROOT, 'apps'), { withFileTypes: true })
     .filter((e) => e.isDirectory()).map((e) => e.name).sort();
-  assert.deepEqual(folders, ['_embed', '_template', 'about', 'app-center', 'browser', 'calculator', 'celeste-classic', 'customize', 'settings']);
+  assert.deepEqual(folders, ['_embed', '_template', 'about', 'app-center', 'browser', 'calculator', 'celeste-classic', 'customize', 'settings', 'web-retro']);
 });
 
 test('the system manifest still matches the repository exactly', () => {
@@ -192,7 +196,7 @@ test('the system manifest still matches the repository exactly', () => {
     'Manifest and repository disagree — re-run python3 tools/gen-fs-manifest.py');
 });
 
-test('the desktop boots, lists and opens all seven catalogued apps', async () => {
+test('the desktop boots, lists and opens all eight catalogued apps', async () => {
   const virtualConsole = new VirtualConsole(), errors = [];
   virtualConsole.on('jsdomError', (err) => errors.push(err.message));
   const dom = new JSDOM('<!doctype html><main id="auth" hidden></main><div id="desktop" hidden></div><div id="toasts"></div>', {
@@ -224,7 +228,7 @@ test('the desktop boots, lists and opens all seven catalogued apps', async () =>
     assert.deepEqual(shortcuts.map((s) => s.target), ['settings', 'browser']);
     for (const s of shortcuts) assert.ok(APPS[s.target], `default shortcut to a removed app: ${s.target}`);
 
-    // The start menu shows one System section holding all seven apps.
+    // The start menu shows one System section holding all eight apps.
     const menu = w.document.querySelector('#startmenu');
     assert.deepEqual([...menu.querySelectorAll('.sm-cat')].map((e) => e.textContent), ['System']);
     assert.deepEqual([...menu.querySelectorAll('.sm-item')].map((e) => e.dataset.app), SYSTEM_APPS);
@@ -274,6 +278,19 @@ test('the desktop boots, lists and opens all seven catalogued apps', async () =>
     key('Escape');
     assert.equal(shown(), '0', 'Escape clears');
     w.closeWin('calculator', true);
+
+    // Web Retro's launcher picks a core and asks for a ROM before anything runs.
+    w.openApp('web-retro');
+    const retro = wins.get('web-retro').body;
+    assert.deepEqual([...retro.querySelectorAll('[data-core]')].map((b) => b.dataset.core),
+      ['mupen64plus_next', 'snes9x', 'nestopia', 'mgba']);
+    assert.equal(retro.querySelector('#wr-upload').hidden, true, 'no ROM panel before a core is picked');
+    retro.querySelector('[data-core="snes9x"]').click();
+    assert.equal(retro.querySelector('#wr-upload').hidden, false);
+    assert.equal(retro.querySelector('#wr-corename').textContent, 'SNES');
+    retro.querySelector('#wr-play').click();
+    assert.match(w.document.querySelector('#toasts').textContent, /Choose a ROM file/);
+    w.closeWin('web-retro', true);
 
     // The Browser registers the catalogued site and offers it on its home page.
     w.openApp('browser');
@@ -343,7 +360,7 @@ test('Customize saves, displays and resets uploaded app icon images', async () =
     const browserWindow = w.eval('wins').get('browser');
     assert.equal(body.querySelector('#cust-files-shortcut'), null, 'Customize still offers a Files shortcut');
     assert.deepEqual([...body.querySelectorAll('#cust-modlist .card b')].map((b) => b.textContent).slice(0, SYSTEM_APPS.length),
-      ['App Center', 'Customize', 'Settings', 'About', 'Calculator', 'Browser', 'Celeste Classic']);
+      ['App Center', 'Customize', 'Settings', 'About', 'Calculator', 'Browser', 'Celeste Classic', 'Web Retro']);
 
     const uploadBrowserIcon = async () => {
       const input = body.querySelector('[data-micon-file="browser"]');

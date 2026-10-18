@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Web Retro - proton app</title>
+</head>
+<body>
+<p>This file is a proton app. It is not meant to be opened on its own:
+open <a href="../../index.html">proton</a> and launch <b>Web Retro</b> from the
+proton menu. The script below is fetched and run by proton's HTML loader
+(assets/html-loader.js) at boot.</p>
+<!-- proton app: everything that registers and renders this app lives in
+     this one script block. Edit it, then reload proton. -->
+<script data-proton-app>
+/* proton app module: web-retro — a ROM launcher around the vendored webretro
+ * emulator build in apps/web-retro/webretro/ (see CREDITS.md).
+ *
+ * The launcher flow is adapted from Gams-Offline/Gams g/webretro.html: pick a
+ * core, choose a ROM file on this device, then hand the file to
+ * webretro/launch.html over a BroadcastChannel (?rom=channel) — the ROM never
+ * leaves the browser. webretro itself is by BinBashBanana (GPL-3.0, via the
+ * Gams-Offline/Gams copy); no game ROMs ship with this repository. */
+'use strict';
+
+/* ============================ WEB RETRO ============================ */
+registerApp({
+  /* Metadata (name, icon, cat, desc, w, h) lives in the app catalog:
+   * data/applications.js — edit it there, not here. */
+  render(body) {
+    const CORES = [
+      ['mupen64plus_next', 'Nintendo 64'],
+      ['snes9x', 'SNES'],
+      ['nestopia', 'NES'],
+      ['mgba', 'Game Boy (GB/GBC/GBA)'],
+    ];
+    const romAccept = '.nes,.fds,.smc,.sfc,.gb,.gbc,.gba,.n64,.z64,.v64,.bin,.zip';
+    let bc = null;
+
+    body.innerHTML = `${bar('Web Retro', '<button type="button" class="btn sm" id="wr-again" hidden>Change game</button>')}<div class="app-main pad" id="wr-main"></div>`;
+    const main = body.querySelector('#wr-main');
+    const again = body.querySelector('#wr-again');
+
+    /* Same 10-letter channel name the Gams launcher generates. */
+    function channelName() {
+      const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+      let out = '';
+      for (let i = 0; i < 10; i++) out += chars.charAt(Math.floor(Math.random() * chars.length));
+      return out;
+    }
+
+    function picker() {
+      if (bc) { bc.close(); bc = null; }
+      again.hidden = true;
+      main.className = 'app-main pad';
+      main.innerHTML = `<div class="card" style="max-width:540px;margin:0 auto">
+        <h3 style="margin-top:0">Play your own retro games</h3>
+        <p class="muted">webretro runs Nintendo 64, SNES, NES and Game Boy games
+        in this window. Choose a core, then pick a ROM file on this device — it
+        goes straight into the emulator and never leaves your browser.</p>
+        <div class="field"><label>Core</label>
+          <div style="display:flex;flex-wrap:wrap;gap:8px">
+            ${CORES.map(([id, label]) => `<button type="button" class="btn" data-core="${id}">${label}</button>`).join('')}
+          </div>
+        </div>
+        <div class="field" id="wr-upload" hidden>
+          <label for="wr-rom">ROM — <span id="wr-corename"></span></label>
+          <input type="file" id="wr-rom" accept="${romAccept}">
+          <button type="button" class="btn primary" id="wr-play" style="margin-top:10px">Play ROM</button>
+        </div>
+        <p class="muted" style="margin-bottom:0">Saves and save states live in
+        your browser's own storage (webretro keeps them in IndexedDB). Bring
+        your own ROMs — this build ships the emulator only.</p>
+      </div>`;
+      main.querySelectorAll('[data-core]').forEach((b) => b.addEventListener('click', () => {
+        main.querySelector('#wr-corename').textContent = b.textContent;
+        main.querySelector('#wr-upload').dataset.core = b.dataset.core;
+        main.querySelector('#wr-upload').hidden = false;
+      }));
+      main.querySelector('#wr-play').addEventListener('click', () => {
+        const upload = main.querySelector('#wr-upload');
+        const file = main.querySelector('#wr-rom').files[0];
+        if (!file) { MH.toast('Choose a ROM file first.'); return; }
+        play(upload.dataset.core, file);
+      });
+    }
+
+    function play(core, file) {
+      const name = file.name.split('.')[0] || 'GAME';
+      const channel = channelName();
+      bc = new BroadcastChannel(channel);
+      again.hidden = false;
+      main.className = 'app-main';
+      main.innerHTML = `<iframe title="Web Retro" id="wr-frame" allow="autoplay; fullscreen; pointer-lock; gamepad" style="width:100%;height:100%;min-height:360px;border:0;display:block"></iframe>`;
+      bc.onmessage = (event) => {
+        if (event.data && event.data.status === 'ready') bc.postMessage({ rom: file });
+      };
+      main.querySelector('#wr-frame').src =
+        `webretro/launch.html?core=${encodeURIComponent(core)}&rom=channel&name=${encodeURIComponent(name)}&channel=${encodeURIComponent(channel)}`;
+    }
+
+    again.addEventListener('click', picker);
+    picker();
+  },
+});
+</script>
+</body>
+</html>

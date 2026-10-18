@@ -52,7 +52,9 @@ to five core System apps: App Center, Customize, Settings, About and Browser.
 Celeste Classic is added as an iframe-only wrapper around its separately
 hosted Math-halper GitHub Pages; no game content is copied into this
 repository. A small Calculator ships again too — new, self-contained code
-(`apps/calculator/`), not a restore of the removed bundle below. The older
+(`apps/calculator/`), not a restore of the removed bundle below — and Web Retro
+(`apps/web-retro/`) re-introduces retro emulation as a vendored webretro build
+(see **Vendored emulator (Web Retro)** below). The older
 bundled apps and game catalogs remain removed:
 
 - **19 bundled apps** — Files, Text Editor, Image Viewer, Notes, Calendar,
@@ -79,7 +81,7 @@ bundled apps and game catalogs remain removed:
   with an empty catalog if it is removed.
 - **The styles, icons and tests that only those apps used** —
   `assets/styles.css` carries the shell's chrome plus the classes used by the
-  seven shipped app wrappers, and `tests/` is a single suite for this trimmed build.
+  eight shipped app wrappers, and `tests/` is a single suite for this trimmed build.
 
 Nothing in the desktop shell was removed: accounts, the window manager, the
 panel and start menu, per-account desktop shortcuts, the customisation layer,
@@ -105,5 +107,41 @@ an **Open in new tab** link:
 - Celeste Classic — [GitHub Pages](https://math-halper.github.io/Celeste/1/index.html) · [source repository](https://github.com/Math-halper/Celeste)
 
 The frames are sandboxed without `allow-same-origin`, keeping embedded content
-away from proton's local account storage. No games or game assets are copied
-into this repository.
+away from proton's local account storage. No Celeste games or game assets are
+copied into this repository.
+
+## Vendored emulator (Web Retro)
+
+The Web Retro app (`apps/web-retro/`) vendors the **webretro** emulator —
+RetroArch compiled for the web by
+[BinBashBanana/webretro](https://github.com/BinBashBanana/webretro)
+(GPL-3.0, webretro 6.5) — as copied into
+[Gams-Offline/Gams](https://github.com/Gams-Offline/Gams) (`g/g/webretro/`):
+
+- `apps/web-retro/webretro/` is that build: `launch.html`, `main.js`, the
+  `cores/` bundles for mupen64plus_next (N64), snes9x (SNES), nestopia (NES)
+  and mgba (GB/GBC/GBA) — the libretro cores are GPL-licensed parts of
+  libretro/RetroArch — and the `assets/` they load. The GIMP source
+  `controller_layout.xcf` is not a runtime asset and is omitted; everything
+  else is byte-for-byte as upstream. The core/wasm and ROM data-URL wrappers
+  are Gams' `file://`-friendly packaging of those files.
+- `apps/web-retro/app.html` is proton's launcher, adapted from Gams'
+  `g/webretro.html`: the same core list and BroadcastChannel ROM hand-off to
+  `webretro/launch.html?rom=channel`, with the UI rebuilt on proton's widgets
+  and the ROM name URL-encoded.
+- The app icon is Gams' `img/webretro.png`, saved as
+  `data/icons/webretro.png` and set as the catalog default
+  (`icon=data/icons/webretro.png`, `svg-icon=false`).
+
+**No ROMs are copied.** Gams' `g/g/webretro/roms/` payload contains commercial
+game ROMs encoded as data URLs; that is copyrighted game content, so this
+repository does not include it and grants no rights in it. Web Retro only runs
+the ROM files you choose on your own device, handed to the emulator in-page
+over a BroadcastChannel — they never leave the browser. Only use ROMs you have
+the right to use.
+
+The webretro files stay under their upstream licence (GPL-3.0, © the webretro
+and libretro authors) and are distributed here as a separate part of this
+AGPL-3.0-only repository — GPL-3.0 section 13 permits the combination. Their
+in-file source headers and upstream links are unchanged. Not affiliated with
+Nintendo or the libretro organisation.

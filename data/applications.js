@@ -19,7 +19,8 @@ icon, category, description and default window size all live here.
   - The app itself still lives in apps/<folder>/app.html; its render()
     code runs from there (apps/_template is the starting point).
 
-proton ships the five core System apps, a Calculator and one embedded game
+proton ships the five core System apps, a Calculator, Web Retro (a vendored
+webretro emulator build; bring your own ROMs) and one embedded game
 page: Celeste Classic. Its app folder contains only an iframe wrapper for the
 existing GitHub Pages site; no game files or assets are copied into this
 repository.
@@ -115,6 +116,17 @@ icon=play
 svg-icon=true
 cat=System
 desc=Play Celeste Classic from Math-halper's GitHub Pages site
+w=980
+h=640
+
+[application]
+id=web-retro
+name=Web Retro
+path=apps/web-retro/app.html
+icon=data/icons/webretro.png
+svg-icon=false
+cat=System
+desc=Play your own retro ROMs - N64, SNES, NES and Game Boy (webretro)
 w=980
 h=640
 
