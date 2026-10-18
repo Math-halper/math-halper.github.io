@@ -75,7 +75,11 @@ see [`data/icons/README.md`](../data/icons/README.md).
 Your app can use: `userData` (the account's saved data), `saveData()`,
 `openApp(id)`, `MH.toast(...)`, `MH.download(...)`, `FS` (the virtual file
 system — `FS.read`, `FS.write`, `FS.list`, `FS.appFor`, …) and the CSS classes
-in `assets/styles.css` (`.btn`, `.card`, `.appbar`, `.stat-grid`, …). Look at
+in `assets/styles.css` (`.btn`, `.card`, `.appbar`, `.stat-grid`, …). Every
+open/save should ask which file system to use — `MH.askFileSource('open'|'save')`
+returns `'device'` (your Files, this computer) or `'vfs'` (the proton file
+system); `MH.devicePick(accept)`, `MH.downloadBlob(name, blob)` and
+`MH.vfsPick({...})` (browse/provide a path) are the two sides. Look at
 `apps/_template/app.html` — the starting point. The account data model in
 `assets/store.js` still carries `notes`, `files`, `dirs`, `events`, `contacts`,
 `sheets`, `slides`, `boards` and `games`, so an app added back can pick up

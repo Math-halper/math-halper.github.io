@@ -127,7 +127,8 @@ registerApp({
             </span></div>
           <div class="add-form" style="margin-top:9px;grid-template-columns:minmax(170px,1fr) 1.5fr 1.2fr 70px 2fr">
             <div class="field"><label>Icon</label><select data-micon="${a.id}">${iconOptions(a.svgIcon === false ? '__catalog__' : a.icon, BASE_MODULES[a.id]?.svgIcon === false)}</select>
-              <label class="btn sm" style="margin-top:5px">${a.iconImage ? 'Replace image…' : 'Set image…'}<input data-micon-file="${a.id}" type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/bmp,image/avif" aria-label="Choose image icon for ${MH.esc(a.name)}" hidden></label>
+              <button type="button" class="btn sm" data-micon-ask="${a.id}" style="margin-top:5px">${a.iconImage ? 'Replace image…' : 'Set image…'}</button>
+              <input data-micon-file="${a.id}" type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/bmp,image/avif" aria-label="Choose image icon for ${MH.esc(a.name)}" hidden>
               ${a.iconImage ? `<button class="btn sm" type="button" data-micon-clear="${a.id}" style="margin-top:5px">${a.svgIcon === false ? 'Use catalog icon' : 'Use vector icon'}</button>` : '<small class="muted">Raster image, up to 8 MB.</small>'}
             </div>
             <div class="field"><label>Name</label><input data-mname="${a.id}" value="${MH.esc(a.name)}" maxlength="40"></div>
@@ -140,7 +141,8 @@ registerApp({
         }).join('') +
         (customs.length ? customs.map((a) => `<div class="card" style="margin-bottom:9px"><span style="font-size:23px">${appIcon(a, 'grid')}</span> <b>${MH.esc(a.name)}</b> <span class="chip">My Apps</span> <span class="muted site-url">${MH.esc(a.url)}</span>
           <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
-            <label class="btn sm">${a.iconImage ? 'Replace image…' : 'Set image…'}<input data-cicon-file="${a.id}" type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/bmp,image/avif" aria-label="Choose image icon for ${MH.esc(a.name)}" hidden></label>
+            <button type="button" class="btn sm" data-cicon-ask="${a.id}">${a.iconImage ? 'Replace image…' : 'Set image…'}</button>
+            <input data-cicon-file="${a.id}" type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/bmp,image/avif" aria-label="Choose image icon for ${MH.esc(a.name)}" hidden>
             ${a.iconImage ? `<button class="btn sm" type="button" data-cicon-clear="${a.id}">Use named icon</button>` : ''}
             <button class="btn sm primary" data-copen="${a.id}">Open</button><button class="btn sm" data-cmanage="${a.id}">Edit / remove in App Center</button>
           </div></div>`).join('') : '');
@@ -155,6 +157,31 @@ registerApp({
           if (saveImage(id, image)) MH.toast('Image icon saved to this account.');
         } catch (error) { MH.toast(error?.message || 'That image could not be used as an icon.'); }
       };
+      /* "Set image…" asks which file system the picture comes from; the hidden
+       * input's change handler stays the device path (and what tests drive). */
+      const askImage = (id, input, saveImage) => {
+        MH.askFileSource('open').then((src) => {
+          if (src === 'device') { input.click(); return; }
+          if (src !== 'vfs') return;
+          MH.vfsPick({ title: 'Choose an image from the proton file system', accept: '.png,.jpg,.jpeg,.webp,.gif,.bmp,.avif' }).then(async (p) => {
+            if (!p) return;
+            try {
+              const image = await iconImageFromFile(new File([await FS.readBlob(p)], FS.basename(p)));
+              if (saveImage(id, image)) MH.toast('Image icon saved to this account.');
+            } catch (error) { MH.toast(error?.message || 'That image could not be used as an icon.'); }
+          });
+        });
+      };
+      body.querySelectorAll('[data-micon-ask]').forEach((b) => b.onclick = () => {
+        const id = b.dataset.miconAsk;
+        const input = [...body.querySelectorAll('[data-micon-file]')].find((i) => i.dataset.miconFile === id);
+        askImage(id, input, saveModuleIconImage);
+      });
+      body.querySelectorAll('[data-cicon-ask]').forEach((b) => b.onclick = () => {
+        const id = b.dataset.ciconAsk;
+        const input = [...body.querySelectorAll('[data-cicon-file]')].find((i) => i.dataset.ciconFile === id);
+        askImage(id, input, saveCustomAppIconImage);
+      });
       body.querySelectorAll('[data-micon-file]').forEach((input) => {
         const id = input.dataset.miconFile;
         input.onchange = () => uploadImage(input, id, saveModuleIconImage);

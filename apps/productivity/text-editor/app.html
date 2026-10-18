@@ -32,6 +32,7 @@ registerApp({
   render(body, options) {
     const HOME = FS.home();
     let path = null;       // absolute VFS path of the open file, or null
+    let deviceName = '';   // name of a file opened from the device ("your Files")
     let dirty = false;
     let loading = 0;       // newest load wins (openPath can be called again)
     let noteHtml = '';     // the note to restore when a prompt is cancelled
@@ -64,9 +65,8 @@ registerApp({
     /* ------------------------------- chrome ----------------------------- */
     body.innerHTML = `${bar('Text Editor', `<button class="btn sm" type="button" id="te-open">${iconSvg('folder-open')} Open…</button>
         <button class="btn sm" type="button" id="te-new">${iconSvg('plus')} New</button>
-        <button class="btn sm primary" type="button" id="te-save" disabled>${iconSvg('save')} Save</button>
+        <button class="btn sm primary" type="button" id="te-save" disabled>${iconSvg('save')} Save…</button>
         <button class="btn sm" type="button" id="te-copy" disabled>${iconSvg('copy')} Save a copy…</button>
-        <button class="btn sm" type="button" id="te-download" disabled>${iconSvg('download')} Download</button>
         <button class="btn sm" type="button" id="te-files" disabled>${iconSvg('folder')} Show in Files</button>`)}
       <div class="viewer-note" id="te-note" hidden></div>
       <div class="app-main editor" id="te-main"></div>
@@ -91,13 +91,15 @@ registerApp({
       status.innerHTML = st
         ? `<span>${esc(st.path)}</span><span>${st.user ? 'Your account' : 'Read-only system file'}</span><span>${size}</span>
            <span style="margin-left:auto">${words} words · ${text.length} characters${dirty ? ' · <b>unsaved changes</b>' : ''}</span>`
+        : deviceName
+          ? `<span>${esc(deviceName)}</span><span>Your Files (this computer)</span><span>${size}</span>
+           <span style="margin-left:auto">${words} words · ${text.length} characters${dirty ? ' · <b>unsaved changes</b>' : ''}</span>`
         : `<span>No file open</span><span style="margin-left:auto">${words} words · ${text.length} characters${dirty ? ' · <b>unsaved changes</b>' : ''}</span>`;
     }
     function syncButtons() {
       const st = path ? FS.stat(path) : null;
-      q('#te-save').disabled = !st || !FS.isWritable(path);
-      q('#te-copy').disabled = !st;
-      q('#te-download').disabled = !st;
+      q('#te-save').disabled = !((path && FS.isWritable(path)) || deviceName);
+      q('#te-copy').disabled = !st && !deviceName;
       q('#te-files').disabled = !st;
     }
     function startScreen() {
@@ -177,6 +179,12 @@ registerApp({
       input.setSelectionRange(input.value.length, input.value.length);
     }
     function askOpen() {
+      MH.askFileSource('open').then((src) => {
+        if (src === 'device') openDevice();
+        else if (src === 'vfs') askOpenVfs();
+      });
+    }
+    function askOpenVfs() {
       askForm({
         title: 'Open a text file', value: path || '', ok: 'Open',
         placeholder: FS.join(HOME, 'Documents', 'notes.txt'),
@@ -190,6 +198,33 @@ registerApp({
           load(p);
         },
       });
+    }
+    function readAsText(file) {
+      if (typeof file.text === 'function') return file.text();
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result ?? ''));
+        reader.onerror = () => reject(new Error(`Could not read ${file.name || 'that file'}.`));
+        reader.readAsText(file);
+      });
+    }
+    async function openDevice() {
+      const file = await MH.devicePick('.txt,.md,.markdown,.js,.mjs,.cjs,.json,.css,.csv,.tsv,.xml,.yml,.yaml,.ini,.log,.svg,.html,.htm,.text,.conf,.sh,.py');
+      if (!file) return;
+      if (dirty && path && !confirmBox(`Discard the unsaved changes in ${FS.basename(path)}?`)) return;
+      if (dirty && !path && !confirmBox('Discard the unsaved changes?')) return;
+      const token = ++loading;
+      try {
+        const text = await readAsText(file);
+        if (token !== loading) return;
+        path = null;
+        deviceName = file.name;
+        dirty = false;
+        syncButtons();
+        editorScreen(text);
+        say(`Opened <b>${esc(file.name)}</b> from your Files (this computer) — it is not in the proton file system yet. <b>Save…</b> asks where to put it.`);
+        updateStatus();
+      } catch (err) { MH.toast(err.message); }
     }
     function askNew() {
       askForm({
@@ -220,6 +255,7 @@ registerApp({
       if (dirty && path && path !== target && !confirmBox(`Discard the unsaved changes in ${FS.basename(path)}?`)) return;
       const token = ++loading;
       path = target;
+      deviceName = '';
       dirty = false;
       syncButtons();
       say(`Opening <b>${esc(target)}</b>…`);
@@ -238,20 +274,44 @@ registerApp({
         startScreen();
       }
     }
-    function save() {
-      if (!path || !FS.isWritable(path)) { MH.toast('That file is read-only — use Save a copy…'); return; }
+    /* Save and Save a copy both ask which file system to save to. */
+    async function save() {
       const area = q('#te-text');
       if (!area) return;
-      try {
-        FS.write(path, area.value);
-        dirty = false;
-        updateStatus();
-        MH.toast(`Saved ${FS.basename(path)}`);
-      } catch (err) { MH.toast(err.message); }
+      const dest = await MH.askFileSource('save');
+      if (!dest) return;
+      if (dest === 'device') {
+        MH.downloadBlob(deviceName || (path ? FS.basename(path) : 'untitled.txt'),
+          new Blob([area.value], { type: 'text/plain;charset=utf-8' }));
+        dirty = false; updateStatus();
+        MH.toast('Saved to your Files (this computer).');
+        return;
+      }
+      if (path && FS.isWritable(path)) {
+        try {
+          FS.write(path, area.value);
+          dirty = false;
+          updateStatus();
+          MH.toast(`Saved ${FS.basename(path)}`);
+        } catch (err) { MH.toast(err.message); }
+        return;
+      }
+      saveCopyToVfs(); // read-only or device-open file: name it inside proton first
     }
     function saveCopy() {
-      if (!path) return;
-      const suggested = FS.isWritable(path) ? path : FS.join(HOME, uniqueName(HOME, FS.basename(path)));
+      MH.askFileSource('save').then((dest) => {
+        if (dest === 'device') {
+          const area = q('#te-text');
+          if (!area) return;
+          MH.downloadBlob(deviceName || (path ? FS.basename(path) : 'untitled.txt'),
+            new Blob([area.value], { type: 'text/plain;charset=utf-8' }));
+          MH.toast('Saved to your Files (this computer).');
+        } else if (dest === 'vfs') saveCopyToVfs();
+      });
+    }
+    function saveCopyToVfs() {
+      if (!path && !deviceName) return;
+      const suggested = path && FS.isWritable(path) ? path : FS.join(HOME, uniqueName(HOME, path ? FS.basename(path) : deviceName));
       askForm({
         title: 'Save a copy to…', value: suggested, ok: 'Save copy',
         list: [HOME, ...userData.dirs.slice().sort()],
@@ -266,23 +326,12 @@ registerApp({
         },
       });
     }
-    function download() {
-      if (!path) return;
-      const area = q('#te-text');
-      if (!area) return;
-      const url = URL.createObjectURL(new Blob([area.value], { type: 'text/plain;charset=utf-8' }));
-      const a = document.createElement('a');
-      a.href = url; a.download = FS.basename(path); a.rel = 'noopener';
-      document.body.appendChild(a); a.click(); a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 4000);
-    }
 
     /* ------------------------------- events ----------------------------- */
     q('#te-open').onclick = askOpen;
     q('#te-new').onclick = askNew;
     q('#te-save').onclick = save;
     q('#te-copy').onclick = saveCopy;
-    q('#te-download').onclick = download;
     q('#te-files').onclick = () => openApp('files', {
       path: path ? FS.dirname(path) : HOME, select: path || undefined,
     });

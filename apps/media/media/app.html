@@ -32,6 +32,7 @@ registerApp({
   render(body, options) {
     const HOME = FS.home();
     let path = null, url = null, token = 0, loop = false;
+    let deviceBlob = null, deviceName = '';   // opened from the device ("your Files")
     const isMedia = (p) => !!FS.mediaKind(p);
     const esc = MH.esc;
     const q = (s) => body.querySelector(s);
@@ -67,10 +68,16 @@ registerApp({
         ? `<span>${esc(st.path)}</span><span>${MH.fmtBytes(st.size)}</span>
            <span>${FS.mediaKind(st.path) === 'audio' ? 'Audio' : 'Video'}${time ? ' · ' + time : ''}</span>
            <span style="margin-left:auto">${loop ? 'Repeat on' : 'Repeat off'} · ${st.user ? 'your account' : 'read-only system file'}</span>`
-        : `<span>Nothing playing</span><span style="margin-left:auto">MP3 · M4A · AAC · FLAC · WAV · OGG · MP4 · MOV · WebM · AVI</span>`;
+        : deviceName
+          ? `<span>${esc(deviceName)}</span><span>${deviceBlob ? MH.fmtBytes(deviceBlob.size) : ''}</span>
+           <span>${time ? time + ' · ' : ''}your Files (this computer)</span>
+           <span style="margin-left:auto">${loop ? 'Repeat on' : 'Repeat off'}</span>`
+          : `<span>Nothing playing</span><span style="margin-left:auto">MP3 · M4A · AAC · FLAC · WAV · OGG · MP4 · MOV · WebM · AVI</span>`;
     }
     function sync() {
-      for (const id of ['md-download', 'md-files', 'md-loop']) q('#' + id).disabled = !path;
+      q('#md-download').disabled = !path && !deviceBlob;
+      q('#md-files').disabled = !path;
+      q('#md-loop').disabled = !path && !deviceBlob;
       q('#md-loop').innerHTML = loop ? `${iconSvg('repeat')} Repeat on` : `${iconSvg('repeat')} Repeat`;
       drawPlaylist();
       statusLine();
@@ -97,6 +104,7 @@ registerApp({
     }
     function startScreen(message = '') {
       path = null;
+      deviceBlob = null; deviceName = '';
       revoke();
       say(message || `<b>Media</b> — import audio or video with <b>Files → Import</b>, then play it here. Playback uses
         your browser's own codecs: proton adds no player library and streams nothing anywhere.`);
@@ -114,6 +122,7 @@ registerApp({
       if (!kind) { MH.toast(`${FS.basename(target)} is not audio or video — Files opens it with the right app.`); return; }
       const mine = ++token;
       path = target;
+      deviceBlob = null; deviceName = '';
       say(`Opening <b>${esc(target)}</b>…`);
       sync();
       try {
@@ -152,6 +161,36 @@ registerApp({
       load(list[(at + delta + list.length) % list.length]);
     }
     function askOpen() {
+      MH.askFileSource('open').then((src) => {
+        if (src === 'device') openDeviceMedia();
+        else if (src === 'vfs') askOpenVfs();
+      });
+    }
+    async function openDeviceMedia() {
+      const file = await MH.devicePick('audio/*,video/*,.mp3,.m4a,.aac,.flac,.wav,.ogg,.mp4,.mov,.webm,.avi');
+      if (!file) return;
+      const kind = FS.mediaKind(file.name) || (/^audio\//i.test(file.type) ? 'audio' : 'video');
+      const mine = ++token;
+      path = null;
+      deviceBlob = file; deviceName = file.name;
+      say(`Opening <b>${esc(file.name)}</b>…`);
+      revoke();
+      url = URL.createObjectURL(file);
+      stage.innerHTML = `<div class="viewer-stage"><${kind} id="md-el" controls preload="metadata" ${loop ? 'loop' : ''}
+        aria-label="${esc(file.name)}"></${kind}></div>`;
+      const el = q('#md-el');
+      el.onloadedmetadata = () => { if (mine === token) statusLine(); };
+      el.onended = () => { if (mine === token && !loop) step(1); };
+      el.onerror = () => {
+        if (mine !== token) return;
+        MH.toast(`This browser cannot play ${file.name} — the codec is missing here.`);
+      };
+      el.src = url;
+      sync();
+      say(`<b>${esc(file.name)}</b> from your Files (this computer) — it is not in the proton file system yet.
+           <b>Save…</b> asks where to put it.`);
+    }
+    function askOpenVfs() {
       const list = playlist();
       say(`<div class="field" style="margin:0"><label for="md-ask"><b>Open a media file</b></label>
         <div class="fm-ask-row"><input id="md-ask" type="text" placeholder="${esc(HOME + '/Music/song.mp3')}" list="md-ask-list" autocomplete="off" spellcheck="false">
@@ -181,14 +220,29 @@ registerApp({
       sync();
     };
     q('#md-download').onclick = async () => {
-      if (!path) return;
+      if (!path && !deviceBlob) return;
+      const dest = await MH.askFileSource('save');
+      if (!dest) return;
       try {
-        const blob = await FS.readBlob(path);
-        const href = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = href; a.download = FS.basename(path); a.rel = 'noopener';
-        document.body.appendChild(a); a.click(); a.remove();
-        setTimeout(() => URL.revokeObjectURL(href), 4000);
+        const blob = deviceBlob || await FS.readBlob(path);
+        const name = deviceName || FS.basename(path);
+        if (dest === 'device') {
+          MH.downloadBlob(name, blob);
+          MH.toast(`Saved ${name} to your Files (this computer).`);
+        } else {
+          const dir = FS.join(HOME, 'Downloads');
+          let target = FS.join(dir, name);
+          if (FS.exists(target)) {
+            const dot = name.lastIndexOf('.');
+            const base = dot > 0 ? name.slice(0, dot) : name, ext = dot > 0 ? name.slice(dot) : '';
+            for (let i = 2; i < 500; i++) {
+              const n = `${base} (${i})${ext}`;
+              if (!FS.exists(FS.join(dir, n))) { target = FS.join(dir, n); break; }
+            }
+          }
+          await FS.writeBlob(target, blob);
+          MH.toast(`Saved to the proton file system: ${target}`);
+        }
       } catch (err) { MH.toast(err.message); }
     };
     q('#md-files').onclick = () => openApp('files', { path: path ? FS.dirname(path) : HOME, select: path || undefined });

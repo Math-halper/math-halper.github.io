@@ -57,8 +57,9 @@ registerApp({
 
     <h3>${iconSvg('save')} Backup (export / import everything for this account)</h3>
     <p class="muted">Your data only exists in this browser. Export a backup before clearing browser data or changing devices.</p>
-    <button class="btn" id="s-export">${iconSvg('download')} Export backup (.json)</button>
-    <label class="btn">${iconSvg('upload')} Import backup<input id="s-import" type="file" accept=".json" hidden></label>
+    <button class="btn" id="s-export">${iconSvg('download')} Export backup (.json)…</button>
+    <button class="btn" id="s-import-btn">${iconSvg('upload')} Import backup…</button>
+    <input id="s-import" type="file" accept=".json" hidden>
 
     <h3>${iconSvg('users')} Accounts on this device</h3>
     <p>${Object.values(MH.accounts()).map((a) => `<b>${MH.esc(a.username)}</b> (${MH.esc(a.displayName)})${a.usernameLower === currentUser.usernameLower ? ' — you' : ''}`).join('<br>')}</p>
@@ -96,17 +97,53 @@ registerApp({
       MH.saveAccounts(accounts); currentUser = accounts[currentUser.usernameLower];
       err.textContent = ''; MH.toast('Password changed. Use it next time you sign in or unlock.');
     };
-    body.querySelector('#s-export').onclick = () => MH.download(`proton-backup-${currentUser.username}.json`, JSON.stringify({ account: { username: currentUser.username, displayName: currentUser.displayName }, exportedAt: new Date().toISOString(), data: userData }, null, 2), 'application/json');
-    body.querySelector('#s-import').onchange = async (e) => {
-      const f = e.target.files[0]; if (!f) return;
+    /* Export and Import both ask which file system to use. */
+    body.querySelector('#s-export').onclick = async () => {
+      const json = JSON.stringify({ account: { username: currentUser.username, displayName: currentUser.displayName }, exportedAt: new Date().toISOString(), data: userData }, null, 2);
+      const dest = await MH.askFileSource('save');
+      if (!dest) return;
+      const name = `proton-backup-${currentUser.username}.json`;
+      if (dest === 'device') {
+        MH.download(name, json, 'application/json');
+        return;
+      }
       try {
-        const parsed = JSON.parse(await f.text());
+        const dir = FS.join(FS.home(), 'Downloads');
+        let target = FS.join(dir, name);
+        if (FS.exists(target)) {
+          for (let i = 2; i < 500; i++) {
+            const n = name.replace(/\.json$/, ` (${i}).json`);
+            if (!FS.exists(FS.join(dir, n))) { target = FS.join(dir, n); break; }
+          }
+        }
+        await FS.writeBlob(target, new Blob([json], { type: 'application/json' }));
+        MH.toast(`Backup saved to the proton file system: ${target}`);
+      } catch (err) { MH.toast(err.message); }
+    };
+    async function importBackup(text) {
+      try {
+        const parsed = JSON.parse(text);
         if (!parsed.data?.settings) throw new Error('bad file');
         userData = parsed.data; normalizeUserData(); syncCustomApps(); saveDataNow(); refreshChrome();
         applyWallpaper();
         applyAccent(); renderPanelApps(); applyComponents();
         MH.toast('Backup imported — your desktop was restored.');
       } catch { MH.toast('That file is not a proton backup.'); }
+    }
+    body.querySelector('#s-import-btn').onclick = () => {
+      MH.askFileSource('open').then((src) => {
+        if (src === 'device') body.querySelector('#s-import').click();
+        else if (src === 'vfs') {
+          MH.vfsPick({ title: 'Import a backup from the proton file system', accept: '.json' }).then(async (p) => {
+            if (p) importBackup(await FS.read(p));
+          });
+        }
+      });
+    };
+    body.querySelector('#s-import').onchange = async (e) => {
+      const f = e.target.files[0]; if (!f) return;
+      e.target.value = '';
+      importBackup(await f.text());
     };
     body.querySelector('#s-addacct').onclick = () => {
       if (!saveDataNow() || !closeAllWindows()) return;

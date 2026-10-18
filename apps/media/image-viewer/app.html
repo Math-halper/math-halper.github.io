@@ -34,6 +34,7 @@ registerApp({
     /* The extension decides what is a picture, exactly like FS.appFor(). */
     const isImage = (p) => EXT.includes(FS.extname(p));
     let path = null, url = null, zoom = 0, token = 0;   // zoom 0 = fit to window
+    let deviceBlob = null, deviceName = '';            // opened from the device ("your Files")
     const esc = MH.esc;
     const q = (s) => body.querySelector(s);
 
@@ -76,9 +77,11 @@ registerApp({
     }
     function sync() {
       const many = path ? siblings(path) : [];
-      for (const id of ['iv-prev', 'iv-next', 'iv-out', 'iv-in', 'iv-fit', 'iv-actual', 'iv-download', 'iv-files']) {
-        q('#' + id).disabled = !path;
+      for (const id of ['iv-out', 'iv-in', 'iv-fit', 'iv-actual']) {
+        q('#' + id).disabled = !path && !deviceBlob;
       }
+      q('#iv-download').disabled = !path && !deviceBlob;
+      q('#iv-files').disabled = !path;
       q('#iv-prev').disabled = !path || many.length < 2;
       q('#iv-next').disabled = !path || many.length < 2;
       q('#iv-fit').innerHTML = zoom === 0 ? 'Fit' : `${iconSvg('check')} Fit`;
@@ -89,7 +92,11 @@ registerApp({
         ? `<span>${esc(st.path)}</span><span>${MH.fmtBytes(st.size)}</span>
            <span>${natural ? `${natural.w} × ${natural.h} px` : (FS.extname(st.path) || 'image').toUpperCase()}</span>
            <span style="margin-left:auto">${zoom === 0 ? 'Fit to window' : Math.round(zoom * 100) + '%'} · ${st.user ? 'your account' : 'read-only system file'}</span>`
-        : `<span>No image open</span><span style="margin-left:auto">PNG · JPG · GIF · WebP · AVIF · BMP · ICO · SVG</span>`;
+        : deviceName
+          ? `<span>${esc(deviceName)}</span><span>${deviceBlob ? MH.fmtBytes(deviceBlob.size) : ''}</span>
+           <span>${natural ? `${natural.w} × ${natural.h} px` : (FS.extname(deviceName) || 'image').toUpperCase()}</span>
+           <span style="margin-left:auto">${zoom === 0 ? 'Fit to window' : Math.round(zoom * 100) + '%'} · your Files (this computer)</span>`
+          : `<span>No image open</span><span style="margin-left:auto">PNG · JPG · GIF · WebP · AVIF · BMP · ICO · SVG</span>`;
     }
     function applyZoom(img) {
       if (!img) return;
@@ -98,6 +105,7 @@ registerApp({
     }
     function startScreen(message = '') {
       path = null;
+      deviceBlob = null; deviceName = '';
       revoke();
       sync();
       statusLine(null);
@@ -122,6 +130,7 @@ registerApp({
       if (!isImage(target)) { MH.toast(`${FS.basename(target)} is not an image — Files opens it with the right app.`); return; }
       const mine = ++token;
       path = target;
+      deviceBlob = null; deviceName = '';
       zoom = 0;
       say(`Opening <b>${esc(target)}</b>…`);
       sync();
@@ -166,6 +175,32 @@ registerApp({
       statusLine(q('#iv-img')?.naturalWidth ? { w: q('#iv-img').naturalWidth, h: q('#iv-img').naturalHeight } : null);
     }
     function askOpen() {
+      MH.askFileSource('open').then((src) => {
+        if (src === 'device') openDeviceImage();
+        else if (src === 'vfs') askOpenVfs();
+      });
+    }
+    async function openDeviceImage() {
+      const file = await MH.devicePick('.png,.jpg,.jpeg,.gif,.webp,.avif,.bmp,.ico,.svg');
+      if (!file) return;
+      const mine = ++token;
+      path = null;
+      deviceBlob = file; deviceName = file.name;
+      zoom = 0;
+      say(`Opening <b>${esc(file.name)}</b>…`);
+      revoke();
+      url = URL.createObjectURL(file);
+      main.innerHTML = `<div class="viewer-stage"><img id="iv-img" alt="${esc(file.name)}" draggable="false"></div>`;
+      const img = q('#iv-img');
+      img.onload = () => { if (mine === token) statusLine({ w: img.naturalWidth, h: img.naturalHeight }); };
+      img.onerror = () => { if (mine !== token) return; MH.toast(`This browser could not decode ${file.name}.`); };
+      img.src = url;
+      applyZoom(img);
+      sync();
+      say(`<b>${esc(file.name)}</b> from your Files (this computer) — it is not in the proton file system yet.
+           <b>Save…</b> asks where to put it.`);
+    }
+    function askOpenVfs() {
       const images = myImages();
       say(`<div class="field" style="margin:0"><label for="iv-ask"><b>Open an image</b></label>
         <div class="fm-ask-row"><input id="iv-ask" type="text" placeholder="${esc(HOME + '/Pictures/photo.png')}" list="iv-ask-list" autocomplete="off" spellcheck="false">
@@ -193,14 +228,29 @@ registerApp({
     q('#iv-fit').onclick = () => { zoom = 0; applyZoom(q('#iv-img')); sync(); statusLine(null); };
     q('#iv-actual').onclick = () => { zoom = 1; applyZoom(q('#iv-img')); sync(); statusLine(null); };
     q('#iv-download').onclick = async () => {
-      if (!path) return;
+      if (!path && !deviceBlob) return;
+      const dest = await MH.askFileSource('save');
+      if (!dest) return;
       try {
-        const blob = await FS.readBlob(path);
-        const href = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = href; a.download = FS.basename(path); a.rel = 'noopener';
-        document.body.appendChild(a); a.click(); a.remove();
-        setTimeout(() => URL.revokeObjectURL(href), 4000);
+        const blob = deviceBlob || await FS.readBlob(path);
+        const name = deviceName || FS.basename(path);
+        if (dest === 'device') {
+          MH.downloadBlob(name, blob);
+          MH.toast(`Saved ${name} to your Files (this computer).`);
+        } else {
+          const dir = FS.join(HOME, 'Downloads');
+          let target = FS.join(dir, name);
+          if (FS.exists(target)) {
+            const dot = name.lastIndexOf('.');
+            const base = dot > 0 ? name.slice(0, dot) : name, ext = dot > 0 ? name.slice(dot) : '';
+            for (let i = 2; i < 500; i++) {
+              const n = `${base} (${i})${ext}`;
+              if (!FS.exists(FS.join(dir, n))) { target = FS.join(dir, n); break; }
+            }
+          }
+          await FS.writeBlob(target, blob);
+          MH.toast(`Saved to the proton file system: ${target}`);
+        }
       } catch (err) { MH.toast(err.message); }
     };
     q('#iv-files').onclick = () => openApp('files', { path: path ? FS.dirname(path) : HOME, select: path || undefined });

@@ -52,7 +52,10 @@ five desktop System apps — App Center, Customize, Settings, About and
 Browser — and copies the **file system suite** back in from `main`'s
 `apps/inbuilt/` layout (re-homed to `apps/<category>/<name>/` here): Files, Text Editor,
 Image Viewer, Media and PDF Viewer, whose ids are exactly the ones
-`FS.appFor()` returns. The three Celeste Classics apps (Celeste Classic,
+`FS.appFor()` returns. On top of main's modules, every open/save in them (and
+in Settings, Customize and Web Retro) now asks which file system to use —
+your Files (this computer) or the proton file system — through the shared
+chooser (`MH.askFileSource` in `assets/store.js`). The three Celeste Classics apps (Celeste Classic,
 Celeste Classic 2, Celeste Community) carry the actual game files, copied
 byte-for-byte from [Math-halper/Celeste](https://github.com/Math-halper/Celeste)
 (classic/, two/ and speed/) — see *Vendored Celeste Classics* below. A small

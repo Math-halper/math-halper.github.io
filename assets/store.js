@@ -89,7 +89,7 @@ const MH = {
       desktopIcons: MH.defaultDesktopIcons(),
       notes: [{
         id: MH.uid(), title: 'Welcome to proton',
-        html: `<p>This desktop is a <b>static clone of Mixt</b> (from <i>proton-arcade/mlp</i>), rebranded and rebuilt to run with <b>no server at all</b>.</p><h2><span style="font-size:19px">Things to try</span></h2><ul><li><b>Files</b> browses your own folders and proton's read-only system tree; text, pictures, audio, video and PDFs open in their own apps</li><li>The <b>Calculator</b> does quick maths, <b>Web Retro</b> plays your own retro ROMs, and the three <b>Celeste</b> apps (Classic, Classic 2, Community) play the actual game files — vendored from Math-halper/Celeste</li><li>Everything you type here is <b>saved on this device</b>, under your account</li><li>Drag windows, pin apps to the panel, change the wallpaper in Settings</li></ul><p>Have fun!</p>`,
+        html: `<p>This desktop is a <b>static clone of Mixt</b> (from <i>proton-arcade/mlp</i>), rebranded and rebuilt to run with <b>no server at all</b>.</p><h2><span style="font-size:19px">Things to try</span></h2><ul><li><b>Files</b> browses your own folders and proton's read-only system tree; text, pictures, audio, video and PDFs open in their own apps — and every open/save asks whether to use <b>your Files</b> (this computer) or the <b>proton file system</b></li><li>The <b>Calculator</b> does quick maths, <b>Web Retro</b> plays your own retro ROMs, and the three <b>Celeste</b> apps (Classic, Classic 2, Community) play the actual game files — vendored from Math-halper/Celeste</li><li>Everything you type here is <b>saved on this device</b>, under your account</li><li>Drag windows, pin apps to the panel, change the wallpaper in Settings</li></ul><p>Have fun!</p>`,
         updated: Date.now(),
       }],
       events: [{ id: MH.uid(), date: today, time: '09:00', title: 'First day on proton', notes: 'Created my account today.' }],
@@ -142,6 +142,130 @@ const MH = {
     a.href = URL.createObjectURL(new Blob([text], { type }));
     a.download = filename; a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  },
+
+  downloadBlob(filename, blob) {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename; a.rel = 'noopener';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  },
+
+  /* ================= file-source chooser (both file systems) ================
+   * Every open/save in proton asks which file system to use: the device's own
+   * ("this computer" / your Files) or proton's virtual one ("proton Files").
+   * askFileSource() shows the question, devicePick()/downloadBlob() are the
+   * device side, vfsPick() browses the proton file system. Apps wire the
+   * answer into their own flows. */
+  askFileSource(kind) {
+    return new Promise((resolve) => {
+      const wrap = document.createElement('div');
+      wrap.className = 'file-source-backdrop';
+      wrap.innerHTML = `<div class="card file-source-box" role="dialog" aria-modal="true"
+        aria-label="${kind === 'save' ? 'Save to which file system' : 'Open from which file system'}">
+        <h3 style="margin:0 0 6px">${kind === 'save' ? 'Save to where?' : 'Open from where?'}</h3>
+        <p class="muted" style="margin:0 0 12px">${kind === 'save'
+          ? 'Save this to <b>your Files</b> (this computer) or to the <b>proton file system</b> (the Files app, in this browser).'
+          : 'Open a file from <b>your Files</b> (this computer) or from the <b>proton file system</b> (the Files app, in this browser).'}</p>
+        <div class="fm-ask-row">
+          <button type="button" class="btn" data-fs="device">${kind === 'save' ? 'To your Files (this computer)' : 'From your Files (this computer)'}</button>
+          <button type="button" class="btn" data-fs="vfs">${kind === 'save' ? 'To the proton file system' : 'From the proton file system'}</button>
+          <button type="button" class="btn" data-fs="cancel">Cancel</button>
+        </div>
+      </div>`;
+      const done = (v) => { wrap.remove(); resolve(v); };
+      wrap.addEventListener('click', (e) => {
+        const b = e.target.closest('button');
+        if (!b) return;
+        done(b.dataset.fs === 'cancel' ? null : b.dataset.fs);
+      });
+      document.body.appendChild(wrap);
+      wrap.querySelector('button').focus();
+    });
+  },
+
+  /* The browser's own file picker. */
+  devicePick(accept = '') {
+    return new Promise((resolve) => {
+      const input = document.createElement('input');
+      input.type = 'file';
+      if (accept) input.accept = accept;
+      input.onchange = () => resolve(input.files?.[0] || null);
+      input.click();
+    });
+  },
+
+  /* Browse the proton file system in a modal. Open mode resolves the picked
+   * file path; save mode has a name field and resolves the full target path
+   * (the folder shown is where the file goes); folder mode resolves the shown
+   * folder. `accept` filters files by extension ('.txt,.md'). */
+  vfsPick({ title = 'proton file system', accept = '', name = '', save = false, folder = false } = {}) {
+    return new Promise((resolve) => {
+      const exts = String(accept || '').split(',').filter(Boolean);
+      const wantName = save && !folder;
+      let dir = FS.home();
+      let picked = null;
+      const wrap = document.createElement('div');
+      wrap.className = 'file-source-backdrop';
+      wrap.innerHTML = `<div class="card file-source-box" role="dialog" aria-modal="true" aria-label="${MH.esc(title)}">
+        <h3 style="margin:0 0 6px">${MH.esc(title)}</h3>
+        <p class="muted" style="margin:0 0 8px" data-vfs-path></p>
+        ${wantName ? `<div class="fm-ask-row" style="margin:0 0 8px"><input type="text" data-vfs-name
+          value="${MH.esc(name)}" aria-label="File name" placeholder="file name" autocomplete="off" spellcheck="false"></div>` : ''}
+        <div class="vfs-pick-list" data-vfs-list></div>
+        <div class="fm-ask-row" style="margin-top:10px">
+          ${save ? `<button type="button" class="btn primary" data-vfs-ok>${folder ? 'Copy here' : 'Save here'}</button>` : ''}
+          <button type="button" class="btn" data-vfs-cancel>Cancel</button>
+        </div>
+      </div>`;
+      const done = (v) => { wrap.remove(); resolve(v); };
+      const list = wrap.querySelector('[data-vfs-list]');
+      const matches = (n) => !exts.length || exts.some((x) => n.toLowerCase().endsWith(x));
+      const draw = () => {
+        wrap.querySelector('[data-vfs-path]').textContent = dir;
+        let entries = [];
+        try { entries = FS.list(dir); } catch { entries = []; }
+        const rows = [];
+        if (dir !== FS.home()) rows.push('<button type="button" class="btn sm" data-up="1">… Up</button>');
+        for (const e of entries) {
+          if (e.type === 'dir') rows.push(`<button type="button" class="btn sm" data-dir="${MH.esc(e.path)}">▸ ${MH.esc(e.name)}</button>`);
+          else if (matches(e.name)) {
+            const on = picked === e.path ? ' primary' : '';
+            rows.push(`<button type="button" class="btn sm${on}" data-file="${MH.esc(e.path)}">${MH.esc(e.name)}</button>`);
+          }
+        }
+        list.innerHTML = rows.join('') || '<p class="muted" style="margin:0">Nothing here.</p>';
+      };
+      wrap.addEventListener('click', (e) => {
+        const b = e.target.closest('button');
+        if (!b) return;
+        if (b.hasAttribute('data-vfs-cancel')) return done(null);
+        if (b.hasAttribute('data-vfs-ok')) {
+          if (folder) return done(dir);
+          const n = wrap.querySelector('[data-vfs-name]').value.trim();
+          if (!n) { wrap.querySelector('[data-vfs-name]').focus(); return; }
+          return done(FS.join(dir, n));
+        }
+        if (b.dataset.up) {
+          dir = FS.dirname(dir);
+          if (dir === '/home' || !dir.startsWith(FS.home())) dir = FS.home();
+          picked = null; draw();
+        } else if (b.dataset.dir) {
+          dir = b.dataset.dir; picked = null; draw();
+        } else if (b.dataset.file) {
+          if (wantName) { wrap.querySelector('[data-vfs-name]').value = FS.basename(b.dataset.file); picked = b.dataset.file; draw(); }
+          else if (!folder && !save) done(b.dataset.file);
+        }
+      });
+      if (wantName) {
+        wrap.querySelector('[data-vfs-name]').addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') { e.preventDefault(); wrap.querySelector('[data-vfs-ok]').click(); }
+        });
+      }
+      document.body.appendChild(wrap);
+      draw();
+    });
   },
 };
 

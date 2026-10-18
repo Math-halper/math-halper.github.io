@@ -9,7 +9,9 @@ text, and white/grey accents** (no colour in the UI).
 
 This build keeps the five desktop System apps from `main` and copies main's
 **file system suite** back in — **Files**, **Text Editor**, **Image Viewer**,
-**Media** and **PDF Viewer**. The **Celeste Classics** collection ships as
+**Media** and **PDF Viewer** — and every open/save across the desktop asks
+which file system to use: **your Files** (this computer) or the **proton
+file system** (the Files app). The **Celeste Classics** collection ships as
 three apps — **Celeste Classic**, **Celeste Classic 2** and **Celeste
 Community** — with the *actual game files*, copied byte-for-byte from
 [Math-halper/Celeste](https://github.com/Math-halper/Celeste) into
@@ -159,6 +161,11 @@ deletes the file.
   running apps, clock, searchable start menu (apps grouped into sections),
   window
   manager (drag/resize/minimise/maximise), toasts.
+- **Two file systems, one chooser** — every open/save asks whether to use
+  **your Files** (this computer) or the **proton file system** (the Files
+  app, in this browser): the Text Editor, Files, Image Viewer, Media, PDF
+  Viewer, Settings backups, Customize icons and Web Retro's ROM picker all
+  work with either.
 - **Menu sections** — the start menu groups the apps by `cat=`: **System**
   (App Center, Customize, Settings, About, Browser), **Productivity**
   (Calculator, Files, Text Editor, PDF Viewer), **Media** (Image Viewer,

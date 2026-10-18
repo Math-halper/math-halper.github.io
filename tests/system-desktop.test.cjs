@@ -395,6 +395,63 @@ test('the desktop boots, lists and opens all fifteen catalogued apps', async () 
     assert.equal(chSent[0].rom.name, 'nes-rom.nes');
     w.closeWin('web-retro', true);
 
+    // Every open/save asks which file system to use: "your Files" (this
+    // computer) or the proton file system.
+    const askModal = (label) => {
+      const modal = w.document.querySelector('.file-source-backdrop');
+      assert.ok(modal, `${label} does not ask which file system to use`);
+      assert.ok(modal.querySelector('[data-fs="device"]') && modal.querySelector('[data-fs="vfs"]'),
+        `${label} chooser is missing one of the two file systems`);
+      modal.querySelector('[data-fs="cancel"]').click();
+      assert.ok(!w.document.querySelector('.file-source-backdrop'), `${label} chooser does not close`);
+    };
+    w.openApp('image-viewer');
+    wins.get('image-viewer').body.querySelector('#iv-open').click();
+    askModal('Image Viewer Open…');
+    w.closeWin('image-viewer', true);
+    w.openApp('media');
+    wins.get('media').body.querySelector('#md-open').click();
+    askModal('Media Open…');
+    w.closeWin('media', true);
+    w.openApp('pdf');
+    wins.get('pdf').body.querySelector('#pdf-open').click();
+    askModal('PDF Viewer Open…');
+    w.closeWin('pdf', true);
+    w.openApp('files');
+    wins.get('files').body.querySelector('#fm-import').click();
+    askModal('Files Import');
+    wins.get('files').body.querySelector('#fm-download').click();
+    askModal('Files Download');
+    w.closeWin('files', true);
+    w.openApp('settings');
+    wins.get('settings').body.querySelector('#s-export').click();
+    askModal('Settings Export backup');
+    wins.get('settings').body.querySelector('#s-import-btn').click();
+    askModal('Settings Import backup');
+    w.closeWin('settings', true);
+    w.openApp('customize');
+    wins.get('customize').body.querySelector('[data-micon-ask]').click();
+    askModal('Customize "Set image…"');
+    w.closeWin('customize', true);
+
+    // The Text Editor asks on Open, Save and Save a copy — and choosing the
+    // proton file system really saves there.
+    w.eval(`openFSItem(${JSON.stringify(home + '/Documents/Welcome.txt')})`);
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    const teWin = wins.get('text-editor').body;
+    assert.ok(!teWin.querySelector('#te-save').disabled, 'Save should be live for a writable file');
+    teWin.querySelector('#te-open').click();
+    askModal('Text Editor Open…');
+    teWin.querySelector('#te-copy').click();
+    askModal('Text Editor Save a copy…');
+    teWin.querySelector('#te-text').value = 'saved through the chooser';
+    teWin.querySelector('#te-save').click();
+    w.document.querySelector('.file-source-backdrop [data-fs="vfs"]').click();
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    assert.match(w.document.querySelector('#toasts').textContent, /Saved Welcome\.txt/);
+    assert.equal(await w.eval(`FS.read(${JSON.stringify(home + '/Documents/Welcome.txt')})`), 'saved through the chooser');
+    w.closeWin('text-editor', true);
+
     // Files lists the account's home folder places from the virtual file system.
     w.openApp('files');
     const filesBody = wins.get('files').body;

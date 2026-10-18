@@ -311,6 +311,28 @@ registerApp({
       if (FS.BINARY_EXT.has(ext)) return false;
       return /^text\//i.test(file.type || '') || TEXT_EXT.includes(ext);
     }
+    /* Copy files between folders in the proton file system (the "other side"
+     * of Import/Download when the proton file system is chosen). Text stays
+     * text, everything else moves as exact bytes. */
+    async function copyInto(dest, srcs) {
+      if (!FS.isWritable(dest)) { MH.toast('That folder is read-only — copy into your home folder instead.'); return; }
+      let done = 0;
+      for (const src of srcs) {
+        try {
+          const st = FS.stat(src);
+          if (!st || st.type !== 'file') { MH.toast(`Skipping ${src} — only files can be copied here.`); continue; }
+          const target = FS.join(dest, uniqueName(dest, st.name));
+          if (FS.isBinary(src)) await FS.writeBlob(target, await FS.readBlob(src));
+          else FS.write(target, await FS.read(src));
+          sel.add(target);
+          done++;
+        } catch (err) { MH.toast(err.message); break; }
+      }
+      if (done) {
+        MH.toast(`Copied ${done} file${done === 1 ? '' : 's'} into ${dest}`);
+        draw();
+      }
+    }
     function importFiles(fileList) {
       const files = Array.from(fileList || []);
       if (!files.length) return;
@@ -645,9 +667,33 @@ registerApp({
     q('#fm-refresh').onclick = () => { draw(); MH.toast('Refreshed.'); };
     q('#fm-new-folder').onclick = newFolder;
     q('#fm-new-file').onclick = newFile;
-    q('#fm-import').onclick = () => q('#fm-file').click();
+    /* Import and Download both ask which file system to use: the device's own
+     * file pickers, or the proton file system (copying into/out of it). */
+    q('#fm-import').onclick = () => {
+      MH.askFileSource('open').then((src) => {
+        if (src === 'device') q('#fm-file').click();
+        else if (src === 'vfs') {
+          if (!writable()) { MH.toast('This folder is read-only — import into your home folder instead.'); return; }
+          MH.vfsPick({ title: 'Import from the proton file system' }).then((p) => {
+            if (p) copyInto(cwd, [p]);
+          });
+        }
+      });
+    };
     q('#fm-file').onchange = (e) => { importFiles(e.target.files); e.target.value = ''; };
-    q('#fm-download').onclick = () => download(selected().length ? selected() : [cwd]);
+    q('#fm-download').onclick = () => {
+      const paths = selected().length ? selected() : [cwd];
+      MH.askFileSource('save').then((dest) => {
+        if (dest === 'device') download(paths);
+        else if (dest === 'vfs') {
+          const files = paths.map((p) => FS.stat(p)).filter((st) => st && st.type === 'file').map((st) => st.path);
+          if (!files.length) { MH.toast('Select a file to copy — folders can only be downloaded as a ZIP.'); return; }
+          MH.vfsPick({ title: 'Save to a proton folder', save: true, folder: true }).then((destDir) => {
+            if (destDir) copyInto(destDir, files);
+          });
+        }
+      });
+    };
     q('#fm-delete').onclick = () => {
       const paths = selected().filter((p) => FS.isWritable(p));
       if (paths.length) remove(paths);

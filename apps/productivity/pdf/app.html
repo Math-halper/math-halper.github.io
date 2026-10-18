@@ -34,6 +34,7 @@ registerApp({
     const HOME = FS.home();
     const isPdf = (p) => FS.extname(p) === 'pdf';
     let path = null, url = null, token = 0;
+    let deviceBlob = null, deviceName = '';   // opened from the device ("your Files")
     const esc = MH.esc;
     const q = (s) => body.querySelector(s);
 
@@ -71,7 +72,8 @@ registerApp({
     }
     function sync() {
       const many = path ? siblings(path) : [];
-      for (const id of ['pdf-tab', 'pdf-download', 'pdf-files']) q('#' + id).disabled = !path;
+      for (const id of ['pdf-tab', 'pdf-files']) q('#' + id).disabled = !path;
+      q('#pdf-download').disabled = !path && !deviceBlob;
       q('#pdf-prev').disabled = !path || many.length < 2;
       q('#pdf-next').disabled = !path || many.length < 2;
       const st = path ? FS.stat(path) : null;
@@ -83,6 +85,7 @@ registerApp({
     }
     function startScreen(message = '') {
       path = null;
+      deviceBlob = null; deviceName = '';
       revoke();
       sync();
       const list = myPdfs();
@@ -106,6 +109,7 @@ registerApp({
       if (!isPdf(target)) { MH.toast(`${FS.basename(target)} is not a PDF — Files opens it with the right app.`); return; }
       const mine = ++token;
       path = target;
+      deviceBlob = null; deviceName = '';
       say(`Opening <b>${esc(target)}</b>…`);
       sync();
       try {
@@ -150,6 +154,26 @@ registerApp({
       window.open(src, '_blank', 'noopener');
     }
     function askOpen() {
+      MH.askFileSource('open').then((src) => {
+        if (src === 'device') openDevicePdf();
+        else if (src === 'vfs') askOpenVfs();
+      });
+    }
+    async function openDevicePdf() {
+      const file = await MH.devicePick('.pdf,application/pdf');
+      if (!file) return;
+      const mine = ++token;
+      path = null;
+      deviceBlob = file; deviceName = file.name;
+      say(`Opening <b>${esc(file.name)}</b>…`);
+      revoke();
+      url = URL.createObjectURL(new Blob([file], { type: 'application/pdf' }));
+      main.innerHTML = `<iframe class="viewer-frame" id="pdf-frame" title="${esc(file.name)}" src="${esc(url)}"></iframe>`;
+      say(`<b>${esc(file.name)}</b> from your Files (this computer) — it is not in the proton file system yet.
+           <b>Save…</b> asks where to put it.`);
+      sync();
+    }
+    function askOpenVfs() {
       const list = myPdfs();
       say(`<div class="field" style="margin:0"><label for="pdf-ask"><b>Open a PDF</b></label>
         <div class="fm-ask-row"><input id="pdf-ask" type="text" placeholder="${esc(HOME + '/Documents/paper.pdf')}" list="pdf-ask-list" autocomplete="off" spellcheck="false">
@@ -174,14 +198,29 @@ registerApp({
     q('#pdf-next').onclick = () => step(1);
     q('#pdf-tab').onclick = openTab;
     q('#pdf-download').onclick = async () => {
-      if (!path) return;
+      if (!path && !deviceBlob) return;
+      const dest = await MH.askFileSource('save');
+      if (!dest) return;
       try {
-        const blob = await FS.readBlob(path);
-        const href = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = href; a.download = FS.basename(path); a.rel = 'noopener';
-        document.body.appendChild(a); a.click(); a.remove();
-        setTimeout(() => URL.revokeObjectURL(href), 4000);
+        const blob = deviceBlob || await FS.readBlob(path);
+        const name = deviceName || FS.basename(path);
+        if (dest === 'device') {
+          MH.downloadBlob(name, blob);
+          MH.toast(`Saved ${name} to your Files (this computer).`);
+        } else {
+          const dir = FS.join(HOME, 'Downloads');
+          let target = FS.join(dir, name);
+          if (FS.exists(target)) {
+            const dot = name.lastIndexOf('.');
+            const base = dot > 0 ? name.slice(0, dot) : name, ext = dot > 0 ? name.slice(dot) : '';
+            for (let i = 2; i < 500; i++) {
+              const n = `${base} (${i})${ext}`;
+              if (!FS.exists(FS.join(dir, n))) { target = FS.join(dir, n); break; }
+            }
+          }
+          await FS.writeBlob(target, blob);
+          MH.toast(`Saved to the proton file system: ${target}`);
+        }
       } catch (err) { MH.toast(err.message); }
     };
     q('#pdf-files').onclick = () => openApp('files', { path: path ? FS.dirname(path) : HOME, select: path || undefined });
