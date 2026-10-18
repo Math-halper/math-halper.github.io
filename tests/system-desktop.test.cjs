@@ -77,9 +77,17 @@ test('the catalog is the desktop apps, the file system suite, a calculator, web 
    * arrays are not reference-equal to this realm's. */
   assert.deepEqual(Array.from(apps, (a) => a.id), SYSTEM_APPS);
   assert.deepEqual(Array.from(apps, (a) => a.cat), SYSTEM_APPS.map((id) => SYSTEM_CATS[id]));
-  /* Every app uses a built-in SVG icon except Web Retro, whose default is
-   * Gams' raster webretro.png under data/icons/. */
-  assert.deepEqual(Array.from(apps, (a) => a.svgIcon), SYSTEM_APPS.map((id) => id !== 'web-retro'));
+  /* Every app uses a built-in SVG icon except the games: each game's default
+   * is its own art, cropped into data/icons/<id>.png (Web Retro keeps Gams'
+   * raster webretro.png). */
+  const RASTER_ICON_APPS = { 'celeste-classic': 'data/icons/celeste-classic.png',
+    'celeste-two': 'data/icons/celeste-two.png', 'celeste-community': 'data/icons/celeste-community.png',
+    'mari0': 'data/icons/mari0.png', 'sm64': 'data/icons/sm64.png', 'web-retro': 'data/icons/webretro.png' };
+  assert.deepEqual(Array.from(apps, (a) => a.svgIcon), SYSTEM_APPS.map((id) => !RASTER_ICON_APPS[id]));
+  const iconById = Object.fromEntries(Array.from(apps, (a) => [a.id, a.icon]));
+  for (const [id, icon] of Object.entries(RASTER_ICON_APPS)) {
+    assert.equal(iconById[id], icon, `${id} should default to its own cropped art`);
+  }
   assert.deepEqual(Array.from(sites, (s) => s.id), ['test-page']);
   const page = { ...sites[0] };
   assert.equal(page.name, 'Test Page');

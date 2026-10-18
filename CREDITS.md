@@ -130,6 +130,12 @@ site-absolute
 paths the source site itself doesn't host (`/glossary/` and friends) and stay
 unresolved here, as they do upstream.
 
+The three app icons are each cropped from that game's own art:
+`celeste-classic` from the cartridge label art in `celeste.p8.png`,
+`celeste-two` from the "CELESTE 2" title logo in the game's own sprite data
+(the cart bytes embedded in its `index.js`), and `celeste-community` from the
+hub's own `maddy.png` avatar. Nothing else was redrawn.
+
 All rights in the games, builds and assets remain with their authors (the
 Celeste Classic PICO-8 game is © Maddy Thorson, Noel Berry and the PICO-8
 community; the community follow-up, practice mods and tools are © their
@@ -171,6 +177,12 @@ Mario, Portal and other third-party artwork, music and trademarks may carry
 separate rights; a code license is not blanket asset clearance. This
 repository grants no rights in Nintendo's game assets, and no permission to
 redistribute them is claimed or implied.
+
+The two app icons are each cropped from that game's own art: `mari0` from the
+game's `graphics/icon.png` window icon (packed inside `game.data`), and
+`sm64` from Mario's cap-logo texture (`mario_logo.rgba16`, decoded from the
+array the SM64 decomp generates for it — sourced via the decomp's public
+build output). The same rights note applies to them.
 
 ## Vendored emulator (Web Retro)
 
