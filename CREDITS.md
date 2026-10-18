@@ -150,7 +150,9 @@ RetroArch compiled for the web by
 - `apps/games/web-retro/app.html` is proton's launcher, adapted from Gams'
   `g/webretro.html`: the same core list and BroadcastChannel ROM hand-off to
   `webretro/launch.html?rom=channel`, with the UI rebuilt on proton's widgets
-  and the ROM name URL-encoded.
+  and the ROM name URL-encoded. The ROM can come from either file system —
+  the device's own file picker, or the proton virtual file system (proton
+  Files, read with `FS.readBlob`).
 - The app icon is Gams' `img/webretro.png`, saved as
   `data/icons/webretro.png` and set as the catalog default
   (`icon=data/icons/webretro.png`, `svg-icon=false`).
@@ -158,7 +160,8 @@ RetroArch compiled for the web by
 **No ROMs are copied.** Gams' `g/g/webretro/roms/` payload contains commercial
 game ROMs encoded as data URLs; that is copyrighted game content, so this
 repository does not include it and grants no rights in it. Web Retro only runs
-the ROM files you choose on your own device, handed to the emulator in-page
+the ROM files you choose — from your own device or from proton's virtual file
+system — handed to the emulator in-page
 over a BroadcastChannel — they never leave the browser. Only use ROMs you have
 the right to use.
 

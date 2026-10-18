@@ -39,7 +39,7 @@ game bundles and earlier built-in sites remain removed (except Test Page).
 | **Celeste Classic** (`celeste-classic`) | Play the original PICO-8 Celeste Classic — its actual game files, vendored from Math-halper/Celeste |
 | **Celeste Classic 2** (`celeste-two`) | Play Celeste Classic 2: Lani's Trek — its actual game files, vendored from Math-halper/Celeste |
 | **Celeste Community** (`celeste-community`) | The Celeste Classic community hub — practice mods, downloads and links (vendored from Math-halper/Celeste) |
-| **Web Retro** (`web-retro`) | Play your own retro ROMs — N64, SNES, NES and Game Boy (webretro) |
+| **Web Retro** (`web-retro`) | Play your own retro ROMs — N64, SNES, NES and Game Boy (webretro); load them from this computer or your proton Files |
 
 Rows are listed in start-menu order: **System**, then **Productivity**, **Media** and **Games**.
 

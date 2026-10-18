@@ -111,7 +111,7 @@ matching the menu sections (`cat=`, ordered by `CATS` in `assets/core.js`).
 | `games/` | Celeste Classic (`celeste-classic`) — the vendored PICO-8 game (from Math-halper/Celeste `classic/`) plus its wrapper |
 | `games/` | Celeste Classic 2 (`celeste-two`) — the vendored Lani's Trek game (from Math-halper/Celeste `two/`) plus its wrapper |
 | `games/` | Celeste Community (`celeste-community`) — the vendored community hub, practice mods and tools (from Math-halper/Celeste `speed/`) plus its wrapper |
-| `games/` | Web Retro (`web-retro`) — the vendored webretro emulator (bring your own ROMs) |
+| `games/` | Web Retro (`web-retro`) — the vendored webretro emulator (bring your own ROMs — from this computer or proton Files) |
 | `_template/` | not an app — the starting point for a new one (copy it into its category folder) |
 | `_embed/` | not an app — the starting point for one that is only a framed page (`EMBED_URL`) |
 

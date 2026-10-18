@@ -219,7 +219,7 @@ path=apps/games/web-retro/app.html
 icon=data/icons/webretro.png
 svg-icon=false
 cat=Games
-desc=Play your own retro ROMs - N64, SNES, NES and Game Boy (webretro)
+desc=Play your own retro ROMs - N64, SNES, NES, Game Boy; load from this computer or proton Files
 w=980
 h=640
 

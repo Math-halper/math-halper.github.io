@@ -254,7 +254,7 @@ test('the system manifest still matches the repository exactly', () => {
     'Manifest and repository disagree — re-run python3 tools/gen-fs-manifest.py');
 });
 
-test('the desktop boots, lists and opens all thirteen catalogued apps', async () => {
+test('the desktop boots, lists and opens all fifteen catalogued apps', async () => {
   const virtualConsole = new VirtualConsole(), errors = [];
   virtualConsole.on('jsdomError', (err) => errors.push(err.message));
   const dom = new JSDOM('<!doctype html><main id="auth" hidden></main><div id="desktop" hidden></div><div id="toasts"></div>', {
@@ -355,7 +355,7 @@ test('the desktop boots, lists and opens all thirteen catalogued apps', async ()
     assert.equal(shown(), '0', 'Escape clears');
     w.closeWin('calculator', true);
 
-    // Web Retro's launcher picks a core and asks for a ROM before anything runs.
+    // Web Retro's launcher picks a core and offers both ROM sources.
     w.openApp('web-retro');
     const retro = wins.get('web-retro').body;
     assert.deepEqual([...retro.querySelectorAll('[data-core]')].map((b) => b.dataset.core),
@@ -364,8 +364,35 @@ test('the desktop boots, lists and opens all thirteen catalogued apps', async ()
     retro.querySelector('[data-core="snes9x"]').click();
     assert.equal(retro.querySelector('#wr-upload').hidden, false);
     assert.equal(retro.querySelector('#wr-corename').textContent, 'SNES');
+    assert.ok(retro.querySelector('[data-src="device"]'), 'no "this computer" ROM source');
+    assert.ok(retro.querySelector('[data-src="vfs"]'), 'no "proton Files" ROM source');
     retro.querySelector('#wr-play').click();
     assert.match(w.document.querySelector('#toasts').textContent, /Choose a ROM file/);
+    // A ROM imported into the proton file system is listed, then handed to the
+    // emulator over the BroadcastChannel like a device file.
+    const home = w.eval('FS.home()');
+    await w.eval(`FS.writeBlob(${JSON.stringify(home + '/Downloads/nes-rom.nes')}, new Blob([new Uint8Array([0x4e, 0x45, 0x53, 0x1a])]))`);
+    retro.querySelector('[data-src="vfs"]').click();
+    const dl = [...retro.querySelectorAll('[data-dir]')].find((b) => b.dataset.dir.endsWith('/Downloads'));
+    assert.ok(dl, 'proton Files should show the Downloads folder');
+    dl.click();
+    const row = [...retro.querySelectorAll('[data-file]')].find((b) => b.dataset.file.endsWith('nes-rom.nes'));
+    assert.ok(row, 'proton Files should list the imported ROM');
+    row.click();
+    const chSent = [];
+    w.BroadcastChannel = class {
+      constructor(name) { this.name = name; w.__wrCh = this; }
+      postMessage(m) { chSent.push(m); }
+      close() {}
+    };
+    retro.querySelector('#wr-play').click();
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    const frame = retro.querySelector('#wr-frame');
+    assert.ok(frame, 'Play should frame the emulator');
+    assert.match(frame.src, /rom=channel/);
+    w.__wrCh.onmessage({ data: { status: 'ready' } });
+    assert.equal(chSent.length, 1, 'the launch page should get the ROM over the channel');
+    assert.equal(chSent[0].rom.name, 'nes-rom.nes');
     w.closeWin('web-retro', true);
 
     // Files lists the account's home folder places from the virtual file system.
