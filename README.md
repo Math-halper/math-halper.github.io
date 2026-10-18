@@ -1,4 +1,4 @@
-# proton — a browser desktop (static Mixt clone), System apps plus a game embed
+# proton — a browser desktop (static Mixt clone), System apps plus games
 
 A desktop shell in your browser: Mint-style bottom panel and proton menu,
 draggable/resizable windows, per-account customisation — cloned and rebranded
@@ -9,11 +9,15 @@ text, and white/grey accents** (no colour in the UI).
 
 This build keeps the five desktop System apps from `main` and copies main's
 **file system suite** back in — **Files**, **Text Editor**, **Image Viewer**,
-**Media** and **PDF Viewer**. Celeste Classic is
-added as a small wrapper around its existing GitHub Pages site. Its app folder
-contains only a sandboxed iframe wrapper; no game source, assets or repository
-contents are copied here. A small **Calculator** (new, self-contained code in
-`apps/calculator/`) ships again too, and **Web Retro** vendors the
+**Media** and **PDF Viewer**. The **Celeste Classics** collection ships as
+three apps — **Celeste Classic**, **Celeste Classic 2** and **Celeste
+Community** — with the *actual game files*, copied byte-for-byte from
+[Math-halper/Celeste](https://github.com/Math-halper/Celeste) into
+`apps/celeste-classic/`, `apps/celeste-two/` and `apps/celeste-community/`
+(each app folder is the game's own pages plus a thin iframe wrapper;
+`apps/index.html` is the "all games" picker their back-links expect). A small
+**Calculator** (new, self-contained code in `apps/calculator/`) ships again
+too, and **Web Retro** vendors the
 [webretro](https://github.com/BinBashBanana/webretro) emulator build from
 [Gams-Offline/Gams](https://github.com/Gams-Offline/Gams) so you can play your
 own ROM files (no ROMs ship with this repository). The other bundled apps,
@@ -32,7 +36,9 @@ game bundles and earlier built-in sites remain removed (except Test Page).
 | **PDF Viewer** (`pdf`) | Read PDF files in your browser's own viewer — no extra library, nothing uploaded |
 | **Image Viewer** (`image-viewer`) | View PNG, JPG, GIF, WebP, AVIF, BMP, ICO and SVG files with zoom and a folder playlist |
 | **Media** (`media`) | Play audio and video files stored in your home folder, with your browser's own codecs |
-| [**Celeste Classic**](https://math-halper.github.io/Celeste/1/index.html) (`celeste-classic`) | Open the Celeste Classic GitHub Pages game in a sandboxed frame |
+| **Celeste Classic** (`celeste-classic`) | Play the original PICO-8 Celeste Classic — its actual game files, vendored from Math-halper/Celeste |
+| **Celeste Classic 2** (`celeste-two`) | Play Celeste Classic 2: Lani's Trek — its actual game files, vendored from Math-halper/Celeste |
+| **Celeste Community** (`celeste-community`) | The Celeste Classic community hub — practice mods, downloads and links (vendored from Math-halper/Celeste) |
 | **Web Retro** (`web-retro`) | Play your own retro ROMs — N64, SNES, NES and Game Boy (webretro) |
 
 Rows are listed in start-menu order: **System**, then **Productivity**, **Media** and **Games**.
@@ -91,12 +97,13 @@ runtime dependencies or build step. Optional regression tests use jsdom:
   app's module on first launch), `assets/styles.css`, `assets/boot.js`.
 - **Tests:** `tests/system-desktop.test.cjs` — the catalogs are exactly the
   five desktop System apps, the file system suite, a Calculator and Web Retro,
-  one embedded game page and the one test site; every module is present, the
-  generated manifest matches the repository, and a jsdom desktop boots and
-  opens each app (the Calculator is driven through real sums; Web Retro's
-  launcher is walked through its core picker; Files lists the home folder).
-  The tests also verify the embedded URL, sandbox settings and absence of
-  copied game files; Test Page passes its own checks.
+  the three vendored Celeste games and the one test site; every module is
+  present, the generated manifest matches the repository, and a jsdom desktop
+  boots and opens each app (the Calculator is driven through real sums; Web
+  Retro's launcher is walked through its core picker; Files lists the home
+  folder). The tests also verify each Celeste app frames the game page that
+  ships in its own folder and that the vendored builds are really there; Test
+  Page passes its own checks.
 
 ## Math Helper cover page
 
@@ -153,7 +160,8 @@ deletes the file.
 - **Menu sections** — the start menu groups the apps by `cat=`: **System**
   (App Center, Customize, Settings, About, Browser), **Productivity**
   (Calculator, Files, Text Editor, PDF Viewer), **Media** (Image Viewer,
-  Media) and **Games** (Celeste Classic, Web Retro), with **My Apps** for
+  Media) and **Games** (Celeste Classic, Celeste Classic 2, Celeste
+  Community, Web Retro), with **My Apps** for
   anything an account adds. The order is `CATS` in `assets/core.js`.
 - **Customize — everything is modular.** Rename any app, change its vector
   icon or upload a raster image for it, move it to another (or a brand-new)
@@ -203,9 +211,10 @@ is documented in [`CREDITS.md`](CREDITS.md). Licensed **AGPL-3.0-only**
 © Puter Technologies Inc.). Not affiliated with Linux Mint, Cinnamon, Puter, or
 the Mixt authors.
 
-Celeste Classic's game build is not copied into this repository — it loads
-live from its linked GitHub Pages URL inside a sandboxed frame, with an
-**Open in new tab** control if the page refuses to frame. Web Retro does ship
+The Celeste Classics game files **are** copied into this repository —
+byte-for-byte from [Math-halper/Celeste](https://github.com/Math-halper/Celeste),
+one app per game (see [`CREDITS.md`](CREDITS.md) for provenance; all rights in
+the games stay with their authors). Web Retro ships
 its emulator files (webretro, vendored from Gams-Offline/Gams under
 GPL-3.0 — see [`CREDITS.md`](CREDITS.md)), but **no game ROMs** are included:
 you bring your own.

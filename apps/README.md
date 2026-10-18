@@ -21,10 +21,11 @@ suite copied from `main` (Files, Text Editor, Image Viewer, Media, PDF
 Viewer), a small Calculator (new code in `apps/calculator/`) and Web Retro
 (`apps/web-retro/`, a vendored webretro emulator build in
 `apps/web-retro/webretro/` — see `CREDITS.md`; no ROMs ship with it).
-Celeste Classic is added as a wrapper
-around its existing GitHub Pages site, loaded live in a sandboxed iframe.
-This repository does not contain its game code, assets or copies of the
-source repository.
+The three Celeste Classics apps (`celeste-classic/`, `celeste-two/`,
+`celeste-community/`) carry the actual game files, copied byte-for-byte from
+[Math-halper/Celeste](https://github.com/Math-halper/Celeste) — each app
+folder is the game's own pages plus a thin iframe wrapper, and `apps/index.html`
+is the "all games" picker their back-links expect (see `CREDITS.md`).
 The previously bundled apps and game catalogs remain removed. The only
 built-in website is **Test Page** (the one entry in `data/websites.js`; see
 [`websites/README.md`](../websites/README.md)).
@@ -92,7 +93,9 @@ exactly where the old one left off.
 | `settings/` | Settings (`settings`) — account, wallpaper & accent, password, backup, accounts on this device |
 | `about/` | About (`about`) — provenance, licence, what's inside |
 | `browser/` | Browser (`browser`) — Test Page, saved websites, external addresses and VFS HTML files |
-| `celeste-classic/` | Celeste Classic (`celeste-classic`) — [hosted game page](https://math-halper.github.io/Celeste/1/index.html), embedded with the shared safe iframe wrapper |
+| `celeste-classic/` | Celeste Classic (`celeste-classic`) — the vendored PICO-8 game (from Math-halper/Celeste `classic/`) plus its wrapper |
+| `celeste-two/` | Celeste Classic 2 (`celeste-two`) — the vendored Lani's Trek game (from Math-halper/Celeste `two/`) plus its wrapper |
+| `celeste-community/` | Celeste Community (`celeste-community`) — the vendored community hub, practice mods and tools (from Math-halper/Celeste `speed/`) plus its wrapper |
 | `_template/` | not an app — the starting point for a new one |
 | `_embed/` | not an app — the starting point for one that is only a framed page (`EMBED_URL`) |
 

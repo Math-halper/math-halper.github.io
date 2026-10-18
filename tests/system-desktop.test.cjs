@@ -1,11 +1,12 @@
 /* The current build keeps its five desktop System apps plus the file system
  * suite (Files, Text Editor, Image Viewer, Media, PDF Viewer — copied from
  * main), a Calculator and Web Retro (a vendored webretro emulator, no ROMs
- * included), plus Celeste Classic as a sandboxed embed of its existing
- * GitHub Pages site. No game content is copied here. The one built-in
- * website is Test Page, the Browser smoke test. These tests keep the
- * catalog, wrappers, generated file-system manifest and running desktop in
- * sync. */
+ * included), and the three Celeste Classics apps — Celeste Classic, Celeste
+ * Classic 2 and Celeste Community, each a thin wrapper around the actual
+ * game files, vendored byte-for-byte from github.com/Math-halper/Celeste.
+ * The one built-in website is Test Page, the Browser smoke test. These tests
+ * keep the catalog, wrappers, generated file-system manifest and running
+ * desktop in sync. */
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -16,15 +17,20 @@ const { JSDOM, VirtualConsole } = require('jsdom');
 const ROOT = path.resolve(__dirname, '..');
 const source = (p) => fs.readFileSync(path.join(ROOT, p), 'utf8');
 const SYSTEM_APPS = ['appcenter', 'customize', 'settings', 'about', 'browser',
-  'calculator', 'files', 'text-editor', 'pdf', 'image-viewer', 'media', 'celeste-classic', 'web-retro'];
+  'calculator', 'files', 'text-editor', 'pdf', 'image-viewer', 'media',
+  'celeste-classic', 'celeste-two', 'celeste-community', 'web-retro'];
 /* Menu sections for each app (data/applications.js cat=), in catalog order. */
 const SYSTEM_CATS = {
   appcenter: 'System', customize: 'System', settings: 'System', about: 'System', browser: 'System',
   calculator: 'Productivity', files: 'Productivity', 'text-editor': 'Productivity', pdf: 'Productivity',
-  'image-viewer': 'Media', media: 'Media', 'celeste-classic': 'Games', 'web-retro': 'Games',
+  'image-viewer': 'Media', media: 'Media',
+  'celeste-classic': 'Games', 'celeste-two': 'Games', 'celeste-community': 'Games', 'web-retro': 'Games',
 };
-const EMBED_URLS = {
-  'celeste-classic': 'https://math-halper.github.io/Celeste/1/index.html',
+/* Each Celeste app frames the game page that ships in its own folder. */
+const GAME_PAGES = {
+  'celeste-classic': 'apps/celeste-classic/index.html',
+  'celeste-two': 'apps/celeste-two/index.html',
+  'celeste-community': 'apps/celeste-community/index.html',
 };
 /* Every script index.html loads, in order, minus boot.js (which starts the
  * auth flow and needs a served page). */
@@ -55,7 +61,7 @@ function catalog() {
   };
 }
 
-test('the catalog is the desktop apps, the file system suite, a calculator, web retro, one embedded game and the built-in test site', () => {
+test('the catalog is the desktop apps, the file system suite, a calculator, web retro, the three vendored Celeste games and the built-in test site', () => {
   const { apps, sites, warnings, icons, render, renderCatalogIcon, validIconPath } = catalog();
   assert.deepEqual(Array.from(warnings), [], 'catalog parses without warnings');
   /* Array.from everywhere: the catalogs come from a vm context, so their
@@ -149,22 +155,46 @@ test('every catalog entry points at a real, syntactically valid app module', () 
     assert.match(script[1], /registerApp\(/, `${app.id} never registers itself`);
     assert.equal(app.streamed, undefined, `${app.id} should load at boot, not lazily`);
   }
-  /* The game addition is a wrapper only: no game code, assets or repo files
-   * are copied into its app folder. */
-  for (const [id, url] of Object.entries(EMBED_URLS)) {
+  /* The Celeste apps are wrapper + game: the actual game files are vendored
+   * from Math-halper/Celeste, byte-for-byte, one app per game. */
+  for (const [id, page] of Object.entries(GAME_PAGES)) {
     const app = apps.find((entry) => entry.id === id);
     assert.ok(app, `Missing catalog entry for ${id}`);
     const html = source(app.path);
-    assert.ok(html.includes(`const EMBED_URL = '${url}';`), `${id} points at the wrong hosted page`);
-    assert.match(html, /sandbox="[^"]*allow-scripts[^"]*"/);
-    assert.ok(!/sandbox="[^"]*allow-same-origin/.test(html));
-    assert.deepEqual(fs.readdirSync(path.dirname(path.join(ROOT, app.path))).sort(), ['app.html']);
+    assert.ok(html.includes(`const GAME_PAGE = '${page}';`), `${id} points at the wrong game page`);
+    assert.match(html, /src="[^"]*GAME_PAGE[^"]*"/, `${id} does not frame its own game page`);
+    assert.ok(!/sandbox=/.test(html), `${id} frames its own local game page sandboxed`);
+    assert.ok(html.includes('allowfullscreen'), `${id} frame cannot go fullscreen`);
+    assert.ok(html.includes('[data-e="ext"]'), `${id} has no Open in new tab escape hatch`);
+    assert.ok(fs.existsSync(path.join(ROOT, page)), `${id}'s game page is missing`);
+  }
+  /* The vendored games really are the games: their builds are huge JS. */
+  for (const [p, min] of [
+    ['apps/celeste-classic/celeste.js', 1000000],
+    ['apps/celeste-classic/celeste.p8.png', 30000],
+    ['apps/celeste-two/index.js', 1000000],
+    ['apps/celeste-community/celeste_practice_mod.js', 1000000],
+    ['apps/celeste-community/celeste2_1.1_practice_mod.js', 1000000],
+    ['apps/celeste-community/webek.js', 1000000],
+  ]) {
+    assert.ok(fs.statSync(path.join(ROOT, p)).size >= min, `${p} is not the real game build`);
+  }
+  /* The game pages are untouched: their "all games" links still go one level
+   * up, and apps/index.html is the picker that link expects (remapped from
+   * the source repository's root selector). */
+  for (const id of Object.keys(GAME_PAGES)) {
+    assert.ok(source(`apps/${id}/index.html`).includes('href="../"'),
+      `apps/${id}/index.html was edited — its ../ link is gone`);
+  }
+  const picker = source('apps/index.html');
+  for (const id of Object.keys(GAME_PAGES)) {
+    assert.ok(picker.includes(`./${id}/`), `apps/index.html does not link to ${id}`);
   }
 
   /* apps/ holds only the shipped apps plus the developer templates. */
   const folders = fs.readdirSync(path.join(ROOT, 'apps'), { withFileTypes: true })
     .filter((e) => e.isDirectory()).map((e) => e.name).sort();
-  assert.deepEqual(folders, ['_embed', '_template', 'about', 'app-center', 'browser', 'calculator', 'celeste-classic', 'customize', 'files', 'image-viewer', 'media', 'pdf', 'settings', 'text-editor', 'web-retro']);
+  assert.deepEqual(folders, ['_embed', '_template', 'about', 'app-center', 'browser', 'calculator', 'celeste-classic', 'celeste-community', 'celeste-two', 'customize', 'files', 'image-viewer', 'media', 'pdf', 'settings', 'text-editor', 'web-retro']);
 });
 
 test('the system manifest still matches the repository exactly', () => {
@@ -254,7 +284,7 @@ test('the desktop boots, lists and opens all thirteen catalogued apps', async ()
       else assert.ok(w.eval('FS').stat(s.target), `default shortcut to a missing path: ${s.target}`);
     }
 
-    // The start menu groups all thirteen apps into their four sections.
+    // The start menu groups all fifteen apps into their four sections.
     const menu = w.document.querySelector('#startmenu');
     assert.deepEqual([...menu.querySelectorAll('.sm-cat')].map((e) => e.textContent),
       ['System', 'Productivity', 'Media', 'Games']);
@@ -269,11 +299,11 @@ test('the desktop boots, lists and opens all thirteen catalogued apps', async ()
       const text = body?.textContent || '';
       assert.ok(body && body.innerHTML.length > 100, `${id} rendered nothing`);
       assert.ok(!/hit a snag|Could not load/i.test(text), `${id} reported an error: ${text.slice(0, 140)}`);
-      if (EMBED_URLS[id]) {
+      if (GAME_PAGES[id]) {
         const frame = body.querySelector('iframe.site-frame');
-        assert.ok(frame, `${id} did not render its hosted page`);
-        assert.equal(frame.getAttribute('src'), EMBED_URLS[id]);
-        assert.ok(!frame.getAttribute('sandbox').includes('allow-same-origin'), `${id} frame can access proton storage`);
+        assert.ok(frame, `${id} did not render its game page`);
+        assert.equal(frame.getAttribute('src'), GAME_PAGES[id]);
+        assert.ok(frame.hasAttribute('allowfullscreen'), `${id} frame cannot go fullscreen`);
         assert.ok(body.querySelector('[data-e="ext"]'), `${id} has no direct-link escape hatch`);
       }
       w.closeWin(id, true);
@@ -422,7 +452,7 @@ test('Customize saves, displays and resets uploaded app icon images', async () =
     const browserWindow = w.eval('wins').get('browser');
     assert.equal(body.querySelector('#cust-files-shortcut'), null, 'Customize still offers a Files shortcut');
     assert.deepEqual([...body.querySelectorAll('#cust-modlist .card b')].map((b) => b.textContent).slice(0, SYSTEM_APPS.length),
-      ['App Center', 'Customize', 'Settings', 'About', 'Browser', 'Calculator', 'Files', 'Text Editor', 'PDF Viewer', 'Image Viewer', 'Media', 'Celeste Classic', 'Web Retro']);
+      ['App Center', 'Customize', 'Settings', 'About', 'Browser', 'Calculator', 'Files', 'Text Editor', 'PDF Viewer', 'Image Viewer', 'Media', 'Celeste Classic', 'Celeste Classic 2', 'Celeste Community', 'Web Retro']);
 
     const uploadBrowserIcon = async () => {
       const input = body.querySelector('[data-micon-file="browser"]');

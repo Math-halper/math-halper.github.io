@@ -25,15 +25,18 @@ proton ships the five desktop System apps (App Center, Customize, Settings,
 About, Browser), the file system suite from main (Files, Text Editor, Image
 Viewer, Media, PDF Viewer — their ids are exactly the ones FS.appFor()
 returns, so double-clicking a file opens it in the right one), a Calculator,
-Web Retro (a vendored webretro emulator build; bring your own ROMs) and one
-embedded game page: Celeste Classic. Its app folder contains only an iframe
-wrapper for the existing GitHub Pages site; no game files or assets are
-copied into this repository.
+Web Retro (a vendored webretro emulator build; bring your own ROMs) and the
+three Celeste Classics apps: Celeste Classic, Celeste Classic 2 and Celeste
+Community. Their game files are copied byte-for-byte from
+github.com/Math-halper/Celeste (classic/, two/ and speed/) into
+apps/celeste-classic, apps/celeste-two and apps/celeste-community — each app
+folder is the game's own pages plus a thin proton iframe wrapper, and
+apps/index.html is the picker their "all games" links expect.
 
 The start menu groups them by cat=: System (the desktop's own five),
 Productivity (Calculator, Files, Text Editor, PDF Viewer), Media (Image
-Viewer, Media) and Games (Celeste Classic, Web Retro). Block order below is
-menu order within each section.
+Viewer, Media) and Games (Celeste Classic, Celeste Classic 2, Celeste
+Community, Web Retro). Block order below is menu order within each section.
 
 Template (named SVG; for an image use `icon=data/icons/my-app.png` and
 `svg-icon=false` instead):
@@ -180,7 +183,29 @@ path=apps/celeste-classic/app.html
 icon=play
 svg-icon=true
 cat=Games
-desc=Play Celeste Classic from Math-halper's GitHub Pages site
+desc=Play the original Celeste Classic - its actual game files, vendored
+w=980
+h=640
+
+[application]
+id=celeste-two
+name=Celeste Classic 2
+path=apps/celeste-two/app.html
+icon=play
+svg-icon=true
+cat=Games
+desc=Play Celeste Classic 2: Lani's Trek - its actual game files, vendored
+w=980
+h=640
+
+[application]
+id=celeste-community
+name=Celeste Community
+path=apps/celeste-community/app.html
+icon=globe
+svg-icon=true
+cat=Games
+desc=Celeste Classic's community hub - practice mods, downloads and links
 w=980
 h=640
 

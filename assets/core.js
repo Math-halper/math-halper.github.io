@@ -5,7 +5,8 @@
  * data/applications.js, parsed by assets/config-loader.js. proton ships the
  * five desktop System apps, the file system suite (Files, Text Editor, Image
  * Viewer, Media, PDF Viewer — copied from main), a Calculator, Web Retro (a
- * vendored webretro emulator) and one sandboxed GitHub Pages game embed.
+ * vendored webretro emulator) and the three Celeste Classics games (their
+ * actual files, vendored from Math-halper/Celeste).
  * Built-in websites use the same catalog system (data/websites.js) and are
  * framed by the Browser app (Test Page is the only built-in site).
  * Window chrome/panel styling follows Mixt's Mint-Y theme.

@@ -52,10 +52,11 @@ five desktop System apps — App Center, Customize, Settings, About and
 Browser — and copies the **file system suite** back in from `main`'s
 `apps/inbuilt/` layout (re-homed to `apps/<name>/` here): Files, Text Editor,
 Image Viewer, Media and PDF Viewer, whose ids are exactly the ones
-`FS.appFor()` returns. Celeste Classic is added as an iframe-only wrapper
-around its separately
-hosted Math-halper GitHub Pages; no game content is copied into this
-repository. A small Calculator ships again too — new, self-contained code
+`FS.appFor()` returns. The three Celeste Classics apps (Celeste Classic,
+Celeste Classic 2, Celeste Community) carry the actual game files, copied
+byte-for-byte from [Math-halper/Celeste](https://github.com/Math-halper/Celeste)
+(classic/, two/ and speed/) — see *Vendored Celeste Classics* below. A small
+Calculator ships again too — new, self-contained code
 (`apps/calculator/`), not a restore of the removed bundle below — and Web Retro
 (`apps/web-retro/`) re-introduces retro emulation as a vendored webretro build
 (see **Vendored emulator (Web Retro)** below). The older
@@ -75,8 +76,8 @@ bundled apps and game catalogs remain removed:
   the `.arcade-*` styles, and the two Gams builds that had been copied into
   this repository under `games/gams/g/g/` (*A Dance of Fire and Ice*,
   *Grey Box Testing*) — none of those game builds or the old streamed catalog
-  are bundled here. The two live Pages URLs used by the new wrappers are
-  listed below.
+  are bundled here. The Celeste Classics files that *are* vendored here are
+  documented below.
 - **5 of the 6 built-in websites** — Guide, World History, Maths Resources,
   proton Daily and the Digital Logic Sim web edition (an independent
   re-implementation inspired by Sebastian Lague's MIT-licensed Digital Logic
@@ -104,17 +105,32 @@ those builds are no longer bundled here. Their upstream projects' licences and
 copyrights are unaffected, and this repository grants no rights in their game
 content.
 
-## Live embedded game page
+## Vendored Celeste Classics
 
-The Celeste app folder contains only proton's iframe wrapper. The page loads
-directly from the existing GitHub Pages deployment, and the wrapper provides
-an **Open in new tab** link:
+The three Celeste apps carry the **actual game files**, copied byte-for-byte
+from [Math-halper/Celeste](https://github.com/Math-halper/Celeste) (that
+repository's `classic/`, `two/` and `speed/` folders), one app per game:
 
-- Celeste Classic — [GitHub Pages](https://math-halper.github.io/Celeste/1/index.html) · [source repository](https://github.com/Math-halper/Celeste)
+- `apps/celeste-classic/` — Celeste Classic (the PICO-8 export of *Celeste
+  Classic* by Maddy Thorson & Noel Berry), from `classic/`
+- `apps/celeste-two/` — *Celeste Classic 2: Lani's Trek* (community follow-up),
+  from `two/`
+- `apps/celeste-community/` — the Celeste Classic community hub, its practice
+  mods, downloads and WebEK tool, from `speed/`
 
-The frames are sandboxed without `allow-same-origin`, keeping embedded content
-away from proton's local account storage. No Celeste games or game assets are
-copied into this repository.
+Each app folder is the game's own pages plus proton's thin iframe wrapper
+(`app.html`); nothing in the game files was edited. The pages' "all games"
+links go one level up (`href="../"`), as on the source site — `apps/index.html`
+is that picker, a copy of the source repository's root selector with its three
+links remapped to the app folders. A few hub links point at site-absolute
+paths the source site itself doesn't host (`/glossary/` and friends) and stay
+unresolved here, as they do upstream.
+
+All rights in the games, builds and assets remain with their authors (the
+Celeste Classic PICO-8 game is © Maddy Thorson, Noel Berry and the PICO-8
+community; the community follow-up, practice mods and tools are © their
+authors). This repository grants no rights in that content — it is here so
+the three apps run from the user's own repository files.
 
 ## Vendored emulator (Web Retro)
 

@@ -96,7 +96,7 @@ registerApp({
         if (event.data && event.data.status === 'ready') bc.postMessage({ rom: file });
       };
       main.querySelector('#wr-frame').src =
-        `webretro/launch.html?core=${encodeURIComponent(core)}&rom=channel&name=${encodeURIComponent(name)}&channel=${encodeURIComponent(channel)}`;
+        `apps/web-retro/webretro/launch.html?core=${encodeURIComponent(core)}&rom=channel&name=${encodeURIComponent(name)}&channel=${encodeURIComponent(channel)}`;
     }
 
     again.addEventListener('click', picker);
