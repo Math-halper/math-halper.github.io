@@ -1,9 +1,10 @@
 /* The current build keeps its five desktop System apps plus the file system
  * suite (Files, Text Editor, Image Viewer, Media, PDF Viewer — copied from
  * main), a Calculator and Web Retro (a vendored webretro emulator, no ROMs
- * included), and the three Celeste Classics apps — Celeste Classic, Celeste
- * Classic 2 and Celeste Community, each a thin wrapper around the actual
- * game files, vendored byte-for-byte from github.com/Math-halper/Celeste.
+ * included), and the vendored game apps — the Celeste Classics trio (from
+ * github.com/Math-halper/Celeste) and Mari0 + Super Mario 64 (from
+ * github.com/Math-halper/Mario, only the game builds) — each a thin wrapper
+ * around the actual game files, copied byte-for-byte.
  * The one built-in website is Test Page, the Browser smoke test. These tests
  * keep the catalog, wrappers, generated file-system manifest and running
  * desktop in sync. */
@@ -18,7 +19,7 @@ const ROOT = path.resolve(__dirname, '..');
 const source = (p) => fs.readFileSync(path.join(ROOT, p), 'utf8');
 const SYSTEM_APPS = ['appcenter', 'customize', 'settings', 'about', 'browser',
   'calculator', 'files', 'text-editor', 'pdf', 'image-viewer', 'media',
-  'celeste-classic', 'celeste-two', 'celeste-community', 'web-retro'];
+  'celeste-classic', 'celeste-two', 'celeste-community', 'mari0', 'sm64', 'web-retro'];
 /* Menu sections for each app (data/applications.js cat=), in catalog order.
  * Every new app is filed here with its respective section — the catalog test
  * asserts each app's cat matches, and the boot test asserts the four menu
@@ -27,14 +28,19 @@ const SYSTEM_CATS = {
   appcenter: 'System', customize: 'System', settings: 'System', about: 'System', browser: 'System',
   calculator: 'Productivity', files: 'Productivity', 'text-editor': 'Productivity', pdf: 'Productivity',
   'image-viewer': 'Media', media: 'Media',
-  'celeste-classic': 'Games', 'celeste-two': 'Games', 'celeste-community': 'Games', 'web-retro': 'Games',
+  'celeste-classic': 'Games', 'celeste-two': 'Games', 'celeste-community': 'Games',
+  'mari0': 'Games', 'sm64': 'Games', 'web-retro': 'Games',
 };
-/* Each Celeste app frames the game page that ships in its own folder. */
+/* Each game app frames the game page that ships in its own folder. */
 const GAME_PAGES = {
   'celeste-classic': 'apps/games/celeste-classic/index.html',
   'celeste-two': 'apps/games/celeste-two/index.html',
   'celeste-community': 'apps/games/celeste-community/index.html',
+  'mari0': 'apps/games/mari0/index.html',
+  'sm64': 'apps/games/sm64/index.html',
 };
+/* Games whose pages carry the source sites' href="../" all-games link. */
+const PICKER_LINKED = ['celeste-classic', 'celeste-two', 'celeste-community', 'sm64'];
 /* Every script index.html loads, in order, minus boot.js (which starts the
  * auth flow and needs a served page). */
 const SHELL = ['assets/store.js', 'assets/icons.js', 'data/fs-manifest.js', 'assets/fs.js',
@@ -64,7 +70,7 @@ function catalog() {
   };
 }
 
-test('the catalog is the desktop apps, the file system suite, a calculator, web retro, the three vendored Celeste games and the built-in test site', () => {
+test('the catalog is the desktop apps, the file system suite, a calculator, web retro, the vendored Celeste and Mario games and the built-in test site', () => {
   const { apps, sites, warnings, icons, render, renderCatalogIcon, validIconPath } = catalog();
   assert.deepEqual(Array.from(warnings), [], 'catalog parses without warnings');
   /* Array.from everywhere: the catalogs come from a vm context, so their
@@ -171,7 +177,7 @@ test('every catalog entry points at a real, syntactically valid app module', () 
     assert.ok(html.includes('[data-e="ext"]'), `${id} has no Open in new tab escape hatch`);
     assert.ok(fs.existsSync(path.join(ROOT, page)), `${id}'s game page is missing`);
   }
-  /* The vendored games really are the games: their builds are huge JS. */
+  /* The vendored games really are the games: their builds are huge. */
   for (const [p, min] of [
     ['apps/games/celeste-classic/celeste.js', 1000000],
     ['apps/games/celeste-classic/celeste.p8.png', 30000],
@@ -179,13 +185,16 @@ test('every catalog entry points at a real, syntactically valid app module', () 
     ['apps/games/celeste-community/celeste_practice_mod.js', 1000000],
     ['apps/games/celeste-community/celeste2_1.1_practice_mod.js', 1000000],
     ['apps/games/celeste-community/webek.js', 1000000],
+    ['apps/games/mari0/love.wasm', 4000000],
+    ['apps/games/mari0/game.data', 3000000],
+    ['apps/games/sm64/sm64.us.f3dex2e.wasm', 15000000],
+    ['apps/games/sm64/sm64.us.f3dex2e.js', 200000],
   ]) {
     assert.ok(fs.statSync(path.join(ROOT, p)).size >= min, `${p} is not the real game build`);
   }
   /* The game pages are untouched: their "all games" links still go one level
-   * up, and apps/games/index.html is the picker that link expects (remapped
-   * from the source repository's root selector). */
-  for (const id of Object.keys(GAME_PAGES)) {
+   * up, and apps/games/index.html is the picker those links expect. */
+  for (const id of PICKER_LINKED) {
     assert.ok(source(`apps/games/${id}/index.html`).includes('href="../"'),
       `apps/games/${id}/index.html was edited — its ../ link is gone`);
   }
@@ -254,7 +263,7 @@ test('the system manifest still matches the repository exactly', () => {
     'Manifest and repository disagree — re-run python3 tools/gen-fs-manifest.py');
 });
 
-test('the desktop boots, lists and opens all fifteen catalogued apps', async () => {
+test('the desktop boots, lists and opens all seventeen catalogued apps', async () => {
   const virtualConsole = new VirtualConsole(), errors = [];
   virtualConsole.on('jsdomError', (err) => errors.push(err.message));
   const dom = new JSDOM('<!doctype html><main id="auth" hidden></main><div id="desktop" hidden></div><div id="toasts"></div>', {
@@ -303,7 +312,7 @@ test('the desktop boots, lists and opens all fifteen catalogued apps', async () 
       else assert.ok(w.eval('FS').stat(s.target), `default shortcut to a missing path: ${s.target}`);
     }
 
-    // The start menu groups all fifteen apps into their four sections.
+    // The start menu groups all seventeen apps into their four sections.
     const menu = w.document.querySelector('#startmenu');
     assert.deepEqual([...menu.querySelectorAll('.sm-cat')].map((e) => e.textContent),
       ['System', 'Productivity', 'Media', 'Games']);
@@ -555,7 +564,7 @@ test('Customize saves, displays and resets uploaded app icon images', async () =
     const browserWindow = w.eval('wins').get('browser');
     assert.equal(body.querySelector('#cust-files-shortcut'), null, 'Customize still offers a Files shortcut');
     assert.deepEqual([...body.querySelectorAll('#cust-modlist .card b')].map((b) => b.textContent).slice(0, SYSTEM_APPS.length),
-      ['App Center', 'Customize', 'Settings', 'About', 'Browser', 'Calculator', 'Files', 'Text Editor', 'PDF Viewer', 'Image Viewer', 'Media', 'Celeste Classic', 'Celeste Classic 2', 'Celeste Community', 'Web Retro']);
+      ['App Center', 'Customize', 'Settings', 'About', 'Browser', 'Calculator', 'Files', 'Text Editor', 'PDF Viewer', 'Image Viewer', 'Media', 'Celeste Classic', 'Celeste Classic 2', 'Celeste Community', 'Mari0', 'Super Mario 64', 'Web Retro']);
 
     const uploadBrowserIcon = async () => {
       const input = body.querySelector('[data-micon-file="browser"]');

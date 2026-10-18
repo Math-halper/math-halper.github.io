@@ -1,0 +1,25 @@
+# Credits and third-party notices
+
+Thank you to everyone who publishes their work freely. These projects are unofficial and are not affiliated with Nintendo. Each game folder keeps its author's original credits and license notices; only the playable builds are included here, so the upstream revision each one came from is recorded below.
+
+## Super Mario 64 browser build
+
+- Source: [incrediblerevived11/incrediblerevived11.github.io — sm64](https://github.com/incrediblerevived11/incrediblerevived11.github.io/tree/main/sm64), commit `a08ec53bd0d959b555f488ec8b189ff0f774fb57`.
+- The three build files in `sm64/` are byte-for-byte identical to that commit.
+- Credit to the upstream host and the original SM64 port/decompilation contributors. The supplied folder does not identify the full port authorship.
+- **No declared upstream license.** Public availability does not grant redistribution rights, and no license or permission for Nintendo game assets is implied.
+
+## Mari0 — Mario × Portal
+
+- Author: **Maurice Guégan / Stabyourself**, with additional contributors credited in the game's own source and menus.
+- Source: <https://github.com/Stabyourself/mari0>, commit `57829fd23e783d1a2993b9d64a7f7e6b131e572f` (v1.6 / LÖVE 11.4).
+- Upstream README and `main.lua` state the **MIT** license; no standalone MIT text ships upstream, so none is invented here.
+- Browser runtime: [**love.js**](https://github.com/Davidobot/love.js) by **Davidobot**, continuing **Tanner Rogalsky's** original Emscripten port of LÖVE (both MIT). Its license is bundled at `mari0/web/LOVEJS-LICENSE.txt`.
+- Browser-specific changes: LuaSocket replaced by offline stubs, a single-threaded streaming music loader, GLSL ported to WebGL ES 1.0 rules, save-folder opening disabled, online update/mappack/netplay paths turned off, LÖVE's stop-all audio call replaced by a per-source sweep (love.js's OpenAL shim crashes on it, which killed the game on every death), and portal input rebuilt because upstream only fired portals from the mouse and looked the binding up with the wrong index (**Q** switches the held colour, and any click or tap fires it, so touch works too).
+- Mario, Portal, and other third-party artwork, music, and trademarks may carry separate rights. A code license is not blanket asset clearance.
+
+## Not included
+
+Fan projects that were reviewed but not shipped: **Mario Party's Slaparazzi** by André Cardoso and Ryan Pocock via Mix and Jam (<https://github.com/mixandjam/MarioParty-Slaparazzi>) — code MIT, 3D assets CC BY-NC 3.0, so noncommercial use only; and **minirop/Super-Mario-Remake**, a C/SDL Super Mario Bros. remake with no stated license. Neither is redistributed here.
+
+No repository-wide license is applied to these independently licensed third-party projects. Public availability alone is not permission; each original author's terms govern their project.

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en-us"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Super Mario 64</title>
+<style>
+      body, html{
+        margin: 0;
+        padding: 0;
+        width: 100vw;
+        height: 100vh;
+        overflow: hidden;
+        background: black;
+        font-family: Arial, Helvetica, sans-serif;
+        color: white;
+        image-rendering: pixelated;
+        scrollbar-width: none;
+        touch-action: none;
+      }
+      ::-webkit-scrollbar {
+        display: none;
+      }
+      #container {
+			background: black;
+			position: absolute;
+			width: 100%;
+			height: 100%;
+			left: 0;
+			right: 0;
+			top: 0;
+			bottom: 0;
+			overflow: hidden;
+      }
+      canvas {
+			border: 0px none;
+			display: block;
+			margin: auto;
+			width: 100%;
+			height: 100%;
+			object-fit: contain;
+			image-rendering: pixelated;
+			outline: none;
+      }
+      #hint {
+        position: fixed; left: 50%; bottom: 12px; transform: translateX(-50%);
+        font: 13px/1.4 system-ui, sans-serif; color: #cfd8e6; background: rgba(0,0,0,0.6);
+        padding: 7px 12px; border-radius: 8px; pointer-events: none;
+        transition: opacity 0.6s ease; z-index: 5;
+      }
+      #hint.hide { opacity: 0; }
+    </style>
+<script data-dapp-detection="">
+(function() {
+  let alreadyInsertedMetaTag = false
+
+  function __insertDappDetected() {
+    if (!alreadyInsertedMetaTag) {
+      const meta = document.createElement('meta')
+      meta.name = 'dapp-detected'
+      document.head.appendChild(meta)
+      alreadyInsertedMetaTag = true
+    }
+  }
+
+  if (window.hasOwnProperty('web3')) {
+    // Note a closure can't be used for this var because some sites like
+    // www.wnyc.org do a second script execution via eval for some reason.
+    window.__disableDappDetectionInsertion = true
+    // Likely oldWeb3 is undefined and it has a property only because
+    // we defined it. Some sites like wnyc.org are evaling all scripts
+    // that exist again, so this is protection against multiple calls.
+    if (window.web3 === undefined) {
+      return
+    }
+    __insertDappDetected()
+  } else {
+    var oldWeb3 = window.web3
+    Object.defineProperty(window, 'web3', {
+      configurable: true,
+      set: function (val) {
+        if (!window.__disableDappDetectionInsertion)
+          __insertDappDetected()
+        oldWeb3 = val
+      },
+      get: function () {
+        if (!window.__disableDappDetectionInsertion)
+          __insertDappDetected()
+        return oldWeb3
+      }
+    })
+  }
+})()</script></head>
+<body data-gr-c-s-loaded="true">
+<div id="container">
+<div id="hint">Click the game once to capture keyboard and mouse. <a href="../" style="color:#9ccaff">All games</a></div>
+<canvas class="emscripten" id="canvas" width="1920" height="1080" style="cursor: default;"></canvas>
+</div>
+<script type="text/javascript">
+      // The page itself is the frame: the canvas fills the browser window. Just fade
+      // the hint out after a while or after the first interaction.
+      function dismissHintLater() {
+        var hint = document.getElementById('hint');
+        if (hint) setTimeout(function () { hint.classList.add('hide'); }, 4000);
+      }
+      ['pointerdown', 'keydown', 'touchstart'].forEach(function (type) {
+        document.addEventListener(type, dismissHintLater, {passive: true});
+      });
+      setTimeout(function () {
+        var hint = document.getElementById('hint');
+        if (hint) hint.classList.add('hide');
+      }, 12000);
+
+      var Module = {
+        preRun: [],
+        postRun: [],
+        print: function(text) { console.log(text); },
+        printErr: function(text) { console.warn(text); },
+        canvas: (function() {
+          var canvas = document.getElementById('canvas');
+          canvas.addEventListener("webglcontextlost", function(e) {
+            alert('WebGL context lost. You will need to reload the page.');
+            e.preventDefault();
+          }, false);
+          return canvas;
+        })(),
+        setStatus: function(text) {
+        }
+      };
+    </script>
+<script async="" type="text/javascript" src="sm64.us.f3dex2e.js"></script>
+<script>
+  (function () {
+    var canvas = document.getElementById('canvas');
+
+    // The Emscripten build only listens for mouse input, so translate taps into a
+    // click at the same position; otherwise touch devices cannot start the game.
+    canvas.addEventListener('touchstart', function (event) {
+      if (event.touches.length > 1) return;
+      event.preventDefault();
+      var touch = event.changedTouches[0];
+      var options = {bubbles: true, cancelable: true, clientX: touch.clientX, clientY: touch.clientY, button: 0, buttons: 1};
+      canvas.dispatchEvent(new MouseEvent('mousedown', options));
+      canvas.dispatchEvent(new MouseEvent('mouseup', options));
+    }, {passive: false});
+    canvas.addEventListener('touchend', function (event) { event.preventDefault(); }, {passive: false});
+    canvas.addEventListener('touchmove', function (event) { event.preventDefault(); }, {passive: false});
+
+    canvas.addEventListener('click', function () { canvas.focus(); });
+    canvas.focus();
+  })();
+</script>
+</body></html>

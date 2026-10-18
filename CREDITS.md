@@ -124,8 +124,9 @@ repository's `classic/`, `two/` and `speed/` folders), one app per game:
 Each app folder is the game's own pages plus proton's thin iframe wrapper
 (`app.html`); nothing in the game files was edited. The pages' "all games"
 links go one level up (`href="../"`), as on the source site — `apps/games/index.html`
-is that picker, a copy of the source repository's root selector with its three
-links remapped to the app folders. A few hub links point at site-absolute
+is that picker: proton's own "all games" page listing every game in the folder
+(the source repository's root selector is not used). A few hub links point at
+site-absolute
 paths the source site itself doesn't host (`/glossary/` and friends) and stay
 unresolved here, as they do upstream.
 
@@ -134,6 +135,42 @@ Celeste Classic PICO-8 game is © Maddy Thorson, Noel Berry and the PICO-8
 community; the community follow-up, practice mods and tools are © their
 authors). This repository grants no rights in that content — it is here so
 the three apps run from the user's own repository files.
+
+## Vendored Mario games
+
+Two unofficial Mario fan games are vendored from
+[Math-halper/Mario](https://github.com/Math-halper/Mario) — **only the game
+builds**; that collection's landing page, READMEs and other files are not
+used. Each app folder is the game's own files plus proton's thin iframe
+wrapper (`app.html`); nothing in the game files was edited.
+
+- `apps/games/sm64/` — Super Mario 64: the three build files (`index.html`,
+  `sm64.us.f3dex2e.js`, `sm64.us.f3dex2e.wasm`) of a precompiled WebAssembly
+  port of the SM64 decompilation, byte-for-byte from that collection's `sm64/`
+  folder (itself identical to
+  [incrediblerevived11's build](https://github.com/incrediblerevived11/incrediblerevived11.github.io/tree/main/sm64)
+  @ `a08ec53`). Credit to that host and the original SM64
+  port/decompilation contributors; the build does not identify the full port
+  authorship. **No declared upstream license** — public availability does not
+  grant redistribution rights.
+- `apps/games/mari0/` — *Mari0 — Mario × Portal* by **Maurice Guégan /
+  Stabyourself** ([Stabyourself/mari0](https://github.com/Stabyourself/mari0),
+  v1.6 / LÖVE 11.4, stated **MIT** upstream), byte-for-byte from that
+  collection's `mari0/web/` build. The browser runtime is **love.js** by
+  **Davidobot** (continuing **Tanner Rogalsky's** Emscripten port of LÖVE,
+  both MIT); its license ships as `apps/games/mari0/LOVEJS-LICENSE.txt`, and
+  the build's own credits notice as `apps/games/mari0/CREDITS.txt`. The
+  browser edition's changes (offline stubs for LuaSocket, WebGL GLSL rules,
+  save-folder opening disabled, online/mappack/netplay paths off, a
+  per-source audio-stop workaround for love.js's OpenAL shim, rebuilt portal
+  input) were made upstream of this repository — see that collection's
+  credits.
+
+**These are unofficial fan projects and are not affiliated with Nintendo.**
+Mario, Portal and other third-party artwork, music and trademarks may carry
+separate rights; a code license is not blanket asset clearance. This
+repository grants no rights in Nintendo's game assets, and no permission to
+redistribute them is claimed or implied.
 
 ## Vendored emulator (Web Retro)
 
