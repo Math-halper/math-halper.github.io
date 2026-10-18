@@ -23,7 +23,11 @@ The **Mario** collection adds **Mari0** (Mario × Portal) and **Super Mario
 [Math-halper/Mario](https://github.com/Math-halper/Mario) (only the games:
 its landing page and READMEs are not used). **Cookie Clicker** is Orteil's
 idle bakery game, copied byte-for-byte from the offline mirror in
-[Gams-Offline/Gams](https://github.com/Gams-Offline/Gams) (`g/g/cookie/`). A small
+[Gams-Offline/Gams](https://github.com/Gams-Offline/Gams) (`g/g/cookie/`), and
+**23 more games** from that same Gams collection join the Games section —
+Flash classics (Pacman, Tetris, the Henry Stickmin series and more) on the
+shared open-source **Ruffle Flash Player** app, Unity WebGL builds and
+single-file HTML5 games. A small
 **Calculator** (new, self-contained code in `apps/productivity/calculator/`) ships again
 too, and **Web Retro** vendors the
 [webretro](https://github.com/BinBashBanana/webretro) emulator build from
@@ -44,12 +48,35 @@ game bundles and earlier built-in sites remain removed (except Test Page).
 | **PDF Viewer** (`pdf`) | Read PDF files in your browser's own viewer — no extra library, nothing uploaded |
 | **Image Viewer** (`image-viewer`) | View PNG, JPG, GIF, WebP, AVIF, BMP, ICO and SVG files with zoom and a folder playlist |
 | **Media** (`media`) | Play audio and video files stored in your home folder, with your browser's own codecs |
+| **2048** (`game-2048`) | Play 2048 - join the tiles |
+| **Bloons Tower Defense 1** (`bloons-tower-defense-1`) | Play Bloons Tower Defense 1 - the original balloon-popping tower defense |
+| **Bloons Tower Defense 2** (`bloons-tower-defense-2`) | Play Bloons Tower Defense 2 - more balloons, more towers |
+| **Bloons Tower Defense 5** (`bloons-tower-defense-5`) | Play Bloons Tower Defense 5 - the classic tower defense |
+| **Bloxorz** (`bloxorz`) | Play Bloxorz - roll the block to the goal |
+| **Breaking The Bank** (`breaking-the-bank`) | Play Breaking The Bank - a Henry Stickmin adventure |
 | **Celeste Classic** (`celeste-classic`) | Play the original PICO-8 Celeste Classic — its actual game files, vendored from Math-halper/Celeste |
 | **Celeste Classic 2** (`celeste-two`) | Play Celeste Classic 2: Lani's Trek — its actual game files, vendored from Math-halper/Celeste |
 | **Celeste Community** (`celeste-community`) | The Celeste Classic community hub — practice mods, downloads and links (vendored from Math-halper/Celeste) |
 | **Cookie Clicker** (`cookie-clicker`) | Play Cookie Clicker — Orteil's idle bakery game (offline mirror, vendored from Gams-Offline/Gams) |
+| **Drive Mad** (`drive-mad`) | Play Drive Mad - the physics driving game |
+| **Escaping The Prison** (`escaping-the-prison`) | Play Escaping The Prison - a Henry Stickmin adventure |
+| **Fleeing The Complex** (`fleeing-the-complex`) | Play Fleeing The Complex - a Henry Stickmin adventure |
+| **Grey Box Testing** (`grey-box-testing`) | Play Grey Box Testing |
+| **Infiltrating The Airship** (`infiltrating-the-airship`) | Play Infiltrating The Airship - a Henry Stickmin adventure |
 | **Mari0** (`mari0`) | Play Mari0 — Mario × Portal by Maurice Guégan / Stabyourself (love.js build, vendored from Math-halper/Mario) |
+| **Offline Paradise** (`offline-paradise`) | Play Offline Paradise |
+| **Pacman** (`pacman`) | Play Pacman - the arcade classic |
+| **Ruffle Flash Player** (`ruffle-flash-player`) | Load and play your own Flash .swf files |
+| **Slope** (`slope`) | Play Slope - roll the ball down the neon slope |
+| **Spacebar Clicker** (`spacebar-clicker`) | Play Spacebar Clicker - mash the spacebar |
+| **Stack** (`stack`) | Play Stack - time the falling blocks |
+| **Stealing The Diamond** (`stealing-the-diamond`) | Play Stealing The Diamond - a Henry Stickmin adventure |
+| **Stickman Hook** (`stickman-hook`) | Play Stickman Hook - swing through the levels |
 | **Super Mario 64** (`sm64`) | Play the Super Mario 64 WebAssembly browser build (unofficial fan port, vendored from Math-halper/Mario) |
+| **Super Mario RPG** (`super-mario-rpg`) | Play Super Mario RPG in Web Retro - bring your own ROM |
+| **Tetris** (`tetris`) | Play Tetris - the falling-blocks classic |
+| **The Impossible Quiz** (`the-impossible-quiz`) | Play The Impossible Quiz - the wildly unfair quiz |
+| **Tunnel Rush** (`tunnel-rush`) | Play Tunnel Rush - dodge through the spinning tunnel |
 | **Web Retro** (`web-retro`) | Play your own retro ROMs — N64, SNES, NES and Game Boy (webretro); load them from this computer or your proton Files |
 
 Rows are listed in start-menu order: **System**, then **Productivity**, **Media** and **Games**.
@@ -81,7 +108,7 @@ runtime dependencies or build step. Optional regression tests use jsdom:
 ## Project layout (everything is a module)
 
 - **Apps:** one folder + HTML file each — `apps/<category>/<name>/app.html`
-  (18 apps in four category folders — `system/`, `productivity/`, `media/`,
+  (41 apps in four category folders — `system/`, `productivity/`, `media/`,
   `games/` — matching the menu sections, plus
   two starting points: `apps/_template/` for a normal app and `apps/_embed/`
   for one that is only a framed page — change its single `EMBED_URL` constant).
@@ -178,8 +205,8 @@ deletes the file.
 - **Menu sections** — the start menu groups the apps by `cat=`: **System**
   (App Center, Customize, Settings, About, Browser), **Productivity**
   (Calculator, Files, Text Editor, PDF Viewer), **Media** (Image Viewer,
-  Media) and **Games** (Celeste Classic, Celeste Classic 2, Celeste
-  Community, Cookie Clicker, Mari0, Super Mario 64, Web Retro), with **My Apps** for
+  Media) and **Games** (30 games: 2048, the Bloons TD series, the Henry Stickmin
+  series, Pacman, Tetris, Slope, Tunnel Rush and more), with **My Apps** for
   anything an account adds. The order is `CATS` in `assets/core.js`.
 - **Customize — everything is modular.** Rename any app, change its vector
   icon or upload a raster image for it, move it to another (or a brand-new)
@@ -240,7 +267,11 @@ assets are granted or implied (details in [`CREDITS.md`](CREDITS.md)). Cookie
 Clicker's files are copied the same way from the offline mirror in
 [Gams-Offline/Gams](https://github.com/Gams-Offline/Gams) (`g/g/cookie/`) —
 the game is © Orteil / DashNet, and the mirror grants no redistribution
-rights (details in [`CREDITS.md`](CREDITS.md)). Web Retro ships
+rights (details in [`CREDITS.md`](CREDITS.md)). The 23-game Gams batch is
+copied the same way from [Gams-Offline/Gams](https://github.com/Gams-Offline/Gams) —
+each game is © its respective authors and the mirrors grant no
+redistribution rights; Super Mario RPG ships **without any ROM**, exactly
+like Web Retro (details in [`CREDITS.md`](CREDITS.md)). Web Retro ships
 its emulator files (webretro, vendored from Gams-Offline/Gams under
 GPL-3.0 — see [`CREDITS.md`](CREDITS.md)), but **no game ROMs** are included:
 you bring your own.

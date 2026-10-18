@@ -202,6 +202,40 @@ as the offline copy the Gams link points at, and no further rights are
 claimed or implied. The app icon is the game's own cookie art from the
 mirror's `img/cookieclicker.png`, scaled into `data/icons/`.
 
+## Vendored Gams-Offline games (batch)
+
+Twenty-three more games ship under `apps/games/`, each copied from
+[Gams-Offline/Gams](https://github.com/Gams-Offline/Gams):
+
+- **Single-file HTML5 games** — Slope, Stickman Hook, Stack, 2048, Spacebar
+  Clicker and Offline Paradise (`g/<name>.html`, one self-contained file
+  each).
+- **Flash classics, played on Ruffle** — Pacman, Tetris, Bloxorz, The
+  Impossible Quiz, Bloons Tower Defense 1/2/5 and the five Henry Stickmin
+  games (Breaking The Bank, Escaping The Prison, Stealing The Diamond,
+  Infiltrating The Airship, Fleeing The Complex). Their builds are the packed
+  SWFs in `g/g/Ruffle/swfs/`, shipped beside each app's tiny Gams loader
+  shim. That shim is edited **only** in its two loader paths (the SWF data
+  now lives beside it; the player is shared as `apps/games/ruffle-flash-player/`)
+  — nothing else in it changed.
+- **WebGL builds** — Tunnel Rush and Grey Box Testing (`g/g/tunnelrush/`,
+  `g/g/greybox/`) and Drive Mad (`g/g/drivemad/`), copied folder-for-folder.
+- **Ruffle Flash Player** (`apps/games/ruffle-flash-player/`) — the shared
+  Flash runtime from `g/g/Ruffle/` (without the `swfs/` library — every Flash
+  game app carries its own build). Ruffle itself is open source, MIT or
+  Apache-2.0 ([ruffle-rs/ruffle](https://github.com/ruffle-rs/ruffle)).
+- **Super Mario RPG** (`apps/games/super-mario-rpg/`) — only a launcher shim
+  into this repository's own Web Retro (core `snes9x`, `rom=smrpg.smc`).
+  **No ROM ships with it**, exactly like Web Retro: you supply your own copy.
+
+Each game is © its respective authors — for example the Henry Stickmin series
+by PuffballsUnited (Innersloth), the Bloons series by Ninja Kiwi, Pac-Man ©
+Bandai Namco, Tetris © Tetris Holding, 2048 by Gabriele Cirulli. The mirrors
+carry **no license granting redistribution**; they are here as the offline
+copies the Gams links point at, and no further rights are claimed or implied.
+The app icons are the Gams collection's own icon images for each game, scaled
+into `data/icons/`.
+
 ## Vendored emulator (Web Retro)
 
 The Web Retro app (`apps/games/web-retro/`) vendors the **webretro** emulator —

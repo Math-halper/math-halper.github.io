@@ -29,7 +29,9 @@ games (`mari0/`, `sm64/`) carry their game builds byte-for-byte from
 [Math-halper/Mario](https://github.com/Math-halper/Mario) — only the games,
 none of that collection's other files. Cookie Clicker (`cookie-clicker/`)
 carries Orteil's idle game byte-for-byte from the offline mirror in
-[Gams-Offline/Gams](https://github.com/Gams-Offline/Gams) (`g/g/cookie/`).
+[Gams-Offline/Gams](https://github.com/Gams-Offline/Gams) (`g/g/cookie/`). A 23-game batch from the same Gams collection (Flash
+classics on the shared Ruffle player, Unity WebGL builds and single-file
+HTML5 games) joins them.
 `apps/games/index.html`
 is the "all games" picker their back-links expect (see `CREDITS.md`).
 The previously bundled apps and game catalogs remain removed. The only
@@ -118,12 +120,35 @@ matching the menu sections (`cat=`, ordered by `CATS` in `assets/core.js`).
 | `productivity/` | PDF Viewer (`pdf`) — read PDFs in your browser's own viewer |
 | `media/` | Image Viewer (`image-viewer`) — PNG, JPG, GIF, WebP, AVIF, BMP, ICO and SVG with zoom and playlists |
 | `media/` | Media (`media`) — play audio and video files from your home folder |
+| `games/` | 2048 (`game-2048`) — the vendored single-file game (from Gams-Offline/Gams `g/`) plus its wrapper |
+| `games/` | Bloons Tower Defense 1 (`bloons-tower-defense-1`) — the vendored Flash build and loader shim (from Gams-Offline/Gams `g/g/Ruffle/swfs/`; runs on the shared Ruffle player) plus its wrapper |
+| `games/` | Bloons Tower Defense 2 (`bloons-tower-defense-2`) — the vendored Flash build and loader shim (from Gams-Offline/Gams `g/g/Ruffle/swfs/`; runs on the shared Ruffle player) plus its wrapper |
+| `games/` | Bloons Tower Defense 5 (`bloons-tower-defense-5`) — the vendored Flash build and loader shim (from Gams-Offline/Gams `g/g/Ruffle/swfs/`; runs on the shared Ruffle player) plus its wrapper |
+| `games/` | Bloxorz (`bloxorz`) — the vendored Flash build and loader shim (from Gams-Offline/Gams `g/g/Ruffle/swfs/`; runs on the shared Ruffle player) plus its wrapper |
+| `games/` | Breaking The Bank (`breaking-the-bank`) — the vendored Flash build and loader shim (from Gams-Offline/Gams `g/g/Ruffle/swfs/`; runs on the shared Ruffle player) plus its wrapper |
 | `games/` | Celeste Classic (`celeste-classic`) — the vendored PICO-8 game (from Math-halper/Celeste `classic/`) plus its wrapper |
 | `games/` | Celeste Classic 2 (`celeste-two`) — the vendored Lani's Trek game (from Math-halper/Celeste `two/`) plus its wrapper |
 | `games/` | Celeste Community (`celeste-community`) — the vendored community hub, practice mods and tools (from Math-halper/Celeste `speed/`) plus its wrapper |
 | `games/` | Cookie Clicker (`cookie-clicker`) — the vendored offline mirror of Orteil's game (from Gams-Offline/Gams `g/g/cookie/`, minus `img/Thumbs.db`) plus its wrapper |
+| `games/` | Drive Mad (`drive-mad`) — the vendored WebGL build (from Gams-Offline/Gams `g/g/`) plus its wrapper |
+| `games/` | Escaping The Prison (`escaping-the-prison`) — the vendored Flash build and loader shim (from Gams-Offline/Gams `g/g/Ruffle/swfs/`; runs on the shared Ruffle player) plus its wrapper |
+| `games/` | Fleeing The Complex (`fleeing-the-complex`) — the vendored Flash build and loader shim (from Gams-Offline/Gams `g/g/Ruffle/swfs/`; runs on the shared Ruffle player) plus its wrapper |
+| `games/` | Grey Box Testing (`grey-box-testing`) — the vendored WebGL build (from Gams-Offline/Gams `g/g/`) plus its wrapper |
+| `games/` | Infiltrating The Airship (`infiltrating-the-airship`) — the vendored Flash build and loader shim (from Gams-Offline/Gams `g/g/Ruffle/swfs/`; runs on the shared Ruffle player) plus its wrapper |
 | `games/` | Mari0 (`mari0`) — the vendored love.js build of Mario × Portal (from Math-halper/Mario `mari0/web/`) plus its wrapper |
+| `games/` | Offline Paradise (`offline-paradise`) — the vendored single-file game (from Gams-Offline/Gams `g/`) plus its wrapper |
+| `games/` | Pacman (`pacman`) — the vendored Flash build and loader shim (from Gams-Offline/Gams `g/g/Ruffle/swfs/`; runs on the shared Ruffle player) plus its wrapper |
+| `games/` | Ruffle Flash Player (`ruffle-flash-player`) — the vendored Ruffle Flash player (from Gams-Offline/Gams `g/g/Ruffle/`, without the swfs library) plus its wrapper |
+| `games/` | Slope (`slope`) — the vendored single-file game (from Gams-Offline/Gams `g/`) plus its wrapper |
+| `games/` | Spacebar Clicker (`spacebar-clicker`) — the vendored single-file game (from Gams-Offline/Gams `g/`) plus its wrapper |
+| `games/` | Stack (`stack`) — the vendored single-file game (from Gams-Offline/Gams `g/`) plus its wrapper |
+| `games/` | Stealing The Diamond (`stealing-the-diamond`) — the vendored Flash build and loader shim (from Gams-Offline/Gams `g/g/Ruffle/swfs/`; runs on the shared Ruffle player) plus its wrapper |
+| `games/` | Stickman Hook (`stickman-hook`) — the vendored single-file game (from Gams-Offline/Gams `g/`) plus its wrapper |
 | `games/` | Super Mario 64 (`sm64`) — the vendored WebAssembly browser build (from Math-halper/Mario `sm64/`) plus its wrapper |
+| `games/` | Super Mario RPG (`super-mario-rpg`) — the vendored launcher into Web Retro (from Gams-Offline/Gams `g/`; bring your own ROM) plus its wrapper |
+| `games/` | Tetris (`tetris`) — the vendored Flash build and loader shim (from Gams-Offline/Gams `g/g/Ruffle/swfs/`; runs on the shared Ruffle player) plus its wrapper |
+| `games/` | The Impossible Quiz (`the-impossible-quiz`) — the vendored Flash build and loader shim (from Gams-Offline/Gams `g/g/Ruffle/swfs/`; runs on the shared Ruffle player) plus its wrapper |
+| `games/` | Tunnel Rush (`tunnel-rush`) — the vendored WebGL build (from Gams-Offline/Gams `g/g/`) plus its wrapper |
 | `games/` | Web Retro (`web-retro`) — the vendored webretro emulator (bring your own ROMs — from this computer or proton Files) |
 | `_template/` | not an app — the starting point for a new one (copy it into its category folder) |
 | `_embed/` | not an app — the starting point for one that is only a framed page (`EMBED_URL`) |

@@ -34,15 +34,26 @@ Community — game files copied byte-for-byte from github.com/Math-halper/Celest
 the two Mario games (Mari0 and Super Mario 64 — game builds copied
 byte-for-byte from github.com/Math-halper/Mario, only the games) and Cookie
 Clicker (Orteil's idle game, copied byte-for-byte from the offline mirror in
-github.com/Gams-Offline/Gams). Each game
+github.com/Gams-Offline/Gams) and 23 more games from that same Gams
+collection (Flash classics on the shared Ruffle player, Unity WebGL builds
+and single-file HTML5 games). Each game
 app folder is the game's own files plus a thin proton iframe wrapper, and
 apps/games/index.html is the picker their "all games" links expect.
 
 The start menu groups them by cat=: System (the desktop's own five),
 Productivity (Calculator, Files, Text Editor, PDF Viewer), Media (Image
-Viewer, Media) and Games (Celeste Classic, Celeste Classic 2, Celeste
-Community, Cookie Clicker, Mari0, Super Mario 64, Web Retro). Block order
-below is menu order within each section.
+Viewer, Media) and Games (30 games: 2048, Bloons Tower Defense 1, Bloons Tower
+Defense 2, Bloons Tower Defense 5, Bloxorz, Breaking The Bank, Celeste
+Classic, Celeste Classic 2, Celeste Community, Cookie Clicker, Drive Mad,
+Escaping The Prison, Fleeing The Complex, Grey Box Testing, Infiltrating
+The Airship, Mari0, Offline Paradise, Pacman, Ruffle Flash Player, Slope,
+Spacebar Clicker, Stack, Stealing The Diamond, Stickman Hook, Super Mario
+64, Super Mario RPG, Tetris, The Impossible Quiz, Tunnel Rush, Web Retro).
+Block order below is menu order within each section.
+
+IMPORTANT: an id must not be a bare number — JavaScript object key ordering
+  hoists integer-like keys to the front of every APPS iteration (this is why
+  the 2048 game's id is `game-2048`).
 
 Template (named SVG; for an image use `icon=data/icons/my-app.png` and
 `svg-icon=false` instead):
@@ -183,6 +194,72 @@ w=940
 h=620
 
 [application]
+id=game-2048
+name=2048
+path=apps/games/game-2048/app.html
+icon=data/icons/game-2048.png
+svg-icon=false
+cat=Games
+desc=Play 2048 - join the tiles
+w=980
+h=640
+
+[application]
+id=bloons-tower-defense-1
+name=Bloons Tower Defense 1
+path=apps/games/bloons-tower-defense-1/app.html
+icon=data/icons/bloons-tower-defense-1.png
+svg-icon=false
+cat=Games
+desc=Play Bloons Tower Defense 1 - the original balloon-popping tower defense
+w=980
+h=640
+
+[application]
+id=bloons-tower-defense-2
+name=Bloons Tower Defense 2
+path=apps/games/bloons-tower-defense-2/app.html
+icon=data/icons/bloons-tower-defense-2.png
+svg-icon=false
+cat=Games
+desc=Play Bloons Tower Defense 2 - more balloons, more towers
+w=980
+h=640
+
+[application]
+id=bloons-tower-defense-5
+name=Bloons Tower Defense 5
+path=apps/games/bloons-tower-defense-5/app.html
+icon=data/icons/bloons-tower-defense-5.png
+svg-icon=false
+cat=Games
+desc=Play Bloons Tower Defense 5 - the classic tower defense
+w=980
+h=640
+
+[application]
+id=bloxorz
+name=Bloxorz
+path=apps/games/bloxorz/app.html
+icon=data/icons/bloxorz.png
+svg-icon=false
+cat=Games
+desc=Play Bloxorz - roll the block to the goal
+w=980
+h=640
+
+[application]
+id=breaking-the-bank
+name=Breaking The Bank
+path=apps/games/breaking-the-bank/app.html
+icon=data/icons/breaking-the-bank.png
+svg-icon=false
+cat=Games
+desc=Play Breaking The Bank - a Henry Stickmin adventure
+w=980
+h=640
+
+[application]
 id=celeste-classic
 name=Celeste Classic
 path=apps/games/celeste-classic/app.html
@@ -227,6 +304,61 @@ w=980
 h=640
 
 [application]
+id=drive-mad
+name=Drive Mad
+path=apps/games/drive-mad/app.html
+icon=data/icons/drive-mad.png
+svg-icon=false
+cat=Games
+desc=Play Drive Mad - the physics driving game
+w=980
+h=640
+
+[application]
+id=escaping-the-prison
+name=Escaping The Prison
+path=apps/games/escaping-the-prison/app.html
+icon=data/icons/escaping-the-prison.png
+svg-icon=false
+cat=Games
+desc=Play Escaping The Prison - a Henry Stickmin adventure
+w=980
+h=640
+
+[application]
+id=fleeing-the-complex
+name=Fleeing The Complex
+path=apps/games/fleeing-the-complex/app.html
+icon=data/icons/fleeing-the-complex.png
+svg-icon=false
+cat=Games
+desc=Play Fleeing The Complex - a Henry Stickmin adventure
+w=980
+h=640
+
+[application]
+id=grey-box-testing
+name=Grey Box Testing
+path=apps/games/grey-box-testing/app.html
+icon=data/icons/grey-box-testing.png
+svg-icon=false
+cat=Games
+desc=Play Grey Box Testing
+w=980
+h=640
+
+[application]
+id=infiltrating-the-airship
+name=Infiltrating The Airship
+path=apps/games/infiltrating-the-airship/app.html
+icon=data/icons/infiltrating-the-airship.png
+svg-icon=false
+cat=Games
+desc=Play Infiltrating The Airship - a Henry Stickmin adventure
+w=980
+h=640
+
+[application]
 id=mari0
 name=Mari0
 path=apps/games/mari0/app.html
@@ -238,6 +370,94 @@ w=980
 h=640
 
 [application]
+id=offline-paradise
+name=Offline Paradise
+path=apps/games/offline-paradise/app.html
+icon=data/icons/offline-paradise.png
+svg-icon=false
+cat=Games
+desc=Play Offline Paradise
+w=980
+h=640
+
+[application]
+id=pacman
+name=Pacman
+path=apps/games/pacman/app.html
+icon=data/icons/pacman.png
+svg-icon=false
+cat=Games
+desc=Play Pacman - the arcade classic
+w=980
+h=640
+
+[application]
+id=ruffle-flash-player
+name=Ruffle Flash Player
+path=apps/games/ruffle-flash-player/app.html
+icon=data/icons/ruffle-flash-player.png
+svg-icon=false
+cat=Games
+desc=Load and play your own Flash .swf files
+w=980
+h=640
+
+[application]
+id=slope
+name=Slope
+path=apps/games/slope/app.html
+icon=data/icons/slope.png
+svg-icon=false
+cat=Games
+desc=Play Slope - roll the ball down the neon slope
+w=980
+h=640
+
+[application]
+id=spacebar-clicker
+name=Spacebar Clicker
+path=apps/games/spacebar-clicker/app.html
+icon=data/icons/spacebar-clicker.png
+svg-icon=false
+cat=Games
+desc=Play Spacebar Clicker - mash the spacebar
+w=980
+h=640
+
+[application]
+id=stack
+name=Stack
+path=apps/games/stack/app.html
+icon=data/icons/stack.png
+svg-icon=false
+cat=Games
+desc=Play Stack - time the falling blocks
+w=980
+h=640
+
+[application]
+id=stealing-the-diamond
+name=Stealing The Diamond
+path=apps/games/stealing-the-diamond/app.html
+icon=data/icons/stealing-the-diamond.png
+svg-icon=false
+cat=Games
+desc=Play Stealing The Diamond - a Henry Stickmin adventure
+w=980
+h=640
+
+[application]
+id=stickman-hook
+name=Stickman Hook
+path=apps/games/stickman-hook/app.html
+icon=data/icons/stickman-hook.png
+svg-icon=false
+cat=Games
+desc=Play Stickman Hook - swing through the levels
+w=980
+h=640
+
+[application]
 id=sm64
 name=Super Mario 64
 path=apps/games/sm64/app.html
@@ -245,6 +465,50 @@ icon=data/icons/sm64.png
 svg-icon=false
 cat=Games
 desc=Play the Super Mario 64 WebAssembly browser build - unofficial fan port
+w=980
+h=640
+
+[application]
+id=super-mario-rpg
+name=Super Mario RPG
+path=apps/games/super-mario-rpg/app.html
+icon=data/icons/super-mario-rpg.png
+svg-icon=false
+cat=Games
+desc=Play Super Mario RPG in Web Retro - bring your own ROM
+w=980
+h=640
+
+[application]
+id=tetris
+name=Tetris
+path=apps/games/tetris/app.html
+icon=data/icons/tetris.png
+svg-icon=false
+cat=Games
+desc=Play Tetris - the falling-blocks classic
+w=980
+h=640
+
+[application]
+id=the-impossible-quiz
+name=The Impossible Quiz
+path=apps/games/the-impossible-quiz/app.html
+icon=data/icons/the-impossible-quiz.png
+svg-icon=false
+cat=Games
+desc=Play The Impossible Quiz - the wildly unfair quiz
+w=980
+h=640
+
+[application]
+id=tunnel-rush
+name=Tunnel Rush
+path=apps/games/tunnel-rush/app.html
+icon=data/icons/tunnel-rush.png
+svg-icon=false
+cat=Games
+desc=Play Tunnel Rush - dodge through the spinning tunnel
 w=980
 h=640
 

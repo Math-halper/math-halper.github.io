@@ -1,10 +1,10 @@
 /* The current build keeps its five desktop System apps plus the file system
  * suite (Files, Text Editor, Image Viewer, Media, PDF Viewer — copied from
  * main), a Calculator and Web Retro (a vendored webretro emulator, no ROMs
- * included), and the vendored game apps — the Celeste Classics trio (from
- * github.com/Math-halper/Celeste), Cookie Clicker (the offline mirror in
- * github.com/Gams-Offline/Gams) and Mari0 + Super Mario 64 (from
- * github.com/Math-halper/Mario, only the game builds) — each a thin wrapper
+ * included), and the vendored game apps — the Celeste Classics trio
+ * (github.com/Math-halper/Celeste), Cookie Clicker plus 23 more games
+ * (github.com/Gams-Offline/Gams) and Mari0 + Super Mario 64
+ * (github.com/Math-halper/Mario, only the game builds) — each a thin wrapper
  * around the actual game files, copied byte-for-byte.
  * The one built-in website is Test Page, the Browser smoke test. These tests
  * keep the catalog, wrappers, generated file-system manifest and running
@@ -20,7 +20,36 @@ const ROOT = path.resolve(__dirname, '..');
 const source = (p) => fs.readFileSync(path.join(ROOT, p), 'utf8');
 const SYSTEM_APPS = ['appcenter', 'customize', 'settings', 'about', 'browser',
   'calculator', 'files', 'text-editor', 'pdf', 'image-viewer', 'media',
-  'celeste-classic', 'celeste-two', 'celeste-community', 'cookie-clicker', 'mari0', 'sm64', 'web-retro'];
+  'game-2048',
+  'bloons-tower-defense-1',
+  'bloons-tower-defense-2',
+  'bloons-tower-defense-5',
+  'bloxorz',
+  'breaking-the-bank',
+  'celeste-classic',
+  'celeste-two',
+  'celeste-community',
+  'cookie-clicker',
+  'drive-mad',
+  'escaping-the-prison',
+  'fleeing-the-complex',
+  'grey-box-testing',
+  'infiltrating-the-airship',
+  'mari0',
+  'offline-paradise',
+  'pacman',
+  'ruffle-flash-player',
+  'slope',
+  'spacebar-clicker',
+  'stack',
+  'stealing-the-diamond',
+  'stickman-hook',
+  'sm64',
+  'super-mario-rpg',
+  'tetris',
+  'the-impossible-quiz',
+  'tunnel-rush',
+  'web-retro'];
 /* Menu sections for each app (data/applications.js cat=), in catalog order.
  * Every new app is filed here with its respective section — the catalog test
  * asserts each app's cat matches, and the boot test asserts the four menu
@@ -29,17 +58,68 @@ const SYSTEM_CATS = {
   appcenter: 'System', customize: 'System', settings: 'System', about: 'System', browser: 'System',
   calculator: 'Productivity', files: 'Productivity', 'text-editor': 'Productivity', pdf: 'Productivity',
   'image-viewer': 'Media', media: 'Media',
-  'celeste-classic': 'Games', 'celeste-two': 'Games', 'celeste-community': 'Games',
-  'cookie-clicker': 'Games', 'mari0': 'Games', 'sm64': 'Games', 'web-retro': 'Games',
+  'game-2048': 'Games',
+  'bloons-tower-defense-1': 'Games',
+  'bloons-tower-defense-2': 'Games',
+  'bloons-tower-defense-5': 'Games',
+  'bloxorz': 'Games',
+  'breaking-the-bank': 'Games',
+  'celeste-classic': 'Games',
+  'celeste-two': 'Games',
+  'celeste-community': 'Games',
+  'cookie-clicker': 'Games',
+  'drive-mad': 'Games',
+  'escaping-the-prison': 'Games',
+  'fleeing-the-complex': 'Games',
+  'grey-box-testing': 'Games',
+  'infiltrating-the-airship': 'Games',
+  'mari0': 'Games',
+  'offline-paradise': 'Games',
+  'pacman': 'Games',
+  'ruffle-flash-player': 'Games',
+  'slope': 'Games',
+  'spacebar-clicker': 'Games',
+  'stack': 'Games',
+  'stealing-the-diamond': 'Games',
+  'stickman-hook': 'Games',
+  'sm64': 'Games',
+  'super-mario-rpg': 'Games',
+  'tetris': 'Games',
+  'the-impossible-quiz': 'Games',
+  'tunnel-rush': 'Games',
+  'web-retro': 'Games',
 };
 /* Each game app frames the game page that ships in its own folder. */
 const GAME_PAGES = {
+  'game-2048': 'apps/games/game-2048/2048.html',
+  'bloons-tower-defense-1': 'apps/games/bloons-tower-defense-1/bloonstowerdefense1.html',
+  'bloons-tower-defense-2': 'apps/games/bloons-tower-defense-2/bloonstowerdefense2.html',
+  'bloons-tower-defense-5': 'apps/games/bloons-tower-defense-5/bloonstowerdefense5.html',
+  'bloxorz': 'apps/games/bloxorz/bloxorz.html',
+  'breaking-the-bank': 'apps/games/breaking-the-bank/breakingthebank.html',
   'celeste-classic': 'apps/games/celeste-classic/index.html',
   'celeste-two': 'apps/games/celeste-two/index.html',
   'celeste-community': 'apps/games/celeste-community/index.html',
   'cookie-clicker': 'apps/games/cookie-clicker/index.html',
+  'drive-mad': 'apps/games/drive-mad/drivemad.html',
+  'escaping-the-prison': 'apps/games/escaping-the-prison/escapingtheprison.html',
+  'fleeing-the-complex': 'apps/games/fleeing-the-complex/fleeingthecomplex.html',
+  'grey-box-testing': 'apps/games/grey-box-testing/index.html',
+  'infiltrating-the-airship': 'apps/games/infiltrating-the-airship/infiltratingtheairship.html',
   'mari0': 'apps/games/mari0/index.html',
+  'offline-paradise': 'apps/games/offline-paradise/offlineparadise.html',
+  'pacman': 'apps/games/pacman/pacman.html',
+  'ruffle-flash-player': 'apps/games/ruffle-flash-player/Ruffle.html',
+  'slope': 'apps/games/slope/slope.html',
+  'spacebar-clicker': 'apps/games/spacebar-clicker/spacebarclicker.html',
+  'stack': 'apps/games/stack/stack.html',
+  'stealing-the-diamond': 'apps/games/stealing-the-diamond/stealingthediamond.html',
+  'stickman-hook': 'apps/games/stickman-hook/stickmanhook.html',
   'sm64': 'apps/games/sm64/index.html',
+  'super-mario-rpg': 'apps/games/super-mario-rpg/supermariorpg.html',
+  'tetris': 'apps/games/tetris/tetris.html',
+  'the-impossible-quiz': 'apps/games/the-impossible-quiz/theimpossiblequiz.html',
+  'tunnel-rush': 'apps/games/tunnel-rush/tunnelrush.html',
 };
 /* Games whose pages carry the source sites' href="../" all-games link. */
 const PICKER_LINKED = ['celeste-classic', 'celeste-two', 'celeste-community', 'cookie-clicker', 'sm64'];
@@ -72,7 +152,7 @@ function catalog() {
   };
 }
 
-test('the catalog is the desktop apps, the file system suite, a calculator, web retro, the vendored Celeste, Cookie Clicker and Mario games and the built-in test site', () => {
+test('the catalog is the desktop apps, the file system suite, a calculator, web retro, the vendored games and the built-in test site', () => {
   const { apps, sites, warnings, icons, render, renderCatalogIcon, validIconPath } = catalog();
   assert.deepEqual(Array.from(warnings), [], 'catalog parses without warnings');
   /* Array.from everywhere: the catalogs come from a vm context, so their
@@ -82,10 +162,37 @@ test('the catalog is the desktop apps, the file system suite, a calculator, web 
   /* Every app uses a built-in SVG icon except the games: each game's default
    * is its own artwork under data/icons/<id>.png (Web Retro keeps Gams'
    * raster webretro.png). */
-  const RASTER_ICON_APPS = { 'celeste-classic': 'data/icons/celeste-classic.png',
-    'celeste-two': 'data/icons/celeste-two.png', 'celeste-community': 'data/icons/celeste-community.png',
+  const RASTER_ICON_APPS = {
+    'game-2048': 'data/icons/game-2048.png',
+    'bloons-tower-defense-1': 'data/icons/bloons-tower-defense-1.png',
+    'bloons-tower-defense-2': 'data/icons/bloons-tower-defense-2.png',
+    'bloons-tower-defense-5': 'data/icons/bloons-tower-defense-5.png',
+    'bloxorz': 'data/icons/bloxorz.png',
+    'breaking-the-bank': 'data/icons/breaking-the-bank.png',
+    'celeste-classic': 'data/icons/celeste-classic.png',
+    'celeste-two': 'data/icons/celeste-two.png',
+    'celeste-community': 'data/icons/celeste-community.png',
     'cookie-clicker': 'data/icons/cookie-clicker.png',
-    'mari0': 'data/icons/mari0.png', 'sm64': 'data/icons/sm64.png', 'web-retro': 'data/icons/webretro.png' };
+    'drive-mad': 'data/icons/drive-mad.png',
+    'escaping-the-prison': 'data/icons/escaping-the-prison.png',
+    'fleeing-the-complex': 'data/icons/fleeing-the-complex.png',
+    'grey-box-testing': 'data/icons/grey-box-testing.png',
+    'infiltrating-the-airship': 'data/icons/infiltrating-the-airship.png',
+    'mari0': 'data/icons/mari0.png',
+    'offline-paradise': 'data/icons/offline-paradise.png',
+    'pacman': 'data/icons/pacman.png',
+    'ruffle-flash-player': 'data/icons/ruffle-flash-player.png',
+    'slope': 'data/icons/slope.png',
+    'spacebar-clicker': 'data/icons/spacebar-clicker.png',
+    'stack': 'data/icons/stack.png',
+    'stealing-the-diamond': 'data/icons/stealing-the-diamond.png',
+    'stickman-hook': 'data/icons/stickman-hook.png',
+    'sm64': 'data/icons/sm64.png',
+    'super-mario-rpg': 'data/icons/super-mario-rpg.png',
+    'tetris': 'data/icons/tetris.png',
+    'the-impossible-quiz': 'data/icons/the-impossible-quiz.png',
+    'tunnel-rush': 'data/icons/tunnel-rush.png',
+    'web-retro': 'data/icons/webretro.png' };
   assert.deepEqual(Array.from(apps, (a) => a.svgIcon), SYSTEM_APPS.map((id) => !RASTER_ICON_APPS[id]));
   const iconById = Object.fromEntries(Array.from(apps, (a) => [a.id, a.icon]));
   for (const [id, icon] of Object.entries(RASTER_ICON_APPS)) {
@@ -197,6 +304,12 @@ test('every catalog entry points at a real, syntactically valid app module', () 
     ['apps/games/celeste-community/celeste2_1.1_practice_mod.js', 1000000],
     ['apps/games/celeste-community/webek.js', 1000000],
     ['apps/games/cookie-clicker/main.js', 900000],
+    ['apps/games/slope/slope.html', 20000000],
+    ['apps/games/stickman-hook/stickmanhook.html', 4000000],
+    ['apps/games/fleeing-the-complex/data1.js', 20000000],
+    ['apps/games/grey-box-testing/greyboxtesting.zip-chunk0.js', 20000000],
+    ['apps/games/tunnel-rush/tunnelrush.zip-chunk0.js', 15000000],
+    ['apps/games/ruffle-flash-player/dd0be85ee9c2092132d1.wasm.js', 15000000],
     ['apps/games/mari0/love.wasm', 4000000],
     ['apps/games/mari0/game.data', 3000000],
     ['apps/games/sm64/sm64.us.f3dex2e.wasm', 15000000],
@@ -275,7 +388,7 @@ test('the system manifest still matches the repository exactly', () => {
     'Manifest and repository disagree — re-run python3 tools/gen-fs-manifest.py');
 });
 
-test('the desktop boots, lists and opens all eighteen catalogued apps', async () => {
+test('the desktop boots, lists and opens all forty-one catalogued apps', async () => {
   const virtualConsole = new VirtualConsole(), errors = [];
   virtualConsole.on('jsdomError', (err) => errors.push(err.message));
   const dom = new JSDOM('<!doctype html><main id="auth" hidden></main><div id="desktop" hidden></div><div id="toasts"></div>', {
@@ -324,7 +437,7 @@ test('the desktop boots, lists and opens all eighteen catalogued apps', async ()
       else assert.ok(w.eval('FS').stat(s.target), `default shortcut to a missing path: ${s.target}`);
     }
 
-    // The start menu groups all eighteen apps into their four sections.
+    // The start menu groups all forty-one apps into their four sections.
     const menu = w.document.querySelector('#startmenu');
     assert.deepEqual([...menu.querySelectorAll('.sm-cat')].map((e) => e.textContent),
       ['System', 'Productivity', 'Media', 'Games']);
@@ -576,7 +689,7 @@ test('Customize saves, displays and resets uploaded app icon images', async () =
     const browserWindow = w.eval('wins').get('browser');
     assert.equal(body.querySelector('#cust-files-shortcut'), null, 'Customize still offers a Files shortcut');
     assert.deepEqual([...body.querySelectorAll('#cust-modlist .card b')].map((b) => b.textContent).slice(0, SYSTEM_APPS.length),
-      ['App Center', 'Customize', 'Settings', 'About', 'Browser', 'Calculator', 'Files', 'Text Editor', 'PDF Viewer', 'Image Viewer', 'Media', 'Celeste Classic', 'Celeste Classic 2', 'Celeste Community', 'Cookie Clicker', 'Mari0', 'Super Mario 64', 'Web Retro']);
+            ['App Center', 'Customize', 'Settings', 'About', 'Browser', 'Calculator', 'Files', 'Text Editor', 'PDF Viewer', 'Image Viewer', 'Media', '2048', 'Bloons Tower Defense 1', 'Bloons Tower Defense 2', 'Bloons Tower Defense 5', 'Bloxorz', 'Breaking The Bank', 'Celeste Classic', 'Celeste Classic 2', 'Celeste Community', 'Cookie Clicker', 'Drive Mad', 'Escaping The Prison', 'Fleeing The Complex', 'Grey Box Testing', 'Infiltrating The Airship', 'Mari0', 'Offline Paradise', 'Pacman', 'Ruffle Flash Player', 'Slope', 'Spacebar Clicker', 'Stack', 'Stealing The Diamond', 'Stickman Hook', 'Super Mario 64', 'Super Mario RPG', 'Tetris', 'The Impossible Quiz', 'Tunnel Rush', 'Web Retro']);
 
     const uploadBrowserIcon = async () => {
       const input = body.querySelector('[data-micon-file="browser"]');
