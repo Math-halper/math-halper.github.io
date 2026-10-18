@@ -13,8 +13,9 @@ icon, category, description and default window size all live here.
     svg-icon=false when icon= is a local image path. Known icon names are
     auto-detected for compatibility with older catalog blocks.
   - cat= is the menu category — the start menu groups apps into its sections.
-    Built-ins: System, Productivity, Media, Games (their order is CATS in
-    assets/core.js); a new name becomes a new section of its own.
+    Every app must be filed into its respective section: System, Productivity,
+    Media or Games (their order is CATS in assets/core.js). Never add an app
+    without a cat=; a new name becomes a new section of its own.
   - w= / h= are the starting window size in pixels.
   - streamed=true loads a remote app's tiny module on first launch instead
     of fetching it during desktop boot (assets/html-loader.js).
@@ -222,7 +223,9 @@ h=640
 
 /* TEMPLATE — an app that is only an embedded page. Copy apps/_embed/,
    rename it, change the EMBED_URL constant in its app.html, then
-   uncomment a block like this one (and delete these lines):
+   uncomment a block like this one (and delete these lines).
+   Set cat= to the menu section the app belongs in — System, Productivity,
+   Media or Games — so it lands in the right group:
 
 [application]
 id=my-embed

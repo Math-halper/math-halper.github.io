@@ -57,8 +57,11 @@ see [`data/icons/README.md`](../data/icons/README.md).
 2. Add ONE `[application]` block to `data/applications.js` (copy the template
    in that file's header): `id`, `name`, `path=apps/my-app/app.html`, `icon`
    (a name from `assets/icons.js` such as `folder`, `globe` or `star`),
-   `cat`, `desc`, `w`, `h`. Block order = menu order within its section. A new
-   `cat=` name adds a new section to the proton menu (the built-in order is
+   `cat`, `desc`, `w`, `h`. **Always file the app into its respective menu
+   section with `cat=`** — `System`, `Productivity`, `Media` or `Games` —
+   so the start menu stays organised; never add an app without one. Block
+   order = menu order within its section. A genuinely new `cat=` name adds a
+   new section to the proton menu (the built-in order is
    `CATS` in `assets/core.js`: `System`, `Productivity`, `Media`, `Games`,
    `My Apps`, then anything else you invent).
 3. Edit `apps/my-app/app.html` and write the `render` function (the app's

@@ -19,7 +19,10 @@ const source = (p) => fs.readFileSync(path.join(ROOT, p), 'utf8');
 const SYSTEM_APPS = ['appcenter', 'customize', 'settings', 'about', 'browser',
   'calculator', 'files', 'text-editor', 'pdf', 'image-viewer', 'media',
   'celeste-classic', 'celeste-two', 'celeste-community', 'web-retro'];
-/* Menu sections for each app (data/applications.js cat=), in catalog order. */
+/* Menu sections for each app (data/applications.js cat=), in catalog order.
+ * Every new app is filed here with its respective section — the catalog test
+ * asserts each app's cat matches, and the boot test asserts the four menu
+ * groups, so an unfiled app fails the suite. */
 const SYSTEM_CATS = {
   appcenter: 'System', customize: 'System', settings: 'System', about: 'System', browser: 'System',
   calculator: 'Productivity', files: 'Productivity', 'text-editor': 'Productivity', pdf: 'Productivity',
