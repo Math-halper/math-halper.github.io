@@ -25,15 +25,17 @@ game bundles and earlier built-in sites remain removed (except Test Page).
 | **Customize** (`customize`) | Rename/re-icon/re-categorise apps, themes, wallpapers, desktop parts |
 | **Settings** (`settings`) | Account, wallpaper & accent, password, backup, other accounts |
 | **About** (`about`) | What this is, credits, licence |
-| **Calculator** (`calculator`) | Do quick maths from the keypad or your keyboard |
 | **Browser** (`browser`) | Visit any address, open HTML files from the virtual file system, and the one built-in site |
+| **Calculator** (`calculator`) | Do quick maths from the keypad or your keyboard |
 | **Files** (`files`) | Browse your home folder and the read-only proton system tree — create, rename, move, import, search and download |
 | **Text Editor** (`text-editor`) | Open, edit and save text files in your home folder; proton's own files open read-only |
+| **PDF Viewer** (`pdf`) | Read PDF files in your browser's own viewer — no extra library, nothing uploaded |
 | **Image Viewer** (`image-viewer`) | View PNG, JPG, GIF, WebP, AVIF, BMP, ICO and SVG files with zoom and a folder playlist |
 | **Media** (`media`) | Play audio and video files stored in your home folder, with your browser's own codecs |
-| **PDF Viewer** (`pdf`) | Read PDF files in your browser's own viewer — no extra library, nothing uploaded |
 | [**Celeste Classic**](https://math-halper.github.io/Celeste/1/index.html) (`celeste-classic`) | Open the Celeste Classic GitHub Pages game in a sandboxed frame |
 | **Web Retro** (`web-retro`) | Play your own retro ROMs — N64, SNES, NES and Game Boy (webretro) |
+
+Rows are listed in start-menu order: **System**, then **Productivity**, **Media** and **Games**.
 
 One built-in website ships with them: **Test Page** (`proton://test-page`), the
 smoke test for a build — it runs automated checks (scripts, shared stylesheet,
@@ -145,9 +147,14 @@ deletes the file.
 ## What's inside
 
 - **Desktop** — movable, per-account shortcuts, a Mint-Y panel with pinned &
-  running apps, clock, searchable start menu (one **System** section), window
+  running apps, clock, searchable start menu (apps grouped into sections),
+  window
   manager (drag/resize/minimise/maximise), toasts.
-- **System** — App Center, Customize, Settings, About, Calculator, Browser, Files, Text Editor, Image Viewer, Media, PDF Viewer, Celeste Classic and Web Retro.
+- **Menu sections** — the start menu groups the apps by `cat=`: **System**
+  (App Center, Customize, Settings, About, Browser), **Productivity**
+  (Calculator, Files, Text Editor, PDF Viewer), **Media** (Image Viewer,
+  Media) and **Games** (Celeste Classic, Web Retro), with **My Apps** for
+  anything an account adds. The order is `CATS` in `assets/core.js`.
 - **Customize — everything is modular.** Rename any app, change its vector
   icon or upload a raster image for it, move it to another (or a brand-new)
   menu category, reorder it, pin it, remove it and add it back, or reset it —

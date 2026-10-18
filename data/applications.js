@@ -12,7 +12,9 @@ icon, category, description and default window size all live here.
   - svg-icon=true means icon= is a named inline SVG icon; use
     svg-icon=false when icon= is a local image path. Known icon names are
     auto-detected for compatibility with older catalog blocks.
-  - cat= is the menu category (invent your own if you like).
+  - cat= is the menu category — the start menu groups apps into its sections.
+    Built-ins: System, Productivity, Media, Games (their order is CATS in
+    assets/core.js); a new name becomes a new section of its own.
   - w= / h= are the starting window size in pixels.
   - streamed=true loads a remote app's tiny module on first launch instead
     of fetching it during desktop boot (assets/html-loader.js).
@@ -27,6 +29,11 @@ Web Retro (a vendored webretro emulator build; bring your own ROMs) and one
 embedded game page: Celeste Classic. Its app folder contains only an iframe
 wrapper for the existing GitHub Pages site; no game files or assets are
 copied into this repository.
+
+The start menu groups them by cat=: System (the desktop's own five),
+Productivity (Calculator, Files, Text Editor, PDF Viewer), Media (Image
+Viewer, Media) and Games (Celeste Classic, Web Retro). Block order below is
+menu order within each section.
 
 Template (named SVG; for an image use `icon=data/icons/my-app.png` and
 `svg-icon=false` instead):
@@ -90,17 +97,6 @@ w=720
 h=540
 
 [application]
-id=calculator
-name=Calculator
-path=apps/calculator/app.html
-icon=calculator
-svg-icon=true
-cat=System
-desc=Do quick maths from the keypad or your keyboard
-w=360
-h=540
-
-[application]
 id=browser
 name=Browser
 path=apps/browser/app.html
@@ -112,12 +108,23 @@ w=940
 h=600
 
 [application]
+id=calculator
+name=Calculator
+path=apps/calculator/app.html
+icon=calculator
+svg-icon=true
+cat=Productivity
+desc=Do quick maths from the keypad or your keyboard
+w=360
+h=540
+
+[application]
 id=files
 name=Files
 path=apps/files/app.html
 icon=folder
 svg-icon=true
-cat=System
+cat=Productivity
 desc=Browse your home folder and the read-only proton system tree - create, rename, move, import, search and download
 w=1000
 h=640
@@ -128,10 +135,21 @@ name=Text Editor
 path=apps/text-editor/app.html
 icon=file-text
 svg-icon=true
-cat=System
+cat=Productivity
 desc=Open, edit and save text files in your home folder; proton's own files open read-only
 w=880
 h=620
+
+[application]
+id=pdf
+name=PDF Viewer
+path=apps/pdf/app.html
+icon=book
+svg-icon=true
+cat=Productivity
+desc=Read PDF files in your browser's own viewer - no extra library, nothing uploaded
+w=920
+h=680
 
 [application]
 id=image-viewer
@@ -139,7 +157,7 @@ name=Image Viewer
 path=apps/image-viewer/app.html
 icon=image
 svg-icon=true
-cat=System
+cat=Media
 desc=View PNG, JPG, GIF, WebP, AVIF, BMP, ICO and SVG files with zoom and a folder playlist
 w=920
 h=640
@@ -150,21 +168,10 @@ name=Media
 path=apps/media/app.html
 icon=film
 svg-icon=true
-cat=System
+cat=Media
 desc=Play audio and video files stored in your home folder, with your browser's own codecs
 w=940
 h=620
-
-[application]
-id=pdf
-name=PDF Viewer
-path=apps/pdf/app.html
-icon=book
-svg-icon=true
-cat=System
-desc=Read PDF files in your browser's own viewer - no extra library, nothing uploaded
-w=920
-h=680
 
 [application]
 id=celeste-classic
@@ -172,7 +179,7 @@ name=Celeste Classic
 path=apps/celeste-classic/app.html
 icon=play
 svg-icon=true
-cat=System
+cat=Games
 desc=Play Celeste Classic from Math-halper's GitHub Pages site
 w=980
 h=640
@@ -183,7 +190,7 @@ name=Web Retro
 path=apps/web-retro/app.html
 icon=data/icons/webretro.png
 svg-icon=false
-cat=System
+cat=Games
 desc=Play your own retro ROMs - N64, SNES, NES and Game Boy (webretro)
 w=980
 h=640

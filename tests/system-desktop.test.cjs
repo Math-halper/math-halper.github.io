@@ -15,8 +15,14 @@ const { JSDOM, VirtualConsole } = require('jsdom');
 
 const ROOT = path.resolve(__dirname, '..');
 const source = (p) => fs.readFileSync(path.join(ROOT, p), 'utf8');
-const SYSTEM_APPS = ['appcenter', 'customize', 'settings', 'about', 'calculator', 'browser',
-  'files', 'text-editor', 'image-viewer', 'media', 'pdf', 'celeste-classic', 'web-retro'];
+const SYSTEM_APPS = ['appcenter', 'customize', 'settings', 'about', 'browser',
+  'calculator', 'files', 'text-editor', 'pdf', 'image-viewer', 'media', 'celeste-classic', 'web-retro'];
+/* Menu sections for each app (data/applications.js cat=), in catalog order. */
+const SYSTEM_CATS = {
+  appcenter: 'System', customize: 'System', settings: 'System', about: 'System', browser: 'System',
+  calculator: 'Productivity', files: 'Productivity', 'text-editor': 'Productivity', pdf: 'Productivity',
+  'image-viewer': 'Media', media: 'Media', 'celeste-classic': 'Games', 'web-retro': 'Games',
+};
 const EMBED_URLS = {
   'celeste-classic': 'https://math-halper.github.io/Celeste/1/index.html',
 };
@@ -55,7 +61,7 @@ test('the catalog is the desktop apps, the file system suite, a calculator, web 
   /* Array.from everywhere: the catalogs come from a vm context, so their
    * arrays are not reference-equal to this realm's. */
   assert.deepEqual(Array.from(apps, (a) => a.id), SYSTEM_APPS);
-  assert.deepEqual(Array.from(apps, (a) => a.cat), SYSTEM_APPS.map(() => 'System'));
+  assert.deepEqual(Array.from(apps, (a) => a.cat), SYSTEM_APPS.map((id) => SYSTEM_CATS[id]));
   /* Every app uses a built-in SVG icon except Web Retro, whose default is
    * Gams' raster webretro.png under data/icons/. */
   assert.deepEqual(Array.from(apps, (a) => a.svgIcon), SYSTEM_APPS.map((id) => id !== 'web-retro'));
@@ -248,9 +254,10 @@ test('the desktop boots, lists and opens all thirteen catalogued apps', async ()
       else assert.ok(w.eval('FS').stat(s.target), `default shortcut to a missing path: ${s.target}`);
     }
 
-    // The start menu shows one System section holding all thirteen apps.
+    // The start menu groups all thirteen apps into their four sections.
     const menu = w.document.querySelector('#startmenu');
-    assert.deepEqual([...menu.querySelectorAll('.sm-cat')].map((e) => e.textContent), ['System']);
+    assert.deepEqual([...menu.querySelectorAll('.sm-cat')].map((e) => e.textContent),
+      ['System', 'Productivity', 'Media', 'Games']);
     assert.deepEqual([...menu.querySelectorAll('.sm-item')].map((e) => e.dataset.app), SYSTEM_APPS);
 
     // The panel only pins apps that exist, and each app really renders.
@@ -415,7 +422,7 @@ test('Customize saves, displays and resets uploaded app icon images', async () =
     const browserWindow = w.eval('wins').get('browser');
     assert.equal(body.querySelector('#cust-files-shortcut'), null, 'Customize still offers a Files shortcut');
     assert.deepEqual([...body.querySelectorAll('#cust-modlist .card b')].map((b) => b.textContent).slice(0, SYSTEM_APPS.length),
-      ['App Center', 'Customize', 'Settings', 'About', 'Calculator', 'Browser', 'Files', 'Text Editor', 'Image Viewer', 'Media', 'PDF Viewer', 'Celeste Classic', 'Web Retro']);
+      ['App Center', 'Customize', 'Settings', 'About', 'Browser', 'Calculator', 'Files', 'Text Editor', 'PDF Viewer', 'Image Viewer', 'Media', 'Celeste Classic', 'Web Retro']);
 
     const uploadBrowserIcon = async () => {
       const input = body.querySelector('[data-micon-file="browser"]');
