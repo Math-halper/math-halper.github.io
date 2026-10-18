@@ -7,7 +7,7 @@
 </head>
 <body>
 <p>This file is a proton app. It is not meant to be opened on its own:
-open <a href="../../index.html">proton</a> and launch <b>Celeste Classic 2</b>
+open <a href="../../../index.html">proton</a> and launch <b>Celeste Classic 2</b>
 from the proton menu. The script below is fetched and run by proton's HTML
 loader (assets/html-loader.js) at boot.</p>
 <!-- VENDORED GAME — proton's wrapper plus the actual Celeste Classic 2 files.
@@ -15,7 +15,7 @@ loader (assets/html-loader.js) at boot.</p>
      index.html and index.js are copied byte-for-byte from
      Math-halper/Celeste (its two/ folder), "Celeste Classic 2: Lani's Trek".
      Nothing in them was edited. The page's "all games" link goes one level up
-     (href="../"), as on the source site; apps/index.html is the picker that
+     (href="../"), as on the source site; apps/games/index.html is the picker that
      link expects, remapped from that repository's root page.
 
      The wrapper frames this folder's own index.html — a local page, so the
@@ -31,7 +31,7 @@ loader (assets/html-loader.js) at boot.</p>
 /* =====================================================================
    The game page that ships in this folder.
    ===================================================================== */
-const GAME_PAGE = 'apps/celeste-two/index.html';
+const GAME_PAGE = 'apps/games/celeste-two/index.html';
 /* --------------------------------------------------------------------- */
 
 registerApp({

@@ -13,10 +13,10 @@ This build keeps the five desktop System apps from `main` and copies main's
 three apps — **Celeste Classic**, **Celeste Classic 2** and **Celeste
 Community** — with the *actual game files*, copied byte-for-byte from
 [Math-halper/Celeste](https://github.com/Math-halper/Celeste) into
-`apps/celeste-classic/`, `apps/celeste-two/` and `apps/celeste-community/`
+`apps/games/celeste-classic/`, `apps/games/celeste-two/` and `apps/games/celeste-community/`
 (each app folder is the game's own pages plus a thin iframe wrapper;
-`apps/index.html` is the "all games" picker their back-links expect). A small
-**Calculator** (new, self-contained code in `apps/calculator/`) ships again
+`apps/games/index.html` is the "all games" picker their back-links expect). A small
+**Calculator** (new, self-contained code in `apps/productivity/calculator/`) ships again
 too, and **Web Retro** vendors the
 [webretro](https://github.com/BinBashBanana/webretro) emulator build from
 [Gams-Offline/Gams](https://github.com/Gams-Offline/Gams) so you can play your
@@ -69,7 +69,9 @@ runtime dependencies or build step. Optional regression tests use jsdom:
 
 ## Project layout (everything is a module)
 
-- **Apps:** one folder + HTML file each — `apps/<name>/app.html` (13 apps, plus
+- **Apps:** one folder + HTML file each — `apps/<category>/<name>/app.html`
+  (15 apps in four category folders — `system/`, `productivity/`, `media/`,
+  `games/` — matching the menu sections, plus
   two starting points: `apps/_template/` for a normal app and `apps/_embed/`
   for one that is only a framed page — change its single `EMBED_URL` constant).
   Every app's name,

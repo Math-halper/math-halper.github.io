@@ -1,6 +1,6 @@
 # proton apps — one app per folder
 
-Every app is a **single HTML file in its own folder**: `apps/<app-name>/app.html`.
+Every app is a **single HTML file in its own folder**: `apps/<category>/<app-name>/app.html`.
 There is no build step. The list of apps — name, location (path), icon,
 category, description and window size — lives in **one catalog file**:
 [`data/applications.js`](../data/applications.js), one `[application]` block
@@ -18,13 +18,13 @@ appears in the proton menu, App Center and Customize.
 
 The current base keeps its five desktop System apps plus the file system
 suite copied from `main` (Files, Text Editor, Image Viewer, Media, PDF
-Viewer), a small Calculator (new code in `apps/calculator/`) and Web Retro
-(`apps/web-retro/`, a vendored webretro emulator build in
-`apps/web-retro/webretro/` — see `CREDITS.md`; no ROMs ship with it).
+Viewer), a small Calculator (new code in `apps/productivity/calculator/`) and Web Retro
+(`apps/games/web-retro/`, a vendored webretro emulator build in
+`apps/games/web-retro/webretro/` — see `CREDITS.md`; no ROMs ship with it).
 The three Celeste Classics apps (`celeste-classic/`, `celeste-two/`,
 `celeste-community/`) carry the actual game files, copied byte-for-byte from
 [Math-halper/Celeste](https://github.com/Math-halper/Celeste) — each app
-folder is the game's own pages plus a thin iframe wrapper, and `apps/index.html`
+folder is the game's own pages plus a thin iframe wrapper, and `apps/games/index.html`
 is the "all games" picker their back-links expect (see `CREDITS.md`).
 The previously bundled apps and game catalogs remain removed. The only
 built-in website is **Test Page** (the one entry in `data/websites.js`; see
@@ -42,7 +42,8 @@ see [`data/icons/README.md`](../data/icons/README.md).
 
 ## Add your own app (developer workflow)
 
-1. Copy the `apps/_template/` folder and rename it, e.g. `apps/my-app/`.
+1. Copy the `apps/_template/` folder into the category folder it belongs in
+   and rename it, e.g. `apps/games/my-app/`.
    If the app is only **one framed page** — a build, a doc, another site —
    copy `apps/_embed/` instead and skip to step 3: its module is a toolbar
    (address, Reload, Open in new tab) plus a full-height sandboxed `<iframe>`,
@@ -55,17 +56,19 @@ see [`data/icons/README.md`](../data/icons/README.md).
    app. Template folders are never registered or deployed —
    `tools/gen-fs-manifest.py` skips every underscore-prefixed folder.
 2. Add ONE `[application]` block to `data/applications.js` (copy the template
-   in that file's header): `id`, `name`, `path=apps/my-app/app.html`, `icon`
+   in that file's header): `id`, `name`, `path=apps/<category>/my-app/app.html`, `icon`
    (a name from `assets/icons.js` such as `folder`, `globe` or `star`),
    `cat`, `desc`, `w`, `h`. **Always file the app into its respective menu
    section with `cat=`** — `System`, `Productivity`, `Media` or `Games` —
-   so the start menu stays organised; never add an app without one. Block
+   and put its folder in `apps/<category>/` to match (`system/`,
+   `productivity/`, `media/`, `games/`), so the start menu stays organised;
+   never add an app without one. Block
    order = menu order within its section. A genuinely new `cat=` name adds a
    new section to the proton menu (the built-in order is
    `CATS` in `assets/core.js`: `System`, `Productivity`, `Media`, `Games`,
    `My Apps`, then anything else you invent).
-3. Edit `apps/my-app/app.html` and write the `render` function (the app's
-   code). Reload proton.
+3. Edit `apps/<category>/my-app/app.html` and write the `render` function
+   (the app's code). Reload proton.
 4. Re-run `python3 tools/gen-fs-manifest.py` so the new file appears in the
    virtual file system, then `npm test`.
 
@@ -89,17 +92,27 @@ exactly where the old one left off.
 
 ## The apps
 
-| Folder | App (id) |
+Apps live in their category folder — `apps/<category>/<app folder>/app.html` —
+matching the menu sections (`cat=`, ordered by `CATS` in `assets/core.js`).
+
+| Category | App (id) |
 | --- | --- |
-| `app-center/` | App Center (`appcenter`) — hide/restore built-ins, manage the account's saved apps & websites |
-| `customize/` | Customize (`customize`) — app modules, vector or uploaded image icons, themes, wallpapers, desktop parts, reset |
-| `settings/` | Settings (`settings`) — account, wallpaper & accent, password, backup, accounts on this device |
-| `about/` | About (`about`) — provenance, licence, what's inside |
-| `browser/` | Browser (`browser`) — Test Page, saved websites, external addresses and VFS HTML files |
-| `celeste-classic/` | Celeste Classic (`celeste-classic`) — the vendored PICO-8 game (from Math-halper/Celeste `classic/`) plus its wrapper |
-| `celeste-two/` | Celeste Classic 2 (`celeste-two`) — the vendored Lani's Trek game (from Math-halper/Celeste `two/`) plus its wrapper |
-| `celeste-community/` | Celeste Community (`celeste-community`) — the vendored community hub, practice mods and tools (from Math-halper/Celeste `speed/`) plus its wrapper |
-| `_template/` | not an app — the starting point for a new one |
+| `system/` | App Center (`appcenter`) — hide/restore built-ins, manage the account's saved apps & websites |
+| `system/` | Customize (`customize`) — app modules, vector or uploaded image icons, themes, wallpapers, desktop parts, reset |
+| `system/` | Settings (`settings`) — account, wallpaper & accent, password, backup, accounts on this device |
+| `system/` | About (`about`) — provenance, licence, what's inside |
+| `system/` | Browser (`browser`) — Test Page, saved websites, external addresses and VFS HTML files |
+| `productivity/` | Calculator (`calculator`) — quick maths from the keypad or your keyboard |
+| `productivity/` | Files (`files`) — browse, create, rename, move, import, search and download the virtual file system |
+| `productivity/` | Text Editor (`text-editor`) — edit text files in your home folder; proton's own files open read-only |
+| `productivity/` | PDF Viewer (`pdf`) — read PDFs in your browser's own viewer |
+| `media/` | Image Viewer (`image-viewer`) — PNG, JPG, GIF, WebP, AVIF, BMP, ICO and SVG with zoom and playlists |
+| `media/` | Media (`media`) — play audio and video files from your home folder |
+| `games/` | Celeste Classic (`celeste-classic`) — the vendored PICO-8 game (from Math-halper/Celeste `classic/`) plus its wrapper |
+| `games/` | Celeste Classic 2 (`celeste-two`) — the vendored Lani's Trek game (from Math-halper/Celeste `two/`) plus its wrapper |
+| `games/` | Celeste Community (`celeste-community`) — the vendored community hub, practice mods and tools (from Math-halper/Celeste `speed/`) plus its wrapper |
+| `games/` | Web Retro (`web-retro`) — the vendored webretro emulator (bring your own ROMs) |
+| `_template/` | not an app — the starting point for a new one (copy it into its category folder) |
 | `_embed/` | not an app — the starting point for one that is only a framed page (`EMBED_URL`) |
 
 ### Desktop shortcut workflow

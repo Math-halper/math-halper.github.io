@@ -7,7 +7,7 @@
 </head>
 <body>
 <p>This file is a proton app. It is not meant to be opened on its own:
-open <a href="../../index.html">proton</a> and launch <b>Celeste Community</b>
+open <a href="../../../index.html">proton</a> and launch <b>Celeste Community</b>
 from the proton menu. The script below is fetched and run by proton's HTML
 loader (assets/html-loader.js) at boot.</p>
 <!-- VENDORED GAME HUB — proton's wrapper plus the actual Celeste community
@@ -17,7 +17,7 @@ loader (assets/html-loader.js) at boot.</p>
      builds, downloads.html, webek.html and its build, styles.css, images and
      font/) is copied byte-for-byte from Math-halper/Celeste (its speed/
      folder). Nothing in them was edited. The hub's back link goes one level
-     up (href="../"), as on the source site; apps/index.html is the page that
+     up (href="../"), as on the source site; apps/games/index.html is the page that
      link expects, remapped from that repository's root page.
 
      The wrapper frames this folder's own index.html — a local page, so the
@@ -35,7 +35,7 @@ loader (assets/html-loader.js) at boot.</p>
 /* =====================================================================
    The hub page that ships in this folder.
    ===================================================================== */
-const GAME_PAGE = 'apps/celeste-community/index.html';
+const GAME_PAGE = 'apps/games/celeste-community/index.html';
 /* --------------------------------------------------------------------- */
 
 registerApp({

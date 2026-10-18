@@ -1,5 +1,5 @@
 /* proton — auth screens, desktop, panel, start menu and window manager.
- * Every app lives in its own apps/<name>/app.html module (loaded via
+ * Every app lives in its own apps/<category>/<name>/app.html module (loaded via
  * assets/html-loader.js); the list of apps and all their metadata (name,
  * icon, category, description, window size) live in the catalog
  * data/applications.js, parsed by assets/config-loader.js. proton ships the
@@ -654,4 +654,4 @@ function bar(title, extra = '') {
 function confirmBox(msg) { return confirm(msg); }
 
 
-/* App modules live in apps/<app-name>/app.html — see apps/README.md. */
+/* App modules live in apps/<category>/<app-name>/app.html — see apps/README.md. */

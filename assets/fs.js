@@ -1,7 +1,7 @@
 /* proton — virtual file system (VFS).
  *
  * One real, hierarchical file system rooted at "/". The file system suite
- * sits on top of it: Files (apps/files) browses and manages the whole
+ * sits on top of it: Files (apps/productivity/files) browses and manages the whole
  * tree, Text Editor writes the text files, Image Viewer / Media / PDF Viewer
  * display the rest, and the Browser opens HTML pages (file:///path). Every
  * account's own data lives here too.

@@ -1,6 +1,6 @@
 /* proton — HTML module loader.
  *
- * Each app is an apps/<name>/app.html containing a <script data-proton-app>
+ * Each app is an apps/<category>/<name>/app.html containing a <script data-proton-app>
  * registration block. Metadata lives in data/applications.js; built-in sites
  * are standalone websites/<name>/site.html pages. Nothing needs a build step.
  *

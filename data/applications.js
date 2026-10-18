@@ -15,11 +15,13 @@ icon, category, description and default window size all live here.
   - cat= is the menu category — the start menu groups apps into its sections.
     Every app must be filed into its respective section: System, Productivity,
     Media or Games (their order is CATS in assets/core.js). Never add an app
-    without a cat=; a new name becomes a new section of its own.
+    without a cat=; a new name becomes a new section of its own. The app's
+    folder goes in apps/<category>/ to match (system/, productivity/, media/,
+    games/) — the tests assert the path matches the section.
   - w= / h= are the starting window size in pixels.
   - streamed=true loads a remote app's tiny module on first launch instead
     of fetching it during desktop boot (assets/html-loader.js).
-  - The app itself still lives in apps/<folder>/app.html; its render()
+  - The app itself still lives in apps/<category>/<folder>/app.html; its render()
     code runs from there (apps/_template is the starting point).
 
 proton ships the five desktop System apps (App Center, Customize, Settings,
@@ -30,9 +32,9 @@ Web Retro (a vendored webretro emulator build; bring your own ROMs) and the
 three Celeste Classics apps: Celeste Classic, Celeste Classic 2 and Celeste
 Community. Their game files are copied byte-for-byte from
 github.com/Math-halper/Celeste (classic/, two/ and speed/) into
-apps/celeste-classic, apps/celeste-two and apps/celeste-community — each app
+apps/games/celeste-classic, apps/games/celeste-two and apps/games/celeste-community — each app
 folder is the game's own pages plus a thin proton iframe wrapper, and
-apps/index.html is the picker their "all games" links expect.
+apps/games/index.html is the picker their "all games" links expect.
 
 The start menu groups them by cat=: System (the desktop's own five),
 Productivity (Calculator, Files, Text Editor, PDF Viewer), Media (Image
@@ -44,7 +46,7 @@ Template (named SVG; for an image use `icon=data/icons/my-app.png` and
 [application]
 id=
 name=
-path=apps/my-app/app.html
+path=apps/<category>/my-app/app.html
 icon=grid
 svg-icon=true
 cat=Productivity
@@ -59,7 +61,7 @@ window.PROTON_APPLICATIONS_TEXT = `
 [application]
 id=appcenter
 name=App Center
-path=apps/app-center/app.html
+path=apps/system/app-center/app.html
 icon=grid
 svg-icon=true
 cat=System
@@ -70,7 +72,7 @@ h=640
 [application]
 id=customize
 name=Customize
-path=apps/customize/app.html
+path=apps/system/customize/app.html
 icon=sliders
 svg-icon=true
 cat=System
@@ -81,7 +83,7 @@ h=660
 [application]
 id=settings
 name=Settings
-path=apps/settings/app.html
+path=apps/system/settings/app.html
 icon=settings
 svg-icon=true
 cat=System
@@ -92,7 +94,7 @@ h=600
 [application]
 id=about
 name=About
-path=apps/about/app.html
+path=apps/system/about/app.html
 icon=info
 svg-icon=true
 cat=System
@@ -103,7 +105,7 @@ h=540
 [application]
 id=browser
 name=Browser
-path=apps/browser/app.html
+path=apps/system/browser/app.html
 icon=globe
 svg-icon=true
 cat=System
@@ -114,7 +116,7 @@ h=600
 [application]
 id=calculator
 name=Calculator
-path=apps/calculator/app.html
+path=apps/productivity/calculator/app.html
 icon=calculator
 svg-icon=true
 cat=Productivity
@@ -125,7 +127,7 @@ h=540
 [application]
 id=files
 name=Files
-path=apps/files/app.html
+path=apps/productivity/files/app.html
 icon=folder
 svg-icon=true
 cat=Productivity
@@ -136,7 +138,7 @@ h=640
 [application]
 id=text-editor
 name=Text Editor
-path=apps/text-editor/app.html
+path=apps/productivity/text-editor/app.html
 icon=file-text
 svg-icon=true
 cat=Productivity
@@ -147,7 +149,7 @@ h=620
 [application]
 id=pdf
 name=PDF Viewer
-path=apps/pdf/app.html
+path=apps/productivity/pdf/app.html
 icon=book
 svg-icon=true
 cat=Productivity
@@ -158,7 +160,7 @@ h=680
 [application]
 id=image-viewer
 name=Image Viewer
-path=apps/image-viewer/app.html
+path=apps/media/image-viewer/app.html
 icon=image
 svg-icon=true
 cat=Media
@@ -169,7 +171,7 @@ h=640
 [application]
 id=media
 name=Media
-path=apps/media/app.html
+path=apps/media/media/app.html
 icon=film
 svg-icon=true
 cat=Media
@@ -180,7 +182,7 @@ h=620
 [application]
 id=celeste-classic
 name=Celeste Classic
-path=apps/celeste-classic/app.html
+path=apps/games/celeste-classic/app.html
 icon=play
 svg-icon=true
 cat=Games
@@ -191,7 +193,7 @@ h=640
 [application]
 id=celeste-two
 name=Celeste Classic 2
-path=apps/celeste-two/app.html
+path=apps/games/celeste-two/app.html
 icon=play
 svg-icon=true
 cat=Games
@@ -202,7 +204,7 @@ h=640
 [application]
 id=celeste-community
 name=Celeste Community
-path=apps/celeste-community/app.html
+path=apps/games/celeste-community/app.html
 icon=globe
 svg-icon=true
 cat=Games
@@ -213,7 +215,7 @@ h=640
 [application]
 id=web-retro
 name=Web Retro
-path=apps/web-retro/app.html
+path=apps/games/web-retro/app.html
 icon=data/icons/webretro.png
 svg-icon=false
 cat=Games
@@ -225,12 +227,13 @@ h=640
    rename it, change the EMBED_URL constant in its app.html, then
    uncomment a block like this one (and delete these lines).
    Set cat= to the menu section the app belongs in — System, Productivity,
-   Media or Games — so it lands in the right group:
+   Media or Games — so it lands in the right group, and put its folder in
+   apps/<category>/ to match:
 
 [application]
 id=my-embed
 name=My Embed
-path=apps/my-embed/app.html
+path=apps/<category>/my-embed/app.html
 icon=globe
 svg-icon=true
 cat=System

@@ -31,9 +31,9 @@ const SYSTEM_CATS = {
 };
 /* Each Celeste app frames the game page that ships in its own folder. */
 const GAME_PAGES = {
-  'celeste-classic': 'apps/celeste-classic/index.html',
-  'celeste-two': 'apps/celeste-two/index.html',
-  'celeste-community': 'apps/celeste-community/index.html',
+  'celeste-classic': 'apps/games/celeste-classic/index.html',
+  'celeste-two': 'apps/games/celeste-two/index.html',
+  'celeste-community': 'apps/games/celeste-community/index.html',
 };
 /* Every script index.html loads, in order, minus boot.js (which starts the
  * auth flow and needs a served page). */
@@ -173,31 +173,47 @@ test('every catalog entry points at a real, syntactically valid app module', () 
   }
   /* The vendored games really are the games: their builds are huge JS. */
   for (const [p, min] of [
-    ['apps/celeste-classic/celeste.js', 1000000],
-    ['apps/celeste-classic/celeste.p8.png', 30000],
-    ['apps/celeste-two/index.js', 1000000],
-    ['apps/celeste-community/celeste_practice_mod.js', 1000000],
-    ['apps/celeste-community/celeste2_1.1_practice_mod.js', 1000000],
-    ['apps/celeste-community/webek.js', 1000000],
+    ['apps/games/celeste-classic/celeste.js', 1000000],
+    ['apps/games/celeste-classic/celeste.p8.png', 30000],
+    ['apps/games/celeste-two/index.js', 1000000],
+    ['apps/games/celeste-community/celeste_practice_mod.js', 1000000],
+    ['apps/games/celeste-community/celeste2_1.1_practice_mod.js', 1000000],
+    ['apps/games/celeste-community/webek.js', 1000000],
   ]) {
     assert.ok(fs.statSync(path.join(ROOT, p)).size >= min, `${p} is not the real game build`);
   }
   /* The game pages are untouched: their "all games" links still go one level
-   * up, and apps/index.html is the picker that link expects (remapped from
-   * the source repository's root selector). */
+   * up, and apps/games/index.html is the picker that link expects (remapped
+   * from the source repository's root selector). */
   for (const id of Object.keys(GAME_PAGES)) {
-    assert.ok(source(`apps/${id}/index.html`).includes('href="../"'),
-      `apps/${id}/index.html was edited — its ../ link is gone`);
+    assert.ok(source(`apps/games/${id}/index.html`).includes('href="../"'),
+      `apps/games/${id}/index.html was edited — its ../ link is gone`);
   }
-  const picker = source('apps/index.html');
+  const picker = source('apps/games/index.html');
   for (const id of Object.keys(GAME_PAGES)) {
-    assert.ok(picker.includes(`./${id}/`), `apps/index.html does not link to ${id}`);
+    assert.ok(picker.includes(`./${id}/`), `apps/games/index.html does not link to ${id}`);
   }
 
-  /* apps/ holds only the shipped apps plus the developer templates. */
+  /* Every app lives inside its category folder — apps/<category>/<folder>/ —
+   * and each category folder holds exactly its own apps. */
+  const CAT_DIRS = { System: 'system', Productivity: 'productivity', Media: 'media', Games: 'games' };
+  for (const app of apps) {
+    assert.ok(app.path.startsWith(`apps/${CAT_DIRS[app.cat]}/`),
+      `${app.id} (${app.cat}) is not filed in apps/${CAT_DIRS[app.cat]}/`);
+  }
+  for (const [cat, dir] of Object.entries(CAT_DIRS)) {
+    const dirs = fs.readdirSync(path.join(ROOT, 'apps', dir), { withFileTypes: true })
+      .filter((e) => e.isDirectory()).map((e) => e.name).sort();
+    /* Array.from: apps lives in the catalog vm realm — copy into this realm
+     * so the arrays compare by structure, not realm identity. */
+    const expected = Array.from(apps).filter((a) => a.cat === cat).map((a) => a.path.split('/')[2]).sort();
+    assert.deepEqual(dirs, expected, `apps/${dir}/ should hold exactly the ${cat} apps`);
+  }
+
+  /* apps/ holds the four category folders plus the developer templates. */
   const folders = fs.readdirSync(path.join(ROOT, 'apps'), { withFileTypes: true })
     .filter((e) => e.isDirectory()).map((e) => e.name).sort();
-  assert.deepEqual(folders, ['_embed', '_template', 'about', 'app-center', 'browser', 'calculator', 'celeste-classic', 'celeste-community', 'celeste-two', 'customize', 'files', 'image-viewer', 'media', 'pdf', 'settings', 'text-editor', 'web-retro']);
+  assert.deepEqual(folders, ['_embed', '_template', 'games', 'media', 'productivity', 'system']);
 });
 
 test('the system manifest still matches the repository exactly', () => {

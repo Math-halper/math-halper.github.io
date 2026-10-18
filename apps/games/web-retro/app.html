@@ -7,7 +7,7 @@
 </head>
 <body>
 <p>This file is a proton app. It is not meant to be opened on its own:
-open <a href="../../index.html">proton</a> and launch <b>Web Retro</b> from the
+open <a href="../../../index.html">proton</a> and launch <b>Web Retro</b> from the
 proton menu. The script below is fetched and run by proton's HTML loader
 (assets/html-loader.js) at boot.</p>
 <!-- proton app: everything that registers and renders this app lives in
@@ -96,7 +96,7 @@ registerApp({
         if (event.data && event.data.status === 'ready') bc.postMessage({ rom: file });
       };
       main.querySelector('#wr-frame').src =
-        `apps/web-retro/webretro/launch.html?core=${encodeURIComponent(core)}&rom=channel&name=${encodeURIComponent(name)}&channel=${encodeURIComponent(channel)}`;
+        `apps/games/web-retro/webretro/launch.html?core=${encodeURIComponent(core)}&rom=channel&name=${encodeURIComponent(name)}&channel=${encodeURIComponent(channel)}`;
     }
 
     again.addEventListener('click', picker);

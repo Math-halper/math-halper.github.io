@@ -50,15 +50,15 @@ authors.
 Everything above describes how proton was built. The current base keeps the
 five desktop System apps — App Center, Customize, Settings, About and
 Browser — and copies the **file system suite** back in from `main`'s
-`apps/inbuilt/` layout (re-homed to `apps/<name>/` here): Files, Text Editor,
+`apps/inbuilt/` layout (re-homed to `apps/<category>/<name>/` here): Files, Text Editor,
 Image Viewer, Media and PDF Viewer, whose ids are exactly the ones
 `FS.appFor()` returns. The three Celeste Classics apps (Celeste Classic,
 Celeste Classic 2, Celeste Community) carry the actual game files, copied
 byte-for-byte from [Math-halper/Celeste](https://github.com/Math-halper/Celeste)
 (classic/, two/ and speed/) — see *Vendored Celeste Classics* below. A small
 Calculator ships again too — new, self-contained code
-(`apps/calculator/`), not a restore of the removed bundle below — and Web Retro
-(`apps/web-retro/`) re-introduces retro emulation as a vendored webretro build
+(`apps/productivity/calculator/`), not a restore of the removed bundle below — and Web Retro
+(`apps/games/web-retro/`) re-introduces retro emulation as a vendored webretro build
 (see **Vendored emulator (Web Retro)** below). The older
 bundled apps and game catalogs remain removed:
 
@@ -111,16 +111,16 @@ The three Celeste apps carry the **actual game files**, copied byte-for-byte
 from [Math-halper/Celeste](https://github.com/Math-halper/Celeste) (that
 repository's `classic/`, `two/` and `speed/` folders), one app per game:
 
-- `apps/celeste-classic/` — Celeste Classic (the PICO-8 export of *Celeste
+- `apps/games/celeste-classic/` — Celeste Classic (the PICO-8 export of *Celeste
   Classic* by Maddy Thorson & Noel Berry), from `classic/`
-- `apps/celeste-two/` — *Celeste Classic 2: Lani's Trek* (community follow-up),
+- `apps/games/celeste-two/` — *Celeste Classic 2: Lani's Trek* (community follow-up),
   from `two/`
-- `apps/celeste-community/` — the Celeste Classic community hub, its practice
+- `apps/games/celeste-community/` — the Celeste Classic community hub, its practice
   mods, downloads and WebEK tool, from `speed/`
 
 Each app folder is the game's own pages plus proton's thin iframe wrapper
 (`app.html`); nothing in the game files was edited. The pages' "all games"
-links go one level up (`href="../"`), as on the source site — `apps/index.html`
+links go one level up (`href="../"`), as on the source site — `apps/games/index.html`
 is that picker, a copy of the source repository's root selector with its three
 links remapped to the app folders. A few hub links point at site-absolute
 paths the source site itself doesn't host (`/glossary/` and friends) and stay
@@ -134,20 +134,20 @@ the three apps run from the user's own repository files.
 
 ## Vendored emulator (Web Retro)
 
-The Web Retro app (`apps/web-retro/`) vendors the **webretro** emulator —
+The Web Retro app (`apps/games/web-retro/`) vendors the **webretro** emulator —
 RetroArch compiled for the web by
 [BinBashBanana/webretro](https://github.com/BinBashBanana/webretro)
 (GPL-3.0, webretro 6.5) — as copied into
 [Gams-Offline/Gams](https://github.com/Gams-Offline/Gams) (`g/g/webretro/`):
 
-- `apps/web-retro/webretro/` is that build: `launch.html`, `main.js`, the
+- `apps/games/web-retro/webretro/` is that build: `launch.html`, `main.js`, the
   `cores/` bundles for mupen64plus_next (N64), snes9x (SNES), nestopia (NES)
   and mgba (GB/GBC/GBA) — the libretro cores are GPL-licensed parts of
   libretro/RetroArch — and the `assets/` they load. The GIMP source
   `controller_layout.xcf` is not a runtime asset and is omitted; everything
   else is byte-for-byte as upstream. The core/wasm and ROM data-URL wrappers
   are Gams' `file://`-friendly packaging of those files.
-- `apps/web-retro/app.html` is proton's launcher, adapted from Gams'
+- `apps/games/web-retro/app.html` is proton's launcher, adapted from Gams'
   `g/webretro.html`: the same core list and BroadcastChannel ROM hand-off to
   `webretro/launch.html?rom=channel`, with the UI rebuilt on proton's widgets
   and the ROM name URL-encoded.
