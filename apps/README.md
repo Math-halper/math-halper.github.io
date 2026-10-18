@@ -1,6 +1,10 @@
 # proton apps — one app per folder
 
-Every app is a **single HTML file in its own folder**: `apps/<app-name>/app.html`.
+Every app is a **single HTML file in its own folder**. The apps built into this
+site live under **[`inbuilt/`](inbuilt/)**: `apps/inbuilt/<app-name>/app.html`.
+The one exception is the Celeste Classic wrapper, which frames a page hosted
+elsewhere and stays directly under `apps/`:
+`apps/celeste-classic/app.html`.
 There is no build step. The list of apps — name, location (path), icon,
 category, description and window size — lives in **one catalog file**:
 [`data/applications.js`](../data/applications.js), one `[application]` block
@@ -16,13 +20,18 @@ appears in the proton menu, App Center and Customize.
 > web-address apps — everything is part of this static website. "Add your own
 > app" below is the *developer* workflow for changing the site's code.
 
-The current base keeps its five core System apps. Celeste Classic is added as
+The current base keeps its five core desktop apps and the five-app file system
+suite (Files, Text Editor, Image Viewer, Media, PDF Viewer), all in
+`apps/inbuilt/`.
+Celeste Classic is added as
 a small wrapper around its existing GitHub Pages site, loaded live in a
-sandboxed iframe. This repository does not contain its game code, assets or
-copies of the source repository.
-The previously bundled apps and game catalogs remain removed. The only
-built-in website is **Test Page** (the one entry in `data/websites.js`; see
-[`websites/README.md`](../websites/README.md)).
+sandboxed iframe from its own `apps/celeste-classic/` folder — it is not an
+inbuilt app, so it does not live in `apps/inbuilt/`. This repository does not
+contain its game code, assets or copies of the source repository.
+The other previously bundled apps (Notes, Calendar, Spreadsheet, Whiteboard,
+Presentation, Terminal, the games) and the game catalogs remain removed. The
+only built-in website is **Test Page** (the one entry in `data/websites.js`;
+see [`websites/README.md`](../websites/README.md)).
 
 In **Customize → App modules**, choose a named vector icon or upload a PNG,
 JPG, WebP, GIF, BMP or AVIF image. Images are resized to at most 128 pixels,
@@ -36,7 +45,9 @@ see [`data/icons/README.md`](../data/icons/README.md).
 
 ## Add your own app (developer workflow)
 
-1. Copy the `apps/_template/` folder and rename it, e.g. `apps/my-app/`.
+1. Copy the `apps/_template/` folder into `apps/inbuilt/` and rename it, e.g.
+   `apps/inbuilt/my-app/` (its "open proton" fallback link is one level deeper
+   there: `../../../index.html`).
    If the app is only **one framed page** — a build, a doc, another site —
    copy `apps/_embed/` instead and skip to step 3: its module is a toolbar
    (address, Reload, Open in new tab) plus a full-height sandboxed `<iframe>`,
@@ -49,15 +60,32 @@ see [`data/icons/README.md`](../data/icons/README.md).
    app. Template folders are never registered or deployed —
    `tools/gen-fs-manifest.py` skips every underscore-prefixed folder.
 2. Add ONE `[application]` block to `data/applications.js` (copy the template
-   in that file's header): `id`, `name`, `path=apps/my-app/app.html`, `icon`
+   in that file's header): `id`, `name`, `path=apps/inbuilt/my-app/app.html`,
+   `icon`
    (a name from `assets/icons.js` such as `folder`, `globe` or `star`),
    `cat`, `desc`, `w`, `h`. Block order = menu order. A new `cat=` name adds a
    new section to the proton menu (the built-in order is `CATS` in
    `assets/core.js`: `System`, `My Apps`, then anything else you invent).
-3. Edit `apps/my-app/app.html` and write the `render` function (the app's
-   code). Reload proton.
-4. Re-run `python3 tools/gen-fs-manifest.py` so the new file appears in the
-   virtual file system, then `npm test`.
+3. Edit `apps/inbuilt/my-app/app.html` and write the `render` function (the
+   app's code). Reload proton.
+4. Re-run `python3 tools/gen-search-index.py` (so the new app's prose is
+   searchable) and `python3 tools/gen-fs-manifest.py` (so the new file appears
+   in the virtual file system — always in that order, the manifest records the
+   index's size), then `npm test`.
+
+Your app's **header comment is its description in search**: `tools/gen-search-index.py`
+indexes an app module's own `/* … */` comments, so the paragraph you write at
+the top of the module is what a search result quotes. Write it for a reader,
+not for yourself.
+
+Search also decides whether a file **answers** a word or merely **mentions** it:
+a catalogued app or website answers its own name, and any file answers words in
+its title, file name or description. The Browser lists answers as results and
+relegates the rest to a *Mentioned in passing* list, so a word your app is about
+belongs in its name or description — not only somewhere in the code. When
+nothing in the repository answers a word, the Browser says so instead of
+promoting a file that uses it once: proton searches the repository, it is not a
+dictionary.
 
 Your app can use: `userData` (the account's saved data), `saveData()`,
 `openApp(id)`, `MH.toast(...)`, `MH.download(...)`, `FS` (the virtual file
@@ -75,44 +103,56 @@ exactly where the old one left off.
   Customize and Settings are protected so the desktop stays manageable.
 - **Permanently:** delete its `[application]` block from
   `data/applications.js` (and optionally delete the folder), refresh
-  `data/fs-manifest.js`, and drop anything in `assets/` that only it used.
+  `data/search-index.js` and `data/fs-manifest.js`, and drop anything in
+  `assets/` that only it used.
 
 ## The apps
 
+Everything in `inbuilt/` is built into this site; `celeste-classic/` and the
+two `_`-prefixed starting points sit next to it, directly under `apps/`.
+
 | Folder | App (id) |
 | --- | --- |
-| `app-center/` | App Center (`appcenter`) — hide/restore built-ins, manage the account's saved apps & websites |
-| `customize/` | Customize (`customize`) — app modules, vector or uploaded image icons, themes, wallpapers, desktop parts, reset |
-| `settings/` | Settings (`settings`) — account, wallpaper & accent, password, backup, accounts on this device |
-| `about/` | About (`about`) — provenance, licence, what's inside |
-| `browser/` | Browser (`browser`) — Test Page, saved websites, external addresses and VFS HTML files |
+| `inbuilt/app-center/` | App Center (`appcenter`) — hide/restore built-ins, manage the account's saved apps & websites |
+| `inbuilt/customize/` | Customize (`customize`) — app modules, vector or uploaded image icons, themes, wallpapers, desktop parts, reset |
+| `inbuilt/settings/` | Settings (`settings`) — account, wallpaper & accent, password, backup, accounts on this device |
+| `inbuilt/about/` | About (`about`) — provenance, licence, what's inside |
+| `inbuilt/browser/` | Browser (`browser`) — tabs, back/forward, bookmarks and history; searches this repository when you type words — files that answer them as results, files that merely mention them below, and no result at all when nothing here defines the word — and visits an address when you type one; Test Page, saved websites, external addresses, VFS HTML files and a reader that marks your matches |
+| `inbuilt/files/` | Files (`files`) — the file manager: `/` (read-only system tree) and `/home/<you>` (yours); create, rename, move, copy, import, search, download as ZIP, desktop shortcuts |
+| `inbuilt/text-editor/` | Text Editor (`text-editor`) — edit the text files in your home folder; system files open read-only with *Save a copy…* |
+| `inbuilt/image-viewer/` | Image Viewer (`image-viewer`) — PNG, JPG, GIF, WebP, AVIF, BMP, ICO, SVG, with zoom and prev/next through the folder |
+| `inbuilt/media/` | Media (`media`) — audio and video, played with your browser's own codecs through a blob URL, with a playlist |
+| `inbuilt/pdf/` | PDF Viewer (`pdf`) — PDFs in the browser's built-in viewer (id `pdf`; the legacy id `pdf-viewer` is still mapped to it) |
 | `celeste-classic/` | Celeste Classic (`celeste-classic`) — [hosted game page](https://math-halper.github.io/Celeste/1/index.html), embedded with the shared safe iframe wrapper |
-| `_template/` | not an app — the starting point for a new one |
+| `_template/` | not an app — the starting point for a new one (copy it into `inbuilt/`) |
 | `_embed/` | not an app — the starting point for one that is only a framed page (`EMBED_URL`) |
 
 ### Desktop shortcut workflow
 
 `assets/desktop-icons.js` renders per-account `userData.desktopIcons` entries
 (`{id, kind:'app'|'path', target, col, row}`). A new account starts with
-Settings and Browser; an empty array means the user intentionally cleared all
-shortcuts. Icons are *links*, not VFS files: removing an icon leaves the app
-intact. Double-click/Enter opens the target; pointer dragging or Alt+arrow keys
+Settings, Browser, Files and a link to its own home folder; an empty array
+means the user intentionally cleared all shortcuts. Icons are *links*, not VFS
+files: removing an icon leaves the app or file intact. Double-click/Enter opens the target; pointer dragging or Alt+arrow keys
 moves it on a snap grid, with occupied spots swapped. The layout reflows on
 narrow screens without changing the saved positions.
 
 Use the desktop **Add icon** search, right-click the wallpaper or an app in the
 proton menu, drag a menu app onto the wallpaper, or use App Center's **Desktop
-icon** button. Select a shortcut for the touch-friendly **Open selected** or
+icon** button. For a file or folder: right-click the wallpaper → **Add file or
+folder…**, right-click an entry in Files → **Add desktop shortcut**, or drag an
+entry out of Files onto the wallpaper. Select a shortcut for the touch-friendly **Open selected** or
 **Remove selected** buttons, right-click it for **Remove shortcut**, or press
 Delete. Shortcut edits save immediately with the account and are included in
 Settings backups; Customize's Reset restores the defaults.
 
-`kind:'path'` entries (files and folders) can no longer be created: they were
-added from the Files app, by dragging out of Files, or by typing a path in the
-desktop menu, and opening one needed a viewer app. One saved by an older
-account still renders (missing targets are marked), can be moved and removed,
-and reports that nothing can open it — `openFSItem()` in `assets/core.js`
-honours any viewer an app added back registers through `FS.appFor()`.
+`kind:'path'` entries (files and folders) are created again by the Files app,
+the desktop menu and dragging out of Files — all of them go through
+`DesktopIcons.addPath()`. Opening one calls `openFSItem()` in `assets/core.js`,
+which sends folders to Files and files to whichever app `FS.appFor()` names, so
+a shortcut keeps working when an app is added or removed. They follow renames
+(`FS.watch`), mark a missing target instead of failing, and can always be
+moved and removed without touching the file itself.
 
 ### Shared code
 
@@ -122,8 +162,13 @@ catalog — name, location, icon and everything else for every app),
 is the only one left; guide: `websites/README.md`),
 `data/fs-manifest.js` (generated list of every deployed file in this
 repository — the `/` tree of the virtual file system; refresh it with
-`python3 tools/gen-fs-manifest.py`), `assets/fs.js` (the file system API),
-`assets/fs-archive.js` (ZIP downloads), `assets/config-loader.js` (parses both
+`python3 tools/gen-fs-manifest.py`), `data/search-index.js` (generated: the
+searchable prose of this repository — refresh it with
+`python3 tools/gen-search-index.py`), `assets/search.js` (the search engine the
+Browser's bar queries), `assets/fs.js` (the file system API the whole Files
+suite is built on — its header comment documents every method),
+`assets/fs-archive.js` (dependency-free ZIP downloads),
+`assets/config-loader.js` (parses both
 catalogs), `assets/store.js` (accounts/storage and the per-account defaults),
 `assets/core.js` (desktop, windows, registries), `assets/desktop-icons.js`
 (shortcuts), `assets/icons.js` (the SVG set and safe image-icon renderer), `assets/styles.css`,

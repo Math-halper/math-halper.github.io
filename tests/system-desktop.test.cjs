@@ -1,8 +1,10 @@
-/* The current build keeps its five core System apps, plus Celeste Classic
- * as a sandboxed embed of its existing GitHub Pages site. No game content is
- * copied here. The one built-in website is Test Page, the Browser smoke
- * test. These tests keep the catalog, wrapper, generated file-system
- * manifest and running desktop in sync. */
+/* The current build keeps its five core desktop apps, the five-app file system
+ * suite that sits on assets/fs.js, and a Browser that searches this repository
+ * through proton's own engine (assets/search.js over the generated
+ * data/search-index.js), plus Celeste Classic as a sandboxed embed of its
+ * existing GitHub Pages site. No game content is copied here. The one built-in
+ * website is Test Page, the Browser smoke test. These tests keep the catalog,
+ * wrapper, both generated data files and the running desktop in sync. */
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -12,15 +14,22 @@ const { JSDOM, VirtualConsole } = require('jsdom');
 
 const ROOT = path.resolve(__dirname, '..');
 const source = (p) => fs.readFileSync(path.join(ROOT, p), 'utf8');
-const SYSTEM_APPS = ['appcenter', 'customize', 'settings', 'about', 'browser', 'celeste-classic'];
+const SYSTEM_APPS = ['appcenter', 'customize', 'settings', 'about', 'browser',
+  'files', 'text-editor', 'image-viewer', 'media', 'pdf', 'celeste-classic'];
+/* The file system suite, all in apps/inbuilt/. These ids are exactly what
+ * FS.appFor() returns, so a file always has an app that can open it. */
+const FS_APPS = ['files', 'text-editor', 'image-viewer', 'media', 'pdf'];
+/* What a brand-new account's desktop starts with (assets/store.js). */
+const DEFAULT_ICONS = ['settings', 'browser', 'files', '/home/ada'];
 const EMBED_URLS = {
   'celeste-classic': 'https://math-halper.github.io/Celeste/1/index.html',
 };
 /* Every script index.html loads, in order, minus boot.js (which starts the
- * auth flow and needs a served page). */
-const SHELL = ['assets/store.js', 'assets/icons.js', 'data/fs-manifest.js', 'assets/fs.js',
-  'assets/fs-archive.js', 'data/applications.js', 'data/websites.js', 'assets/config-loader.js',
-  'assets/core.js', 'assets/desktop-icons.js', 'assets/html-loader.js'];
+ * auth flow and needs a served page). Read from the page itself so this list
+ * cannot drift when a new data file or asset is added. */
+const SHELL = [...source('index.html').matchAll(/<script src="([^"]+)"><\/script>/g)]
+  .map((m) => m[1])
+  .filter((p) => p !== 'assets/boot.js');
 
 /* Per-check states, for a readable failure message. */
 function CHECK_STATES(w) {
@@ -45,7 +54,7 @@ function catalog() {
   };
 }
 
-test('the catalog is five core apps, one embedded game and the built-in test site', () => {
+test('the catalog is ten System apps, one embedded game and the built-in test site', () => {
   const { apps, sites, warnings, icons, render, renderCatalogIcon, validIconPath } = catalog();
   assert.deepEqual(Array.from(warnings), [], 'catalog parses without warnings');
   /* Array.from everywhere: the catalogs come from a vm context, so their
@@ -100,11 +109,11 @@ test('catalog icons accept local image paths or named inline SVG defaults', () =
   const ctx = vm.createContext({ window: {}, console });
   vm.runInContext(source('assets/icons.js'), ctx);
   ctx.window.PROTON_APPLICATIONS_TEXT = [
-    '[application]', 'id=image-app', 'name=Image App', 'path=apps/image/app.html',
+    '[application]', 'id=image-app', 'name=Image App', 'path=apps/inbuilt/image/app.html',
     'icon=data/icons/app-logo.png', 'svg-icon=false',
-    '[application]', 'id=vector-app', 'name=Vector App', 'path=apps/vector/app.html',
+    '[application]', 'id=vector-app', 'name=Vector App', 'path=apps/inbuilt/vector/app.html',
     'icon=globe', 'svg-icon=true',
-    '[application]', 'id=legacy-app', 'name=Legacy App', 'path=apps/legacy/app.html', 'icon=grid',
+    '[application]', 'id=legacy-app', 'name=Legacy App', 'path=apps/inbuilt/legacy/app.html', 'icon=grid',
   ].join('\n');
   ctx.window.PROTON_WEBSITES_TEXT = '';
   vm.runInContext(source('assets/config-loader.js'), ctx);
@@ -148,10 +157,21 @@ test('every catalog entry points at a real, syntactically valid app module', () 
     assert.deepEqual(fs.readdirSync(path.dirname(path.join(ROOT, app.path))).sort(), ['app.html']);
   }
 
-  /* apps/ holds only the shipped apps plus the developer templates. */
+  /* apps/ holds the developer templates, the Celeste wrapper and inbuilt/ —
+   * the folder with every app built into this site. */
   const folders = fs.readdirSync(path.join(ROOT, 'apps'), { withFileTypes: true })
     .filter((e) => e.isDirectory()).map((e) => e.name).sort();
-  assert.deepEqual(folders, ['_embed', '_template', 'about', 'app-center', 'browser', 'celeste-classic', 'customize', 'settings']);
+  assert.deepEqual(folders, ['_embed', '_template', 'celeste-classic', 'inbuilt']);
+  const inbuilt = fs.readdirSync(path.join(ROOT, 'apps', 'inbuilt'), { withFileTypes: true })
+    .filter((e) => e.isDirectory()).map((e) => e.name).sort();
+  assert.deepEqual(inbuilt, ['about', 'app-center', 'browser', 'customize', 'files',
+    'image-viewer', 'media', 'pdf', 'settings', 'text-editor']);
+  /* The catalog agrees with the tree: only the embedded game sits outside
+   * apps/inbuilt/, and it stays a wrapper folder of its own under apps/. */
+  for (const app of apps) {
+    const home = app.id === 'celeste-classic' ? 'apps/celeste-classic/' : 'apps/inbuilt/';
+    assert.ok(app.path.startsWith(home), `${app.id} should live in ${home}, not ${app.path}`);
+  }
 });
 
 test('the system manifest still matches the repository exactly', () => {
@@ -192,7 +212,7 @@ test('the system manifest still matches the repository exactly', () => {
     'Manifest and repository disagree — re-run python3 tools/gen-fs-manifest.py');
 });
 
-test('the desktop boots, lists and opens all six catalogued apps', async () => {
+test('the desktop boots, lists and opens every catalogued app', async () => {
   const virtualConsole = new VirtualConsole(), errors = [];
   virtualConsole.on('jsdomError', (err) => errors.push(err.message));
   const dom = new JSDOM('<!doctype html><main id="auth" hidden></main><div id="desktop" hidden></div><div id="toasts"></div>', {
@@ -218,13 +238,16 @@ test('the desktop boots, lists and opens all six catalogued apps', async () => {
     w.eval("currentUser = {username:'Ada',usernameLower:'ada',displayName:'Ada',createdAt:Date.now()}; userData = MH.defaultData('Ada','ada'); enterDesktop();");
     const wins = w.eval('wins'), APPS = w.eval('APPS');
 
-    // The account defaults point at apps that still exist.
+    // The account defaults point at apps and folders that still exist.
     assert.deepEqual(Array.from(w.eval('userData.settings.pinned')), ['settings', 'appcenter', 'browser']);
     const shortcuts = Array.from(w.eval('userData.desktopIcons'));
-    assert.deepEqual(shortcuts.map((s) => s.target), ['settings', 'browser']);
-    for (const s of shortcuts) assert.ok(APPS[s.target], `default shortcut to a removed app: ${s.target}`);
+    assert.deepEqual(shortcuts.map((s) => s.target), DEFAULT_ICONS);
+    for (const s of shortcuts) {
+      if (s.kind === 'app') assert.ok(APPS[s.target], `default shortcut to a removed app: ${s.target}`);
+      else assert.ok(w.eval(`FS.stat(${JSON.stringify(s.target)})`), `default shortcut to a missing path: ${s.target}`);
+    }
 
-    // The start menu shows one System section holding all six apps.
+    // The start menu shows one System section holding every app.
     const menu = w.document.querySelector('#startmenu');
     assert.deepEqual([...menu.querySelectorAll('.sm-cat')].map((e) => e.textContent), ['System']);
     assert.deepEqual([...menu.querySelectorAll('.sm-item')].map((e) => e.dataset.app), SYSTEM_APPS);
@@ -263,10 +286,29 @@ test('the desktop boots, lists and opens all six catalogued apps', async () => {
     assert.ok(browserBody.querySelector('iframe.site-frame').src.endsWith('/websites/test-page/site.html'));
     w.closeWin('browser', true);
 
-    // A file shortcut from an older account is reported, not fatal.
+    // Opening a system file routes it to the app FS.appFor() names. proton's
+    // own files are fetched over HTTP, so serve them out of the repository
+    // (the test page lives one folder down, like the real GitHub Pages site).
+    const served = (url) => {
+      const rel = new URL(url).pathname.replace(/^\/+/, '');
+      return source(fs.existsSync(path.join(ROOT, rel)) ? rel : rel.split('/').slice(1).join('/'));
+    };
+    w.fetch = async (url) => ({
+      ok: true, status: 200,
+      text: async () => served(url),
+      blob: async () => new w.Blob([served(url)]),
+    });
     w.eval("openFSItem('/README.md')");
+    assert.ok(wins.has('text-editor'), 'a system text file opens in the Text Editor');
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    const editor = wins.get('text-editor').body;
+    assert.match(editor.querySelector('#te-note').textContent, /read-only proton system/,
+      'proton\'s own files open locked');
+    assert.equal(editor.querySelector('#te-text').readOnly, true);
+    assert.match(editor.querySelector('#te-text').value, /^# proton/);
+    assert.equal(editor.querySelector('#te-save').disabled, true, 'a read-only file cannot be saved in place');
+    w.closeWin('text-editor', true);
     assert.equal(wins.size, 0);
-    assert.match(w.document.querySelector('#toasts').textContent, /No app can open README\.md/);
 
     assert.deepEqual(errors, []);
   } finally { dom.window.close(); }
@@ -316,7 +358,8 @@ test('Customize saves, displays and resets uploaded app icon images', async () =
     const browserWindow = w.eval('wins').get('browser');
     assert.equal(body.querySelector('#cust-files-shortcut'), null, 'Customize still offers a Files shortcut');
     assert.deepEqual([...body.querySelectorAll('#cust-modlist .card b')].map((b) => b.textContent).slice(0, SYSTEM_APPS.length),
-      ['App Center', 'Customize', 'Settings', 'About', 'Browser', 'Celeste Classic']);
+      ['App Center', 'Customize', 'Settings', 'About', 'Browser', 'Files', 'Text Editor',
+        'Image Viewer', 'Media', 'PDF Viewer', 'Celeste Classic']);
 
     const uploadBrowserIcon = async () => {
       const input = body.querySelector('[data-micon-file="browser"]');
@@ -369,7 +412,7 @@ test('Customize saves, displays and resets uploaded app icon images', async () =
     assert.equal(w.document.querySelector('#startmenu .sm-item[data-app="browser"] img.app-icon-image')?.getAttribute('src'),
       'data/icons/catalog-browser.png', 'reset returns to the configured default icon');
     assert.deepEqual(Array.from(w.eval('userData.settings.pinned')), ['settings', 'appcenter', 'browser']);
-    assert.deepEqual(Array.from(w.eval('userData.desktopIcons'), (s) => s.target), ['settings', 'browser']);
+    assert.deepEqual(Array.from(w.eval('userData.desktopIcons'), (s) => s.target), DEFAULT_ICONS);
   } finally { w.close(); }
 });
 
@@ -508,4 +551,773 @@ test('the Test Page site passes its own checks', async () => {
     assert.match(summary(), /^All 7 checks passed/);
     w.stop(); // the page's 1 s clock interval must not outlive the test
   } finally { dom.window.close(); }
+});
+
+/* ---------------------------------------------------------------------------
+   The file system suite (Files, Text Editor, Image Viewer, Media, PDF Viewer).
+   These drive the real windows through the real FS API, so a change in
+   assets/fs.js, assets/desktop-icons.js or any of the five modules shows up
+   here rather than only in the browser.
+   --------------------------------------------------------------------------- */
+
+/* A booted desktop, plus the pieces jsdom lacks: blob URLs, Blob.arrayBuffer()
+ * (FS.readBlob/writeBlob need it) and HTTP for proton's own read-only files.
+ * The page URL has no sub-path, so a system path maps straight onto the repo. */
+async function bootDesktop(username = 'ada') {
+  const virtualConsole = new VirtualConsole(), errors = [];
+  virtualConsole.on('jsdomError', (err) => errors.push(err.message));
+  const dom = new JSDOM('<!doctype html><main id="auth" hidden></main><div id="desktop" hidden></div><div id="toasts"></div>', {
+    url: 'https://math-halper.github.io/', runScripts: 'dangerously', pretendToBeVisual: true, virtualConsole,
+  });
+  const { window: w } = dom;
+  const blobs = [];
+  w.URL.createObjectURL = (blob) => { blobs.push(blob); return 'blob:mock-' + blobs.length; };
+  w.URL.revokeObjectURL = () => {};
+  /* jsdom does no layout, so elements have no scrollIntoView; the Browser's
+   * reader and its suggestion list both scroll to what they just selected. */
+  w.Element.prototype.scrollIntoView = function () {};
+  /* jsdom leaves TextEncoder/TextDecoder off the window; assets/fs-archive.js
+   * needs one to build a ZIP. Every browser has had both since 2015. */
+  w.TextEncoder = TextEncoder;
+  w.TextDecoder = TextDecoder;
+  /* jsdom's Blob has no arrayBuffer()/text(), which FS.readBlob/writeBlob use. */
+  w.Blob.prototype.arrayBuffer = function () {
+    return new Promise((resolve, reject) => {
+      const reader = new w.FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(new Error('FileReader could not read the blob'));
+      reader.readAsArrayBuffer(this);
+    });
+  };
+  const run = (text) => { const s = w.document.createElement('script'); s.textContent = text; w.document.body.appendChild(s); s.remove(); };
+  for (const p of SHELL) run(source(p));
+  w.fetchText = async (p) => source(p);
+  w.fetch = async (url) => ({ ok: true, status: 200, text: async () => source(new URL(url).pathname.slice(1)) });
+  await w.loadHtmlModules();
+  w.eval(`window.confirm = () => true;
+    currentUser = {username:'Ada',usernameLower:${JSON.stringify(username)},displayName:'Ada',createdAt:Date.now()};
+    userData = MH.defaultData('Ada',${JSON.stringify(username)});
+    enterDesktop();`);
+  const settle = () => new Promise((resolve) => setTimeout(resolve, 25));
+  const saved = () => JSON.parse(w.localStorage.getItem(`mhOS.user.${username}.v1`));
+  return { w, errors, blobs, settle, saved, wins: w.eval('wins'), APPS: w.eval('APPS'), close: () => w.close() };
+}
+
+/* Click the button in a menu/toolbar whose text starts with a label. */
+function clickLabel(host, label) {
+  const button = [...host.querySelectorAll('button')]
+    .find((b) => b.textContent.replace(/\s+/g, ' ').trim().startsWith(label));
+  assert.ok(button, `no "${label}" button in: ${[...host.querySelectorAll('button')].map((b) => b.textContent.trim()).join(' | ')}`);
+  button.click();
+  return button;
+}
+
+test('the Files app manages the account’s folders and files end to end', async () => {
+  const { w, errors, blobs, settle, saved, wins, close } = await bootDesktop();
+  const HOME = '/home/ada';
+  /* Downloads click a real anchor; jsdom reports the navigation it cannot do. */
+  const ignorable = (m) => /Not implemented: navigation/.test(m);
+  try {
+    // A new account's desktop already links Files and its own home folder.
+    assert.ok(w.document.querySelector('.desktop-icon[data-shortcut="desktop-files"]'), 'Files is a default shortcut');
+    const homeIcon = w.document.querySelector('.desktop-icon[data-shortcut="desktop-home"]');
+    assert.ok(homeIcon, 'the home folder is a default shortcut');
+    assert.match(homeIcon.getAttribute('title'), new RegExp(HOME));
+
+    w.openApp('files');
+    const body = wins.get('files').body;
+    const rows = () => [...body.querySelectorAll('#fm-scroll [data-path]')].map((el) => el.dataset.path);
+    const rowOf = (p) => [...body.querySelectorAll('[data-path]')].find((el) => el.dataset.path === p);
+    const askInput = () => body.querySelector('#fm-ask-input');
+    const askOk = () => body.querySelector('#fm-ask [data-ok]');
+
+    // The seeded home folder, and the read-only system tree in the sidebar.
+    assert.equal(body.querySelector('#fm-path').value, HOME);
+    assert.deepEqual(rows(), [`${HOME}/Desktop`, `${HOME}/Documents`, `${HOME}/Downloads`, `${HOME}/Pictures`, `${HOME}/README.txt`]);
+    assert.ok(body.querySelector('#fm-side [data-go="/apps"]'), 'the sidebar lists the read-only system tree');
+    assert.match(body.querySelector('#fm-status').textContent, /Your home: 3 files, 4 folders/);
+
+    // Double-click walks into a folder.
+    rowOf(`${HOME}/Documents`).dispatchEvent(new w.MouseEvent('dblclick', { bubbles: true }));
+    assert.equal(body.querySelector('#fm-path').value, `${HOME}/Documents`);
+    assert.deepEqual(rows(), [`${HOME}/Documents/Ideas.txt`, `${HOME}/Documents/Welcome.txt`]);
+
+    // New folder: created in the VFS, listed, and saved with the account.
+    body.querySelector('#fm-new-folder').click();
+    assert.equal(body.querySelector('#fm-ask').hidden, false, 'the prompt is an inline form, not window.prompt()');
+    askInput().value = 'Notes';
+    askOk().click();
+    assert.equal(w.eval(`FS.isDir('${HOME}/Documents/Notes')`), true);
+    assert.ok(rows().includes(`${HOME}/Documents/Notes`));
+    assert.ok(saved().dirs.includes(`${HOME}/Documents/Notes`), 'the folder is saved in localStorage');
+
+    // New file opens in the Text Editor, and saving writes through FS.write().
+    body.querySelector('#fm-new-file').click();
+    askInput().value = 'todo.txt';
+    askOk().click();
+    assert.ok(wins.has('text-editor'), 'a new text file opens in the Text Editor');
+    const editor = wins.get('text-editor').body;
+    await settle();                       // the file's contents load asynchronously
+    const area = editor.querySelector('#te-text');
+    assert.equal(area.readOnly, false, 'a file in your home folder is editable');
+    const text = 'buy milk\nwrite tests';
+    area.value = text;
+    area.dispatchEvent(new w.Event('input', { bubbles: true }));
+    assert.match(editor.querySelector('#te-status').textContent, /unsaved changes/);
+    editor.querySelector('#te-save').click();
+    assert.equal(await w.eval(`FS.read('${HOME}/Documents/todo.txt')`), text);
+    assert.ok(saved().files.some((f) => f.path === `${HOME}/Documents/todo.txt` && f.content === text), 'saved with the account');
+    assert.equal(editor.querySelector('#te-status').textContent.includes('unsaved'), false, 'the dirty flag clears');
+    // FS.watch() keeps the open Files window in step — no manual refresh.
+    assert.ok(rows().includes(`${HOME}/Documents/todo.txt`), 'Files re-rendered from FS.watch()');
+    w.closeWin('text-editor', true);
+
+    // Right-click menu: open-with, shortcut, rename, move, copy, delete.
+    const openMenu = (p) => {
+      rowOf(p).dispatchEvent(new w.MouseEvent('contextmenu', { bubbles: true, clientX: 24, clientY: 24 }));
+      const menu = body.querySelector('#fm-menu');
+      assert.ok(menu, 'right-clicking an entry opens its menu');
+      return menu;
+    };
+    const menuLabels = (menu) => [...menu.querySelectorAll('button')].map((b) => b.textContent.trim());
+    let menu = openMenu(`${HOME}/Documents/todo.txt`);
+    assert.ok(menuLabels(menu).includes('Open in Text Editor'), menuLabels(menu).join(' | '));
+    assert.ok(menuLabels(menu).includes('Add desktop shortcut'));
+    clickLabel(menu, 'Add desktop shortcut');
+    assert.ok(Array.from(w.eval('userData.desktopIcons'))
+      .some((s) => s.kind === 'path' && s.target === `${HOME}/Documents/todo.txt`), 'the shortcut is a link to the path');
+    assert.ok(w.document.querySelector(`.desktop-icon[title*="todo.txt"]`), 'and it renders on the desktop');
+
+    // A rename moves the file and the desktop shortcut follows it.
+    menu = openMenu(`${HOME}/Documents/todo.txt`);
+    clickLabel(menu, 'Rename…');
+    askInput().value = 'shopping.txt';
+    askOk().click();
+    assert.equal(w.eval(`FS.exists('${HOME}/Documents/shopping.txt')`), true);
+    assert.equal(w.eval(`FS.exists('${HOME}/Documents/todo.txt')`), false);
+    assert.ok(Array.from(w.eval('userData.desktopIcons'))
+      .some((s) => s.kind === 'path' && s.target === `${HOME}/Documents/shopping.txt`), 'the shortcut followed the rename');
+
+    // Move and copy both go through FS, into a folder chosen in the form.
+    menu = openMenu(`${HOME}/Documents/shopping.txt`);
+    clickLabel(menu, 'Move to…');
+    assert.ok(body.querySelector('#fm-ask-folders'), 'the destination prompt offers real folders');
+    askInput().value = HOME;
+    askOk().click();
+    await settle();
+    assert.equal(w.eval(`FS.exists('${HOME}/shopping.txt')`), true, 'moved');
+    assert.equal(w.eval(`FS.exists('${HOME}/Documents/shopping.txt')`), false, 'and not left behind');
+    body.querySelector('#fm-up').click();
+    assert.equal(body.querySelector('#fm-path').value, HOME);
+    menu = openMenu(`${HOME}/shopping.txt`);
+    clickLabel(menu, 'Copy to…');
+    askInput().value = `${HOME}/Documents/Notes`;
+    askOk().click();
+    await settle();
+    assert.equal(w.eval(`FS.exists('${HOME}/Documents/Notes/shopping.txt')`), true, 'copied into the subfolder');
+    assert.equal(w.eval(`FS.exists('${HOME}/shopping.txt')`), true, 'the original stays');
+
+    // Import stores the exact bytes of a file from the computer.
+    const imported = new w.File(['imported bytes'], 'note.txt', { type: 'text/plain' });
+    const fileInput = body.querySelector('#fm-file');
+    Object.defineProperty(fileInput, 'files', { configurable: true, value: [imported] });
+    rowOf(`${HOME}/Documents`).dispatchEvent(new w.MouseEvent('dblclick', { bubbles: true }));
+    await fileInput.onchange({ target: fileInput });
+    await settle();
+    assert.equal(w.eval(`FS.stat('${HOME}/Documents/note.txt')?.size`), 14, 'the imported file is in the account');
+    // An imported text file stays text: readable, editable, and it opens in
+    // the Text Editor rather than falling back to Files.
+    assert.equal(await w.eval(`FS.read('${HOME}/Documents/note.txt')`), 'imported bytes');
+    assert.equal(w.eval(`FS.appFor('${HOME}/Documents/note.txt')`), 'text-editor');
+    assert.ok(saved().files.some((f) => f.path === `${HOME}/Documents/note.txt` && f.content === 'imported bytes'),
+      'imported text is stored as text, not as opaque bytes');
+    // Search is recursive (FS.find); the filter box is only this folder.
+    body.querySelector('#fm-search').value = 'welcome';
+    body.querySelector('#fm-search').dispatchEvent(new w.KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    assert.ok(rows().includes(`${HOME}/Documents/Welcome.txt`), 'a recursive search finds files in subfolders');
+    assert.equal(body.querySelector('#fm-clear').hidden, false, 'the search can be cleared again');
+    body.querySelector('#fm-clear').click();
+    // shopping.txt was moved out of this folder and copied into Notes/.
+    assert.deepEqual(rows().map((p) => p.split('/').pop()).sort(), ['Ideas.txt', 'Notes', 'Welcome.txt', 'note.txt']);
+    body.querySelector('#fm-filter').value = 'shop';
+    body.querySelector('#fm-filter').dispatchEvent(new w.Event('input', { bubbles: true }));
+    assert.deepEqual(rows(), [], 'the filter only looks in this folder');
+    body.querySelector('#fm-filter').value = '';
+    body.querySelector('#fm-filter').dispatchEvent(new w.Event('input', { bubbles: true }));
+
+    // A folder downloads as a real ZIP (assets/fs-archive.js).
+    const before = blobs.length;
+    body.querySelector('#fm-up').click();                    // back out to /home/ada
+    assert.equal(body.querySelector('#fm-path').value, HOME);
+    rowOf(`${HOME}/Documents`).dispatchEvent(new w.MouseEvent('click', { bubbles: true }));
+    assert.match(body.querySelector('#fm-status').textContent, /Selected 1/, 'the click selected the folder');
+    body.querySelector('#fm-download').click();
+    await settle();
+    assert.ok(blobs.length > before, 'download produced an archive');
+    assert.equal(blobs[blobs.length - 1].type, 'application/zip');
+    assert.ok(blobs[blobs.length - 1].size > 100, 'the archive holds the folder, not just a header');
+
+    // Delete removes it from the account (confirm() is stubbed to yes).
+    rowOf(`${HOME}/Documents`).dispatchEvent(new w.MouseEvent('dblclick', { bubbles: true }));
+    menu = openMenu(`${HOME}/Documents/Notes`);
+    clickLabel(menu, 'Delete');
+    assert.equal(w.eval(`FS.exists('${HOME}/Documents/Notes')`), false, 'the folder is gone');
+    assert.equal(w.eval(`FS.exists('${HOME}/Documents/Notes/shopping.txt')`), false, 'and so is everything inside it');
+    assert.equal(saved().dirs.includes(`${HOME}/Documents/Notes`), false, 'the change is saved');
+
+    // The proton system tree is browsable but locked.
+    body.querySelector('#fm-side [data-go="/apps"]').click();
+    rowOf('/apps/inbuilt').dispatchEvent(new w.MouseEvent('dblclick', { bubbles: true }));
+    rowOf('/apps/inbuilt/files').dispatchEvent(new w.MouseEvent('dblclick', { bubbles: true }));
+    assert.equal(body.querySelector('#fm-path').value, '/apps/inbuilt/files');
+    assert.ok(rows().includes('/apps/inbuilt/files/app.html'), 'the manifest tree is browsable');
+    assert.equal(body.querySelector('#fm-new-folder').disabled, true, 'nothing can be created in the system tree');
+    assert.match(body.querySelector('#fm-status').textContent, /read-only/);
+    assert.throws(() => w.eval("FS.mkdir('/apps/inbuilt/nope')"), /Read-only file system/);
+
+    // Back home: a binary import keeps its exact bytes instead of being read
+    // as text, while the imported note.txt above stayed editable text.
+    body.querySelector(`#fm-side [data-go="${HOME}"]`).click();   // sidebar: Home
+    assert.equal(body.querySelector('#fm-path').value, HOME);
+    rowOf(`${HOME}/Documents`).dispatchEvent(new w.MouseEvent('dblclick', { bubbles: true }));
+    const picture = new w.File([new Uint8Array([137, 80, 78, 71])], 'dot.png', { type: 'image/png' });
+    Object.defineProperty(fileInput, 'files', { configurable: true, value: [picture] });
+    await fileInput.onchange({ target: fileInput });
+    await settle();
+    assert.equal(w.eval(`FS.appFor('${HOME}/Documents/dot.png')`), 'image-viewer');
+    assert.equal(w.eval(`FS.isBinary('${HOME}/Documents/dot.png')`), true);
+    assert.equal((await w.eval(`FS.readBlob('${HOME}/Documents/dot.png')`)).size, 4, 'the bytes survived');
+    await assert.rejects(() => w.eval(`FS.read('${HOME}/Documents/dot.png')`),
+      /Binary file:/, 'and it is still not read as text');
+
+    assert.deepEqual(errors.filter((m) => !ignorable(m)), []);
+  } finally { close(); }
+});
+
+test('every kind of file has an app that opens it', async () => {
+  const { w, errors, blobs, settle, wins, APPS, close } = await bootDesktop();
+  const ignorable = (m) => /Not implemented: navigation/.test(m);
+  try {
+    /* FS.appFor() only ever returns ids that are installed, so nothing in the
+     * file system is unopenable — and the ids match the catalog exactly. */
+    const cases = [['page.html', 'browser'], ['paper.pdf', 'pdf'], ['photo.png', 'image-viewer'],
+      ['drawing.svg', 'image-viewer'], ['song.mp3', 'media'], ['clip.mp4', 'media'],
+      ['notes.txt', 'text-editor'], ['data.json', 'text-editor'], ['module.js', 'text-editor']];
+    for (const [name, id] of cases) {
+      assert.equal(w.eval(`FS.appFor('/home/ada/${name}')`), id, `${name} should open in ${id}`);
+      assert.ok(APPS[id], `${id} is named by FS.appFor() but is not installed`);
+    }
+    assert.deepEqual(FS_APPS.filter((id) => !APPS[id]), [], 'the whole suite is installed');
+
+    const store = async (name, bytes, type) => {
+      await w.eval(`FS.writeBlob('/home/ada/${name}', new Blob([new Uint8Array(${JSON.stringify(bytes)})], { type: '${type}' }))`);
+    };
+    const opened = () => [...wins.keys()].filter((id) => FS_APPS.includes(id) || id === 'browser');
+
+    // Images go to the Image Viewer, as a blob URL of the stored bytes.
+    await store('photo.png', [137, 80, 78, 71, 13, 10, 26, 10], 'image/png');
+    w.eval("openFSItem('/home/ada/photo.png')");
+    await settle();
+    const viewer = wins.get('image-viewer').body;
+    assert.match(viewer.querySelector('#iv-img').getAttribute('src'), /^blob:mock-/);
+    assert.match(viewer.querySelector('#iv-note').textContent, /photo\.png/);
+    assert.equal(viewer.querySelector('#iv-download').disabled, false);
+    w.closeWin('image-viewer', true);
+
+    // Audio and video go to Media, which picks the right element.
+    await store('song.mp3', [73, 68, 51, 4, 0, 0], 'audio/mpeg');
+    w.eval("openFSItem('/home/ada/song.mp3')");
+    await settle();
+    assert.equal(wins.get('media').body.querySelector('#md-el').tagName, 'AUDIO');
+    assert.ok(wins.get('media').body.querySelector('[data-play="/home/ada/song.mp3"]'), 'the playlist lists it');
+    w.closeWin('media', true);
+    await store('clip.mp4', [0, 0, 0, 24, 102, 116, 121, 112], 'video/mp4');
+    w.eval("openFSItem('/home/ada/clip.mp4')");
+    await settle();
+    assert.equal(wins.get('media').body.querySelector('#md-el').tagName, 'VIDEO');
+    w.closeWin('media', true);
+
+    // PDFs are handed to the browser's own viewer in a frame.
+    await store('paper.pdf', [37, 80, 68, 70, 45, 49, 46, 52], 'application/pdf');
+    w.eval("openFSItem('/home/ada/paper.pdf')");
+    await settle();
+    const pdf = wins.get('pdf').body;
+    assert.match(pdf.querySelector('#pdf-frame').getAttribute('src'), /^blob:mock-/);
+    assert.equal(pdf.querySelector('#pdf-frame').getAttribute('title'), 'paper.pdf');
+    assert.match(pdf.querySelector('#iv-note, #pdf-note').textContent, /new tab/i);
+    w.closeWin('pdf', true);
+
+    // Text goes to the Text Editor, and a system file opens locked.
+    w.eval("openFSItem('/data/applications.js')");
+    await settle();
+    const editor = wins.get('text-editor').body;
+    assert.equal(editor.querySelector('#te-text').readOnly, true, 'proton’s own files are read-only');
+    assert.match(editor.querySelector('#te-text').value, /PROTON_APPLICATIONS_TEXT/);
+    assert.equal(editor.querySelector('#te-save').disabled, true);
+    editor.querySelector('#te-copy').click();
+    assert.match(editor.querySelector('#te-note').textContent, /Save a copy to/, 'but they can be copied into your home folder');
+    w.closeWin('text-editor', true);
+
+    // A file with no viewer of its own falls back to Files, already selected.
+    await store('backup.zip', [80, 75, 3, 4, 0, 0], 'application/zip');
+    assert.equal(w.eval("FS.appFor('/home/ada/backup.zip')"), null, 'a ZIP has no viewer of its own');
+    w.eval("openFSItem('/home/ada/backup.zip')");
+    await settle();
+    assert.ok(wins.has('files'), 'Files is the fallback');
+    assert.match(w.document.querySelector('#toasts').textContent, /No viewer for backup\.zip/);
+    assert.ok(wins.get('files').body.querySelector('.sel[data-path="/home/ada/backup.zip"]'), 'the fallback selects the file');
+
+    // Folders open in Files, wherever they are in the tree.
+    w.closeWin('files', true);
+    w.eval("openFSItem('/assets')");
+    assert.equal(wins.get('files').body.querySelector('#fm-path').value, '/assets');
+    assert.equal(opened().length, 1, 'opening a folder does not launch a viewer');
+
+    assert.ok(blobs.length >= 4, 'each viewer made a blob URL for the file it shows');
+    assert.deepEqual(errors.filter((m) => !ignorable(m)), []);
+  } finally { close(); }
+});
+
+test('the desktop can link any file or folder again', async () => {
+  const { w, errors, settle, saved, wins, close } = await bootDesktop();
+  try {
+    // The desktop menu offers a file/folder shortcut, with a path picker.
+    w.eval('DesktopIcons.menu(null, {})');
+    const menu = w.document.querySelector('#desktop-context');
+    assert.deepEqual([...menu.querySelectorAll('button')].map((b) => b.textContent.trim()),
+      ['Add application…', 'Add file or folder…', 'Arrange icons']);
+    clickLabel(menu, 'Add file or folder…');
+    const picker = w.document.querySelector('#desktop-picker');
+    assert.equal(picker.hidden, false);
+    const item = picker.querySelector('[data-path="/home/ada/Documents/Welcome.txt"]');
+    assert.ok(item, 'the picker lists the account’s own files');
+    item.click();
+    assert.equal(picker.hidden, true, 'picking closes the dialog');
+    const shortcut = saved().desktopIcons.find((s) => s.target === '/home/ada/Documents/Welcome.txt');
+    assert.equal(shortcut.kind, 'path');
+    const icon = w.document.querySelector(`.desktop-icon[data-shortcut="${shortcut.id}"]`);
+    assert.ok(icon, 'the shortcut renders on the desktop');
+
+    // Opening it goes through openFSItem(): a file lands in its viewer.
+    icon.dispatchEvent(new w.MouseEvent('dblclick', { bubbles: true }));
+    await settle();
+    assert.ok(wins.has('text-editor'), 'a text shortcut opens the Text Editor');
+    w.closeWin('text-editor', true);
+
+    // A path typed by hand works too, including proton's read-only files.
+    w.eval('DesktopIcons.showPathPicker()');
+    const typed = w.document.querySelector('#desktop-picker .desktop-picker-search');
+    typed.value = '/README.md';
+    typed.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    assert.ok(saved().desktopIcons.some((s) => s.kind === 'path' && s.target === '/README.md'), 'a typed path becomes a shortcut');
+
+    // Missing targets are reported, not fatal: delete the file, keep the icon.
+    w.eval("FS.rm('/home/ada/Documents/Welcome.txt')");
+    const gone = w.document.querySelector(`.desktop-icon[data-shortcut="${shortcut.id}"]`);
+    assert.ok(gone?.classList.contains('missing'), 'a shortcut to a deleted file is marked missing');
+    assert.match(gone.getAttribute('title'), /Missing/);
+    gone.dispatchEvent(new w.MouseEvent('dblclick', { bubbles: true }));
+    assert.match(w.document.querySelector('#toasts').textContent, /File not found/);
+    assert.equal(wins.size, 0, 'and opens nothing');
+
+    // Removing a shortcut never touches the file itself.
+    w.eval(`DesktopIcons.remove('${shortcut.id}')`);
+    assert.equal(saved().desktopIcons.some((s) => s.id === shortcut.id), false, 'the shortcut is gone');
+    assert.equal(w.eval(`FS.exists('/README.md')`), true, 'the target was not deleted');
+
+    assert.deepEqual(errors, []);
+  } finally { close(); }
+});
+
+/* -------------------------------------------------------------------------
+   The Browser: proton's own search engine, and the chrome around it.
+   The corpus is this repository — there is no server and no outside search
+   API — so these tests hold the index, the engine and the Browser's tabs,
+   address bar, reader, bookmarks and history to that.
+   --------------------------------------------------------------------------- */
+
+/* Wait out saveData()'s 150 ms debounce, so saved() reads what the account
+ * really holds rather than what it held a moment ago. */
+const flush = () => new Promise((resolve) => setTimeout(resolve, 200));
+
+test('proton’s search engine answers from the repository itself', async () => {
+  const { w, errors, close } = await bootDesktop();
+  try {
+    const stats = w.eval('PROTON_SEARCH.stats()');
+    assert.ok(stats.docs >= 30, `the corpus is this repository, so it is bigger than ${stats.docs} documents`);
+    assert.ok(stats.terms > 500, `expected a real vocabulary, got ${stats.terms} terms`);
+    assert.equal(stats.version, 1);
+
+    /* Every indexed document is a real deployed file with a usable headline,
+     * and the corpus is exactly the prose this repository has. */
+    const docs = w.eval('PROTON_SEARCH_INDEX.docs');
+    const indexed = new Set();
+    for (const doc of docs) {
+      const rel = doc.p.replace(/^\//, '');
+      assert.ok(fs.existsSync(path.join(ROOT, rel)), `${doc.p} is indexed but is not in the repository`);
+      assert.ok(['doc', 'app', 'site', 'code'].includes(doc.k), `${doc.p} has an unknown kind "${doc.k}"`);
+      assert.ok(doc.t && doc.t.length <= 88, `${doc.p} needs a headline a result can show`);
+      assert.ok(Number.isInteger(doc.n) && doc.n > 0, `${doc.p} contributed no words`);
+      assert.ok(doc.p.startsWith('/'), `${doc.p} should be a virtual file system path`);
+      indexed.add(doc.p);
+    }
+    const must = ['/README.md', '/CREDITS.md', '/LICENSE.txt', '/apps/README.md', '/websites/README.md',
+      '/data/icons/README.md', '/index.html', '/assets/core.js', '/assets/fs.js', '/assets/search.js',
+      '/assets/styles.css', '/tools/gen-fs-manifest.py', '/tools/gen-search-index.py',
+      '/websites/test-page/site.html', '/apps/celeste-classic/app.html'];
+    for (const app of SYSTEM_APPS) {
+      const entry = w.eval(`window.PROTON_APPLICATIONS.find((a) => a.id === ${JSON.stringify(app)})`);
+      if (entry) must.push('/' + entry.path);
+    }
+    for (const p of must) assert.ok(indexed.has(p), `${p} is part of this repository and should be searchable`);
+    /* Machine-written files have no prose, and the tests and the copy-me
+     * templates are not part of the deployed site. */
+    for (const p of ['/package.json', '/package-lock.json', '/.gitignore', '/.nojekyll',
+      '/data/fs-manifest.js', '/data/search-index.js']) {
+      assert.ok(!indexed.has(p), `${p} is machine-written and should not be indexed`);
+    }
+    assert.ok(![...indexed].some((p) => p.startsWith('/tests/') || p.includes('/_')),
+      'the tests and the _template/_embed starting points are not deployed');
+
+    /* The generator and the engine must fold words the same way, or a query
+     * never meets the document it should. Every indexed term is a fixed point
+     * of the engine's own stemmer. */
+    const terms = [...w.eval('Object.keys(PROTON_SEARCH_INDEX.terms)')];
+    const drifted = terms.filter((term) => w.eval(`PROTON_SEARCH.stemToken(${JSON.stringify(term)})`) !== term);
+    assert.deepEqual(drifted.slice(0, 10), [], 'assets/search.js stems these differently from tools/gen-search-index.py');
+
+    /* Ranking: the thing you meant is the thing you get first. */
+    const results = (query, limit = 6) => w.eval(`PROTON_SEARCH.search(${JSON.stringify(query)}, {limit: ${limit}})`);
+    assert.equal(results('files').results[0].appId, 'files', 'the Files app answers "files"');
+    assert.equal(results('test page').results[0].siteId, 'test-page', 'the built-in website answers "test page"');
+    assert.equal(results('celeste').results[0].appId, 'celeste-classic');
+    assert.ok(results('zip').results.some((r) => r.path === '/assets/fs-archive.js'), 'ZIP downloads point at the code that builds them');
+    assert.ok(results('wallpaper').results.some((r) => r.appId === 'customize'), 'wallpapers point at Customize');
+    assert.ok(results('search index').results.some((r) => r.path === '/tools/gen-search-index.py'));
+    assert.ok(results('openFSItem').results.some((r) => r.path === '/assets/desktop-icons.js'),
+      'a camelCase identifier is indexed whole and in pieces');
+
+    /* Word shapes fold together, so the query does not have to be exact. */
+    const first = (query) => results(query, 1).results[0]?.path;
+    assert.equal(first('folder'), first('folders'), 'plurals meet');
+    assert.equal(first('licence'), first('license'), 'British and American spellings meet');
+    assert.ok(results('licence').results.some((r) => r.path === '/LICENSE.txt'), 'and the licence file is one of them');
+    assert.ok(results('wallpap', 8).total > 0, 'a half-typed word still lands somewhere');
+
+    /* Every answer is something the desktop can actually open. */
+    for (const result of results('file', 40).results) {
+      const real = result.path.startsWith('proton://')
+        || fs.existsSync(path.join(ROOT, result.path.replace(/^\//, '')));
+      assert.ok(real, `${result.path} is not a file in this repository or one of proton's pages`);
+      assert.ok(result.score > 0 && Array.isArray(result.matched) && result.matched.length > 0);
+    }
+
+    /* An ANSWER is a file this repository is about the word in; a MENTION is a
+     * file the word merely turns up in. proton is not a dictionary, so a word
+     * nothing here defines must not come back wearing a top result. */
+    const defined = results('definition');
+    assert.equal(defined.answer, false, 'nothing in this repository defines "definition"');
+    assert.equal(defined.answers, 0);
+    assert.ok(defined.mentions >= 1, 'but the word does turn up, and that is reported honestly');
+    assert.equal(defined.results[0].answer, false);
+    assert.ok(defined.results.some((r) => r.path === '/LICENSE.txt'),
+      'the word does occur — in the licence, in passing, like every mention here');
+    assert.ok(defined.results.every((r) => !r.answer), 'and no file is claimed as an answer for it');
+    assert.ok(defined.nearby.length > 0, 'and the engine offers the nearest words the index does hold');
+    assert.equal(results('warranty').answer, true,
+      'a document that really is about a word still answers it, however long it is');
+    assert.equal(results('zip').answer, true, 'the code that builds ZIPs answers "zip"');
+    assert.equal(results('zip').results[0].answer, true);
+    assert.equal(results('zip').mentions > 0 && results('zip').answers > 0, true,
+      'and the two are kept apart rather than ranked as one list');
+    for (const query of ['files', 'celeste', 'test page', 'search index', 'wallpaper', 'licence']) {
+      assert.equal(results(query).answer, true, `"${query}" has a real answer in this repository`);
+    }
+
+    /* Nonsense finds nothing, and the engine never reaches the network: it
+     * only reads the index it was given. */
+    assert.equal(results('zzzqqxx').total, 0);
+    assert.equal(results('').total, 0);
+    assert.deepEqual([...w.eval(`PROTON_SEARCH.suggest('', {})`)], []);
+    const suggested = [...w.eval(`PROTON_SEARCH.suggest('fi', {limit: 8})`)];
+    assert.ok(suggested.some((item) => item.action === 'app' && item.value === 'files'), 'the bar offers the app');
+    assert.ok(suggested.some((item) => item.action === 'search'), 'and offers to search for the words themselves');
+    assert.deepEqual(errors, []);
+  } finally { close(); }
+});
+
+test('the Browser searches this repository and reads what it finds', async () => {
+  const { w, errors, settle, wins, close } = await bootDesktop();
+  try {
+    w.openApp('browser');
+    await settle();
+    const body = wins.get('browser').body;
+    const bar = body.querySelector('#b-url');
+    const page = () => body.querySelector('.brw-page:not([hidden])');
+    const type = async (text, key = 'Enter') => {
+      bar.value = text;
+      bar.dispatchEvent(new w.Event('input', { bubbles: true }));
+      await settle();
+      bar.dispatchEvent(new w.KeyboardEvent('keydown', { key, bubbles: true }));
+      await settle();
+    };
+
+    /* The start page says what is being searched, and offers a way in. */
+    assert.ok(body.querySelector('#b-startq'), 'the home page has a search box');
+    assert.match(body.querySelector('.brw-start-note').textContent, /tools\/gen-search-index\.py/,
+      'the home page says where the answers come from');
+    assert.match(body.querySelector('.brw-start-note').textContent, /never leaves this browser/);
+    assert.equal(bar.placeholder, 'Search proton or type an address');
+
+    /* Words in the bar are a question, and the bar says so before you ask. */
+    bar.value = 'zip';
+    bar.dispatchEvent(new w.Event('input', { bubbles: true }));
+    await settle();
+    assert.equal(body.querySelector('#b-go').textContent, 'Search', 'the button says what Enter will do');
+    assert.ok(body.querySelector('#b-baricon').innerHTML.includes('search') || body.querySelector('#b-baricon').title.includes('Searches'));
+    const suggest = body.querySelector('#b-suggest');
+    assert.equal(suggest.hidden, false, 'typing offers completions');
+    const labels = [...suggest.querySelectorAll('.brw-sug-label')].map((el) => el.textContent);
+    assert.ok(labels.includes('zip'), `expected "zip" among ${labels.join(', ')}`);
+    /* Arrow keys walk the list, and Enter takes the highlighted suggestion. */
+    bar.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+    assert.equal(suggest.querySelector('.brw-sug.on'), suggest.querySelector('.brw-sug'));
+
+    await type('zip');
+    assert.equal(bar.value, 'proton://search?q=zip', 'the bar shows the search address');
+    assert.equal(suggest.hidden, true);
+    const hits = [...page().querySelectorAll('.brw-hit')];
+    assert.ok(hits.length >= 3, `expected results for "zip", got ${hits.length}`);
+    assert.match(page().querySelector('.brw-count').textContent, /results? for/);
+    assert.match(page().querySelector('.brw-count').textContent, /“zip”/);
+    assert.ok(page().querySelector('.brw-hit-path .brw-path'), 'every result says which file it is');
+    assert.ok(page().querySelector('.brw-hit-snippet mark'), 'and shows the word it matched on');
+    assert.ok(page().querySelector('.brw-engine'), 'the page explains the engine behind it');
+
+    /* Then the top results quote the file itself, fetched after the list is
+     * drawn. A quote from mid-file carries the ellipsis snippet() adds, which
+     * no summary has — that is the proof the file was really read. */
+    await flush();
+    const snippets = [...page().querySelectorAll('.brw-hit-snippet')].map((el) => el.textContent);
+    assert.ok(snippets.some((text) => text.includes('\u2026')),
+      `expected a windowed quote from a file, got: ${snippets[0].slice(0, 60)}`);
+    assert.ok(page().querySelectorAll('.brw-hit-snippet mark').length > 0,
+      'with the matched word marked in it');
+
+    /* Opening a documentation result reads it here, with the matches marked. */
+    const readme = [...page().querySelectorAll('.brw-hit')]
+      .find((li) => li.querySelector('.brw-path').textContent === '/README.md');
+    assert.ok(readme, 'the README is a result for "zip"');
+    readme.querySelector('.brw-hit-title').click();
+    await settle();
+    await flush();
+    assert.match(bar.value, /^proton:\/\/read\?path=%2FREADME\.md/, 'the reader is an address like any other');
+    const text = page().querySelector('.brw-reader-text');
+    assert.ok(text, 'the reader shows the file');
+    assert.ok(text.textContent.includes('proton'), 'and it is really the README');
+    assert.ok(text.querySelectorAll('mark').length > 0, 'the query’s matches are marked in it');
+    assert.match(page().querySelector('.brw-matches').textContent, /match/, 'with a count');
+    assert.match(page().querySelector('.brw-reader-bar .brw-path').textContent, /^\/README\.md$/);
+    assert.ok(page().querySelector('[data-files]'), 'the reader can hand the file to Files');
+
+    /* Back and forward walk this tab's own history. */
+    body.querySelector('#b-back').click();
+    await settle();
+    assert.equal(bar.value, 'proton://search?q=zip', 'Back returns to the results');
+    assert.ok(page().querySelectorAll('.brw-hit').length >= 3);
+    body.querySelector('#b-back').click();
+    await settle();
+    assert.ok(body.querySelector('#b-startq'), 'and Back again is the start page');
+    assert.equal(body.querySelector('#b-back').disabled, true, 'there is nothing further back');
+    body.querySelector('#b-forward').click();
+    await settle();
+    assert.equal(bar.value, 'proton://search?q=zip', 'Forward walks back into the results');
+
+    /* Kind chips narrow the answers without searching again. */
+    await type('files');
+    const chips = [...page().querySelectorAll('#b-kinds .brw-chip')];
+    assert.ok(chips.length > 1, '"files" is answered by more than one kind of file');
+    const docs = chips.find((c) => c.dataset.kind === 'doc');
+    assert.ok(docs, 'the documentation is among them');
+    docs.click();
+    await settle();
+    const shown = [...page().querySelectorAll('#b-hits .brw-hit')];
+    assert.ok(shown.length > 0, 'filtering keeps the answers of that kind');
+    assert.ok(shown.every((li) => li.querySelector('.brw-kind').textContent === 'Documents'));
+    chips.find((c) => c.dataset.kind === '').click();
+    await settle();
+    assert.ok(page().querySelectorAll('#b-hits .brw-hit').length > shown.length, 'and All brings the rest back');
+
+    /* An app result launches the app; the Browser stays where it was. */
+    const filesHit = page().querySelector('.brw-hit');
+    assert.equal(filesHit.querySelector('.brw-hit-title').textContent.trim(), 'Files');
+    assert.ok(filesHit.querySelector('.brw-hit-title mark'), 'the matched word is marked in the headline');
+    filesHit.querySelector('.brw-hit-title').click();
+    await settle();
+    assert.ok(wins.has('files'), 'the Files app opened from its search result');
+    assert.equal(bar.value, 'proton://search?q=files', 'and the Browser kept its page');
+    w.closeWin('files', true);
+
+    /* Another app can ask the Browser to search something. */
+    w.openApp('browser', { query: 'wallpaper' });
+    await settle();
+    assert.equal(bar.value, 'proton://search?q=wallpaper');
+    assert.match(page().querySelector('.brw-count').textContent, /wallpaper/);
+
+    /* The Files hand-off: an HTML page is rendered in a frame, not read as
+     * source, and a text file is read. */
+    w.openFSItem('/websites/test-page/site.html');
+    await settle();
+    assert.equal(bar.value, 'file:///websites/test-page/site.html');
+    assert.ok(page().querySelector('iframe.site-frame').src.endsWith('/websites/test-page/site.html'),
+      'the page is framed, the way the Browser frames any HTML file');
+    /* A text file belongs to the Text Editor, not the Browser: FS.appFor()
+     * decides, and the Browser only gets what nothing else claims. */
+    w.openFSItem('/README.md');
+    await settle();
+    assert.ok(wins.has('text-editor'), 'a markdown file goes to the Text Editor');
+    assert.equal(bar.value, 'file:///websites/test-page/site.html', 'and the Browser keeps its page');
+    w.closeWin('text-editor', true);
+    await type('/README.md');
+    assert.match(bar.value, /^proton:\/\/read\?path=%2FREADME\.md/, 'typed as an address, the Browser reads it');
+
+    /* A word nothing in this repository defines gets no first result: the page
+     * says so plainly, and the file that merely mentions it is listed as a
+     * mention, under the explanation rather than above it. */
+    await type('definition');
+    assert.match(page().querySelector('.brw-count').textContent, /Nothing in this repository answers/);
+    assert.equal(page().querySelector('#b-hits'), null, 'nothing is presented as a result');
+    assert.match(page().querySelector('.brw-none h3').textContent,
+      /Nothing in this repository defines or explains “definition”/);
+    assert.match(page().querySelector('.brw-none p').textContent,
+      /proton searches this repository, not the English language/,
+      'and it says why: proton searches the repository, not the language');
+    const passing = page().querySelector('#b-mentions');
+    assert.ok(passing, 'the mention is still there — hidden nothing, claimed nothing');
+    assert.match(page().querySelector('.brw-mention-h').textContent, /Mentioned in passing/);
+    assert.ok(passing.querySelectorAll('.brw-hit').length >= 1);
+    assert.ok([...passing.querySelectorAll('.brw-path')].some((el) => /LICENSE\.txt/.test(el.textContent)),
+      'the licence is where the word really occurs');
+    await flush();
+    assert.ok(passing.querySelector('.brw-hit-snippet mark'),
+      'and its quote shows the word where it really occurs');
+    assert.ok(page().querySelector('.brw-none .brw-chip'), 'with something to try instead');
+
+    /* A search that finds nothing at all says so, and offers a way out. */
+    await type('zzzqqxx');
+    assert.match(page().querySelector('.brw-none').textContent, /Nothing in this repository matches/);
+    assert.match(page().querySelector('.brw-none').textContent, /never sends your words anywhere/);
+    assert.ok(page().querySelectorAll('.brw-none .brw-chip').length > 0, 'with something to try instead');
+    assert.deepEqual(errors, []);
+  } finally { close(); }
+});
+
+test('the Browser keeps tabs, bookmarks and history like a browser', async () => {
+  const { w, errors, settle, saved, wins, close } = await bootDesktop();
+  try {
+    w.openApp('browser');
+    await settle();
+    const body = wins.get('browser').body;
+    const bar = body.querySelector('#b-url');
+    const page = () => body.querySelector('.brw-page:not([hidden])');
+    const tabs = () => [...body.querySelectorAll('#b-tabs .brw-tab')];
+    const go = async (address) => {
+      bar.value = address;
+      bar.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+      await settle();
+    };
+
+    assert.equal(tabs().length, 1, 'it starts with one tab');
+    assert.equal(bar.value, '', 'the home page leaves the bar empty');
+
+    /* A built-in website is a navigation: bar, history and Back all know. */
+    const menu = body.querySelector('#b-sites-menu');
+    menu.value = 'test-page';
+    menu.dispatchEvent(new w.Event('change', { bubbles: true }));
+    await settle();
+    assert.equal(bar.value, 'proton://test-page');
+    assert.ok(page().querySelector('iframe.site-frame').src.endsWith('/websites/test-page/site.html'));
+    assert.match(tabs()[0].textContent, /Test Page/, 'the tab is titled after the page');
+
+    /* Star it: bookmarks are account data, so a backup carries them. */
+    body.querySelector('#b-star').click();
+    await settle();
+    await flush();
+    assert.deepEqual(saved().bookmarks.map((b) => b.url), ['proton://test-page']);
+    assert.equal(saved().bookmarks[0].title, 'Test Page');
+    assert.equal(body.querySelector('#b-star').classList.contains('on'), true, 'the star fills in');
+    body.querySelector('#b-star').click();
+    await flush();
+    assert.deepEqual(saved().bookmarks, [], 'and unstarring removes it again');
+    body.querySelector('#b-star').click();
+    await flush();
+
+    /* A second tab, its own page, and closing it leaves the first untouched. */
+    body.querySelector('#b-newtab').click();
+    await settle();
+    assert.equal(tabs().length, 2, 'a new tab opened');
+    assert.equal(tabs()[1].classList.contains('on'), true, 'and took focus');
+    assert.ok(page().querySelector('#b-startq'), 'showing the start page');
+    await go('https://example.com/');
+    assert.equal(bar.value, 'https://example.com/');
+    assert.equal(page().querySelector('iframe.site-frame').getAttribute('src'), 'https://example.com/');
+    assert.match(page().textContent, /refuses to be embedded/, 'and warns that a site may not allow it');
+    tabs()[0].click();
+    await settle();
+    assert.equal(bar.value, 'proton://test-page', 'the first tab is still where it was');
+    assert.ok(page().querySelector('iframe.site-frame').src.endsWith('/websites/test-page/site.html'));
+    body.querySelector('[data-close="' + tabs()[1].dataset.tab + '"]').click();
+    await settle();
+    assert.equal(tabs().length, 1, 'the tab closed');
+    assert.equal(bar.value, 'proton://test-page', 'and the one left is still the site');
+
+    /* proton's own pages are addresses too. */
+    await go('proton://bookmarks');
+    const rows = [...page().querySelectorAll('.brw-row')];
+    assert.equal(rows.length, 1, 'the bookmark is listed');
+    assert.match(rows[0].textContent, /Test Page/);
+    rows[0].querySelector('[data-remove]').click();
+    await settle();
+    await flush();
+    assert.deepEqual(saved().bookmarks, [], 'and can be removed from its page');
+    assert.match(page().textContent, /Nothing bookmarked yet/);
+
+    await go('proton://history');
+    await flush();
+    const visited = saved().history.map((h) => h.url);
+    assert.equal(visited[0], 'proton://history', 'history is newest first');
+    assert.ok(visited.includes('proton://test-page') && visited.includes('https://example.com/'),
+      `expected the pages this tab visited in ${visited.join(', ')}`);
+    assert.ok(page().querySelectorAll('.brw-row').length >= 3, 'and the page lists them');
+    assert.match(page().querySelector('.brw-row').textContent, /(just now|min ago|h ago|d ago)/);
+    page().querySelector('#b-clearhist').click();
+    await settle();
+    await flush();
+    assert.deepEqual(saved().history, [], 'Clear history empties it');
+    assert.match(page().textContent, /Nothing visited yet/);
+
+    /* Addresses: a file path frames a page, and any other file gets read. */
+    await go('/websites/test-page/site.html');
+    assert.ok(page().querySelector('iframe.site-frame'), 'an HTML file in the file system is framed');
+    await go('/README.md');
+    assert.match(bar.value, /^proton:\/\/read\?path=%2FREADME\.md/, 'a text file is read, not framed');
+    assert.ok(page().querySelector('.brw-reader-text').textContent.includes('proton'));
+    await go('file:///assets/search.js');
+    assert.match(page().querySelector('.brw-reader-bar .brw-path').textContent, /assets\/search\.js/);
+    await go('proton://nope');
+    assert.match(page().textContent, /proton doesn't know that page/);
+    page().querySelector('[data-search]').click();
+    await settle();
+    assert.equal(bar.value, 'proton://search?q=nope', 'and offers to search for it instead');
+
+    /* Alt+arrow keys travel without touching the bar. */
+    const before = bar.value;
+    body.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'ArrowLeft', altKey: true, bubbles: true }));
+    await settle();
+    assert.notEqual(bar.value, before, 'Alt+← went back');
+    body.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'ArrowRight', altKey: true, bubbles: true }));
+    await settle();
+    assert.equal(bar.value, before, 'Alt+→ came forward again');
+    assert.deepEqual(errors, []);
+  } finally { close(); }
 });

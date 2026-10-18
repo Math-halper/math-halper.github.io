@@ -25,7 +25,7 @@ and offers buttons that talk back to proton. Add more sites the same way.
 
 (Websites saved on an account before adding was disabled are different — those
 live in account data and can still be opened or removed in App Center
-(`apps/app-center/`) and on the Browser home page. Users cannot add websites;
+(`apps/inbuilt/app-center/`) and on the Browser home page. Users cannot add websites;
 typing an address in the Browser visits it without saving it.)
 
 ## Add your own site (developer workflow)
@@ -57,7 +57,8 @@ directly, outside the Browser, where `window.parent` is the page itself.
 - **Temporarily:** set `enabled=false` in its `[website]` block in
   `data/websites.js`.
 - **Permanently:** delete its block from `data/websites.js`, delete the folder,
-  and refresh `data/fs-manifest.js`. The Browser copes with an empty catalog:
+  and refresh `data/search-index.js` and `data/fs-manifest.js`. The Browser copes
+  with an empty catalog:
   its home page says there are no built-in sites and its “Built-in websites…”
   menu disappears.
 
