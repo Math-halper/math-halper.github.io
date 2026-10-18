@@ -101,7 +101,7 @@ path=apps/inbuilt/browser/app.html
 icon=globe
 svg-icon=true
 cat=System
-desc=Visit web addresses and any built-in websites from data/websites.js
+desc=Tabs, back/forward, bookmarks and history — and a search bar that answers from proton's own index of this repository
 w=940
 h=600
 

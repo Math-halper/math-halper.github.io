@@ -1,4 +1,4 @@
-# proton — a browser desktop (static Mixt clone), System apps, a file system and a game embed
+# proton — a browser desktop (static Mixt clone), System apps, a file system, its own search engine and a game embed
 
 A desktop shell in your browser: Mint-style bottom panel and proton menu,
 draggable/resizable windows, per-account customisation — cloned and rebranded
@@ -22,7 +22,7 @@ the earlier built-in sites stay removed (except Test Page).
 | **Customize** (`customize`) | Rename/re-icon/re-categorise apps, themes, wallpapers, desktop parts |
 | **Settings** (`settings`) | Account, wallpaper & accent, password, backup, other accounts |
 | **About** (`about`) | What this is, credits, licence |
-| **Browser** (`browser`) | Visit any address, open HTML files from the virtual file system, and the one built-in site |
+| **Browser** (`browser`) | Tabs, back/forward, bookmarks and history; a bar that **searches this repository** when you type words and visits an address when you type one; built-in websites, external addresses, HTML files from the virtual file system and a reader that marks your matches |
 | **Files** (`files`) | Browse `/` and your own `/home/<you>`: create, rename, move, copy, import, search, download (folders as ZIP) |
 | **Text Editor** (`text-editor`) | Edit text files in your home folder; proton's own files open read-only with *Save a copy…* |
 | **Image Viewer** (`image-viewer`) | PNG, JPG, GIF, WebP, AVIF, BMP, ICO and SVG, with zoom and a folder playlist |
@@ -73,30 +73,39 @@ runtime dependencies or build step. Optional regression tests use jsdom:
   ships: **Test Page** (`websites/test-page/`), plus `websites/_template/` and
   `websites/_embed/` (one framed page, one `EMBED_URL` constant to change) as
   the starting points for a new one. The Browser also visits any address typed
-  into its bar and opens HTML files from the virtual file system. Guide:
+  into its bar, opens HTML files from the virtual file system, and searches its
+  own index of this repository (see **Search** below). Guide:
   [`websites/README.md`](websites/README.md).
 - **Core:** `data/applications.js` (the app catalog), `data/websites.js` (the
   website catalog), `data/fs-manifest.js` (generated: every deployed file in
   this repository — the `/` tree of the virtual file system; refresh with
-  `python3 tools/gen-fs-manifest.py`), `assets/config-loader.js` (parses both
+  `python3 tools/gen-fs-manifest.py`), `data/search-index.js` (generated: the
+  searchable prose of this repository; refresh with
+  `python3 tools/gen-search-index.py`), `assets/config-loader.js` (parses both
   catalogs), `assets/store.js` (accounts/storage and the per-account defaults),
   `assets/fs.js` (the virtual file system), `assets/fs-archive.js`
-  (dependency-free ZIP export), `assets/icons.js` (monochrome SVGs plus safe uploaded-image icons),
+  (dependency-free ZIP export), `assets/search.js` (the search engine),
+  `assets/icons.js` (monochrome SVGs plus safe uploaded-image icons),
   `assets/core.js` (desktop/window manager/registries),
   `assets/desktop-icons.js` (shortcut layout, drag/drop and menus),
   `assets/html-loader.js` (loads the app modules at boot, or a `streamed=true`
   app's module on first launch), `assets/styles.css`, `assets/boot.js`.
-- **Tests:** `tests/system-desktop.test.cjs` — the catalogs are exactly the ten
-  System apps, one embedded game page and the one test site; every module is
-  present, the inbuilt apps sit in `apps/inbuilt/` with only the Celeste
-  wrapper outside it, the generated manifest matches the repository, and a
-  jsdom desktop boots and opens each app. Three of them drive the file system
-  suite end to end: Files creating/renaming/moving/importing/searching/zipping
-  real account data, every file kind landing in the app `FS.appFor()` names
-  (and falling back to Files when nothing else claims it), and desktop
-  shortcuts to files and folders. The tests also verify the embedded URL,
-  sandbox settings and absence of copied game files; Test Page passes its own
-  checks.
+- **Tests:** `tests/system-desktop.test.cjs` — 16 tests. The catalogs are
+  exactly the ten System apps, one embedded game page and the one test site;
+  every module is present, the inbuilt apps sit in `apps/inbuilt/` with only the
+  Celeste wrapper outside it, the generated manifest matches the repository, and
+  a jsdom desktop boots and opens each app. Three drive the file system suite
+  end to end: Files creating/renaming/moving/importing/searching/zipping real
+  account data, every file kind landing in the app `FS.appFor()` names (and
+  falling back to Files when nothing else claims it), and desktop shortcuts to
+  files and folders. Three more hold search to its promises: the index is
+  exactly this repository's prose (no machine-written files, no tests, no
+  templates) and every term in it is a fixed point of the engine's own stemmer,
+  so the Python generator and the JavaScript engine cannot drift apart; typing
+  words in the bar finds, ranks and *reads* the right files; and tabs,
+  bookmarks, history and every address scheme behave. The tests also verify the
+  embedded URL, sandbox settings and absence of copied game files; Test Page
+  passes its own checks.
 
 ## Math Helper cover page
 
@@ -144,6 +153,48 @@ entry out of Files onto the wallpaper. A shortcut is a link, never a copy — it
 follows renames, is marked when its target goes missing, and removing it never
 deletes the file.
 
+## Search
+
+The Browser's bar is a search bar first: **type words and it searches, type an
+address and it goes there.** proton has no server and calls no outside search
+API, so the corpus is this repository — which is also the privacy story: what
+you type never leaves the browser.
+
+`python3 tools/gen-search-index.py` reads the prose of every deployed file —
+the documentation, each app module's own comments, the built-in website pages
+and the source comments — and writes one inverted index to
+`data/search-index.js` (34 documents, ~1,760 terms, ~54 KB). Like
+`data/fs-manifest.js` it is generated and committed: re-run it after changing
+documentation or an app's prose, then commit. Its output is deterministic (no
+timestamps, sorted documents and terms), so re-running writes the same bytes,
+and the tests fail if it drifts from the repository.
+
+`assets/search.js` is the engine. It decodes that index and scores it with
+tf–idf, boosts a word that appears in a title or a file name, folds plurals and
+-ise/-ize spellings onto one key, indexes `camelCase` identifiers both whole
+and in pieces (`openFSItem` is found by "openFSItem" *and* by "open"), and
+merges in three things it can see at runtime: every path in the virtual file
+system, the app catalog and the website catalog — using the live names, so a
+rename in Customize is what you see. Results that account for every word you
+typed always outrank partial ones.
+
+In the Browser that becomes:
+
+- **suggestions** under the bar while you type — apps, built-in websites,
+  proton's own pages, your bookmarks and history, file names, and the words
+  this repository actually uses, commonest first;
+- **a results page** (`proton://search?q=…`) with ranked hits, the matched word
+  marked in each headline, kind filters, and a real quote fetched from each of
+  the top files after the list is drawn;
+- **a reader** (`proton://read?path=…&q=…`) that shows any text file in the
+  repository with every match marked, buttons to walk them one by one, and ways
+  to hand the file to its own app or to Files.
+
+Your own files under `/home/<you>` are deliberately not in this index — it
+covers the repository, and the Files app searches your folders instead.
+Bookmarks and history are per-account data (`userData.bookmarks`,
+`userData.history`), saved with the account and carried by Settings backups.
+
 ## What's inside
 
 - **Desktop** — movable, per-account shortcuts, a Mint-Y panel with pinned &
@@ -151,6 +202,11 @@ deletes the file.
   manager (drag/resize/minimise/maximise), toasts.
 - **System** — App Center, Customize, Settings, About and Browser; Files, Text
   Editor, Image Viewer, Media and PDF Viewer; and Celeste Classic.
+- **Search** — the Browser's bar searches *this repository* with proton's own
+  engine (`assets/search.js` over the generated `data/search-index.js`): tabs,
+  back/forward, bookmarks, history, live suggestions and a reader that marks
+  every match. No server, no outside search API, and nothing you type leaves
+  the browser. See **Search** below.
 - **Customize — everything is modular.** Rename any app, change its vector
   icon or upload a raster image for it, move it to another (or a brand-new)
   menu category, reorder it, pin it, remove it and add it back, or reset it —

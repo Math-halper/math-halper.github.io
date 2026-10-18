@@ -1,9 +1,10 @@
-/* The current build keeps its five core desktop apps and the five-app file
- * system suite that sits on assets/fs.js, plus Celeste Classic as a sandboxed
- * embed of its existing GitHub Pages site. No game content is copied here. The
- * one built-in website is Test Page, the Browser smoke test. These tests keep
- * the catalog, wrapper, generated file-system manifest and running desktop in
- * sync. */
+/* The current build keeps its five core desktop apps, the five-app file system
+ * suite that sits on assets/fs.js, and a Browser that searches this repository
+ * through proton's own engine (assets/search.js over the generated
+ * data/search-index.js), plus Celeste Classic as a sandboxed embed of its
+ * existing GitHub Pages site. No game content is copied here. The one built-in
+ * website is Test Page, the Browser smoke test. These tests keep the catalog,
+ * wrapper, both generated data files and the running desktop in sync. */
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -24,10 +25,11 @@ const EMBED_URLS = {
   'celeste-classic': 'https://math-halper.github.io/Celeste/1/index.html',
 };
 /* Every script index.html loads, in order, minus boot.js (which starts the
- * auth flow and needs a served page). */
-const SHELL = ['assets/store.js', 'assets/icons.js', 'data/fs-manifest.js', 'assets/fs.js',
-  'assets/fs-archive.js', 'data/applications.js', 'data/websites.js', 'assets/config-loader.js',
-  'assets/core.js', 'assets/desktop-icons.js', 'assets/html-loader.js'];
+ * auth flow and needs a served page). Read from the page itself so this list
+ * cannot drift when a new data file or asset is added. */
+const SHELL = [...source('index.html').matchAll(/<script src="([^"]+)"><\/script>/g)]
+  .map((m) => m[1])
+  .filter((p) => p !== 'assets/boot.js');
 
 /* Per-check states, for a readable failure message. */
 function CHECK_STATES(w) {
@@ -571,6 +573,9 @@ async function bootDesktop(username = 'ada') {
   const blobs = [];
   w.URL.createObjectURL = (blob) => { blobs.push(blob); return 'blob:mock-' + blobs.length; };
   w.URL.revokeObjectURL = () => {};
+  /* jsdom does no layout, so elements have no scrollIntoView; the Browser's
+   * reader and its suggestion list both scroll to what they just selected. */
+  w.Element.prototype.scrollIntoView = function () {};
   /* jsdom leaves TextEncoder/TextDecoder off the window; assets/fs-archive.js
    * needs one to build a ZIP. Every browser has had both since 2015. */
   w.TextEncoder = TextEncoder;
@@ -920,6 +925,356 @@ test('the desktop can link any file or folder again', async () => {
     assert.equal(saved().desktopIcons.some((s) => s.id === shortcut.id), false, 'the shortcut is gone');
     assert.equal(w.eval(`FS.exists('/README.md')`), true, 'the target was not deleted');
 
+    assert.deepEqual(errors, []);
+  } finally { close(); }
+});
+
+/* -------------------------------------------------------------------------
+   The Browser: proton's own search engine, and the chrome around it.
+   The corpus is this repository — there is no server and no outside search
+   API — so these tests hold the index, the engine and the Browser's tabs,
+   address bar, reader, bookmarks and history to that.
+   --------------------------------------------------------------------------- */
+
+/* Wait out saveData()'s 150 ms debounce, so saved() reads what the account
+ * really holds rather than what it held a moment ago. */
+const flush = () => new Promise((resolve) => setTimeout(resolve, 200));
+
+test('proton’s search engine answers from the repository itself', async () => {
+  const { w, errors, close } = await bootDesktop();
+  try {
+    const stats = w.eval('PROTON_SEARCH.stats()');
+    assert.ok(stats.docs >= 30, `the corpus is this repository, so it is bigger than ${stats.docs} documents`);
+    assert.ok(stats.terms > 500, `expected a real vocabulary, got ${stats.terms} terms`);
+    assert.equal(stats.version, 1);
+
+    /* Every indexed document is a real deployed file with a usable headline,
+     * and the corpus is exactly the prose this repository has. */
+    const docs = w.eval('PROTON_SEARCH_INDEX.docs');
+    const indexed = new Set();
+    for (const doc of docs) {
+      const rel = doc.p.replace(/^\//, '');
+      assert.ok(fs.existsSync(path.join(ROOT, rel)), `${doc.p} is indexed but is not in the repository`);
+      assert.ok(['doc', 'app', 'site', 'code'].includes(doc.k), `${doc.p} has an unknown kind "${doc.k}"`);
+      assert.ok(doc.t && doc.t.length <= 88, `${doc.p} needs a headline a result can show`);
+      assert.ok(Number.isInteger(doc.n) && doc.n > 0, `${doc.p} contributed no words`);
+      assert.ok(doc.p.startsWith('/'), `${doc.p} should be a virtual file system path`);
+      indexed.add(doc.p);
+    }
+    const must = ['/README.md', '/CREDITS.md', '/LICENSE.txt', '/apps/README.md', '/websites/README.md',
+      '/data/icons/README.md', '/index.html', '/assets/core.js', '/assets/fs.js', '/assets/search.js',
+      '/assets/styles.css', '/tools/gen-fs-manifest.py', '/tools/gen-search-index.py',
+      '/websites/test-page/site.html', '/apps/celeste-classic/app.html'];
+    for (const app of SYSTEM_APPS) {
+      const entry = w.eval(`window.PROTON_APPLICATIONS.find((a) => a.id === ${JSON.stringify(app)})`);
+      if (entry) must.push('/' + entry.path);
+    }
+    for (const p of must) assert.ok(indexed.has(p), `${p} is part of this repository and should be searchable`);
+    /* Machine-written files have no prose, and the tests and the copy-me
+     * templates are not part of the deployed site. */
+    for (const p of ['/package.json', '/package-lock.json', '/.gitignore', '/.nojekyll',
+      '/data/fs-manifest.js', '/data/search-index.js']) {
+      assert.ok(!indexed.has(p), `${p} is machine-written and should not be indexed`);
+    }
+    assert.ok(![...indexed].some((p) => p.startsWith('/tests/') || p.includes('/_')),
+      'the tests and the _template/_embed starting points are not deployed');
+
+    /* The generator and the engine must fold words the same way, or a query
+     * never meets the document it should. Every indexed term is a fixed point
+     * of the engine's own stemmer. */
+    const terms = [...w.eval('Object.keys(PROTON_SEARCH_INDEX.terms)')];
+    const drifted = terms.filter((term) => w.eval(`PROTON_SEARCH.stemToken(${JSON.stringify(term)})`) !== term);
+    assert.deepEqual(drifted.slice(0, 10), [], 'assets/search.js stems these differently from tools/gen-search-index.py');
+
+    /* Ranking: the thing you meant is the thing you get first. */
+    const results = (query, limit = 6) => w.eval(`PROTON_SEARCH.search(${JSON.stringify(query)}, {limit: ${limit}})`);
+    assert.equal(results('files').results[0].appId, 'files', 'the Files app answers "files"');
+    assert.equal(results('test page').results[0].siteId, 'test-page', 'the built-in website answers "test page"');
+    assert.equal(results('celeste').results[0].appId, 'celeste-classic');
+    assert.ok(results('zip').results.some((r) => r.path === '/assets/fs-archive.js'), 'ZIP downloads point at the code that builds them');
+    assert.ok(results('wallpaper').results.some((r) => r.appId === 'customize'), 'wallpapers point at Customize');
+    assert.ok(results('search index').results.some((r) => r.path === '/tools/gen-search-index.py'));
+    assert.ok(results('openFSItem').results.some((r) => r.path === '/assets/desktop-icons.js'),
+      'a camelCase identifier is indexed whole and in pieces');
+
+    /* Word shapes fold together, so the query does not have to be exact. */
+    const first = (query) => results(query, 1).results[0]?.path;
+    assert.equal(first('folder'), first('folders'), 'plurals meet');
+    assert.equal(first('licence'), first('license'), 'British and American spellings meet');
+    assert.ok(results('licence').results.some((r) => r.path === '/LICENSE.txt'), 'and the licence file is one of them');
+    assert.ok(results('wallpap', 8).total > 0, 'a half-typed word still lands somewhere');
+
+    /* Every answer is something the desktop can actually open. */
+    for (const result of results('file', 40).results) {
+      const real = result.path.startsWith('proton://')
+        || fs.existsSync(path.join(ROOT, result.path.replace(/^\//, '')));
+      assert.ok(real, `${result.path} is not a file in this repository or one of proton's pages`);
+      assert.ok(result.score > 0 && Array.isArray(result.matched) && result.matched.length > 0);
+    }
+
+    /* Nonsense finds nothing, and the engine never reaches the network: it
+     * only reads the index it was given. */
+    assert.equal(results('zzzqqxx').total, 0);
+    assert.equal(results('').total, 0);
+    assert.deepEqual([...w.eval(`PROTON_SEARCH.suggest('', {})`)], []);
+    const suggested = [...w.eval(`PROTON_SEARCH.suggest('fi', {limit: 8})`)];
+    assert.ok(suggested.some((item) => item.action === 'app' && item.value === 'files'), 'the bar offers the app');
+    assert.ok(suggested.some((item) => item.action === 'search'), 'and offers to search for the words themselves');
+    assert.deepEqual(errors, []);
+  } finally { close(); }
+});
+
+test('the Browser searches this repository and reads what it finds', async () => {
+  const { w, errors, settle, wins, close } = await bootDesktop();
+  try {
+    w.openApp('browser');
+    await settle();
+    const body = wins.get('browser').body;
+    const bar = body.querySelector('#b-url');
+    const page = () => body.querySelector('.brw-page:not([hidden])');
+    const type = async (text, key = 'Enter') => {
+      bar.value = text;
+      bar.dispatchEvent(new w.Event('input', { bubbles: true }));
+      await settle();
+      bar.dispatchEvent(new w.KeyboardEvent('keydown', { key, bubbles: true }));
+      await settle();
+    };
+
+    /* The start page says what is being searched, and offers a way in. */
+    assert.ok(body.querySelector('#b-startq'), 'the home page has a search box');
+    assert.match(body.querySelector('.brw-start-note').textContent, /tools\/gen-search-index\.py/,
+      'the home page says where the answers come from');
+    assert.match(body.querySelector('.brw-start-note').textContent, /never leaves this browser/);
+    assert.equal(bar.placeholder, 'Search proton or type an address');
+
+    /* Words in the bar are a question, and the bar says so before you ask. */
+    bar.value = 'zip';
+    bar.dispatchEvent(new w.Event('input', { bubbles: true }));
+    await settle();
+    assert.equal(body.querySelector('#b-go').textContent, 'Search', 'the button says what Enter will do');
+    assert.ok(body.querySelector('#b-baricon').innerHTML.includes('search') || body.querySelector('#b-baricon').title.includes('Searches'));
+    const suggest = body.querySelector('#b-suggest');
+    assert.equal(suggest.hidden, false, 'typing offers completions');
+    const labels = [...suggest.querySelectorAll('.brw-sug-label')].map((el) => el.textContent);
+    assert.ok(labels.includes('zip'), `expected "zip" among ${labels.join(', ')}`);
+    /* Arrow keys walk the list, and Enter takes the highlighted suggestion. */
+    bar.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+    assert.equal(suggest.querySelector('.brw-sug.on'), suggest.querySelector('.brw-sug'));
+
+    await type('zip');
+    assert.equal(bar.value, 'proton://search?q=zip', 'the bar shows the search address');
+    assert.equal(suggest.hidden, true);
+    const hits = [...page().querySelectorAll('.brw-hit')];
+    assert.ok(hits.length >= 3, `expected results for "zip", got ${hits.length}`);
+    assert.match(page().querySelector('.brw-count').textContent, /results? for/);
+    assert.match(page().querySelector('.brw-count').textContent, /“zip”/);
+    assert.ok(page().querySelector('.brw-hit-path .brw-path'), 'every result says which file it is');
+    assert.ok(page().querySelector('.brw-hit-snippet mark'), 'and shows the word it matched on');
+    assert.ok(page().querySelector('.brw-engine'), 'the page explains the engine behind it');
+
+    /* Then the top results quote the file itself, fetched after the list is
+     * drawn. A quote from mid-file carries the ellipsis snippet() adds, which
+     * no summary has — that is the proof the file was really read. */
+    await flush();
+    const snippets = [...page().querySelectorAll('.brw-hit-snippet')].map((el) => el.textContent);
+    assert.ok(snippets.some((text) => text.includes('\u2026')),
+      `expected a windowed quote from a file, got: ${snippets[0].slice(0, 60)}`);
+    assert.ok(page().querySelectorAll('.brw-hit-snippet mark').length > 0,
+      'with the matched word marked in it');
+
+    /* Kind chips narrow the list without searching again. */
+    const chips = [...page().querySelectorAll('#b-kinds .brw-chip')];
+    if (chips.length > 1) {
+      const code = chips.find((c) => c.dataset.kind === 'code');
+      assert.ok(code, 'the ZIP results include code');
+      code.click();
+      await settle();
+      const shown = [...page().querySelectorAll('.brw-hit')];
+      assert.ok(shown.length > 0 && shown.length < hits.length, 'filtering narrows the list');
+      assert.ok(shown.every((li) => li.querySelector('.brw-kind').textContent === 'Code'));
+      chips.find((c) => c.dataset.kind === '').click();
+      await settle();
+      assert.equal(page().querySelectorAll('.brw-hit').length, hits.length, 'and All brings it back');
+    }
+
+    /* Opening a documentation result reads it here, with the matches marked. */
+    const readme = [...page().querySelectorAll('.brw-hit')]
+      .find((li) => li.querySelector('.brw-path').textContent === '/README.md');
+    assert.ok(readme, 'the README is a result for "zip"');
+    readme.querySelector('.brw-hit-title').click();
+    await settle();
+    await flush();
+    assert.match(bar.value, /^proton:\/\/read\?path=%2FREADME\.md/, 'the reader is an address like any other');
+    const text = page().querySelector('.brw-reader-text');
+    assert.ok(text, 'the reader shows the file');
+    assert.ok(text.textContent.includes('proton'), 'and it is really the README');
+    assert.ok(text.querySelectorAll('mark').length > 0, 'the query’s matches are marked in it');
+    assert.match(page().querySelector('.brw-matches').textContent, /match/, 'with a count');
+    assert.match(page().querySelector('.brw-reader-bar .brw-path').textContent, /^\/README\.md$/);
+    assert.ok(page().querySelector('[data-files]'), 'the reader can hand the file to Files');
+
+    /* Back and forward walk this tab's own history. */
+    body.querySelector('#b-back').click();
+    await settle();
+    assert.equal(bar.value, 'proton://search?q=zip', 'Back returns to the results');
+    assert.ok(page().querySelectorAll('.brw-hit').length >= 3);
+    body.querySelector('#b-back').click();
+    await settle();
+    assert.ok(body.querySelector('#b-startq'), 'and Back again is the start page');
+    assert.equal(body.querySelector('#b-back').disabled, true, 'there is nothing further back');
+    body.querySelector('#b-forward').click();
+    await settle();
+    assert.equal(bar.value, 'proton://search?q=zip', 'Forward walks back into the results');
+
+    /* An app result launches the app; the Browser stays where it was. */
+    await type('files');
+    const filesHit = page().querySelector('.brw-hit');
+    assert.equal(filesHit.querySelector('.brw-hit-title').textContent.trim(), 'Files');
+    assert.ok(filesHit.querySelector('.brw-hit-title mark'), 'the matched word is marked in the headline');
+    filesHit.querySelector('.brw-hit-title').click();
+    await settle();
+    assert.ok(wins.has('files'), 'the Files app opened from its search result');
+    assert.equal(bar.value, 'proton://search?q=files', 'and the Browser kept its page');
+    w.closeWin('files', true);
+
+    /* Another app can ask the Browser to search something. */
+    w.openApp('browser', { query: 'wallpaper' });
+    await settle();
+    assert.equal(bar.value, 'proton://search?q=wallpaper');
+    assert.match(page().querySelector('.brw-count').textContent, /wallpaper/);
+
+    /* The Files hand-off: an HTML page is rendered in a frame, not read as
+     * source, and a text file is read. */
+    w.openFSItem('/websites/test-page/site.html');
+    await settle();
+    assert.equal(bar.value, 'file:///websites/test-page/site.html');
+    assert.ok(page().querySelector('iframe.site-frame').src.endsWith('/websites/test-page/site.html'),
+      'the page is framed, the way the Browser frames any HTML file');
+    /* A text file belongs to the Text Editor, not the Browser: FS.appFor()
+     * decides, and the Browser only gets what nothing else claims. */
+    w.openFSItem('/README.md');
+    await settle();
+    assert.ok(wins.has('text-editor'), 'a markdown file goes to the Text Editor');
+    assert.equal(bar.value, 'file:///websites/test-page/site.html', 'and the Browser keeps its page');
+    w.closeWin('text-editor', true);
+    await type('/README.md');
+    assert.match(bar.value, /^proton:\/\/read\?path=%2FREADME\.md/, 'typed as an address, the Browser reads it');
+
+    /* A search that finds nothing says so, and offers a way out. */
+    await type('zzzqqxx');
+    assert.match(page().querySelector('.brw-none').textContent, /Nothing in this repository matches/);
+    assert.match(page().querySelector('.brw-none').textContent, /never sends your words anywhere/);
+    assert.ok(page().querySelectorAll('.brw-none .brw-chip').length > 0, 'with something to try instead');
+    assert.deepEqual(errors, []);
+  } finally { close(); }
+});
+
+test('the Browser keeps tabs, bookmarks and history like a browser', async () => {
+  const { w, errors, settle, saved, wins, close } = await bootDesktop();
+  try {
+    w.openApp('browser');
+    await settle();
+    const body = wins.get('browser').body;
+    const bar = body.querySelector('#b-url');
+    const page = () => body.querySelector('.brw-page:not([hidden])');
+    const tabs = () => [...body.querySelectorAll('#b-tabs .brw-tab')];
+    const go = async (address) => {
+      bar.value = address;
+      bar.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+      await settle();
+    };
+
+    assert.equal(tabs().length, 1, 'it starts with one tab');
+    assert.equal(bar.value, '', 'the home page leaves the bar empty');
+
+    /* A built-in website is a navigation: bar, history and Back all know. */
+    const menu = body.querySelector('#b-sites-menu');
+    menu.value = 'test-page';
+    menu.dispatchEvent(new w.Event('change', { bubbles: true }));
+    await settle();
+    assert.equal(bar.value, 'proton://test-page');
+    assert.ok(page().querySelector('iframe.site-frame').src.endsWith('/websites/test-page/site.html'));
+    assert.match(tabs()[0].textContent, /Test Page/, 'the tab is titled after the page');
+
+    /* Star it: bookmarks are account data, so a backup carries them. */
+    body.querySelector('#b-star').click();
+    await settle();
+    await flush();
+    assert.deepEqual(saved().bookmarks.map((b) => b.url), ['proton://test-page']);
+    assert.equal(saved().bookmarks[0].title, 'Test Page');
+    assert.equal(body.querySelector('#b-star').classList.contains('on'), true, 'the star fills in');
+    body.querySelector('#b-star').click();
+    await flush();
+    assert.deepEqual(saved().bookmarks, [], 'and unstarring removes it again');
+    body.querySelector('#b-star').click();
+    await flush();
+
+    /* A second tab, its own page, and closing it leaves the first untouched. */
+    body.querySelector('#b-newtab').click();
+    await settle();
+    assert.equal(tabs().length, 2, 'a new tab opened');
+    assert.equal(tabs()[1].classList.contains('on'), true, 'and took focus');
+    assert.ok(page().querySelector('#b-startq'), 'showing the start page');
+    await go('https://example.com/');
+    assert.equal(bar.value, 'https://example.com/');
+    assert.equal(page().querySelector('iframe.site-frame').getAttribute('src'), 'https://example.com/');
+    assert.match(page().textContent, /refuses to be embedded/, 'and warns that a site may not allow it');
+    tabs()[0].click();
+    await settle();
+    assert.equal(bar.value, 'proton://test-page', 'the first tab is still where it was');
+    assert.ok(page().querySelector('iframe.site-frame').src.endsWith('/websites/test-page/site.html'));
+    body.querySelector('[data-close="' + tabs()[1].dataset.tab + '"]').click();
+    await settle();
+    assert.equal(tabs().length, 1, 'the tab closed');
+    assert.equal(bar.value, 'proton://test-page', 'and the one left is still the site');
+
+    /* proton's own pages are addresses too. */
+    await go('proton://bookmarks');
+    const rows = [...page().querySelectorAll('.brw-row')];
+    assert.equal(rows.length, 1, 'the bookmark is listed');
+    assert.match(rows[0].textContent, /Test Page/);
+    rows[0].querySelector('[data-remove]').click();
+    await settle();
+    await flush();
+    assert.deepEqual(saved().bookmarks, [], 'and can be removed from its page');
+    assert.match(page().textContent, /Nothing bookmarked yet/);
+
+    await go('proton://history');
+    await flush();
+    const visited = saved().history.map((h) => h.url);
+    assert.equal(visited[0], 'proton://history', 'history is newest first');
+    assert.ok(visited.includes('proton://test-page') && visited.includes('https://example.com/'),
+      `expected the pages this tab visited in ${visited.join(', ')}`);
+    assert.ok(page().querySelectorAll('.brw-row').length >= 3, 'and the page lists them');
+    assert.match(page().querySelector('.brw-row').textContent, /(just now|min ago|h ago|d ago)/);
+    page().querySelector('#b-clearhist').click();
+    await settle();
+    await flush();
+    assert.deepEqual(saved().history, [], 'Clear history empties it');
+    assert.match(page().textContent, /Nothing visited yet/);
+
+    /* Addresses: a file path frames a page, and any other file gets read. */
+    await go('/websites/test-page/site.html');
+    assert.ok(page().querySelector('iframe.site-frame'), 'an HTML file in the file system is framed');
+    await go('/README.md');
+    assert.match(bar.value, /^proton:\/\/read\?path=%2FREADME\.md/, 'a text file is read, not framed');
+    assert.ok(page().querySelector('.brw-reader-text').textContent.includes('proton'));
+    await go('file:///assets/search.js');
+    assert.match(page().querySelector('.brw-reader-bar .brw-path').textContent, /assets\/search\.js/);
+    await go('proton://nope');
+    assert.match(page().textContent, /proton doesn't know that page/);
+    page().querySelector('[data-search]').click();
+    await settle();
+    assert.equal(bar.value, 'proton://search?q=nope', 'and offers to search for it instead');
+
+    /* Alt+arrow keys travel without touching the bar. */
+    const before = bar.value;
+    body.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'ArrowLeft', altKey: true, bubbles: true }));
+    await settle();
+    assert.notEqual(bar.value, before, 'Alt+← went back');
+    body.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'ArrowRight', altKey: true, bubbles: true }));
+    await settle();
+    assert.equal(bar.value, before, 'Alt+→ came forward again');
     assert.deepEqual(errors, []);
   } finally { close(); }
 });

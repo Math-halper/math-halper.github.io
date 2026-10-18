@@ -68,8 +68,15 @@ see [`data/icons/README.md`](../data/icons/README.md).
    `assets/core.js`: `System`, `My Apps`, then anything else you invent).
 3. Edit `apps/inbuilt/my-app/app.html` and write the `render` function (the
    app's code). Reload proton.
-4. Re-run `python3 tools/gen-fs-manifest.py` so the new file appears in the
-   virtual file system, then `npm test`.
+4. Re-run `python3 tools/gen-search-index.py` (so the new app's prose is
+   searchable) and `python3 tools/gen-fs-manifest.py` (so the new file appears
+   in the virtual file system — always in that order, the manifest records the
+   index's size), then `npm test`.
+
+Your app's **header comment is its description in search**: `tools/gen-search-index.py`
+indexes an app module's own `/* … */` comments, so the paragraph you write at
+the top of the module is what a search result quotes. Write it for a reader,
+not for yourself.
 
 Your app can use: `userData` (the account's saved data), `saveData()`,
 `openApp(id)`, `MH.toast(...)`, `MH.download(...)`, `FS` (the virtual file
@@ -87,7 +94,8 @@ exactly where the old one left off.
   Customize and Settings are protected so the desktop stays manageable.
 - **Permanently:** delete its `[application]` block from
   `data/applications.js` (and optionally delete the folder), refresh
-  `data/fs-manifest.js`, and drop anything in `assets/` that only it used.
+  `data/search-index.js` and `data/fs-manifest.js`, and drop anything in
+  `assets/` that only it used.
 
 ## The apps
 
@@ -100,7 +108,7 @@ two `_`-prefixed starting points sit next to it, directly under `apps/`.
 | `inbuilt/customize/` | Customize (`customize`) — app modules, vector or uploaded image icons, themes, wallpapers, desktop parts, reset |
 | `inbuilt/settings/` | Settings (`settings`) — account, wallpaper & accent, password, backup, accounts on this device |
 | `inbuilt/about/` | About (`about`) — provenance, licence, what's inside |
-| `inbuilt/browser/` | Browser (`browser`) — Test Page, saved websites, external addresses and VFS HTML files |
+| `inbuilt/browser/` | Browser (`browser`) — tabs, back/forward, bookmarks and history; searches this repository when you type words, visits an address when you type one; Test Page, saved websites, external addresses, VFS HTML files and a reader that marks your matches |
 | `inbuilt/files/` | Files (`files`) — the file manager: `/` (read-only system tree) and `/home/<you>` (yours); create, rename, move, copy, import, search, download as ZIP, desktop shortcuts |
 | `inbuilt/text-editor/` | Text Editor (`text-editor`) — edit the text files in your home folder; system files open read-only with *Save a copy…* |
 | `inbuilt/image-viewer/` | Image Viewer (`image-viewer`) — PNG, JPG, GIF, WebP, AVIF, BMP, ICO, SVG, with zoom and prev/next through the folder |
@@ -145,8 +153,11 @@ catalog — name, location, icon and everything else for every app),
 is the only one left; guide: `websites/README.md`),
 `data/fs-manifest.js` (generated list of every deployed file in this
 repository — the `/` tree of the virtual file system; refresh it with
-`python3 tools/gen-fs-manifest.py`), `assets/fs.js` (the file system API the
-whole Files suite is built on — its header comment documents every method),
+`python3 tools/gen-fs-manifest.py`), `data/search-index.js` (generated: the
+searchable prose of this repository — refresh it with
+`python3 tools/gen-search-index.py`), `assets/search.js` (the search engine the
+Browser's bar queries), `assets/fs.js` (the file system API the whole Files
+suite is built on — its header comment documents every method),
 `assets/fs-archive.js` (dependency-free ZIP downloads),
 `assets/config-loader.js` (parses both
 catalogs), `assets/store.js` (accounts/storage and the per-account defaults),

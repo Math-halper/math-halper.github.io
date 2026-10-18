@@ -96,6 +96,14 @@ contacts, sheets, slides, boards), so an older backup still imports and any of
 those apps can be added back with a folder under `apps/inbuilt/` and one
 catalog block.
 
+The search engine is new in this build rather than inherited, and it exists
+because a static page with no server still needs a way to find things: the only
+corpus it can honestly search is its own repository. `tools/gen-search-index.py`
+generates `data/search-index.js` from the prose of every deployed file,
+`assets/search.js` scores it, and the Browser (`apps/inbuilt/browser/`) grew the
+chrome around it — tabs, back/forward, bookmarks, history, suggestions and a
+reader. No search API is called and no query leaves the browser.
+
 The provenance table above and the sections that used to follow it (Digital
 Logic Sim, the streamed Proton Arcade and Gams Offline catalogs) are historical:
 those builds are no longer bundled here. Their upstream projects' licences and
