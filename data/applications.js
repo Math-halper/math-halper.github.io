@@ -30,17 +30,19 @@ Viewer, Media, PDF Viewer — their ids are exactly the ones FS.appFor()
 returns, so double-clicking a file opens it in the right one), a Calculator,
 Web Retro (a vendored webretro emulator build; bring your own ROMs), the
 three Celeste Classics apps (Celeste Classic, Celeste Classic 2, Celeste
-Community — game files copied byte-for-byte from github.com/Math-halper/Celeste)
-and the two Mario games (Mari0 and Super Mario 64 — game builds copied
-byte-for-byte from github.com/Math-halper/Mario, only the games). Each game
+Community — game files copied byte-for-byte from github.com/Math-halper/Celeste),
+the two Mario games (Mari0 and Super Mario 64 — game builds copied
+byte-for-byte from github.com/Math-halper/Mario, only the games) and Cookie
+Clicker (Orteil's idle game, copied byte-for-byte from the offline mirror in
+github.com/Gams-Offline/Gams). Each game
 app folder is the game's own files plus a thin proton iframe wrapper, and
 apps/games/index.html is the picker their "all games" links expect.
 
 The start menu groups them by cat=: System (the desktop's own five),
 Productivity (Calculator, Files, Text Editor, PDF Viewer), Media (Image
 Viewer, Media) and Games (Celeste Classic, Celeste Classic 2, Celeste
-Community, Mari0, Super Mario 64, Web Retro). Block order below is menu order
-within each section.
+Community, Cookie Clicker, Mari0, Super Mario 64, Web Retro). Block order
+below is menu order within each section.
 
 Template (named SVG; for an image use `icon=data/icons/my-app.png` and
 `svg-icon=false` instead):
@@ -210,6 +212,17 @@ icon=data/icons/celeste-community.png
 svg-icon=false
 cat=Games
 desc=Celeste Classic's community hub - practice mods, downloads and links
+w=980
+h=640
+
+[application]
+id=cookie-clicker
+name=Cookie Clicker
+path=apps/games/cookie-clicker/app.html
+icon=data/icons/cookie-clicker.png
+svg-icon=false
+cat=Games
+desc=Play Cookie Clicker - Orteil's idle bakery game, an offline mirror
 w=980
 h=640
 

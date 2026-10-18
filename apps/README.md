@@ -27,7 +27,10 @@ The three Celeste Classics apps (`celeste-classic/`, `celeste-two/`,
 folder is the game's own pages plus a thin iframe wrapper. The two Mario
 games (`mari0/`, `sm64/`) carry their game builds byte-for-byte from
 [Math-halper/Mario](https://github.com/Math-halper/Mario) — only the games,
-none of that collection's other files. `apps/games/index.html`
+none of that collection's other files. Cookie Clicker (`cookie-clicker/`)
+carries Orteil's idle game byte-for-byte from the offline mirror in
+[Gams-Offline/Gams](https://github.com/Gams-Offline/Gams) (`g/g/cookie/`).
+`apps/games/index.html`
 is the "all games" picker their back-links expect (see `CREDITS.md`).
 The previously bundled apps and game catalogs remain removed. The only
 built-in website is **Test Page** (the one entry in `data/websites.js`; see
@@ -118,6 +121,7 @@ matching the menu sections (`cat=`, ordered by `CATS` in `assets/core.js`).
 | `games/` | Celeste Classic (`celeste-classic`) — the vendored PICO-8 game (from Math-halper/Celeste `classic/`) plus its wrapper |
 | `games/` | Celeste Classic 2 (`celeste-two`) — the vendored Lani's Trek game (from Math-halper/Celeste `two/`) plus its wrapper |
 | `games/` | Celeste Community (`celeste-community`) — the vendored community hub, practice mods and tools (from Math-halper/Celeste `speed/`) plus its wrapper |
+| `games/` | Cookie Clicker (`cookie-clicker`) — the vendored offline mirror of Orteil's game (from Gams-Offline/Gams `g/g/cookie/`, minus `img/Thumbs.db`) plus its wrapper |
 | `games/` | Mari0 (`mari0`) — the vendored love.js build of Mario × Portal (from Math-halper/Mario `mari0/web/`) plus its wrapper |
 | `games/` | Super Mario 64 (`sm64`) — the vendored WebAssembly browser build (from Math-halper/Mario `sm64/`) plus its wrapper |
 | `games/` | Web Retro (`web-retro`) — the vendored webretro emulator (bring your own ROMs — from this computer or proton Files) |

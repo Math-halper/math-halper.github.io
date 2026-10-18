@@ -21,7 +21,9 @@ Community** — with the *actual game files*, copied byte-for-byte from
 The **Mario** collection adds **Mari0** (Mario × Portal) and **Super Mario
 64** — their game builds copied byte-for-byte from
 [Math-halper/Mario](https://github.com/Math-halper/Mario) (only the games:
-its landing page and READMEs are not used). A small
+its landing page and READMEs are not used). **Cookie Clicker** is Orteil's
+idle bakery game, copied byte-for-byte from the offline mirror in
+[Gams-Offline/Gams](https://github.com/Gams-Offline/Gams) (`g/g/cookie/`). A small
 **Calculator** (new, self-contained code in `apps/productivity/calculator/`) ships again
 too, and **Web Retro** vendors the
 [webretro](https://github.com/BinBashBanana/webretro) emulator build from
@@ -45,6 +47,7 @@ game bundles and earlier built-in sites remain removed (except Test Page).
 | **Celeste Classic** (`celeste-classic`) | Play the original PICO-8 Celeste Classic — its actual game files, vendored from Math-halper/Celeste |
 | **Celeste Classic 2** (`celeste-two`) | Play Celeste Classic 2: Lani's Trek — its actual game files, vendored from Math-halper/Celeste |
 | **Celeste Community** (`celeste-community`) | The Celeste Classic community hub — practice mods, downloads and links (vendored from Math-halper/Celeste) |
+| **Cookie Clicker** (`cookie-clicker`) | Play Cookie Clicker — Orteil's idle bakery game (offline mirror, vendored from Gams-Offline/Gams) |
 | **Mari0** (`mari0`) | Play Mari0 — Mario × Portal by Maurice Guégan / Stabyourself (love.js build, vendored from Math-halper/Mario) |
 | **Super Mario 64** (`sm64`) | Play the Super Mario 64 WebAssembly browser build (unofficial fan port, vendored from Math-halper/Mario) |
 | **Web Retro** (`web-retro`) | Play your own retro ROMs — N64, SNES, NES and Game Boy (webretro); load them from this computer or your proton Files |
@@ -78,7 +81,7 @@ runtime dependencies or build step. Optional regression tests use jsdom:
 ## Project layout (everything is a module)
 
 - **Apps:** one folder + HTML file each — `apps/<category>/<name>/app.html`
-  (17 apps in four category folders — `system/`, `productivity/`, `media/`,
+  (18 apps in four category folders — `system/`, `productivity/`, `media/`,
   `games/` — matching the menu sections, plus
   two starting points: `apps/_template/` for a normal app and `apps/_embed/`
   for one that is only a framed page — change its single `EMBED_URL` constant).
@@ -176,7 +179,7 @@ deletes the file.
   (App Center, Customize, Settings, About, Browser), **Productivity**
   (Calculator, Files, Text Editor, PDF Viewer), **Media** (Image Viewer,
   Media) and **Games** (Celeste Classic, Celeste Classic 2, Celeste
-  Community, Mari0, Super Mario 64, Web Retro), with **My Apps** for
+  Community, Cookie Clicker, Mari0, Super Mario 64, Web Retro), with **My Apps** for
   anything an account adds. The order is `CATS` in `assets/core.js`.
 - **Customize — everything is modular.** Rename any app, change its vector
   icon or upload a raster image for it, move it to another (or a brand-new)
@@ -233,7 +236,11 @@ the games stay with their authors). The two Mario games are copied the same
 way from [Math-halper/Mario](https://github.com/Math-halper/Mario) — only the
 game builds, nothing else from that collection; they are **unofficial fan
 projects with no affiliation to Nintendo**, and no rights in Nintendo's game
-assets are granted or implied (details in [`CREDITS.md`](CREDITS.md)). Web Retro ships
+assets are granted or implied (details in [`CREDITS.md`](CREDITS.md)). Cookie
+Clicker's files are copied the same way from the offline mirror in
+[Gams-Offline/Gams](https://github.com/Gams-Offline/Gams) (`g/g/cookie/`) —
+the game is © Orteil / DashNet, and the mirror grants no redistribution
+rights (details in [`CREDITS.md`](CREDITS.md)). Web Retro ships
 its emulator files (webretro, vendored from Gams-Offline/Gams under
 GPL-3.0 — see [`CREDITS.md`](CREDITS.md)), but **no game ROMs** are included:
 you bring your own.

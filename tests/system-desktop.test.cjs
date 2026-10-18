@@ -2,7 +2,8 @@
  * suite (Files, Text Editor, Image Viewer, Media, PDF Viewer — copied from
  * main), a Calculator and Web Retro (a vendored webretro emulator, no ROMs
  * included), and the vendored game apps — the Celeste Classics trio (from
- * github.com/Math-halper/Celeste) and Mari0 + Super Mario 64 (from
+ * github.com/Math-halper/Celeste), Cookie Clicker (the offline mirror in
+ * github.com/Gams-Offline/Gams) and Mari0 + Super Mario 64 (from
  * github.com/Math-halper/Mario, only the game builds) — each a thin wrapper
  * around the actual game files, copied byte-for-byte.
  * The one built-in website is Test Page, the Browser smoke test. These tests
@@ -19,7 +20,7 @@ const ROOT = path.resolve(__dirname, '..');
 const source = (p) => fs.readFileSync(path.join(ROOT, p), 'utf8');
 const SYSTEM_APPS = ['appcenter', 'customize', 'settings', 'about', 'browser',
   'calculator', 'files', 'text-editor', 'pdf', 'image-viewer', 'media',
-  'celeste-classic', 'celeste-two', 'celeste-community', 'mari0', 'sm64', 'web-retro'];
+  'celeste-classic', 'celeste-two', 'celeste-community', 'cookie-clicker', 'mari0', 'sm64', 'web-retro'];
 /* Menu sections for each app (data/applications.js cat=), in catalog order.
  * Every new app is filed here with its respective section — the catalog test
  * asserts each app's cat matches, and the boot test asserts the four menu
@@ -29,18 +30,19 @@ const SYSTEM_CATS = {
   calculator: 'Productivity', files: 'Productivity', 'text-editor': 'Productivity', pdf: 'Productivity',
   'image-viewer': 'Media', media: 'Media',
   'celeste-classic': 'Games', 'celeste-two': 'Games', 'celeste-community': 'Games',
-  'mari0': 'Games', 'sm64': 'Games', 'web-retro': 'Games',
+  'cookie-clicker': 'Games', 'mari0': 'Games', 'sm64': 'Games', 'web-retro': 'Games',
 };
 /* Each game app frames the game page that ships in its own folder. */
 const GAME_PAGES = {
   'celeste-classic': 'apps/games/celeste-classic/index.html',
   'celeste-two': 'apps/games/celeste-two/index.html',
   'celeste-community': 'apps/games/celeste-community/index.html',
+  'cookie-clicker': 'apps/games/cookie-clicker/index.html',
   'mari0': 'apps/games/mari0/index.html',
   'sm64': 'apps/games/sm64/index.html',
 };
 /* Games whose pages carry the source sites' href="../" all-games link. */
-const PICKER_LINKED = ['celeste-classic', 'celeste-two', 'celeste-community', 'sm64'];
+const PICKER_LINKED = ['celeste-classic', 'celeste-two', 'celeste-community', 'cookie-clicker', 'sm64'];
 /* Every script index.html loads, in order, minus boot.js (which starts the
  * auth flow and needs a served page). */
 const SHELL = ['assets/store.js', 'assets/icons.js', 'data/fs-manifest.js', 'assets/fs.js',
@@ -70,7 +72,7 @@ function catalog() {
   };
 }
 
-test('the catalog is the desktop apps, the file system suite, a calculator, web retro, the vendored Celeste and Mario games and the built-in test site', () => {
+test('the catalog is the desktop apps, the file system suite, a calculator, web retro, the vendored Celeste, Cookie Clicker and Mario games and the built-in test site', () => {
   const { apps, sites, warnings, icons, render, renderCatalogIcon, validIconPath } = catalog();
   assert.deepEqual(Array.from(warnings), [], 'catalog parses without warnings');
   /* Array.from everywhere: the catalogs come from a vm context, so their
@@ -78,10 +80,11 @@ test('the catalog is the desktop apps, the file system suite, a calculator, web 
   assert.deepEqual(Array.from(apps, (a) => a.id), SYSTEM_APPS);
   assert.deepEqual(Array.from(apps, (a) => a.cat), SYSTEM_APPS.map((id) => SYSTEM_CATS[id]));
   /* Every app uses a built-in SVG icon except the games: each game's default
-   * is its own art, cropped into data/icons/<id>.png (Web Retro keeps Gams'
+   * is its own artwork under data/icons/<id>.png (Web Retro keeps Gams'
    * raster webretro.png). */
   const RASTER_ICON_APPS = { 'celeste-classic': 'data/icons/celeste-classic.png',
     'celeste-two': 'data/icons/celeste-two.png', 'celeste-community': 'data/icons/celeste-community.png',
+    'cookie-clicker': 'data/icons/cookie-clicker.png',
     'mari0': 'data/icons/mari0.png', 'sm64': 'data/icons/sm64.png', 'web-retro': 'data/icons/webretro.png' };
   assert.deepEqual(Array.from(apps, (a) => a.svgIcon), SYSTEM_APPS.map((id) => !RASTER_ICON_APPS[id]));
   const iconById = Object.fromEntries(Array.from(apps, (a) => [a.id, a.icon]));
@@ -193,6 +196,7 @@ test('every catalog entry points at a real, syntactically valid app module', () 
     ['apps/games/celeste-community/celeste_practice_mod.js', 1000000],
     ['apps/games/celeste-community/celeste2_1.1_practice_mod.js', 1000000],
     ['apps/games/celeste-community/webek.js', 1000000],
+    ['apps/games/cookie-clicker/main.js', 900000],
     ['apps/games/mari0/love.wasm', 4000000],
     ['apps/games/mari0/game.data', 3000000],
     ['apps/games/sm64/sm64.us.f3dex2e.wasm', 15000000],
@@ -271,7 +275,7 @@ test('the system manifest still matches the repository exactly', () => {
     'Manifest and repository disagree — re-run python3 tools/gen-fs-manifest.py');
 });
 
-test('the desktop boots, lists and opens all seventeen catalogued apps', async () => {
+test('the desktop boots, lists and opens all eighteen catalogued apps', async () => {
   const virtualConsole = new VirtualConsole(), errors = [];
   virtualConsole.on('jsdomError', (err) => errors.push(err.message));
   const dom = new JSDOM('<!doctype html><main id="auth" hidden></main><div id="desktop" hidden></div><div id="toasts"></div>', {
@@ -320,7 +324,7 @@ test('the desktop boots, lists and opens all seventeen catalogued apps', async (
       else assert.ok(w.eval('FS').stat(s.target), `default shortcut to a missing path: ${s.target}`);
     }
 
-    // The start menu groups all seventeen apps into their four sections.
+    // The start menu groups all eighteen apps into their four sections.
     const menu = w.document.querySelector('#startmenu');
     assert.deepEqual([...menu.querySelectorAll('.sm-cat')].map((e) => e.textContent),
       ['System', 'Productivity', 'Media', 'Games']);
@@ -572,7 +576,7 @@ test('Customize saves, displays and resets uploaded app icon images', async () =
     const browserWindow = w.eval('wins').get('browser');
     assert.equal(body.querySelector('#cust-files-shortcut'), null, 'Customize still offers a Files shortcut');
     assert.deepEqual([...body.querySelectorAll('#cust-modlist .card b')].map((b) => b.textContent).slice(0, SYSTEM_APPS.length),
-      ['App Center', 'Customize', 'Settings', 'About', 'Browser', 'Calculator', 'Files', 'Text Editor', 'PDF Viewer', 'Image Viewer', 'Media', 'Celeste Classic', 'Celeste Classic 2', 'Celeste Community', 'Mari0', 'Super Mario 64', 'Web Retro']);
+      ['App Center', 'Customize', 'Settings', 'About', 'Browser', 'Calculator', 'Files', 'Text Editor', 'PDF Viewer', 'Image Viewer', 'Media', 'Celeste Classic', 'Celeste Classic 2', 'Celeste Community', 'Cookie Clicker', 'Mari0', 'Super Mario 64', 'Web Retro']);
 
     const uploadBrowserIcon = async () => {
       const input = body.querySelector('[data-micon-file="browser"]');

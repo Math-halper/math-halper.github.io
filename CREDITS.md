@@ -130,11 +130,9 @@ site-absolute
 paths the source site itself doesn't host (`/glossary/` and friends) and stay
 unresolved here, as they do upstream.
 
-The three app icons are each cropped from that game's own art:
-`celeste-classic` from the cartridge label art in `celeste.p8.png`,
-`celeste-two` from the "CELESTE 2" title logo in the game's own sprite data
-(the cart bytes embedded in its `index.js`), and `celeste-community` from the
-hub's own `maddy.png` avatar. Nothing else was redrawn.
+The app icons for `celeste-classic` and `celeste-two` are a shared pixel-art
+image uploaded by the repository maintainer; `celeste-community` keeps its
+own icon cropped from the hub's `maddy.png` avatar. Nothing else was redrawn.
 
 All rights in the games, builds and assets remain with their authors (the
 Celeste Classic PICO-8 game is © Maddy Thorson, Noel Berry and the PICO-8
@@ -178,11 +176,31 @@ separate rights; a code license is not blanket asset clearance. This
 repository grants no rights in Nintendo's game assets, and no permission to
 redistribute them is claimed or implied.
 
-The two app icons are each cropped from that game's own art: `mari0` from the
-game's `graphics/icon.png` window icon (packed inside `game.data`), and
-`sm64` from Mario's cap-logo texture (`mario_logo.rgba16`, decoded from the
-array the SM64 decomp generates for it — sourced via the decomp's public
-build output). The same rights note applies to them.
+The app icons for `mari0` and `sm64` are key-art images uploaded by the
+repository maintainer (512×512, under `data/icons/`). The same rights note
+applies to them.
+
+## Vendored Cookie Clicker
+
+`apps/games/cookie-clicker/` is Orteil's **Cookie Clicker** idle game,
+copied byte-for-byte from the offline mirror in
+[Gams-Offline/Gams](https://github.com/Gams-Offline/Gams) (`g/g/cookie/` —
+itself the [ozh/cookieclicker](https://github.com/ozh/cookieclicker) mirror;
+its README travels with the game). The one omission is `img/Thumbs.db`, a
+Windows Explorer thumbnail cache that is not part of the game. Nothing in
+the game files was edited.
+
+The game is self-contained — its own `img/`, `snd/`, `loc/` translations and
+minigames all ship in the folder — and saves to the browser's localStorage.
+Some of the original page chrome points at remote URLs (ads, cookie consent,
+Google Fonts, links to Orteil's other work) and fails quietly when offline.
+
+Cookie Clicker is © **Orteil (DashNet)**; the original lives at
+[orteil.dashnet.org/cookieclicker](https://orteil.dashnet.org/cookieclicker/).
+The mirror carries **no license granting redistribution** — the game is here
+as the offline copy the Gams link points at, and no further rights are
+claimed or implied. The app icon is the game's own cookie art from the
+mirror's `img/cookieclicker.png`, scaled into `data/icons/`.
 
 ## Vendored emulator (Web Retro)
 
