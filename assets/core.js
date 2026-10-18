@@ -3,7 +3,7 @@
  * assets/html-loader.js); the list of apps and all their metadata (name,
  * icon, category, description, window size) live in the catalog
  * data/applications.js, parsed by assets/config-loader.js. proton ships five
- * core System apps and one sandboxed GitHub Pages game embed.
+ * core System apps, a Calculator and one sandboxed GitHub Pages game embed.
  * Built-in websites use the same catalog system (data/websites.js) and are
  * framed by the Browser app (Test Page is the only built-in site).
  * Window chrome/panel styling follows Mixt's Mint-Y theme.

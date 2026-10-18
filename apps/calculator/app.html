@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Calculator - proton app</title>
+</head>
+<body>
+<p>This file is a proton app. It is not meant to be opened on its own:
+open <a href="../../index.html">proton</a> and launch <b>Calculator</b> from the
+proton menu. The script below is fetched and run by proton's HTML loader
+(assets/html-loader.js) at boot.</p>
+<!-- proton app: everything that registers and renders this app lives in
+     this one script block. Edit it, then reload proton. -->
+<script data-proton-app>
+/* proton app module: calculator — a small immediate-execution calculator.
+ * Loaded by index.html; calls registerApp() (see apps/README.md).
+ * Buttons and keyboard drive the same state machine: digits, . + - * /,
+ * Enter = equals, Backspace = delete one digit, Esc or c = clear. */
+'use strict';
+
+/* ============================ CALCULATOR ============================ */
+registerApp({
+  /* Metadata (name, icon, cat, desc, w, h) lives in the app catalog:
+   * data/applications.js — edit it there, not here. */
+  render(body) {
+    const key = (k, label, cls = '', extra = '') =>
+      `<button type="button" class="btn ${cls}" data-k="${k}" style="width:100%;min-height:46px;font-size:16px" ${extra}>${label}</button>`;
+    body.innerHTML = `${bar('Calculator')}<div class="app-main pad">
+      <div id="calc-wrap" tabindex="0" style="max-width:320px;margin:0 auto;outline:none">
+        <div class="card" style="padding:10px 14px 12px;margin-bottom:12px">
+          <div id="calc-tape" class="muted" style="min-height:17px;text-align:right;font-variant-numeric:tabular-nums">&nbsp;</div>
+          <div id="calc-display" aria-live="polite" style="font-size:32px;line-height:1.25;text-align:right;font-variant-numeric:tabular-nums;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">0</div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
+          ${key('ac', 'AC')}${key('back', '&#9003;', '', 'aria-label="Delete one digit"')}${key('neg', '&#177;', '', 'aria-label="Plus or minus"')}${key('/', '&#247;', 'primary', 'aria-label="Divide"')}
+          ${key('7', '7')}${key('8', '8')}${key('9', '9')}${key('*', '&#215;', 'primary', 'aria-label="Multiply"')}
+          ${key('4', '4')}${key('5', '5')}${key('6', '6')}${key('-', '&#8722;', 'primary', 'aria-label="Subtract"')}
+          ${key('1', '1')}${key('2', '2')}${key('3', '3')}${key('+', '+', 'primary', 'aria-label="Add"')}
+          ${key('0', '0', '', 'style="width:100%;min-height:46px;font-size:16px;grid-column:span 2"')}${key('.', '.')}${key('=', '=', 'primary')}
+        </div>
+        <p class="muted" style="margin:12px 0 0">Keyboard: digits, <span class="kbd">+</span> <span class="kbd">&#8722;</span> <span class="kbd">*</span> <span class="kbd">/</span>, <span class="kbd">Enter</span> for equals, <span class="kbd">Backspace</span> to delete, <span class="kbd">Esc</span> to clear.</p>
+      </div>
+    </div>`;
+
+    const wrap = body.querySelector('#calc-wrap');
+    const display = body.querySelector('#calc-display');
+    const tape = body.querySelector('#calc-tape');
+    const OPS = {
+      '+': (a, b) => a + b,
+      '-': (a, b) => a - b,
+      '*': (a, b) => a * b,
+      '/': (a, b) => a / b,
+    };
+    const SYM = { '+': '+', '-': '\u2212', '*': '\u00d7', '/': '\u00f7' };
+
+    /* Immediate-execution calculator state: acc holds the stored operand,
+     * pending the operator waiting for its right-hand side, cur the entry
+     * being typed. 'fresh' marks a display that a digit should replace. */
+    let acc = null, pending = null, cur = '0', fresh = true, bad = false, last = null, tapeText = '';
+
+    /* 12 significant digits, no floating-point noise in the display. */
+    function fmt(n) {
+      if (!isFinite(n)) return 'Error';
+      const r = parseFloat(n.toPrecision(12));
+      return isFinite(r) ? String(r) : 'Error';
+    }
+    function paint() {
+      display.textContent = cur;
+      tape.textContent = tapeText || '\u00a0';
+    }
+    function reset() {
+      acc = null; pending = null; cur = '0'; fresh = true; bad = false; last = null; tapeText = '';
+    }
+    function digit(d) {
+      if (bad) reset();
+      if (fresh) {
+        cur = d === '.' ? '0.' : d;
+        fresh = false;
+        if (pending === null) tapeText = '';
+      } else if (d === '.') {
+        if (!cur.includes('.')) cur += '.';
+      } else if (cur === '0') {
+        cur = d;
+      } else if (cur.replace(/[-.]/g, '').length < 15) {
+        cur += d;
+      }
+      paint();
+    }
+    function evaluate() {
+      const a = acc, b = parseFloat(cur), fn = OPS[pending];
+      last = { op: pending, b };
+      tapeText = `${fmt(a)} ${SYM[pending]} ${fmt(b)} =`;
+      const out = fn(a, b);
+      if (!isFinite(out)) {
+        bad = true; cur = 'Error'; acc = null; pending = null; fresh = true;
+      } else {
+        acc = out; cur = fmt(out); pending = null; fresh = true;
+      }
+      paint();
+    }
+    function op(o) {
+      if (bad) return;
+      if (pending !== null && !fresh) evaluate();
+      if (bad) return;
+      if (pending === null) acc = parseFloat(cur);
+      pending = o; fresh = true;
+      tapeText = `${fmt(acc)} ${SYM[o]}`;
+      paint();
+    }
+    function equals() {
+      if (bad) return;
+      if (pending !== null) evaluate();
+      else if (last) { /* pressing = again repeats the last operation */
+        acc = parseFloat(cur); pending = last.op; cur = fmt(last.b);
+        evaluate();
+      } else {
+        cur = fmt(parseFloat(cur)); fresh = true;
+        paint();
+      }
+    }
+    function negate() {
+      if (bad) return;
+      if (cur !== '0') cur = cur.startsWith('-') ? cur.slice(1) : '-' + cur;
+      paint();
+    }
+    function back() {
+      if (bad) return;
+      if (fresh) { cur = '0'; fresh = false; }
+      else {
+        cur = cur.length > 1 ? cur.slice(0, -1) : '0';
+        if (cur === '-') cur = '0';
+      }
+      paint();
+    }
+
+    body.querySelectorAll('[data-k]').forEach((b) => {
+      b.addEventListener('click', () => {
+        const k = b.dataset.k;
+        if (k === 'ac') { reset(); paint(); }
+        else if (k === 'back') back();
+        else if (k === 'neg') negate();
+        else if (k === '=') equals();
+        else if (OPS[k]) op(k);
+        else digit(k);
+        wrap.focus();
+      });
+    });
+    wrap.addEventListener('keydown', (e) => {
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      const k = e.key;
+      if (/^[0-9]$/.test(k)) digit(k);
+      else if (k === '.' || k === ',') digit('.');
+      else if (OPS[k] || k === 'x' || k === 'X') op(k === 'x' || k === 'X' ? '*' : k);
+      else if (k === 'Enter' || k === '=') equals();
+      else if (k === 'Backspace') back();
+      else if (k === 'Escape' || k === 'Delete' || k === 'c' || k === 'C') { reset(); paint(); }
+      else return;
+      e.preventDefault();
+    });
+    paint();
+    wrap.focus();
+  },
+});
+</script>
+</body>
+</html>

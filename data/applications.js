@@ -19,8 +19,8 @@ icon, category, description and default window size all live here.
   - The app itself still lives in apps/<folder>/app.html; its render()
     code runs from there (apps/_template is the starting point).
 
-proton ships the five core System apps plus one embedded game page:
-Celeste Classic. Its app folder contains only an iframe wrapper for the
+proton ships the five core System apps, a Calculator and one embedded game
+page: Celeste Classic. Its app folder contains only an iframe wrapper for the
 existing GitHub Pages site; no game files or assets are copied into this
 repository.
 
@@ -83,6 +83,17 @@ svg-icon=true
 cat=System
 desc=What this is, credits and how saving works
 w=720
+h=540
+
+[application]
+id=calculator
+name=Calculator
+path=apps/calculator/app.html
+icon=calculator
+svg-icon=true
+cat=System
+desc=Do quick maths from the keypad or your keyboard
+w=360
 h=540
 
 [application]

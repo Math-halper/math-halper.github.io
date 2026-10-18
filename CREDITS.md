@@ -50,7 +50,10 @@ authors.
 Everything above describes how proton was built. The current base is trimmed
 to five core System apps: App Center, Customize, Settings, About and Browser.
 Celeste Classic is added as an iframe-only wrapper around its separately
-hosted Math-halper GitHub Pages; no game content is copied into this repository. The older bundled apps and game catalogs remain removed:
+hosted Math-halper GitHub Pages; no game content is copied into this
+repository. A small Calculator ships again too — new, self-contained code
+(`apps/calculator/`), not a restore of the removed bundle below. The older
+bundled apps and game catalogs remain removed:
 
 - **19 bundled apps** — Files, Text Editor, Image Viewer, Notes, Calendar,
   Contacts, Calculator, Spreadsheet, Presentation, Whiteboard, Logic Sim,
@@ -76,7 +79,7 @@ hosted Math-halper GitHub Pages; no game content is copied into this repository.
   with an empty catalog if it is removed.
 - **The styles, icons and tests that only those apps used** —
   `assets/styles.css` carries the shell's chrome plus the classes used by the
-  six shipped app wrappers, and `tests/` is a single suite for this trimmed build.
+  seven shipped app wrappers, and `tests/` is a single suite for this trimmed build.
 
 Nothing in the desktop shell was removed: accounts, the window manager, the
 panel and start menu, per-account desktop shortcuts, the customisation layer,

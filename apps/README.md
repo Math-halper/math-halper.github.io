@@ -16,10 +16,11 @@ appears in the proton menu, App Center and Customize.
 > web-address apps — everything is part of this static website. "Add your own
 > app" below is the *developer* workflow for changing the site's code.
 
-The current base keeps its five core System apps. Celeste Classic is added as
-a small wrapper around its existing GitHub Pages site, loaded live in a
-sandboxed iframe. This repository does not contain its game code, assets or
-copies of the source repository.
+The current base keeps its five core System apps plus a small Calculator
+(new code in `apps/calculator/`). Celeste Classic is added as a wrapper
+around its existing GitHub Pages site, loaded live in a sandboxed iframe.
+This repository does not contain its game code, assets or copies of the
+source repository.
 The previously bundled apps and game catalogs remain removed. The only
 built-in website is **Test Page** (the one entry in `data/websites.js`; see
 [`websites/README.md`](../websites/README.md)).

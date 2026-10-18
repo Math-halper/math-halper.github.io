@@ -1,8 +1,8 @@
-/* The current build keeps its five core System apps, plus Celeste Classic
- * as a sandboxed embed of its existing GitHub Pages site. No game content is
- * copied here. The one built-in website is Test Page, the Browser smoke
- * test. These tests keep the catalog, wrapper, generated file-system
- * manifest and running desktop in sync. */
+/* The current build keeps its five core System apps plus a Calculator,
+ * plus Celeste Classic as a sandboxed embed of its existing GitHub Pages
+ * site. No game content is copied here. The one built-in website is Test
+ * Page, the Browser smoke test. These tests keep the catalog, wrapper,
+ * generated file-system manifest and running desktop in sync. */
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -12,7 +12,7 @@ const { JSDOM, VirtualConsole } = require('jsdom');
 
 const ROOT = path.resolve(__dirname, '..');
 const source = (p) => fs.readFileSync(path.join(ROOT, p), 'utf8');
-const SYSTEM_APPS = ['appcenter', 'customize', 'settings', 'about', 'browser', 'celeste-classic'];
+const SYSTEM_APPS = ['appcenter', 'customize', 'settings', 'about', 'calculator', 'browser', 'celeste-classic'];
 const EMBED_URLS = {
   'celeste-classic': 'https://math-halper.github.io/Celeste/1/index.html',
 };
@@ -45,7 +45,7 @@ function catalog() {
   };
 }
 
-test('the catalog is five core apps, one embedded game and the built-in test site', () => {
+test('the catalog is five core apps, a calculator, one embedded game and the built-in test site', () => {
   const { apps, sites, warnings, icons, render, renderCatalogIcon, validIconPath } = catalog();
   assert.deepEqual(Array.from(warnings), [], 'catalog parses without warnings');
   /* Array.from everywhere: the catalogs come from a vm context, so their
@@ -151,7 +151,7 @@ test('every catalog entry points at a real, syntactically valid app module', () 
   /* apps/ holds only the shipped apps plus the developer templates. */
   const folders = fs.readdirSync(path.join(ROOT, 'apps'), { withFileTypes: true })
     .filter((e) => e.isDirectory()).map((e) => e.name).sort();
-  assert.deepEqual(folders, ['_embed', '_template', 'about', 'app-center', 'browser', 'celeste-classic', 'customize', 'settings']);
+  assert.deepEqual(folders, ['_embed', '_template', 'about', 'app-center', 'browser', 'calculator', 'celeste-classic', 'customize', 'settings']);
 });
 
 test('the system manifest still matches the repository exactly', () => {
@@ -192,7 +192,7 @@ test('the system manifest still matches the repository exactly', () => {
     'Manifest and repository disagree — re-run python3 tools/gen-fs-manifest.py');
 });
 
-test('the desktop boots, lists and opens all six catalogued apps', async () => {
+test('the desktop boots, lists and opens all seven catalogued apps', async () => {
   const virtualConsole = new VirtualConsole(), errors = [];
   virtualConsole.on('jsdomError', (err) => errors.push(err.message));
   const dom = new JSDOM('<!doctype html><main id="auth" hidden></main><div id="desktop" hidden></div><div id="toasts"></div>', {
@@ -224,7 +224,7 @@ test('the desktop boots, lists and opens all six catalogued apps', async () => {
     assert.deepEqual(shortcuts.map((s) => s.target), ['settings', 'browser']);
     for (const s of shortcuts) assert.ok(APPS[s.target], `default shortcut to a removed app: ${s.target}`);
 
-    // The start menu shows one System section holding all six apps.
+    // The start menu shows one System section holding all seven apps.
     const menu = w.document.querySelector('#startmenu');
     assert.deepEqual([...menu.querySelectorAll('.sm-cat')].map((e) => e.textContent), ['System']);
     assert.deepEqual([...menu.querySelectorAll('.sm-item')].map((e) => e.dataset.app), SYSTEM_APPS);
@@ -247,6 +247,33 @@ test('the desktop boots, lists and opens all six catalogued apps', async () => {
       }
       w.closeWin(id, true);
     }
+
+    // The Calculator computes — keypad clicks and keyboard keys alike.
+    w.openApp('calculator');
+    const calc = wins.get('calculator').body;
+    const press = (...keys) => keys.forEach((k) => calc.querySelector(`[data-k="${k}"]`).click());
+    const shown = () => calc.querySelector('#calc-display').textContent;
+    press('1', '2', '*', '3', '=');
+    assert.equal(shown(), '36', 'buttons compute');
+    press('ac', '1', '0', '/', '4', '=');
+    assert.equal(shown(), '2.5', 'decimal results');
+    press('ac', '5', '+', '3', '=');
+    assert.equal(shown(), '8');
+    press('=');
+    assert.equal(shown(), '11', 'pressing = repeats the last operation');
+    press('ac', '1', '/', '0', '=');
+    assert.equal(shown(), 'Error', 'division by zero reports an error');
+    press('7');
+    assert.equal(shown(), '7', 'a digit after an error starts fresh');
+    press('neg', 'back');
+    assert.equal(shown(), '0', 'plus/minus and backspace edit the entry');
+    const key = (k) => calc.querySelector('#calc-wrap')
+      .dispatchEvent(new w.KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true }));
+    key('7'); key('*'); key('6'); key('Enter');
+    assert.equal(shown(), '42', 'the keyboard drives the calculator');
+    key('Escape');
+    assert.equal(shown(), '0', 'Escape clears');
+    w.closeWin('calculator', true);
 
     // The Browser registers the catalogued site and offers it on its home page.
     w.openApp('browser');
@@ -316,7 +343,7 @@ test('Customize saves, displays and resets uploaded app icon images', async () =
     const browserWindow = w.eval('wins').get('browser');
     assert.equal(body.querySelector('#cust-files-shortcut'), null, 'Customize still offers a Files shortcut');
     assert.deepEqual([...body.querySelectorAll('#cust-modlist .card b')].map((b) => b.textContent).slice(0, SYSTEM_APPS.length),
-      ['App Center', 'Customize', 'Settings', 'About', 'Browser', 'Celeste Classic']);
+      ['App Center', 'Customize', 'Settings', 'About', 'Calculator', 'Browser', 'Celeste Classic']);
 
     const uploadBrowserIcon = async () => {
       const input = body.querySelector('[data-micon-file="browser"]');
