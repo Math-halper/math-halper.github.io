@@ -40,16 +40,7 @@ and single-file HTML5 games). Each game
 app folder is the game's own files plus a thin proton iframe wrapper, and
 apps/games/index.html is the picker their "all games" links expect.
 
-The start menu groups them by cat=: System (the desktop's own five),
-Productivity (Calculator, Files, Text Editor, PDF Viewer), Media (Image
-Viewer, Media) and Games (30 games: 2048, Bloons Tower Defense 1, Bloons Tower
-Defense 2, Bloons Tower Defense 5, Bloxorz, Breaking The Bank, Celeste
-Classic, Celeste Classic 2, Celeste Community, Cookie Clicker, Drive Mad,
-Escaping The Prison, Fleeing The Complex, Grey Box Testing, Infiltrating
-The Airship, Mari0, Offline Paradise, Pacman, Ruffle Flash Player, Slope,
-Spacebar Clicker, Stack, Stealing The Diamond, Stickman Hook, Super Mario
-64, Super Mario RPG, Tetris, The Impossible Quiz, Tunnel Rush, Web Retro).
-Block order below is menu order within each section.
+The start menu groups them by cat=: System (the desktop’s own five), Productivity (Calculator, Files, Text Editor, PDF Viewer), Media (Image Viewer, Media), Tools (Ruffle Flash Player, Web Retro — the players behind the Flash and cartridge games) and Games (28 games: 2048, Bloons Tower Defense 1, Bloons Tower Defense 2, Bloons Tower Defense 5, Bloxorz, Breaking The Bank, Celeste Classic, Celeste Classic 2, Celeste Community, Cookie Clicker, Drive Mad, Escaping The Prison, Fleeing The Complex, Grey Box Testing, Infiltrating The Airship, Mari0, Offline Paradise, Pacman, Slope, Spacebar Clicker, Stack, Stealing The Diamond, Stickman Hook, Super Mario 64, Super Mario RPG, Tetris, The Impossible Quiz, Tunnel Rush). Block order below is menu order within each section.
 
 IMPORTANT: an id must not be a bare number — JavaScript object key ordering
   hoists integer-like keys to the front of every APPS iteration (this is why
@@ -193,6 +184,27 @@ desc=Play audio and video files stored in your home folder, with your browser's 
 w=940
 h=620
 
+[application]
+id=ruffle-flash-player
+name=Ruffle Flash Player
+path=apps/tools/ruffle-flash-player/app.html
+icon=data/icons/ruffle-flash-player.png
+svg-icon=false
+cat=Tools
+desc=Load and play your own Flash .swf files
+w=980
+h=640
+
+[application]
+id=web-retro
+name=Web Retro
+path=apps/tools/web-retro/app.html
+icon=data/icons/webretro.png
+svg-icon=false
+cat=Tools
+desc=Play retro classics or your own ROMs - N64, SNES, NES, Game Boy
+w=980
+h=640
 [application]
 id=game-2048
 name=2048
@@ -392,17 +404,6 @@ w=980
 h=640
 
 [application]
-id=ruffle-flash-player
-name=Ruffle Flash Player
-path=apps/games/ruffle-flash-player/app.html
-icon=data/icons/ruffle-flash-player.png
-svg-icon=false
-cat=Games
-desc=Load and play your own Flash .swf files
-w=980
-h=640
-
-[application]
 id=slope
 name=Slope
 path=apps/games/slope/app.html
@@ -475,7 +476,7 @@ path=apps/games/super-mario-rpg/app.html
 icon=data/icons/super-mario-rpg.png
 svg-icon=false
 cat=Games
-desc=Play Super Mario RPG in Web Retro - bring your own ROM
+desc=Play Super Mario RPG in Web Retro - the catalog’s classic ROM included
 w=980
 h=640
 
@@ -509,17 +510,6 @@ icon=data/icons/tunnel-rush.png
 svg-icon=false
 cat=Games
 desc=Play Tunnel Rush - dodge through the spinning tunnel
-w=980
-h=640
-
-[application]
-id=web-retro
-name=Web Retro
-path=apps/games/web-retro/app.html
-icon=data/icons/webretro.png
-svg-icon=false
-cat=Games
-desc=Play your own retro ROMs - N64, SNES, NES, Game Boy; load from this computer or proton Files
 w=980
 h=640
 

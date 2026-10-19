@@ -32,7 +32,7 @@ single-file HTML5 games. A small
 too, and **Web Retro** vendors the
 [webretro](https://github.com/BinBashBanana/webretro) emulator build from
 [Gams-Offline/Gams](https://github.com/Gams-Offline/Gams) so you can play your
-own ROM files (no ROMs ship with this repository). The other bundled apps,
+own ROM files too — and it now carries the offline games catalog’s classic ROMs (details in [`CREDITS.md`](CREDITS.md)). The other bundled apps,
 game bundles and earlier built-in sites remain removed (except Test Page).
 
 | App (id) | What it does |
@@ -48,6 +48,8 @@ game bundles and earlier built-in sites remain removed (except Test Page).
 | **PDF Viewer** (`pdf`) | Read PDF files in your browser's own viewer — no extra library, nothing uploaded |
 | **Image Viewer** (`image-viewer`) | View PNG, JPG, GIF, WebP, AVIF, BMP, ICO and SVG files with zoom and a folder playlist |
 | **Media** (`media`) | Play audio and video files stored in your home folder, with your browser's own codecs |
+| **Ruffle Flash Player** (`ruffle-flash-player`) | Load and play your own Flash .swf files |
+| **Web Retro** (`web-retro`) | Play retro classics or your own ROMs — N64, SNES, NES and Game Boy (webretro; the catalog’s classics are bundled) |
 | **2048** (`game-2048`) | Play 2048 - join the tiles |
 | **Bloons Tower Defense 1** (`bloons-tower-defense-1`) | Play Bloons Tower Defense 1 - the original balloon-popping tower defense |
 | **Bloons Tower Defense 2** (`bloons-tower-defense-2`) | Play Bloons Tower Defense 2 - more balloons, more towers |
@@ -66,18 +68,16 @@ game bundles and earlier built-in sites remain removed (except Test Page).
 | **Mari0** (`mari0`) | Play Mari0 — Mario × Portal by Maurice Guégan / Stabyourself (love.js build, vendored from Math-halper/Mario) |
 | **Offline Paradise** (`offline-paradise`) | Play Offline Paradise |
 | **Pacman** (`pacman`) | Play Pacman - the arcade classic |
-| **Ruffle Flash Player** (`ruffle-flash-player`) | Load and play your own Flash .swf files |
 | **Slope** (`slope`) | Play Slope - roll the ball down the neon slope |
 | **Spacebar Clicker** (`spacebar-clicker`) | Play Spacebar Clicker - mash the spacebar |
 | **Stack** (`stack`) | Play Stack - time the falling blocks |
 | **Stealing The Diamond** (`stealing-the-diamond`) | Play Stealing The Diamond - a Henry Stickmin adventure |
 | **Stickman Hook** (`stickman-hook`) | Play Stickman Hook - swing through the levels |
 | **Super Mario 64** (`sm64`) | Play the Super Mario 64 WebAssembly browser build (unofficial fan port, vendored from Math-halper/Mario) |
-| **Super Mario RPG** (`super-mario-rpg`) | Play Super Mario RPG in Web Retro - bring your own ROM |
+| **Super Mario RPG** (`super-mario-rpg`) | Play Super Mario RPG in Web Retro - the catalog’s classic ROM included |
 | **Tetris** (`tetris`) | Play Tetris - the falling-blocks classic |
 | **The Impossible Quiz** (`the-impossible-quiz`) | Play The Impossible Quiz - the wildly unfair quiz |
 | **Tunnel Rush** (`tunnel-rush`) | Play Tunnel Rush - dodge through the spinning tunnel |
-| **Web Retro** (`web-retro`) | Play your own retro ROMs — N64, SNES, NES and Game Boy (webretro); load them from this computer or your proton Files |
 
 Rows are listed in start-menu order: **System**, then **Productivity**, **Media** and **Games**.
 
@@ -108,7 +108,7 @@ runtime dependencies or build step. Optional regression tests use jsdom:
 ## Project layout (everything is a module)
 
 - **Apps:** one folder + HTML file each — `apps/<category>/<name>/app.html`
-  (41 apps in four category folders — `system/`, `productivity/`, `media/`,
+  (41 apps in five category folders — `system/`, `productivity/`, `media/`, `tools/`,
   `games/` — matching the menu sections, plus
   two starting points: `apps/_template/` for a normal app and `apps/_embed/`
   for one that is only a framed page — change its single `EMBED_URL` constant).
@@ -205,7 +205,7 @@ deletes the file.
 - **Menu sections** — the start menu groups the apps by `cat=`: **System**
   (App Center, Customize, Settings, About, Browser), **Productivity**
   (Calculator, Files, Text Editor, PDF Viewer), **Media** (Image Viewer,
-  Media) and **Games** (30 games: 2048, the Bloons TD series, the Henry Stickmin
+  Media), **Tools** (Ruffle Flash Player, Web Retro) and **Games** (28 games: 2048, the Bloons TD series, the Henry Stickmin
   series, Pacman, Tetris, Slope, Tunnel Rush and more), with **My Apps** for
   anything an account adds. The order is `CATS` in `assets/core.js`.
 - **Customize — everything is modular.** Rename any app, change its vector
@@ -270,8 +270,8 @@ the game is © Orteil / DashNet, and the mirror grants no redistribution
 rights (details in [`CREDITS.md`](CREDITS.md)). The 23-game Gams batch is
 copied the same way from [Gams-Offline/Gams](https://github.com/Gams-Offline/Gams) —
 each game is © its respective authors and the mirrors grant no
-redistribution rights; Super Mario RPG ships **without any ROM**, exactly
-like Web Retro (details in [`CREDITS.md`](CREDITS.md)). Web Retro ships
+redistribution rights; Super Mario RPG’s ROM comes straight from that catalog (details in [`CREDITS.md`](CREDITS.md)). Web Retro ships
 its emulator files (webretro, vendored from Gams-Offline/Gams under
-GPL-3.0 — see [`CREDITS.md`](CREDITS.md)), but **no game ROMs** are included:
-you bring your own.
+GPL-3.0 — see [`CREDITS.md`](CREDITS.md)) together with the catalog’s classic
+ROMs — mirrored as-is, each © its respective rights holders — and it still
+plays ROMs you bring yourself.

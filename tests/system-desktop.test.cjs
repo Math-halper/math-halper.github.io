@@ -20,6 +20,7 @@ const ROOT = path.resolve(__dirname, '..');
 const source = (p) => fs.readFileSync(path.join(ROOT, p), 'utf8');
 const SYSTEM_APPS = ['appcenter', 'customize', 'settings', 'about', 'browser',
   'calculator', 'files', 'text-editor', 'pdf', 'image-viewer', 'media',
+  'ruffle-flash-player', 'web-retro',
   'game-2048',
   'bloons-tower-defense-1',
   'bloons-tower-defense-2',
@@ -38,7 +39,6 @@ const SYSTEM_APPS = ['appcenter', 'customize', 'settings', 'about', 'browser',
   'mari0',
   'offline-paradise',
   'pacman',
-  'ruffle-flash-player',
   'slope',
   'spacebar-clicker',
   'stack',
@@ -48,11 +48,10 @@ const SYSTEM_APPS = ['appcenter', 'customize', 'settings', 'about', 'browser',
   'super-mario-rpg',
   'tetris',
   'the-impossible-quiz',
-  'tunnel-rush',
-  'web-retro'];
+  'tunnel-rush'];
 /* Menu sections for each app (data/applications.js cat=), in catalog order.
  * Every new app is filed here with its respective section — the catalog test
- * asserts each app's cat matches, and the boot test asserts the four menu
+ * asserts each app's cat matches, and the boot test asserts the five menu
  * groups, so an unfiled app fails the suite. */
 const SYSTEM_CATS = {
   appcenter: 'System', customize: 'System', settings: 'System', about: 'System', browser: 'System',
@@ -76,7 +75,7 @@ const SYSTEM_CATS = {
   'mari0': 'Games',
   'offline-paradise': 'Games',
   'pacman': 'Games',
-  'ruffle-flash-player': 'Games',
+  'ruffle-flash-player': 'Tools',
   'slope': 'Games',
   'spacebar-clicker': 'Games',
   'stack': 'Games',
@@ -87,7 +86,7 @@ const SYSTEM_CATS = {
   'tetris': 'Games',
   'the-impossible-quiz': 'Games',
   'tunnel-rush': 'Games',
-  'web-retro': 'Games',
+  'web-retro': 'Tools',
 };
 /* Each game app frames the game page that ships in its own folder. */
 const GAME_PAGES = {
@@ -109,7 +108,6 @@ const GAME_PAGES = {
   'mari0': 'apps/games/mari0/index.html',
   'offline-paradise': 'apps/games/offline-paradise/offlineparadise.html',
   'pacman': 'apps/games/pacman/pacman.html',
-  'ruffle-flash-player': 'apps/games/ruffle-flash-player/Ruffle.html',
   'slope': 'apps/games/slope/slope.html',
   'spacebar-clicker': 'apps/games/spacebar-clicker/spacebarclicker.html',
   'stack': 'apps/games/stack/stack.html',
@@ -309,7 +307,7 @@ test('every catalog entry points at a real, syntactically valid app module', () 
     ['apps/games/fleeing-the-complex/data1.js', 20000000],
     ['apps/games/grey-box-testing/greyboxtesting.zip-chunk0.js', 20000000],
     ['apps/games/tunnel-rush/tunnelrush.zip-chunk0.js', 15000000],
-    ['apps/games/ruffle-flash-player/dd0be85ee9c2092132d1.wasm.js', 15000000],
+    ['apps/tools/ruffle-flash-player/dd0be85ee9c2092132d1.wasm.js', 15000000],
     ['apps/games/mari0/love.wasm', 4000000],
     ['apps/games/mari0/game.data', 3000000],
     ['apps/games/sm64/sm64.us.f3dex2e.wasm', 15000000],
@@ -330,7 +328,7 @@ test('every catalog entry points at a real, syntactically valid app module', () 
 
   /* Every app lives inside its category folder — apps/<category>/<folder>/ —
    * and each category folder holds exactly its own apps. */
-  const CAT_DIRS = { System: 'system', Productivity: 'productivity', Media: 'media', Games: 'games' };
+  const CAT_DIRS = { System: 'system', Productivity: 'productivity', Media: 'media', Tools: 'tools', Games: 'games' };
   for (const app of apps) {
     assert.ok(app.path.startsWith(`apps/${CAT_DIRS[app.cat]}/`),
       `${app.id} (${app.cat}) is not filed in apps/${CAT_DIRS[app.cat]}/`);
@@ -344,10 +342,10 @@ test('every catalog entry points at a real, syntactically valid app module', () 
     assert.deepEqual(dirs, expected, `apps/${dir}/ should hold exactly the ${cat} apps`);
   }
 
-  /* apps/ holds the four category folders plus the developer templates. */
+  /* apps/ holds the five category folders plus the developer templates. */
   const folders = fs.readdirSync(path.join(ROOT, 'apps'), { withFileTypes: true })
     .filter((e) => e.isDirectory()).map((e) => e.name).sort();
-  assert.deepEqual(folders, ['_embed', '_template', 'games', 'media', 'productivity', 'system']);
+  assert.deepEqual(folders, ['_embed', '_template', 'games', 'media', 'productivity', 'system', 'tools']);
 });
 
 test('the system manifest still matches the repository exactly', () => {
@@ -437,10 +435,10 @@ test('the desktop boots, lists and opens all forty-one catalogued apps', async (
       else assert.ok(w.eval('FS').stat(s.target), `default shortcut to a missing path: ${s.target}`);
     }
 
-    // The start menu groups all forty-one apps into their four sections.
+    // The start menu groups all forty-one apps into their five sections.
     const menu = w.document.querySelector('#startmenu');
     assert.deepEqual([...menu.querySelectorAll('.sm-cat')].map((e) => e.textContent),
-      ['System', 'Productivity', 'Media', 'Games']);
+      ['System', 'Productivity', 'Media', 'Tools', 'Games']);
     assert.deepEqual([...menu.querySelectorAll('.sm-item')].map((e) => e.dataset.app), SYSTEM_APPS);
 
     // The panel only pins apps that exist, and each app really renders.
@@ -689,7 +687,7 @@ test('Customize saves, displays and resets uploaded app icon images', async () =
     const browserWindow = w.eval('wins').get('browser');
     assert.equal(body.querySelector('#cust-files-shortcut'), null, 'Customize still offers a Files shortcut');
     assert.deepEqual([...body.querySelectorAll('#cust-modlist .card b')].map((b) => b.textContent).slice(0, SYSTEM_APPS.length),
-            ['App Center', 'Customize', 'Settings', 'About', 'Browser', 'Calculator', 'Files', 'Text Editor', 'PDF Viewer', 'Image Viewer', 'Media', '2048', 'Bloons Tower Defense 1', 'Bloons Tower Defense 2', 'Bloons Tower Defense 5', 'Bloxorz', 'Breaking The Bank', 'Celeste Classic', 'Celeste Classic 2', 'Celeste Community', 'Cookie Clicker', 'Drive Mad', 'Escaping The Prison', 'Fleeing The Complex', 'Grey Box Testing', 'Infiltrating The Airship', 'Mari0', 'Offline Paradise', 'Pacman', 'Ruffle Flash Player', 'Slope', 'Spacebar Clicker', 'Stack', 'Stealing The Diamond', 'Stickman Hook', 'Super Mario 64', 'Super Mario RPG', 'Tetris', 'The Impossible Quiz', 'Tunnel Rush', 'Web Retro']);
+            ['App Center', 'Customize', 'Settings', 'About', 'Browser', 'Calculator', 'Files', 'Text Editor', 'PDF Viewer', 'Image Viewer', 'Media', 'Ruffle Flash Player', 'Web Retro', '2048', 'Bloons Tower Defense 1', 'Bloons Tower Defense 2', 'Bloons Tower Defense 5', 'Bloxorz', 'Breaking The Bank', 'Celeste Classic', 'Celeste Classic 2', 'Celeste Community', 'Cookie Clicker', 'Drive Mad', 'Escaping The Prison', 'Fleeing The Complex', 'Grey Box Testing', 'Infiltrating The Airship', 'Mari0', 'Offline Paradise', 'Pacman', 'Slope', 'Spacebar Clicker', 'Stack', 'Stealing The Diamond', 'Stickman Hook', 'Super Mario 64', 'Super Mario RPG', 'Tetris', 'The Impossible Quiz', 'Tunnel Rush']);
 
     const uploadBrowserIcon = async () => {
       const input = body.querySelector('[data-micon-file="browser"]');

@@ -15,7 +15,7 @@ proton menu. The script below is fetched and run by proton's HTML loader
      The game's Flash build and its Gams loader shim are copied from
      Gams-Offline/Gams (g/g/Ruffle/swfs/ and g/). The shim is edited only in
      its two loader paths (the swf data now lives beside it, and the shared
-     Ruffle player lives in apps/games/ruffle-flash-player/); nothing else
+     Ruffle player lives in apps/tools/ruffle-flash-player/); nothing else
      in it changed.
 
      The wrapper frames this folder's own game page — a local page, so the
@@ -44,7 +44,7 @@ registerApp({
       <p class="muted" style="flex:none;margin:0;padding:7px 14px;border-top:1px solid var(--line)">The game's Flash build and its loader shim ship with this app — copied
         verbatim from <a href="https://github.com/Gams-Offline/Gams" target="_blank"
         rel="noopener">Gams-Offline/Gams</a>; the shim's loader paths point at the
-        shared <b>Ruffle Flash Player</b> app in this folder. The game is © its
+        shared <b>Ruffle Flash Player</b> app (in Tools). The game is © its
         respective authors.</p>`;
     const frame = body.querySelector('iframe');
     body.querySelector('[data-e="reload"]').onclick = () => { frame.src = GAME_PAGE; };

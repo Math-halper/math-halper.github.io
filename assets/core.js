@@ -471,9 +471,9 @@ function renderPanelApps() {
  * web-address apps an account saved before adding was disabled, and any
  * category invented in Customize is appended after these. */
 /* Start menu sections, in order. System and My Apps are the built-ins; the
- * catalog's own categories (Productivity, Media, Games) follow in this order,
+ * catalog's own categories (Productivity, Media, Tools, Games) follow in this order,
  * and a catalog can invent more — they are appended after these. */
-const CATS = ['System', 'Productivity', 'Media', 'Games', 'My Apps'];
+const CATS = ['System', 'Productivity', 'Media', 'Tools', 'Games', 'My Apps'];
 function renderStartMenu(q) {
   const sm = MH.$('startmenu'); if (!sm) return;
   const query = (q ?? MH.$('sm-search-input')?.value ?? '').trim().toLowerCase();

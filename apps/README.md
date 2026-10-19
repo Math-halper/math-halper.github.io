@@ -19,8 +19,9 @@ appears in the proton menu, App Center and Customize.
 The current base keeps its five desktop System apps plus the file system
 suite copied from `main` (Files, Text Editor, Image Viewer, Media, PDF
 Viewer), a small Calculator (new code in `apps/productivity/calculator/`) and Web Retro
-(`apps/games/web-retro/`, a vendored webretro emulator build in
-`apps/games/web-retro/webretro/` — see `CREDITS.md`; no ROMs ship with it).
+(`apps/tools/web-retro/`, a vendored webretro emulator build in
+`apps/tools/web-retro/webretro/` — see `CREDITS.md`; it also carries the
+offline games catalog’s classic ROMs).
 The three Celeste Classics apps (`celeste-classic/`, `celeste-two/`,
 `celeste-community/`) carry the actual game files, copied byte-for-byte from
 [Math-halper/Celeste](https://github.com/Math-halper/Celeste) — each app
@@ -67,9 +68,9 @@ see [`data/icons/README.md`](../data/icons/README.md).
    in that file's header): `id`, `name`, `path=apps/<category>/my-app/app.html`, `icon`
    (a name from `assets/icons.js` such as `folder`, `globe` or `star`),
    `cat`, `desc`, `w`, `h`. **Always file the app into its respective menu
-   section with `cat=`** — `System`, `Productivity`, `Media` or `Games` —
+   section with `cat=`** — `System`, `Productivity`, `Media`, `Tools` or `Games` —
    and put its folder in `apps/<category>/` to match (`system/`,
-   `productivity/`, `media/`, `games/`), so the start menu stays organised;
+   `productivity/`, `media/`, `tools/`, `games/`), so the start menu stays organised;
    never add an app without one. Block
    order = menu order within its section. A genuinely new `cat=` name adds a
    new section to the proton menu (the built-in order is
@@ -120,6 +121,8 @@ matching the menu sections (`cat=`, ordered by `CATS` in `assets/core.js`).
 | `productivity/` | PDF Viewer (`pdf`) — read PDFs in your browser's own viewer |
 | `media/` | Image Viewer (`image-viewer`) — PNG, JPG, GIF, WebP, AVIF, BMP, ICO and SVG with zoom and playlists |
 | `media/` | Media (`media`) — play audio and video files from your home folder |
+| `tools/` | Ruffle Flash Player (`ruffle-flash-player`) — the vendored Ruffle Flash player (from Gams-Offline/Gams `g/g/Ruffle/`, without the swfs library) plus its wrapper |
+| `tools/` | Web Retro (`web-retro`) — the vendored webretro emulator (the offline catalog’s classics plus your own ROMs — from this computer or proton Files) |
 | `games/` | 2048 (`game-2048`) — the vendored single-file game (from Gams-Offline/Gams `g/`) plus its wrapper |
 | `games/` | Bloons Tower Defense 1 (`bloons-tower-defense-1`) — the vendored Flash build and loader shim (from Gams-Offline/Gams `g/g/Ruffle/swfs/`; runs on the shared Ruffle player) plus its wrapper |
 | `games/` | Bloons Tower Defense 2 (`bloons-tower-defense-2`) — the vendored Flash build and loader shim (from Gams-Offline/Gams `g/g/Ruffle/swfs/`; runs on the shared Ruffle player) plus its wrapper |
@@ -138,18 +141,16 @@ matching the menu sections (`cat=`, ordered by `CATS` in `assets/core.js`).
 | `games/` | Mari0 (`mari0`) — the vendored love.js build of Mario × Portal (from Math-halper/Mario `mari0/web/`) plus its wrapper |
 | `games/` | Offline Paradise (`offline-paradise`) — the vendored single-file game (from Gams-Offline/Gams `g/`) plus its wrapper |
 | `games/` | Pacman (`pacman`) — the vendored Flash build and loader shim (from Gams-Offline/Gams `g/g/Ruffle/swfs/`; runs on the shared Ruffle player) plus its wrapper |
-| `games/` | Ruffle Flash Player (`ruffle-flash-player`) — the vendored Ruffle Flash player (from Gams-Offline/Gams `g/g/Ruffle/`, without the swfs library) plus its wrapper |
 | `games/` | Slope (`slope`) — the vendored single-file game (from Gams-Offline/Gams `g/`) plus its wrapper |
 | `games/` | Spacebar Clicker (`spacebar-clicker`) — the vendored single-file game (from Gams-Offline/Gams `g/`) plus its wrapper |
 | `games/` | Stack (`stack`) — the vendored single-file game (from Gams-Offline/Gams `g/`) plus its wrapper |
 | `games/` | Stealing The Diamond (`stealing-the-diamond`) — the vendored Flash build and loader shim (from Gams-Offline/Gams `g/g/Ruffle/swfs/`; runs on the shared Ruffle player) plus its wrapper |
 | `games/` | Stickman Hook (`stickman-hook`) — the vendored single-file game (from Gams-Offline/Gams `g/`) plus its wrapper |
 | `games/` | Super Mario 64 (`sm64`) — the vendored WebAssembly browser build (from Math-halper/Mario `sm64/`) plus its wrapper |
-| `games/` | Super Mario RPG (`super-mario-rpg`) — the vendored launcher into Web Retro (from Gams-Offline/Gams `g/`; bring your own ROM) plus its wrapper |
+| `games/` | Super Mario RPG (`super-mario-rpg`) — the vendored launcher into Web Retro (from Gams-Offline/Gams `g/`; the catalog’s ROM is bundled with Web Retro) plus its wrapper |
 | `games/` | Tetris (`tetris`) — the vendored Flash build and loader shim (from Gams-Offline/Gams `g/g/Ruffle/swfs/`; runs on the shared Ruffle player) plus its wrapper |
 | `games/` | The Impossible Quiz (`the-impossible-quiz`) — the vendored Flash build and loader shim (from Gams-Offline/Gams `g/g/Ruffle/swfs/`; runs on the shared Ruffle player) plus its wrapper |
 | `games/` | Tunnel Rush (`tunnel-rush`) — the vendored WebGL build (from Gams-Offline/Gams `g/g/`) plus its wrapper |
-| `games/` | Web Retro (`web-retro`) — the vendored webretro emulator (bring your own ROMs — from this computer or proton Files) |
 | `_template/` | not an app — the starting point for a new one (copy it into its category folder) |
 | `_embed/` | not an app — the starting point for one that is only a framed page (`EMBED_URL`) |
 
