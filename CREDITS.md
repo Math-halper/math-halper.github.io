@@ -47,21 +47,10 @@ authors.
 
 ## What this build ships
 
-Everything above describes how proton was built. The current base keeps five
-core desktop apps — App Center, Customize, Settings, About and Browser — plus
-the five-app file system suite that sits on `assets/fs.js`: **Files**, **Text
-Editor**, **Image Viewer**, **Media** and **PDF Viewer**. All ten live in
-`apps/inbuilt/`. Celeste Classic is added as an iframe-only wrapper around its
-separately hosted Math-halper GitHub Pages; no game content is copied into this
-repository. The rest of the older bundled apps and the game catalogs remain
-removed:
-
-- **14 of the 19 bundled apps** — Notes, Calendar, Contacts, Calculator,
-  Spreadsheet, Presentation, Whiteboard, Logic Sim, Terminal and the five local
-  games (Chess, Checkers, Sudoku, Klondike, Backgammon). The other five —
-  Files, Text Editor, Image Viewer, Media and PDF Viewer — are back, rewritten
-  as static single-file modules on the virtual file system that was kept all
-  along (no Terminal: it needs a shell, and a static page has none).
+  `assets/styles.css` carries the shell's chrome, the classes the shipped apps
+  use (including the file manager/viewer and browser/search blocks), and
+  `tests/` is a single suite for this build, including tests that drive the
+  Files suite end to end.
 - **92 game entries from the older build** — the 19 Proton Arcade titles,
   68 Gams Offline titles and the five local games above (the local five were
   not streamed), catalogued in `data/applications.js` before trimming.
@@ -70,8 +59,8 @@ removed:
   the `.arcade-*` styles, and the two Gams builds that had been copied into
   this repository under `games/gams/g/g/` (*A Dance of Fire and Ice*,
   *Grey Box Testing*) — none of those game builds or the old streamed catalog
-  are bundled here. The two live Pages URLs used by the new wrappers are
-  listed below.
+  are bundled here. The Celeste Classics files that *are* vendored here are
+  documented below.
 - **5 of the 6 built-in websites** — Guide, World History, Maths Resources,
   proton Daily and the Digital Logic Sim web edition (an independent
   re-implementation inspired by Sebastian Lague's MIT-licensed Digital Logic
@@ -81,9 +70,8 @@ removed:
   `data/websites.js` still holds one `[website]` block; the Browser also copes
   with an empty catalog if it is removed.
 - **The styles, icons and tests that only those apps used** —
-  `assets/styles.css` carries the shell's chrome, the classes the shipped apps
-  use, and the file manager/viewer block at the end; `tests/` is a single suite
-  for this build, including three tests that drive the Files suite end to end.
+  `assets/styles.css` carries the shell's chrome plus the classes used by the
+  thirteen shipped app wrappers, and `tests/` is a single suite for this trimmed build.
 
 Nothing in the desktop shell was removed: accounts, the window manager, the
 panel and start menu, per-account desktop shortcuts, the customisation layer,
@@ -115,14 +103,178 @@ those builds are no longer bundled here. Their upstream projects' licences and
 copyrights are unaffected, and this repository grants no rights in their game
 content.
 
-## Live embedded game page
+## Vendored Celeste Classics
 
-The Celeste app folder contains only proton's iframe wrapper. The page loads
-directly from the existing GitHub Pages deployment, and the wrapper provides
-an **Open in new tab** link:
+The three Celeste apps carry the **actual game files**, copied byte-for-byte
+from [Math-halper/Celeste](https://github.com/Math-halper/Celeste) (that
+repository's `classic/`, `two/` and `speed/` folders), one app per game:
 
-- Celeste Classic — [GitHub Pages](https://math-halper.github.io/Celeste/1/index.html) · [source repository](https://github.com/Math-halper/Celeste)
+- `apps/games/celeste-classic/` — Celeste Classic (the PICO-8 export of *Celeste
+  Classic* by Maddy Thorson & Noel Berry), from `classic/`
+- `apps/games/celeste-two/` — *Celeste Classic 2: Lani's Trek* (community follow-up),
+  from `two/`
+- `apps/games/celeste-community/` — the Celeste Classic community hub, its practice
+  mods, downloads and WebEK tool, from `speed/`
 
-The frames are sandboxed without `allow-same-origin`, keeping embedded content
-away from proton's local account storage. No games or game assets are copied
-into this repository.
+Each app folder is the game's own pages plus proton's thin iframe wrapper
+(`app.html`); nothing in the game files was edited. The pages' "all games"
+links go one level up (`href="../"`), as on the source site — `apps/games/index.html`
+is that picker: proton's own "all games" page listing every game in the folder
+(the source repository's root selector is not used). A few hub links point at
+site-absolute
+paths the source site itself doesn't host (`/glossary/` and friends) and stay
+unresolved here, as they do upstream.
+
+The app icons for `celeste-classic` and `celeste-two` are a shared pixel-art
+image uploaded by the repository maintainer; `celeste-community` keeps its
+own icon cropped from the hub's `maddy.png` avatar. Nothing else was redrawn.
+
+All rights in the games, builds and assets remain with their authors (the
+Celeste Classic PICO-8 game is © Maddy Thorson, Noel Berry and the PICO-8
+community; the community follow-up, practice mods and tools are © their
+authors). This repository grants no rights in that content — it is here so
+the three apps run from the user's own repository files.
+
+## Vendored Mario games
+
+Two unofficial Mario fan games are vendored from
+[Math-halper/Mario](https://github.com/Math-halper/Mario) — **only the game
+builds**; that collection's landing page, READMEs and other files are not
+used. Each app folder is the game's own files plus proton's thin iframe
+wrapper (`app.html`); nothing in the game files was edited.
+
+- `apps/games/sm64/` — Super Mario 64: the three build files (`index.html`,
+  `sm64.us.f3dex2e.js`, `sm64.us.f3dex2e.wasm`) of a precompiled WebAssembly
+  port of the SM64 decompilation, byte-for-byte from that collection's `sm64/`
+  folder (itself identical to
+  [incrediblerevived11's build](https://github.com/incrediblerevived11/incrediblerevived11.github.io/tree/main/sm64)
+  @ `a08ec53`). Credit to that host and the original SM64
+  port/decompilation contributors; the build does not identify the full port
+  authorship. **No declared upstream license** — public availability does not
+  grant redistribution rights.
+- `apps/games/mari0/` — *Mari0 — Mario × Portal* by **Maurice Guégan /
+  Stabyourself** ([Stabyourself/mari0](https://github.com/Stabyourself/mari0),
+  v1.6 / LÖVE 11.4, stated **MIT** upstream), byte-for-byte from that
+  collection's `mari0/web/` build. The browser runtime is **love.js** by
+  **Davidobot** (continuing **Tanner Rogalsky's** Emscripten port of LÖVE,
+  both MIT); its license ships as `apps/games/mari0/LOVEJS-LICENSE.txt`, and
+  the build's own credits notice as `apps/games/mari0/CREDITS.txt`. The
+  browser edition's changes (offline stubs for LuaSocket, WebGL GLSL rules,
+  save-folder opening disabled, online/mappack/netplay paths off, a
+  per-source audio-stop workaround for love.js's OpenAL shim, rebuilt portal
+  input) were made upstream of this repository — see that collection's
+  credits.
+
+**These are unofficial fan projects and are not affiliated with Nintendo.**
+Mario, Portal and other third-party artwork, music and trademarks may carry
+separate rights; a code license is not blanket asset clearance. This
+repository grants no rights in Nintendo's game assets, and no permission to
+redistribute them is claimed or implied.
+
+The app icons for `mari0` and `sm64` are key-art images uploaded by the
+repository maintainer (512×512, under `data/icons/`). The same rights note
+applies to them.
+
+## Vendored Cookie Clicker
+
+`apps/games/cookie-clicker/` is Orteil's **Cookie Clicker** idle game,
+copied byte-for-byte from the offline mirror in
+[Gams-Offline/Gams](https://github.com/Gams-Offline/Gams) (`g/g/cookie/` —
+itself the [ozh/cookieclicker](https://github.com/ozh/cookieclicker) mirror;
+its README travels with the game). The one omission is `img/Thumbs.db`, a
+Windows Explorer thumbnail cache that is not part of the game. Nothing in
+the game files was edited.
+
+The game is self-contained — its own `img/`, `snd/`, `loc/` translations and
+minigames all ship in the folder — and saves to the browser's localStorage.
+Some of the original page chrome points at remote URLs (ads, cookie consent,
+Google Fonts, links to Orteil's other work) and fails quietly when offline.
+
+Cookie Clicker is © **Orteil (DashNet)**; the original lives at
+[orteil.dashnet.org/cookieclicker](https://orteil.dashnet.org/cookieclicker/).
+The mirror carries **no license granting redistribution** — the game is here
+as the offline copy the Gams link points at, and no further rights are
+claimed or implied. The app icon is the game's own cookie art from the
+mirror's `img/cookieclicker.png`, scaled into `data/icons/`.
+
+## Vendored Gams-Offline games (batch)
+
+Twenty-three more games ship under `apps/games/`, each copied from
+[Gams-Offline/Gams](https://github.com/Gams-Offline/Gams):
+
+- **Single-file HTML5 games** — Slope, Stickman Hook, Stack, 2048, Spacebar
+  Clicker and Offline Paradise (`g/<name>.html`, one self-contained file
+  each).
+- **Flash classics, played on Ruffle** — Pacman, Tetris, Bloxorz, The
+  Impossible Quiz, Bloons Tower Defense 1/2/5 and the five Henry Stickmin
+  games (Breaking The Bank, Escaping The Prison, Stealing The Diamond,
+  Infiltrating The Airship, Fleeing The Complex). Their builds are the packed
+  SWFs in `g/g/Ruffle/swfs/`, shipped beside each app's tiny Gams loader
+  shim. That shim is edited **only** in its two loader paths (the SWF data
+  now lives beside it; the player is shared as `apps/tools/ruffle-flash-player/`)
+  — nothing else in it changed.
+- **WebGL builds** — Tunnel Rush and Grey Box Testing (`g/g/tunnelrush/`,
+  `g/g/greybox/`) and Drive Mad (`g/g/drivemad/`), copied folder-for-folder.
+- **Ruffle Flash Player** (`apps/tools/ruffle-flash-player/`) — the shared
+  Flash runtime from `g/g/Ruffle/` (without the `swfs/` library — every Flash
+  game app carries its own build). Ruffle itself is open source, MIT or
+  Apache-2.0 ([ruffle-rs/ruffle](https://github.com/ruffle-rs/ruffle)).
+- **Super Mario RPG** (`apps/games/super-mario-rpg/`) — a launcher shim into
+  this repository's own Web Retro (core `snes9x`, `rom=smrpg.smc`), which
+  loads the catalog's bundled ROM (see the Web Retro section).
+
+Each game is © its respective authors — for example the Henry Stickmin series
+by PuffballsUnited (Innersloth), the Bloons series by Ninja Kiwi, Pac-Man ©
+Bandai Namco, Tetris © Tetris Holding, 2048 by Gabriele Cirulli. The mirrors
+carry **no license granting redistribution**; they are here as the offline
+copies the Gams links point at, and no further rights are claimed or implied.
+The app icons are the Gams collection's own icon images for each game, scaled
+into `data/icons/`.
+
+## Vendored emulator (Web Retro)
+
+The Web Retro app (`apps/tools/web-retro/`) vendors the **webretro** emulator —
+RetroArch compiled for the web by
+[BinBashBanana/webretro](https://github.com/BinBashBanana/webretro)
+(GPL-3.0, webretro 6.5) — as copied into
+[Gams-Offline/Gams](https://github.com/Gams-Offline/Gams) (`g/g/webretro/`):
+
+- `apps/tools/web-retro/webretro/` is that build: `launch.html`, `main.js`, the
+  `cores/` bundles for mupen64plus_next (N64), snes9x (SNES), nestopia (NES)
+  and mgba (GB/GBC/GBA) — the libretro cores are GPL-licensed parts of
+  libretro/RetroArch — and the `assets/` they load. The catalog's original `roms/`
+  library from Gams' `g/g/webretro/` now lives in
+  `apps/tools/web-retro/webretro/roms/` — the seven packed ROMs behind the
+  classic cartridge games (see Rights below). The GIMP source
+  `controller_layout.xcf` is not a runtime asset and is omitted; everything
+  else is byte-for-byte as upstream. The core/wasm and ROM data-URL wrappers
+  are Gams' `file://`-friendly packaging of those files.
+- `apps/tools/web-retro/app.html` is proton's launcher, adapted from Gams'
+  `g/webretro.html`: the same core list and BroadcastChannel ROM hand-off to
+  `webretro/launch.html?rom=channel`, with the UI rebuilt on proton's widgets
+  and the ROM name URL-encoded. The ROM can come from either file system —
+  the device's own file picker, or the proton virtual file system (proton
+  Files, read with `FS.readBlob`).
+- The app icon is Gams' `img/webretro.png`, saved as
+  `data/icons/webretro.png` and set as the catalog default
+  (`icon=data/icons/webretro.png`, `svg-icon=false`).
+
+**The classic ROMs come from the offline games catalog.** At the maintainer's
+request, `apps/tools/web-retro/webretro/roms/` carries the original `roms/`
+library from Gams' `g/g/webretro/` — the packed ROMs behind the catalog's
+classics (Super Mario World, Super Mario RPG, The Legend of Zelda: A Link to
+the Past, EarthBound, Super Mario Bros., Pokémon Sapphire and Paper Mario 64),
+so they run out of the box. Those are commercial games © Nintendo, Square,
+Creatures, HAL Laboratory, Game Freak and their respective rights holders:
+the Gams mirror grants no redistribution rights and this repository grants
+none either — the files are mirrored here as-is. Web Retro still runs any ROM
+file you choose — from your own device or from proton's virtual file system —
+handed to the emulator in-page over a BroadcastChannel; those never leave the
+browser. If you hold rights in a bundled ROM and want it removed, open an
+issue or pull request and it will be taken down.
+
+The webretro files stay under their upstream licence (GPL-3.0, © the webretro
+and libretro authors) and are distributed here as a separate part of this
+AGPL-3.0-only repository — GPL-3.0 section 13 permits the combination. Their
+in-file source headers and upstream links are unchanged. Not affiliated with
+Nintendo or the libretro organisation.

@@ -1,10 +1,6 @@
 # proton apps — one app per folder
 
-Every app is a **single HTML file in its own folder**. The apps built into this
-site live under **[`inbuilt/`](inbuilt/)**: `apps/inbuilt/<app-name>/app.html`.
-The one exception is the Celeste Classic wrapper, which frames a page hosted
-elsewhere and stays directly under `apps/`:
-`apps/celeste-classic/app.html`.
+Every app is a **single HTML file in its own folder**: `apps/<category>/<app-name>/app.html`.
 There is no build step. The list of apps — name, location (path), icon,
 category, description and window size — lives in **one catalog file**:
 [`data/applications.js`](../data/applications.js), one `[application]` block
@@ -20,18 +16,28 @@ appears in the proton menu, App Center and Customize.
 > web-address apps — everything is part of this static website. "Add your own
 > app" below is the *developer* workflow for changing the site's code.
 
-The current base keeps its five core desktop apps and the five-app file system
-suite (Files, Text Editor, Image Viewer, Media, PDF Viewer), all in
-`apps/inbuilt/`.
-Celeste Classic is added as
-a small wrapper around its existing GitHub Pages site, loaded live in a
-sandboxed iframe from its own `apps/celeste-classic/` folder — it is not an
-inbuilt app, so it does not live in `apps/inbuilt/`. This repository does not
-contain its game code, assets or copies of the source repository.
-The other previously bundled apps (Notes, Calendar, Spreadsheet, Whiteboard,
-Presentation, Terminal, the games) and the game catalogs remain removed. The
-only built-in website is **Test Page** (the one entry in `data/websites.js`;
-see [`websites/README.md`](../websites/README.md)).
+The current base keeps its five desktop System apps plus the file system
+suite copied from `main` (Files, Text Editor, Image Viewer, Media, PDF
+Viewer), a small Calculator (new code in `apps/productivity/calculator/`) and Web Retro
+(`apps/tools/web-retro/`, a vendored webretro emulator build in
+`apps/tools/web-retro/webretro/` — see `CREDITS.md`; it also carries the
+offline games catalog’s classic ROMs).
+The three Celeste Classics apps (`celeste-classic/`, `celeste-two/`,
+`celeste-community/`) carry the actual game files, copied byte-for-byte from
+[Math-halper/Celeste](https://github.com/Math-halper/Celeste) — each app
+folder is the game's own pages plus a thin iframe wrapper. The two Mario
+games (`mari0/`, `sm64/`) carry their game builds byte-for-byte from
+[Math-halper/Mario](https://github.com/Math-halper/Mario) — only the games,
+none of that collection's other files. Cookie Clicker (`cookie-clicker/`)
+carries Orteil's idle game byte-for-byte from the offline mirror in
+[Gams-Offline/Gams](https://github.com/Gams-Offline/Gams) (`g/g/cookie/`). A 23-game batch from the same Gams collection (Flash
+classics on the shared Ruffle player, Unity WebGL builds and single-file
+HTML5 games) joins them.
+`apps/games/index.html`
+is the "all games" picker their back-links expect (see `CREDITS.md`).
+The previously bundled apps and game catalogs remain removed. The only
+built-in website is **Test Page** (the one entry in `data/websites.js`; see
+[`websites/README.md`](../websites/README.md)).
 
 In **Customize → App modules**, choose a named vector icon or upload a PNG,
 JPG, WebP, GIF, BMP or AVIF image. Images are resized to at most 128 pixels,
@@ -45,9 +51,8 @@ see [`data/icons/README.md`](../data/icons/README.md).
 
 ## Add your own app (developer workflow)
 
-1. Copy the `apps/_template/` folder into `apps/inbuilt/` and rename it, e.g.
-   `apps/inbuilt/my-app/` (its "open proton" fallback link is one level deeper
-   there: `../../../index.html`).
+1. Copy the `apps/_template/` folder into the category folder it belongs in
+   and rename it, e.g. `apps/games/my-app/`.
    If the app is only **one framed page** — a build, a doc, another site —
    copy `apps/_embed/` instead and skip to step 3: its module is a toolbar
    (address, Reload, Open in new tab) plus a full-height sandboxed `<iframe>`,
@@ -60,37 +65,30 @@ see [`data/icons/README.md`](../data/icons/README.md).
    app. Template folders are never registered or deployed —
    `tools/gen-fs-manifest.py` skips every underscore-prefixed folder.
 2. Add ONE `[application]` block to `data/applications.js` (copy the template
-   in that file's header): `id`, `name`, `path=apps/inbuilt/my-app/app.html`,
-   `icon`
+   in that file's header): `id`, `name`, `path=apps/<category>/my-app/app.html`, `icon`
    (a name from `assets/icons.js` such as `folder`, `globe` or `star`),
-   `cat`, `desc`, `w`, `h`. Block order = menu order. A new `cat=` name adds a
-   new section to the proton menu (the built-in order is `CATS` in
-   `assets/core.js`: `System`, `My Apps`, then anything else you invent).
-3. Edit `apps/inbuilt/my-app/app.html` and write the `render` function (the
-   app's code). Reload proton.
-4. Re-run `python3 tools/gen-search-index.py` (so the new app's prose is
-   searchable) and `python3 tools/gen-fs-manifest.py` (so the new file appears
-   in the virtual file system — always in that order, the manifest records the
-   index's size), then `npm test`.
-
-Your app's **header comment is its description in search**: `tools/gen-search-index.py`
-indexes an app module's own `/* … */` comments, so the paragraph you write at
-the top of the module is what a search result quotes. Write it for a reader,
-not for yourself.
-
-Search also decides whether a file **answers** a word or merely **mentions** it:
-a catalogued app or website answers its own name, and any file answers words in
-its title, file name or description. The Browser lists answers as results and
-relegates the rest to a *Mentioned in passing* list, so a word your app is about
-belongs in its name or description — not only somewhere in the code. When
-nothing in the repository answers a word, the Browser says so instead of
-promoting a file that uses it once: proton searches the repository, it is not a
-dictionary.
+   `cat`, `desc`, `w`, `h`. **Always file the app into its respective menu
+   section with `cat=`** — `System`, `Productivity`, `Media`, `Tools` or `Games` —
+   and put its folder in `apps/<category>/` to match (`system/`,
+   `productivity/`, `media/`, `tools/`, `games/`), so the start menu stays organised;
+   never add an app without one. Block
+   order = menu order within its section. A genuinely new `cat=` name adds a
+   new section to the proton menu (the built-in order is
+   `CATS` in `assets/core.js`: `System`, `Productivity`, `Media`, `Games`,
+   `My Apps`, then anything else you invent).
+3. Edit `apps/<category>/my-app/app.html` and write the `render` function
+   (the app's code). Reload proton.
+4. Re-run `python3 tools/gen-fs-manifest.py` so the new file appears in the
+   virtual file system, then `npm test`.
 
 Your app can use: `userData` (the account's saved data), `saveData()`,
 `openApp(id)`, `MH.toast(...)`, `MH.download(...)`, `FS` (the virtual file
 system — `FS.read`, `FS.write`, `FS.list`, `FS.appFor`, …) and the CSS classes
-in `assets/styles.css` (`.btn`, `.card`, `.appbar`, `.stat-grid`, …). Look at
+in `assets/styles.css` (`.btn`, `.card`, `.appbar`, `.stat-grid`, …). Every
+open/save should ask which file system to use — `MH.askFileSource('open'|'save')`
+returns `'device'` (your Files, this computer) or `'vfs'` (the proton file
+system); `MH.devicePick(accept)`, `MH.downloadBlob(name, blob)` and
+`MH.vfsPick({...})` (browse/provide a path) are the two sides. Look at
 `apps/_template/app.html` — the starting point. The account data model in
 `assets/store.js` still carries `notes`, `files`, `dirs`, `events`, `contacts`,
 `sheets`, `slides`, `boards` and `games`, so an app added back can pick up
@@ -108,23 +106,53 @@ exactly where the old one left off.
 
 ## The apps
 
-Everything in `inbuilt/` is built into this site; `celeste-classic/` and the
-two `_`-prefixed starting points sit next to it, directly under `apps/`.
+Apps live in their category folder — `apps/<category>/<app folder>/app.html` —
+matching the menu sections (`cat=`, ordered by `CATS` in `assets/core.js`).
 
-| Folder | App (id) |
+| Category | App (id) |
 | --- | --- |
-| `inbuilt/app-center/` | App Center (`appcenter`) — hide/restore built-ins, manage the account's saved apps & websites |
-| `inbuilt/customize/` | Customize (`customize`) — app modules, vector or uploaded image icons, themes, wallpapers, desktop parts, reset |
-| `inbuilt/settings/` | Settings (`settings`) — account, wallpaper & accent, password, backup, accounts on this device |
-| `inbuilt/about/` | About (`about`) — provenance, licence, what's inside |
-| `inbuilt/browser/` | Browser (`browser`) — tabs, back/forward, bookmarks and history; searches this repository when you type words — files that answer them as results, files that merely mention them below, and no result at all when nothing here defines the word — and visits an address when you type one; Test Page, saved websites, external addresses, VFS HTML files and a reader that marks your matches |
-| `inbuilt/files/` | Files (`files`) — the file manager: `/` (read-only system tree) and `/home/<you>` (yours); create, rename, move, copy, import, search, download as ZIP, desktop shortcuts |
-| `inbuilt/text-editor/` | Text Editor (`text-editor`) — edit the text files in your home folder; system files open read-only with *Save a copy…* |
-| `inbuilt/image-viewer/` | Image Viewer (`image-viewer`) — PNG, JPG, GIF, WebP, AVIF, BMP, ICO, SVG, with zoom and prev/next through the folder |
-| `inbuilt/media/` | Media (`media`) — audio and video, played with your browser's own codecs through a blob URL, with a playlist |
-| `inbuilt/pdf/` | PDF Viewer (`pdf`) — PDFs in the browser's built-in viewer (id `pdf`; the legacy id `pdf-viewer` is still mapped to it) |
-| `celeste-classic/` | Celeste Classic (`celeste-classic`) — [hosted game page](https://math-halper.github.io/Celeste/1/index.html), embedded with the shared safe iframe wrapper |
-| `_template/` | not an app — the starting point for a new one (copy it into `inbuilt/`) |
+| `system/` | App Center (`appcenter`) — hide/restore built-ins, manage the account's saved apps & websites |
+| `system/` | Customize (`customize`) — app modules, vector or uploaded image icons, themes, wallpapers, desktop parts, reset |
+| `system/` | Settings (`settings`) — account, wallpaper & accent, password, backup, accounts on this device |
+| `system/` | About (`about`) — provenance, licence, what's inside |
+| `system/` | Browser (`browser`) — Test Page, saved websites, external addresses and VFS HTML files |
+| `productivity/` | Calculator (`calculator`) — quick maths from the keypad or your keyboard |
+| `productivity/` | Files (`files`) — browse, create, rename, move, import, search and download the virtual file system |
+| `productivity/` | Text Editor (`text-editor`) — edit text files in your home folder; proton's own files open read-only |
+| `productivity/` | PDF Viewer (`pdf`) — read PDFs in your browser's own viewer |
+| `media/` | Image Viewer (`image-viewer`) — PNG, JPG, GIF, WebP, AVIF, BMP, ICO and SVG with zoom and playlists |
+| `media/` | Media (`media`) — play audio and video files from your home folder |
+| `tools/` | Ruffle Flash Player (`ruffle-flash-player`) — the vendored Ruffle Flash player (from Gams-Offline/Gams `g/g/Ruffle/`, without the swfs library) plus its wrapper |
+| `tools/` | Web Retro (`web-retro`) — the vendored webretro emulator (the offline catalog’s classics plus your own ROMs — from this computer or proton Files) |
+| `games/` | 2048 (`game-2048`) — the vendored single-file game (from Gams-Offline/Gams `g/`) plus its wrapper |
+| `games/` | Bloons Tower Defense 1 (`bloons-tower-defense-1`) — the vendored Flash build and loader shim (from Gams-Offline/Gams `g/g/Ruffle/swfs/`; runs on the shared Ruffle player) plus its wrapper |
+| `games/` | Bloons Tower Defense 2 (`bloons-tower-defense-2`) — the vendored Flash build and loader shim (from Gams-Offline/Gams `g/g/Ruffle/swfs/`; runs on the shared Ruffle player) plus its wrapper |
+| `games/` | Bloons Tower Defense 5 (`bloons-tower-defense-5`) — the vendored Flash build and loader shim (from Gams-Offline/Gams `g/g/Ruffle/swfs/`; runs on the shared Ruffle player) plus its wrapper |
+| `games/` | Bloxorz (`bloxorz`) — the vendored Flash build and loader shim (from Gams-Offline/Gams `g/g/Ruffle/swfs/`; runs on the shared Ruffle player) plus its wrapper |
+| `games/` | Breaking The Bank (`breaking-the-bank`) — the vendored Flash build and loader shim (from Gams-Offline/Gams `g/g/Ruffle/swfs/`; runs on the shared Ruffle player) plus its wrapper |
+| `games/` | Celeste Classic (`celeste-classic`) — the vendored PICO-8 game (from Math-halper/Celeste `classic/`) plus its wrapper |
+| `games/` | Celeste Classic 2 (`celeste-two`) — the vendored Lani's Trek game (from Math-halper/Celeste `two/`) plus its wrapper |
+| `games/` | Celeste Community (`celeste-community`) — the vendored community hub, practice mods and tools (from Math-halper/Celeste `speed/`) plus its wrapper |
+| `games/` | Cookie Clicker (`cookie-clicker`) — the vendored offline mirror of Orteil's game (from Gams-Offline/Gams `g/g/cookie/`, minus `img/Thumbs.db`) plus its wrapper |
+| `games/` | Drive Mad (`drive-mad`) — the vendored WebGL build (from Gams-Offline/Gams `g/g/`) plus its wrapper |
+| `games/` | Escaping The Prison (`escaping-the-prison`) — the vendored Flash build and loader shim (from Gams-Offline/Gams `g/g/Ruffle/swfs/`; runs on the shared Ruffle player) plus its wrapper |
+| `games/` | Fleeing The Complex (`fleeing-the-complex`) — the vendored Flash build and loader shim (from Gams-Offline/Gams `g/g/Ruffle/swfs/`; runs on the shared Ruffle player) plus its wrapper |
+| `games/` | Grey Box Testing (`grey-box-testing`) — the vendored WebGL build (from Gams-Offline/Gams `g/g/`) plus its wrapper |
+| `games/` | Infiltrating The Airship (`infiltrating-the-airship`) — the vendored Flash build and loader shim (from Gams-Offline/Gams `g/g/Ruffle/swfs/`; runs on the shared Ruffle player) plus its wrapper |
+| `games/` | Mari0 (`mari0`) — the vendored love.js build of Mario × Portal (from Math-halper/Mario `mari0/web/`) plus its wrapper |
+| `games/` | Offline Paradise (`offline-paradise`) — the vendored single-file game (from Gams-Offline/Gams `g/`) plus its wrapper |
+| `games/` | Pacman (`pacman`) — the vendored Flash build and loader shim (from Gams-Offline/Gams `g/g/Ruffle/swfs/`; runs on the shared Ruffle player) plus its wrapper |
+| `games/` | Slope (`slope`) — the vendored single-file game (from Gams-Offline/Gams `g/`) plus its wrapper |
+| `games/` | Spacebar Clicker (`spacebar-clicker`) — the vendored single-file game (from Gams-Offline/Gams `g/`) plus its wrapper |
+| `games/` | Stack (`stack`) — the vendored single-file game (from Gams-Offline/Gams `g/`) plus its wrapper |
+| `games/` | Stealing The Diamond (`stealing-the-diamond`) — the vendored Flash build and loader shim (from Gams-Offline/Gams `g/g/Ruffle/swfs/`; runs on the shared Ruffle player) plus its wrapper |
+| `games/` | Stickman Hook (`stickman-hook`) — the vendored single-file game (from Gams-Offline/Gams `g/`) plus its wrapper |
+| `games/` | Super Mario 64 (`sm64`) — the vendored WebAssembly browser build (from Math-halper/Mario `sm64/`) plus its wrapper |
+| `games/` | Super Mario RPG (`super-mario-rpg`) — the vendored launcher into Web Retro (from Gams-Offline/Gams `g/`; the catalog’s ROM is bundled with Web Retro) plus its wrapper |
+| `games/` | Tetris (`tetris`) — the vendored Flash build and loader shim (from Gams-Offline/Gams `g/g/Ruffle/swfs/`; runs on the shared Ruffle player) plus its wrapper |
+| `games/` | The Impossible Quiz (`the-impossible-quiz`) — the vendored Flash build and loader shim (from Gams-Offline/Gams `g/g/Ruffle/swfs/`; runs on the shared Ruffle player) plus its wrapper |
+| `games/` | Tunnel Rush (`tunnel-rush`) — the vendored WebGL build (from Gams-Offline/Gams `g/g/`) plus its wrapper |
+| `_template/` | not an app — the starting point for a new one (copy it into its category folder) |
 | `_embed/` | not an app — the starting point for one that is only a framed page (`EMBED_URL`) |
 
 ### Desktop shortcut workflow

@@ -1,11 +1,8 @@
 /* proton — HTML module loader.
  *
- * Each app is an apps/inbuilt/<name>/app.html containing a
- * <script data-proton-app> registration block (the Celeste Classic wrapper is
- * the one app outside that folder: apps/celeste-classic/app.html). Metadata
- * lives in data/applications.js, where every app's path is listed; built-in
- * sites are standalone websites/<name>/site.html pages. Nothing needs a build
- * step — the loader only ever fetches the catalog's own paths.
+ * Each app is an apps/<category>/<name>/app.html containing a <script data-proton-app>
+ * registration block. Metadata lives in data/applications.js; built-in sites
+ * are standalone websites/<name>/site.html pages. Nothing needs a build step.
  *
  * Local desktop apps load at boot. A streamed app (streamed=true in the
  * catalog) instead gets a lightweight registered placeholder that fetches

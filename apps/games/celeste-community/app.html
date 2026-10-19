@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Celeste Community - proton app</title>
+</head>
+<body>
+<p>This file is a proton app. It is not meant to be opened on its own:
+open <a href="../../../index.html">proton</a> and launch <b>Celeste Community</b>
+from the proton menu. The script below is fetched and run by proton's HTML
+loader (assets/html-loader.js) at boot.</p>
+<!-- VENDORED GAME HUB — proton's wrapper plus the actual Celeste community
+     files.
+
+     Every file in this folder (the hub page, practice-mod pages and their
+     builds, downloads.html, webek.html and its build, styles.css, images and
+     font/) is copied byte-for-byte from Math-halper/Celeste (its speed/
+     folder). Nothing in them was edited. The hub's back link goes one level
+     up (href="../"), as on the source site; apps/games/index.html is the page that
+     link expects — proton's all-games picker for this folder.
+
+     The wrapper frames this folder's own index.html — a local page, so the
+     frame is NOT sandboxed and may use keyboard, audio and fullscreen like
+     any desktop app. The practice mods play from here; the hub's Discord,
+     itch.io, speedrun.com and lexaloffle.com links open on the web when
+     clicked. -->
+<script data-proton-app>
+(() => {
+/* proton app module: vendored game wrapper — edit this file to change this app.
+ * Loaded by index.html; calls registerApp() (see apps/README.md).
+ * Metadata (name, icon, cat, desc, w, h) lives in data/applications.js. */
+'use strict';
+
+/* =====================================================================
+   The hub page that ships in this folder.
+   ===================================================================== */
+const GAME_PAGE = 'apps/games/celeste-community/index.html';
+/* --------------------------------------------------------------------- */
+
+registerApp({
+  render(body) {
+    body.innerHTML = `${bar('Celeste Community', `<span class="muted embed-src" title="${MH.esc(GAME_PAGE)}">${MH.esc(GAME_PAGE)}</span>
+      <button class="btn sm" data-e="reload">${iconSvg('refresh')} Reload</button>
+      <button class="btn sm primary" data-e="ext">${iconSvg('external')} Open in new tab</button>`)}
+      <div class="app-main local-page"><iframe class="site-frame" title="Celeste Community" src="${MH.esc(GAME_PAGE)}"
+        allow="autoplay; fullscreen; pointer-lock; gamepad" allowfullscreen></iframe></div>
+      <p class="muted" style="flex:none;margin:0;padding:7px 14px;border-top:1px solid var(--line)">The hub, its
+        practice mods and tools ship with this app — copied verbatim from
+        <a href="https://github.com/Math-halper/Celeste" target="_blank" rel="noopener">Math-halper/Celeste</a>.
+        External links (Discord, itch.io, speedrun.com) leave the app in this frame; <b>Reload</b> brings the hub
+        back.</p>`;
+    const frame = body.querySelector('iframe');
+    body.querySelector('[data-e="reload"]').onclick = () => { frame.src = GAME_PAGE; };
+    body.querySelector('[data-e="ext"]').onclick = () => window.open(GAME_PAGE, '_blank', 'noopener');
+  },
+});
+})();
+</script>
+<style>
+/* The toolbar path, truncated like the Browser's. */
+.embed-src{max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}
+</style>
+</body>
+</html>

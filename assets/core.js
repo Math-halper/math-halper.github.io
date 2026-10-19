@@ -1,11 +1,11 @@
 /* proton — auth screens, desktop, panel, start menu and window manager.
- * Every app lives in its own apps/inbuilt/<name>/app.html module (loaded via
+ * Every app lives in its own apps/<category>/<name>/app.html module (loaded via
  * assets/html-loader.js); the list of apps and all their metadata (name,
  * icon, category, description, window size) live in the catalog
- * data/applications.js, parsed by assets/config-loader.js. proton ships ten
- * System apps — the five desktop apps plus the file system suite (Files, Text
- * Editor, Image Viewer, Media, PDF Viewer) — and one sandboxed GitHub Pages
- * game embed.
+ * data/applications.js, parsed by assets/config-loader.js. proton ships the
+ * five desktop System apps, the file system suite (Files, Text Editor, Image
+ * Viewer, Media, PDF Viewer), a Calculator, Web Retro and Ruffle Flash Player
+ * (the Tools), the bundled games and the three Celeste Classics (41 apps).
  * Built-in websites use the same catalog system (data/websites.js) and are
  * framed by the Browser app (Test Page is the only built-in site).
  * Window chrome/panel styling follows Mixt's Mint-Y theme.
@@ -466,7 +466,7 @@ function renderPanelApps() {
   const ids = [...new Set([...pinned, ...wins.keys()])].filter((id) => !(userData.hiddenApps || []).includes(id));
   box.innerHTML = ids.filter((id) => APPS[id]).map((id) => {
     const a = APPS[id], run = wins.has(id), act = activeApp === id;
-    return `<button class="pitem ${run ? 'running' : ''} ${act ? 'active' : ''}" data-app="${id}" title="${MH.esc(a.name)}${run ? ' (open)' : ''}"><span>${appIcon(a)}</span>${(pinned.includes(id) && !(userData.settings.components || {}).panelLabels) ? '' : `<span class="pl">${MH.esc(a.name)}</span>`}</button>`;
+    return `<button class="pitem ${run ? 'running' : ''} ${act ? 'active' : ''}" data-app="${id}" title="${MH.esc(a.name)}${run ? ' (open)' : ''}"><span>${appIcon(a)}</span>${(userData.settings.components || {}).panelLabels ? `<span class="pl">${MH.esc(a.name)}</span>` : ''}</button>`;
   }).join('');
   box.querySelectorAll('.pitem').forEach((b) => b.onclick = () => {
     const id = b.dataset.app;
@@ -476,7 +476,10 @@ function renderPanelApps() {
 /* Menu category order. proton ships System apps only; 'My Apps' holds the
  * web-address apps an account saved before adding was disabled, and any
  * category invented in Customize is appended after these. */
-const CATS = ['System', 'My Apps'];
+/* Start menu sections, in order. System and My Apps are the built-ins; the
+ * catalog's own categories (Productivity, Media, Tools, Games) follow in this order,
+ * and a catalog can invent more — they are appended after these. */
+const CATS = ['System', 'Productivity', 'Media', 'Tools', 'Games', 'My Apps'];
 function renderStartMenu(q) {
   const sm = MH.$('startmenu'); if (!sm) return;
   const query = (q ?? MH.$('sm-search-input')?.value ?? '').trim().toLowerCase();
@@ -657,6 +660,4 @@ function bar(title, extra = '') {
 function confirmBox(msg) { return confirm(msg); }
 
 
-/* App modules live in apps/inbuilt/<app-name>/app.html (Celeste Classic is
- * the one wrapper outside it: apps/celeste-classic/app.html) — see
- * apps/README.md. */
+/* App modules live in apps/<category>/<app-name>/app.html — see apps/README.md. */

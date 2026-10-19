@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Super Mario 64 - proton app</title>
+</head>
+<body>
+<p>This file is a proton app. It is not meant to be opened on its own:
+open <a href="../../../index.html">proton</a> and launch <b>Super Mario 64</b>
+from the proton menu. The script below is fetched and run by proton's HTML
+loader (assets/html-loader.js) at boot.</p>
+<!-- VENDORED GAME — proton's wrapper plus the actual Super Mario 64 build.
+
+     index.html, sm64.us.f3dex2e.js and sm64.us.f3dex2e.wasm are copied
+     byte-for-byte from Math-halper/Mario (its sm64/ folder) — the three build
+     files of a precompiled WebAssembly port of the SM64 decompilation, as
+     hosted by incrediblerevived11. Nothing here was edited; only the game
+     build was taken — the collection's landing page, READMEs and other files
+     were not. The page's "All games" link goes one level up (href="../"), as
+     on the source site; apps/games/index.html is that picker.
+
+     These are unofficial fan projects with no affiliation to Nintendo; the
+     build carries no upstream license and grants no rights in Nintendo's
+     game assets — see CREDITS.md.
+
+     The wrapper frames this folder's own index.html — a local page, so the
+     frame is NOT sandboxed and may use keyboard, mouse, audio and fullscreen
+     like any desktop app. Click the game once to capture keyboard and mouse. -->
+<script data-proton-app>
+(() => {
+/* proton app module: vendored game wrapper — edit this file to change this app.
+ * Loaded by index.html; calls registerApp() (see apps/README.md).
+ * Metadata (name, icon, cat, desc, w, h) lives in data/applications.js. */
+'use strict';
+
+/* =====================================================================
+   The game page that ships in this folder.
+   ===================================================================== */
+const GAME_PAGE = 'apps/games/sm64/index.html';
+/* --------------------------------------------------------------------- */
+
+registerApp({
+  render(body) {
+    body.innerHTML = `${bar('Super Mario 64', `<span class="muted embed-src" title="${MH.esc(GAME_PAGE)}">${MH.esc(GAME_PAGE)}</span>
+      <button class="btn sm" data-e="reload">${iconSvg('refresh')} Reload</button>
+      <button class="btn sm primary" data-e="ext">${iconSvg('external')} Open in new tab</button>`)}
+      <div class="app-main local-page"><iframe class="site-frame" title="Super Mario 64" src="${MH.esc(GAME_PAGE)}"
+        allow="autoplay; fullscreen; pointer-lock; gamepad" allowfullscreen></iframe></div>
+      <p class="muted" style="flex:none;margin:0;padding:7px 14px;border-top:1px solid var(--line)">The game files
+        ship with this app — copied verbatim from <a href="https://github.com/Math-halper/Mario" target="_blank"
+        rel="noopener">Math-halper/Mario</a>. Unofficial fan build; not affiliated with Nintendo.</p>`;
+    const frame = body.querySelector('iframe');
+    body.querySelector('[data-e="reload"]').onclick = () => { frame.src = GAME_PAGE; };
+    body.querySelector('[data-e="ext"]').onclick = () => window.open(GAME_PAGE, '_blank', 'noopener');
+  },
+});
+})();
+</script>
+<style>
+/* The toolbar path, truncated like the Browser's. */
+.embed-src{max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}
+</style>
+</body>
+</html>

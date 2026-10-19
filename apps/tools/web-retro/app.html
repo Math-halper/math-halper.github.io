@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Web Retro - proton app</title>
+</head>
+<body>
+<p>This file is a proton app. It is not meant to be opened on its own:
+open <a href="../../../index.html">proton</a> and launch <b>Web Retro</b> from the
+proton menu. The script below is fetched and run by proton's HTML loader
+(assets/html-loader.js) at boot.</p>
+<!-- proton app: everything that registers and renders this app lives in
+     this one script block. Edit it, then reload proton. -->
+<script data-proton-app>
+/* proton app module: web-retro — a ROM launcher around the vendored webretro
+ * emulator build in apps/tools/web-retro/webretro/ (see CREDITS.md).
+ *
+ * The launcher flow is adapted from Gams-Offline/Gams g/webretro.html: pick a
+ * core, choose a ROM, then hand the file to webretro/launch.html over a
+ * BroadcastChannel (?rom=channel) — the ROM never leaves the browser. The ROM
+ * can come from EITHER file system: "From this computer" opens the device's
+ * own file picker, "From proton Files" browses the account's virtual home
+ * folder (whatever was imported with the Files app) and reads it with
+ * FS.readBlob(). webretro itself is by BinBashBanana (GPL-3.0, via the
+ * Gams-Offline/Gams copy). The bundled classics run from the offline games
+ * catalog's own roms/ library (see CREDITS.md for the rights notes). */
+'use strict';
+
+/* ============================ WEB RETRO ============================ */
+registerApp({
+  /* Metadata (name, icon, cat, desc, w, h) lives in the app catalog:
+   * data/applications.js — edit it there, not here. */
+  render(body) {
+    const CORES = [
+      ['mupen64plus_next', 'Nintendo 64'],
+      ['snes9x', 'SNES'],
+      ['nestopia', 'NES'],
+      ['mgba', 'Game Boy (GB/GBC/GBA)'],
+    ];
+    const romAccept = '.nes,.fds,.smc,.sfc,.gb,.gbc,.gba,.n64,.z64,.v64,.bin,.zip';
+    const romExts = romAccept.split(',');
+    /* Classics bundled from the offline games catalog (Gams-Offline/Gams
+     * g/g/webretro/roms/) — each ships with the core it needs. */
+    const CLASSICS = [
+      ['world.smc', 'snes9x', 'Super Mario World', 'SNES'],
+      ['smrpg.smc', 'snes9x', 'Super Mario RPG', 'SNES'],
+      ['linktothepast.smc', 'snes9x', 'Zelda: A Link to the Past', 'SNES'],
+      ['earthbound.sfc', 'snes9x', 'EarthBound', 'SNES'],
+      ['mario.nes', 'nestopia', 'Super Mario Bros.', 'NES'],
+      ['pokemon-sapphire.gba', 'mgba', 'Pokémon Sapphire', 'GBA'],
+      ['pm64.zip', 'mupen64plus_next', 'Paper Mario', 'N64'],
+    ];
+    let bc = null;
+    let romSource = 'device';   // 'device' = real file picker, 'vfs' = proton Files
+    let vfsPath = FS.home();    // folder shown in the proton Files browser
+    let vfsPick = null;         // selected VFS path
+
+    body.innerHTML = `${bar('Web Retro', '<button type="button" class="btn sm" id="wr-again" hidden>Change game</button>')}<div class="app-main pad" id="wr-main"></div>`;
+    const main = body.querySelector('#wr-main');
+    const again = body.querySelector('#wr-again');
+
+    /* Same 10-letter channel name the Gams launcher generates. */
+    function channelName() {
+      const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+      let out = '';
+      for (let i = 0; i < 10; i++) out += chars.charAt(Math.floor(Math.random() * chars.length));
+      return out;
+    }
+
+    function isRom(name) {
+      const lower = name.toLowerCase();
+      return romExts.some((ext) => lower.endsWith(ext));
+    }
+
+    /* The proton Files browser: folders plus ROM files under the account's
+     * home folder, one level at a time. */
+    function renderVfs() {
+      const list = main.querySelector('#wr-vfs-list');
+      const crumb = main.querySelector('#wr-vfs-path');
+      if (!list) return;
+      crumb.textContent = vfsPath;
+      let entries = [];
+      try { entries = FS.list(vfsPath); } catch (err) { entries = []; }
+      const rows = [];
+      if (vfsPath !== FS.home()) {
+        rows.push('<button type="button" class="btn sm" data-up="1">… Up</button>');
+      }
+      for (const e of entries) {
+        if (e.type === 'dir') {
+          rows.push(`<button type="button" class="btn sm" data-dir="${MH.esc(e.path)}">▸ ${MH.esc(e.name)}</button>`);
+        } else if (isRom(e.name)) {
+          const on = vfsPick === e.path ? ' primary' : '';
+          rows.push(`<button type="button" class="btn sm${on}" data-file="${MH.esc(e.path)}">${MH.esc(e.name)}</button>`);
+        }
+      }
+      list.innerHTML = rows.join('') || '<p class="muted" style="margin:0">No ROM files here — import some with the Files app.</p>';
+    }
+
+    function showSource(src) {
+      romSource = src;
+      main.querySelectorAll('[data-src]').forEach((b) => {
+        b.classList.toggle('primary', b.dataset.src === src);
+      });
+      main.querySelector('#wr-device').hidden = src !== 'device';
+      main.querySelector('#wr-vfs').hidden = src !== 'vfs';
+      if (src === 'vfs') renderVfs();
+    }
+
+    function picker() {
+      if (bc) { bc.close(); bc = null; }
+      again.hidden = true;
+      vfsPick = null;
+      romSource = 'device';
+      main.className = 'app-main pad';
+      main.innerHTML = `<div class="card" style="max-width:540px;margin:0 auto">
+        <h3 style="margin-top:0">Play your own retro games</h3>
+        <p class="muted">webretro runs Nintendo 64, SNES, NES and Game Boy games
+        in this window. Play a bundled classic below, or choose a core and pick
+        your own ROM file — from this computer or from your proton Files — it
+        goes straight into the emulator and never leaves your browser.</p>
+        <div class="field"><label>Classics from the offline games catalog</label>
+          <div style="display:flex;flex-wrap:wrap;gap:8px">
+            ${CLASSICS.map(([rom, core, title, sys]) => `<button type="button" class="btn sm" data-classic="${rom}|${core}|${title}">${title} <span class="muted">${sys}</span></button>`).join('')}
+          </div>
+        </div>
+        <div class="field"><label>Or bring your own — core</label>
+          <div style="display:flex;flex-wrap:wrap;gap:8px">
+            ${CORES.map(([id, label]) => `<button type="button" class="btn" data-core="${id}">${label}</button>`).join('')}
+          </div>
+        </div>
+        <div class="field" id="wr-upload" hidden>
+          <label for="wr-rom">ROM — <span id="wr-corename"></span></label>
+          <div style="display:flex;gap:8px;margin:0 0 10px">
+            <button type="button" class="btn sm primary" data-src="device">From this computer</button>
+            <button type="button" class="btn sm" data-src="vfs">From proton Files</button>
+          </div>
+          <div id="wr-device">
+            <input type="file" id="wr-rom" accept="${romAccept}">
+          </div>
+          <div id="wr-vfs" hidden>
+            <p class="muted" style="margin:0 0 6px">ROM files in your proton home folder
+            (import more with the <b>Files</b> app) — <span id="wr-vfs-path"></span></p>
+            <div id="wr-vfs-list" style="max-height:190px;overflow:auto;display:flex;flex-direction:column;gap:4px"></div>
+          </div>
+          <button type="button" class="btn primary" id="wr-play" style="margin-top:10px">Play ROM</button>
+        </div>
+        <p class="muted" style="margin-bottom:0">Saves and save states live in
+        your browser's own storage (webretro keeps them in IndexedDB). The
+        bundled classics come from the offline games catalog (see
+        <b>CREDITS.md</b>); you can also bring your own ROMs.</p>
+      </div>`;
+      main.querySelectorAll('[data-classic]').forEach((b) => b.addEventListener('click', () => {
+        const [rom, core, title] = b.dataset.classic.split('|');
+        playBundled(core, rom, title);
+      }));
+      main.querySelectorAll('[data-core]').forEach((b) => b.addEventListener('click', () => {
+        main.querySelector('#wr-corename').textContent = b.textContent;
+        main.querySelector('#wr-upload').dataset.core = b.dataset.core;
+        main.querySelector('#wr-upload').hidden = false;
+        showSource(romSource);
+      }));
+      main.querySelectorAll('[data-src]').forEach((b) => b.addEventListener('click', () => showSource(b.dataset.src)));
+      main.querySelector('#wr-vfs-list').addEventListener('click', (e) => {
+        const btn = e.target.closest('button');
+        if (!btn) return;
+        if (btn.dataset.up) {
+          vfsPath = FS.dirname(vfsPath);
+          if (vfsPath === '/home' || !vfsPath.startsWith(FS.home())) vfsPath = FS.home();
+          vfsPick = null;
+          renderVfs();
+        } else if (btn.dataset.dir) {
+          vfsPath = btn.dataset.dir;
+          vfsPick = null;
+          renderVfs();
+        } else if (btn.dataset.file) {
+          vfsPick = btn.dataset.file;
+          renderVfs();
+        }
+      });
+      main.querySelector('#wr-play').addEventListener('click', async () => {
+        const upload = main.querySelector('#wr-upload');
+        const core = upload.dataset.core;
+        if (romSource === 'device') {
+          const file = main.querySelector('#wr-rom').files[0];
+          if (!file) { MH.toast('Choose a ROM file first.'); return; }
+          play(core, file);
+          return;
+        }
+        if (!vfsPick) { MH.toast('Choose a ROM file first.'); return; }
+        try {
+          const blob = await FS.readBlob(vfsPick);
+          play(core, new File([blob], FS.basename(vfsPick)));
+        } catch (err) {
+          MH.toast(err.message || 'Could not read that ROM.');
+        }
+      });
+    }
+
+    function play(core, file) {
+      const name = file.name.split('.')[0] || 'GAME';
+      const channel = channelName();
+      bc = new BroadcastChannel(channel);
+      again.hidden = false;
+      main.className = 'app-main';
+      main.innerHTML = `<iframe title="Web Retro" id="wr-frame" allow="autoplay; fullscreen; pointer-lock; gamepad" style="width:100%;height:100%;min-height:360px;border:0;display:block"></iframe>`;
+      bc.onmessage = (event) => {
+        if (event.data && event.data.status === 'ready') bc.postMessage({ rom: file });
+      };
+      main.querySelector('#wr-frame').src =
+        `apps/tools/web-retro/webretro/launch.html?core=${encodeURIComponent(core)}&rom=channel&name=${encodeURIComponent(name)}&channel=${encodeURIComponent(channel)}`;
+    }
+
+    /* A bundled classic: launch.html loads roms/<rom>.js itself. */
+    function playBundled(core, rom, title) {
+      if (bc) { bc.close(); bc = null; }
+      again.hidden = false;
+      main.className = 'app-main';
+      main.innerHTML = `<iframe title="Web Retro" id="wr-frame" allow="autoplay; fullscreen; pointer-lock; gamepad" style="width:100%;height:100%;min-height:360px;border:0;display:block"></iframe>`;
+      main.querySelector('#wr-frame').src =
+        `apps/tools/web-retro/webretro/launch.html?core=${encodeURIComponent(core)}&rom=${encodeURIComponent(rom)}&name=${encodeURIComponent(title)}`;
+    }
+
+    again.addEventListener('click', picker);
+    picker();
+  },
+});
+</script>
+</body>
+</html>

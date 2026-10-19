@@ -1,4 +1,4 @@
-# proton — a browser desktop (static Mixt clone), System apps, a file system, its own search engine and a game embed
+# proton — a browser desktop (static Mixt clone), System apps, a file system, its own search engine and games
 
 A desktop shell in your browser: Mint-style bottom panel and proton menu,
 draggable/resizable windows, per-account customisation — cloned and rebranded
@@ -7,14 +7,33 @@ and rebuilt to run as a **pure static website** (no server, no build step, no
 dependencies). It ships a **black-and-white theme: black backgrounds, white
 text, and white/grey accents** (no colour in the UI).
 
-This build keeps the five core desktop apps from `main` and puts the **file
-system suite** back on top of them: Files, Text Editor, Image Viewer, Media and
-PDF Viewer, all driven by the virtual file system in `assets/fs.js`. Celeste
-Classic is added as a small wrapper around its existing GitHub Pages site. Its
-app folder contains only a sandboxed iframe wrapper; no game source, assets or
-repository contents are copied here. The remaining bundled apps (Notes,
-Calendar, Spreadsheet, Whiteboard, Terminal, the games), the game bundles and
-the earlier built-in sites stay removed (except Test Page).
+This build keeps the five desktop System apps from `main` and copies main's
+**file system suite** back in — **Files**, **Text Editor**, **Image Viewer**,
+**Media** and **PDF Viewer** — and every open/save across the desktop asks
+which file system to use: **your Files** (this computer) or the **proton
+file system** (the Files app). The **Celeste Classics** collection ships as
+three apps — **Celeste Classic**, **Celeste Classic 2** and **Celeste
+Community** — with the *actual game files*, copied byte-for-byte from
+[Math-halper/Celeste](https://github.com/Math-halper/Celeste) into
+`apps/games/celeste-classic/`, `apps/games/celeste-two/` and `apps/games/celeste-community/`
+(each app folder is the game's own pages plus a thin iframe wrapper;
+`apps/games/index.html` is the "all games" picker their back-links expect).
+The **Mario** collection adds **Mari0** (Mario × Portal) and **Super Mario
+64** — their game builds copied byte-for-byte from
+[Math-halper/Mario](https://github.com/Math-halper/Mario) (only the games:
+its landing page and READMEs are not used). **Cookie Clicker** is Orteil's
+idle bakery game, copied byte-for-byte from the offline mirror in
+[Gams-Offline/Gams](https://github.com/Gams-Offline/Gams) (`g/g/cookie/`), and
+**23 more games** from that same Gams collection join the Games section —
+Flash classics (Pacman, Tetris, the Henry Stickmin series and more) on the
+shared open-source **Ruffle Flash Player** app, Unity WebGL builds and
+single-file HTML5 games. A small
+**Calculator** (new, self-contained code in `apps/productivity/calculator/`) ships again
+too, and **Web Retro** vendors the
+[webretro](https://github.com/BinBashBanana/webretro) emulator build from
+[Gams-Offline/Gams](https://github.com/Gams-Offline/Gams) so you can play your
+own ROM files too — and it now carries the offline games catalog’s classic ROMs (details in [`CREDITS.md`](CREDITS.md)). The other bundled apps,
+game bundles and earlier built-in sites remain removed (except Test Page).
 
 | App (id) | What it does |
 | --- | --- |
@@ -23,12 +42,44 @@ the earlier built-in sites stay removed (except Test Page).
 | **Settings** (`settings`) | Account, wallpaper & accent, password, backup, other accounts |
 | **About** (`about`) | What this is, credits, licence |
 | **Browser** (`browser`) | Tabs, back/forward, bookmarks and history; a bar that **searches this repository** when you type words and visits an address when you type one; built-in websites, external addresses, HTML files from the virtual file system and a reader that marks your matches |
+| **Calculator** (`calculator`) | Do quick maths from the keypad or your keyboard |
 | **Files** (`files`) | Browse `/` and your own `/home/<you>`: create, rename, move, copy, import, search, download (folders as ZIP) |
-| **Text Editor** (`text-editor`) | Edit text files in your home folder; proton's own files open read-only with *Save a copy…* |
-| **Image Viewer** (`image-viewer`) | PNG, JPG, GIF, WebP, AVIF, BMP, ICO and SVG, with zoom and a folder playlist |
-| **Media** (`media`) | Audio and video from your home folder, played by your browser's own codecs |
-| **PDF Viewer** (`pdf`) | PDFs in your browser's built-in viewer — no library, nothing uploaded |
-| [**Celeste Classic**](https://math-halper.github.io/Celeste/1/index.html) (`celeste-classic`) | Open the Celeste Classic GitHub Pages game in a sandboxed frame |
+| **Text Editor** (`text-editor`) | Open, edit and save text files in your home folder; proton's own files open read-only |
+| **PDF Viewer** (`pdf`) | Read PDF files in your browser's own viewer — no extra library, nothing uploaded |
+| **Image Viewer** (`image-viewer`) | View PNG, JPG, GIF, WebP, AVIF, BMP, ICO and SVG files with zoom and a folder playlist |
+| **Media** (`media`) | Play audio and video files stored in your home folder, with your browser's own codecs |
+| **Ruffle Flash Player** (`ruffle-flash-player`) | Load and play your own Flash .swf files |
+| **Web Retro** (`web-retro`) | Play retro classics or your own ROMs — N64, SNES, NES and Game Boy (webretro; the catalog’s classics are bundled) |
+| **2048** (`game-2048`) | Play 2048 - join the tiles |
+| **Bloons Tower Defense 1** (`bloons-tower-defense-1`) | Play Bloons Tower Defense 1 - the original balloon-popping tower defense |
+| **Bloons Tower Defense 2** (`bloons-tower-defense-2`) | Play Bloons Tower Defense 2 - more balloons, more towers |
+| **Bloons Tower Defense 5** (`bloons-tower-defense-5`) | Play Bloons Tower Defense 5 - the classic tower defense |
+| **Bloxorz** (`bloxorz`) | Play Bloxorz - roll the block to the goal |
+| **Breaking The Bank** (`breaking-the-bank`) | Play Breaking The Bank - a Henry Stickmin adventure |
+| **Celeste Classic** (`celeste-classic`) | Play the original PICO-8 Celeste Classic — its actual game files, vendored from Math-halper/Celeste |
+| **Celeste Classic 2** (`celeste-two`) | Play Celeste Classic 2: Lani's Trek — its actual game files, vendored from Math-halper/Celeste |
+| **Celeste Community** (`celeste-community`) | The Celeste Classic community hub — practice mods, downloads and links (vendored from Math-halper/Celeste) |
+| **Cookie Clicker** (`cookie-clicker`) | Play Cookie Clicker — Orteil's idle bakery game (offline mirror, vendored from Gams-Offline/Gams) |
+| **Drive Mad** (`drive-mad`) | Play Drive Mad - the physics driving game |
+| **Escaping The Prison** (`escaping-the-prison`) | Play Escaping The Prison - a Henry Stickmin adventure |
+| **Fleeing The Complex** (`fleeing-the-complex`) | Play Fleeing The Complex - a Henry Stickmin adventure |
+| **Grey Box Testing** (`grey-box-testing`) | Play Grey Box Testing |
+| **Infiltrating The Airship** (`infiltrating-the-airship`) | Play Infiltrating The Airship - a Henry Stickmin adventure |
+| **Mari0** (`mari0`) | Play Mari0 — Mario × Portal by Maurice Guégan / Stabyourself (love.js build, vendored from Math-halper/Mario) |
+| **Offline Paradise** (`offline-paradise`) | Play Offline Paradise |
+| **Pacman** (`pacman`) | Play Pacman - the arcade classic |
+| **Slope** (`slope`) | Play Slope - roll the ball down the neon slope |
+| **Spacebar Clicker** (`spacebar-clicker`) | Play Spacebar Clicker - mash the spacebar |
+| **Stack** (`stack`) | Play Stack - time the falling blocks |
+| **Stealing The Diamond** (`stealing-the-diamond`) | Play Stealing The Diamond - a Henry Stickmin adventure |
+| **Stickman Hook** (`stickman-hook`) | Play Stickman Hook - swing through the levels |
+| **Super Mario 64** (`sm64`) | Play the Super Mario 64 WebAssembly browser build (unofficial fan port, vendored from Math-halper/Mario) |
+| **Super Mario RPG** (`super-mario-rpg`) | Play Super Mario RPG in Web Retro - the catalog’s classic ROM included |
+| **Tetris** (`tetris`) | Play Tetris - the falling-blocks classic |
+| **The Impossible Quiz** (`the-impossible-quiz`) | Play The Impossible Quiz - the wildly unfair quiz |
+| **Tunnel Rush** (`tunnel-rush`) | Play Tunnel Rush - dodge through the spinning tunnel |
+
+Rows are listed in start-menu order: **System**, then **Productivity**, **Media**, **Tools** and **Games**.
 
 One built-in website ships with them: **Test Page** (`proton://test-page`), the
 smoke test for a build — it runs automated checks (scripts, shared stylesheet,
@@ -56,12 +107,11 @@ runtime dependencies or build step. Optional regression tests use jsdom:
 
 ## Project layout (everything is a module)
 
-- **Apps:** one folder + HTML file each. The five System apps built into this
-  site are in **`apps/inbuilt/<name>/app.html`**; the Celeste Classic wrapper
-  is the one app outside that folder (`apps/celeste-classic/app.html`), because
-  the page it frames is hosted elsewhere. Two starting points sit next to them:
-  `apps/_template/` for a normal app and `apps/_embed/`
-  for one that is only a framed page — change its single `EMBED_URL` constant.
+- **Apps:** one folder + HTML file each — `apps/<category>/<name>/app.html`
+  (41 apps in five category folders — `system/`, `productivity/`, `media/`, `tools/`,
+  `games/` — matching the menu sections, plus
+  two starting points: `apps/_template/` for a normal app and `apps/_embed/`
+  for one that is only a framed page — change its single `EMBED_URL` constant).
   Every app's name,
   location, icon, category, description and window size is listed in **one
   catalog file** — `data/applications.js`. Add one by copying
@@ -91,21 +141,23 @@ runtime dependencies or build step. Optional regression tests use jsdom:
   `assets/html-loader.js` (loads the app modules at boot, or a `streamed=true`
   app's module on first launch), `assets/styles.css`, `assets/boot.js`.
 - **Tests:** `tests/system-desktop.test.cjs` — 16 tests. The catalogs are
-  exactly the ten System apps, one embedded game page and the one test site;
-  every module is present, the inbuilt apps sit in `apps/inbuilt/` with only the
-  Celeste wrapper outside it, the generated manifest matches the repository, and
-  a jsdom desktop boots and opens each app. Three drive the file system suite
-  end to end: Files creating/renaming/moving/importing/searching/zipping real
-  account data, every file kind landing in the app `FS.appFor()` names (and
-  falling back to Files when nothing else claims it), and desktop shortcuts to
-  files and folders. Three more hold search to its promises: the index is
-  exactly this repository's prose (no machine-written files, no tests, no
-  templates) and every term in it is a fixed point of the engine's own stemmer,
-  so the Python generator and the JavaScript engine cannot drift apart; typing
-  words in the bar finds, ranks and *reads* the right files; and tabs,
-  bookmarks, history and every address scheme behave. The tests also verify the
-  embedded URL, sandbox settings and absence of copied game files; Test Page
-  passes its own checks.
+  exactly the 41 catalogued apps (five desktop System apps, the file system
+  suite, a Calculator, the two Tools, and the games) and the one test site;
+  every module is present, each app is filed in its category folder, the
+  generated manifest matches the repository, and a jsdom desktop boots and
+  opens each app (the Calculator is driven through real sums; Web Retro's
+  launcher is walked through its core picker). Three drive the file system
+  suite end to end: Files creating/renaming/moving/importing/searching/zipping
+  real account data, every file kind landing in the app `FS.appFor()` names
+  (and falling back to Files when nothing else claims it), and desktop
+  shortcuts to files and folders. Three more hold search to its promises: the
+  index is exactly this repository's prose and every term in it is a fixed
+  point of the engine's own stemmer, so the Python generator and the
+  JavaScript engine cannot drift apart; typing words in the bar finds, ranks
+  and *reads* the right files; and tabs, bookmarks, history and every address
+  scheme behave. The tests also verify each game app frames the game page that
+  ships in its own folder and that the vendored builds are really there; Test
+  Page passes its own checks.
 
 ## Math Helper cover page
 
@@ -163,7 +215,7 @@ you type never leaves the browser.
 `python3 tools/gen-search-index.py` reads the prose of every deployed file —
 the documentation, each app module's own comments, the built-in website pages
 and the source comments — and writes one inverted index to
-`data/search-index.js` (34 documents, ~1,800 terms, ~55 KB). Like
+`data/search-index.js` (99 documents, ~5,400 terms, ~167 KB). Like
 `data/fs-manifest.js` it is generated and committed: re-run it after changing
 documentation or an app's prose, then commit. Its output is deterministic (no
 timestamps, sorted documents and terms), so re-running writes the same bytes,
@@ -211,10 +263,20 @@ Bookmarks and history are per-account data (`userData.bookmarks`,
 ## What's inside
 
 - **Desktop** — movable, per-account shortcuts, a Mint-Y panel with pinned &
-  running apps, clock, searchable start menu (one **System** section), window
+  running apps, clock, searchable start menu (apps grouped into sections),
+  window
   manager (drag/resize/minimise/maximise), toasts.
-- **System** — App Center, Customize, Settings, About and Browser; Files, Text
-  Editor, Image Viewer, Media and PDF Viewer; and Celeste Classic.
+- **Two file systems, one chooser** — every open/save asks whether to use
+  **your Files** (this computer) or the **proton file system** (the Files
+  app, in this browser): the Text Editor, Files, Image Viewer, Media, PDF
+  Viewer, Settings backups, Customize icons and Web Retro's ROM picker all
+  work with either.
+- **Menu sections** — the start menu groups the apps by `cat=`: **System**
+  (App Center, Customize, Settings, About, Browser), **Productivity**
+  (Calculator, Files, Text Editor, PDF Viewer), **Media** (Image Viewer,
+  Media), **Tools** (Ruffle Flash Player, Web Retro) and **Games** (28 games: 2048, the Bloons TD series, the Henry Stickmin
+  series, Pacman, Tetris, Slope, Tunnel Rush and more), with **My Apps** for
+  anything an account adds. The order is `CATS` in `assets/core.js`.
 - **Search** — the Browser's bar searches *this repository* with proton's own
   engine (`assets/search.js` over the generated `data/search-index.js`): tabs,
   back/forward, bookmarks, history, live suggestions and a reader that marks
@@ -239,9 +301,9 @@ Bookmarks and history are per-account data (`userData.bookmarks`,
   into its bar without saving it, and anything already saved on an account
   (custom apps, websites) stays openable and removable in App Center and the
   Browser. Mail, Team Chat, Meetings, G-Talk and Admin Vault were removed
-  earlier, and the other bundled apps (Notes, Calendar, Spreadsheet,
-  Whiteboard, Presentation, Terminal and the games) remain removed. All saved
-  per account.
+  earlier; the rest of the old bundles were removed with them, apart from the
+  file system suite (Files, Text Editor, Image Viewer, Media, PDF Viewer),
+  which is copied back from `main`. All saved per account.
 - **Virtual file system** — `assets/fs.js` builds the full read-only `/` tree
   of this repository from `data/fs-manifest.js` plus each account's writable
   `/home/<user>/`, and Settings still counts and exports those files in a
@@ -270,6 +332,22 @@ is documented in [`CREDITS.md`](CREDITS.md). Licensed **AGPL-3.0-only**
 © Puter Technologies Inc.). Not affiliated with Linux Mint, Cinnamon, Puter, or
 the Mixt authors.
 
-No game build is copied into this repository. Celeste Classic loads live
-from its linked GitHub Pages URL inside a sandboxed frame, with an **Open in
-new tab** control if the page refuses to frame.
+The Celeste Classics game files **are** copied into this repository —
+byte-for-byte from [Math-halper/Celeste](https://github.com/Math-halper/Celeste),
+one app per game (see [`CREDITS.md`](CREDITS.md) for provenance; all rights in
+the games stay with their authors). The two Mario games are copied the same
+way from [Math-halper/Mario](https://github.com/Math-halper/Mario) — only the
+game builds, nothing else from that collection; they are **unofficial fan
+projects with no affiliation to Nintendo**, and no rights in Nintendo's game
+assets are granted or implied (details in [`CREDITS.md`](CREDITS.md)). Cookie
+Clicker's files are copied the same way from the offline mirror in
+[Gams-Offline/Gams](https://github.com/Gams-Offline/Gams) (`g/g/cookie/`) —
+the game is © Orteil / DashNet, and the mirror grants no redistribution
+rights (details in [`CREDITS.md`](CREDITS.md)). The 23-game Gams batch is
+copied the same way from [Gams-Offline/Gams](https://github.com/Gams-Offline/Gams) —
+each game is © its respective authors and the mirrors grant no
+redistribution rights; Super Mario RPG’s ROM comes straight from that catalog (details in [`CREDITS.md`](CREDITS.md)). Web Retro ships
+its emulator files (webretro, vendored from Gams-Offline/Gams under
+GPL-3.0 — see [`CREDITS.md`](CREDITS.md)) together with the catalog’s classic
+ROMs — mirrored as-is, each © its respective rights holders — and it still
+plays ROMs you bring yourself.

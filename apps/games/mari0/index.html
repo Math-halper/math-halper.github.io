@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <title>Mari0 — Mario × Portal</title>
+  <style>
+    html, body { margin: 0; height: 100%; background: #000; overflow: hidden; }
+    #stage { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; }
+    canvas {
+      display: block; background: #000; outline: none;
+      image-rendering: pixelated; touch-action: none;
+      -webkit-user-select: none; user-select: none;
+    }
+    #ui {
+      position: fixed; top: max(10px, env(safe-area-inset-top)); right: max(10px, env(safe-area-inset-right));
+      display: flex; gap: 8px; z-index: 10; font: 14px/1.2 system-ui, sans-serif;
+    }
+    #ui button {
+      font: inherit; cursor: pointer; color: #eef2ff; background: rgba(16, 24, 39, 0.82);
+      border: 1px solid rgba(156, 202, 255, 0.45); border-radius: 8px; padding: 9px 13px;
+      backdrop-filter: blur(6px);
+    }
+    #ui button:active { transform: translateY(1px); }
+    #portal .swatch {
+      display: inline-block; width: 10px; height: 10px; border-radius: 50%;
+      margin-right: 7px; vertical-align: -1px; background: #3cbcfc;
+      box-shadow: 0 0 8px currentColor;
+    }
+    #portal.orange .swatch { background: #e8821e; }
+    #status {
+      position: fixed; left: 50%; bottom: max(16px, env(safe-area-inset-bottom)); transform: translateX(-50%);
+      font: 13px/1.4 system-ui, sans-serif; color: #b4bfd4; background: rgba(16, 24, 39, 0.82);
+      padding: 8px 14px; border-radius: 8px; z-index: 10; text-align: center;
+      transition: opacity 0.6s ease; pointer-events: none; max-width: 80vw;
+    }
+    #status.hide { opacity: 0; }
+    #status.error { color: #ffb7b7; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <div id="stage"><canvas id="canvas" tabindex="0" width="800" height="448"></canvas></div>
+  <div id="ui">
+    <button id="portal" type="button" title="Switch portal (Q)"><span class="swatch"></span><span id="portallabel">Blue portal</span></button>
+  </div>
+  <div id="status" role="status">Loading Mari0…</div>
+<script>
+const canvas = document.getElementById('canvas');
+const status = document.getElementById('status');
+const portalButton = document.getElementById('portal');
+const portalLabel = document.getElementById('portallabel');
+let fatal = false;
+
+function showStatus(message, isError) {
+  status.textContent = message;
+  status.classList.remove('hide');
+  status.classList.toggle('error', !!isError);
+  if (!isError) {
+    clearTimeout(showStatus.timer);
+    showStatus.timer = setTimeout(() => status.classList.add('hide'), 6000);
+  }
+}
+
+function setPortal(index) {
+  const orange = index === 2;
+  portalButton.classList.toggle('orange', orange);
+  portalLabel.textContent = orange ? 'Orange portal' : 'Blue portal';
+}
+
+// The canvas is a fixed 800x448 surface. Scale it to the largest size that fits the
+// browser window, keeping the element box equal to the drawn area so pointer
+// coordinates stay 1:1 with game pixels. No OS-level fullscreen: the page itself is
+// the frame, with a black surround.
+function fitCanvas() {
+  const width = canvas.width || 800;
+  const height = canvas.height || 448;
+  const scale = Math.min(innerWidth / width, innerHeight / height);
+  canvas.style.width = Math.round(width * scale) + 'px';
+  canvas.style.height = Math.round(height * scale) + 'px';
+}
+addEventListener('resize', fitCanvas);
+addEventListener('orientationchange', fitCanvas);
+setInterval(fitCanvas, 250);
+fitCanvas();
+
+// The portal button sends the same key the game listens for, so Lua stays the
+// single source of truth and the label follows the prints below.
+portalButton.addEventListener('click', () => {
+  document.dispatchEvent(new KeyboardEvent('keydown', {key: 'q', code: 'KeyQ', keyCode: 81, which: 81, bubbles: true, cancelable: true}));
+  document.dispatchEvent(new KeyboardEvent('keyup', {key: 'q', code: 'KeyQ', keyCode: 81, which: 81, bubbles: true, cancelable: true}));
+  canvas.focus();
+});
+
+canvas.addEventListener('contextmenu', event => event.preventDefault());
+canvas.addEventListener('pointerdown', () => canvas.focus());
+
+// love.js only forwards mouse events to LÖVE, so a tap would otherwise reach the game
+// as a touch event that Mari0 ignores. Turn taps into a left click on the canvas.
+canvas.addEventListener('touchstart', event => {
+  if (event.touches.length > 1) return;
+  event.preventDefault();
+  const touch = event.changedTouches[0];
+  const point = {bubbles: true, cancelable: true, clientX: touch.clientX, clientY: touch.clientY};
+  // Move the pointer first so the game aims where the finger landed, then click.
+  canvas.dispatchEvent(new MouseEvent('mousemove', {...point, buttons: 0}));
+  canvas.dispatchEvent(new MouseEvent('mousedown', {...point, button: 0, buttons: 1}));
+  canvas.dispatchEvent(new MouseEvent('mouseup', {...point, button: 0, buttons: 0}));
+}, {passive: false});
+canvas.addEventListener('touchend', event => event.preventDefault(), {passive: false});
+canvas.addEventListener('touchmove', event => event.preventDefault(), {passive: false});
+
+// game.js declares a global `var Module`, so publish ours on window *before* the
+// runtime scripts load instead of declaring another binding for it.
+var Module = {
+  arguments: ['./game.love'],  // love.js packages game.data under this name
+  INITIAL_MEMORY: 134217728,
+  canvas,
+  print: (...args) => {
+    const line = args.join(' ');
+    console.log(line);
+    const portal = /^MARIO_PORTAL ([12])$/.exec(line);
+    if (portal) setPortal(Number(portal[1]));
+    if (line.indexOf('MARIO_WEB_READY') === 0) showStatus('Click or tap to fire the selected portal. Q switches colour.');
+  },
+  printErr: (...args) => {
+    console.error(...args);
+    const text = args.join(' ');
+    if (!fatal && /Error:|abort/i.test(text)) showStatus(text, true);
+  },
+  setStatus: text => { if (text && !fatal) status.textContent = text; },
+  monitorRunDependencies: left => {
+    if (!fatal) status.textContent = left ? `Loading game files (${left} remaining)…` : 'Starting Mari0…';
+  },
+  onRuntimeInitialized: () => { canvas.focus(); },
+  onAbort: reason => { fatal = true; showStatus('Unable to start Mari0: ' + reason, true); },
+};
+
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = src;
+    script.onload = resolve;
+    script.onerror = () => reject(new Error('Could not load ' + src));
+    document.body.appendChild(script);
+  });
+}
+
+// Start as soon as the page opens; no Play button. Sound unlocks on the first
+// interaction, which love.js handles itself.
+(async function start() {
+  if (!window.WebAssembly) { fatal = true; showStatus('This game requires WebAssembly and WebGL.', true); return; }
+  try {
+    await loadScript('game.js');
+    await loadScript('love.js');
+    await Love(Module);
+  } catch (error) {
+    fatal = true;
+    showStatus(error.message, true);
+  }
+})();
+</script>
+</body>
+</html>

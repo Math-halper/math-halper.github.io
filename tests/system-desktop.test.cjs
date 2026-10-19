@@ -1,10 +1,14 @@
-/* The current build keeps its five core desktop apps, the five-app file system
- * suite that sits on assets/fs.js, and a Browser that searches this repository
- * through proton's own engine (assets/search.js over the generated
- * data/search-index.js), plus Celeste Classic as a sandboxed embed of its
- * existing GitHub Pages site. No game content is copied here. The one built-in
- * website is Test Page, the Browser smoke test. These tests keep the catalog,
- * wrapper, both generated data files and the running desktop in sync. */
+/* The current build keeps its five desktop System apps plus the file system
+ * suite (Files, Text Editor, Image Viewer, Media, PDF Viewer — copied from
+ * main), a Calculator and Web Retro (a vendored webretro emulator, no ROMs
+ * included), and the vendored game apps — the Celeste Classics trio
+ * (github.com/Math-halper/Celeste), Cookie Clicker plus 23 more games
+ * (github.com/Gams-Offline/Gams) and Mari0 + Super Mario 64
+ * (github.com/Math-halper/Mario, only the game builds) — each a thin wrapper
+ * around the actual game files, copied byte-for-byte.
+ * The one built-in website is Test Page, the Browser smoke test. These tests
+ * keep the catalog, wrappers, generated file-system manifest and running
+ * desktop in sync. */
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -14,16 +18,111 @@ const { JSDOM, VirtualConsole } = require('jsdom');
 
 const ROOT = path.resolve(__dirname, '..');
 const source = (p) => fs.readFileSync(path.join(ROOT, p), 'utf8');
-const SYSTEM_APPS = ['appcenter', 'customize', 'settings', 'about', 'browser',
-  'files', 'text-editor', 'image-viewer', 'media', 'pdf', 'celeste-classic'];
-/* The file system suite, all in apps/inbuilt/. These ids are exactly what
- * FS.appFor() returns, so a file always has an app that can open it. */
+/* The file system suite FS.appFor() resolves files to. */
 const FS_APPS = ['files', 'text-editor', 'image-viewer', 'media', 'pdf'];
-/* What a brand-new account's desktop starts with (assets/store.js). */
-const DEFAULT_ICONS = ['settings', 'browser', 'files', '/home/ada'];
-const EMBED_URLS = {
-  'celeste-classic': 'https://math-halper.github.io/Celeste/1/index.html',
+const SYSTEM_APPS = ['appcenter', 'customize', 'settings', 'about', 'browser',
+  'calculator', 'files', 'text-editor', 'pdf', 'image-viewer', 'media',
+  'ruffle-flash-player', 'web-retro',
+  'game-2048',
+  'bloons-tower-defense-1',
+  'bloons-tower-defense-2',
+  'bloons-tower-defense-5',
+  'bloxorz',
+  'breaking-the-bank',
+  'celeste-classic',
+  'celeste-two',
+  'celeste-community',
+  'cookie-clicker',
+  'drive-mad',
+  'escaping-the-prison',
+  'fleeing-the-complex',
+  'grey-box-testing',
+  'infiltrating-the-airship',
+  'mari0',
+  'offline-paradise',
+  'pacman',
+  'slope',
+  'spacebar-clicker',
+  'stack',
+  'stealing-the-diamond',
+  'stickman-hook',
+  'sm64',
+  'super-mario-rpg',
+  'tetris',
+  'the-impossible-quiz',
+  'tunnel-rush'];
+/* Menu sections for each app (data/applications.js cat=), in catalog order.
+ * Every new app is filed here with its respective section — the catalog test
+ * asserts each app's cat matches, and the boot test asserts the five menu
+ * groups, so an unfiled app fails the suite. */
+const SYSTEM_CATS = {
+  appcenter: 'System', customize: 'System', settings: 'System', about: 'System', browser: 'System',
+  calculator: 'Productivity', files: 'Productivity', 'text-editor': 'Productivity', pdf: 'Productivity',
+  'image-viewer': 'Media', media: 'Media',
+  'game-2048': 'Games',
+  'bloons-tower-defense-1': 'Games',
+  'bloons-tower-defense-2': 'Games',
+  'bloons-tower-defense-5': 'Games',
+  'bloxorz': 'Games',
+  'breaking-the-bank': 'Games',
+  'celeste-classic': 'Games',
+  'celeste-two': 'Games',
+  'celeste-community': 'Games',
+  'cookie-clicker': 'Games',
+  'drive-mad': 'Games',
+  'escaping-the-prison': 'Games',
+  'fleeing-the-complex': 'Games',
+  'grey-box-testing': 'Games',
+  'infiltrating-the-airship': 'Games',
+  'mari0': 'Games',
+  'offline-paradise': 'Games',
+  'pacman': 'Games',
+  'ruffle-flash-player': 'Tools',
+  'slope': 'Games',
+  'spacebar-clicker': 'Games',
+  'stack': 'Games',
+  'stealing-the-diamond': 'Games',
+  'stickman-hook': 'Games',
+  'sm64': 'Games',
+  'super-mario-rpg': 'Games',
+  'tetris': 'Games',
+  'the-impossible-quiz': 'Games',
+  'tunnel-rush': 'Games',
+  'web-retro': 'Tools',
 };
+/* Each game app frames the game page that ships in its own folder. */
+const GAME_PAGES = {
+  'game-2048': 'apps/games/game-2048/2048.html',
+  'bloons-tower-defense-1': 'apps/games/bloons-tower-defense-1/bloonstowerdefense1.html',
+  'bloons-tower-defense-2': 'apps/games/bloons-tower-defense-2/bloonstowerdefense2.html',
+  'bloons-tower-defense-5': 'apps/games/bloons-tower-defense-5/bloonstowerdefense5.html',
+  'bloxorz': 'apps/games/bloxorz/bloxorz.html',
+  'breaking-the-bank': 'apps/games/breaking-the-bank/breakingthebank.html',
+  'celeste-classic': 'apps/games/celeste-classic/index.html',
+  'celeste-two': 'apps/games/celeste-two/index.html',
+  'celeste-community': 'apps/games/celeste-community/index.html',
+  'cookie-clicker': 'apps/games/cookie-clicker/index.html',
+  'drive-mad': 'apps/games/drive-mad/drivemad.html',
+  'escaping-the-prison': 'apps/games/escaping-the-prison/escapingtheprison.html',
+  'fleeing-the-complex': 'apps/games/fleeing-the-complex/fleeingthecomplex.html',
+  'grey-box-testing': 'apps/games/grey-box-testing/index.html',
+  'infiltrating-the-airship': 'apps/games/infiltrating-the-airship/infiltratingtheairship.html',
+  'mari0': 'apps/games/mari0/index.html',
+  'offline-paradise': 'apps/games/offline-paradise/offlineparadise.html',
+  'pacman': 'apps/games/pacman/pacman.html',
+  'slope': 'apps/games/slope/slope.html',
+  'spacebar-clicker': 'apps/games/spacebar-clicker/spacebarclicker.html',
+  'stack': 'apps/games/stack/stack.html',
+  'stealing-the-diamond': 'apps/games/stealing-the-diamond/stealingthediamond.html',
+  'stickman-hook': 'apps/games/stickman-hook/stickmanhook.html',
+  'sm64': 'apps/games/sm64/index.html',
+  'super-mario-rpg': 'apps/games/super-mario-rpg/supermariorpg.html',
+  'tetris': 'apps/games/tetris/tetris.html',
+  'the-impossible-quiz': 'apps/games/the-impossible-quiz/theimpossiblequiz.html',
+  'tunnel-rush': 'apps/games/tunnel-rush/tunnelrush.html',
+};
+/* Games whose pages carry the source sites' href="../" all-games link. */
+const PICKER_LINKED = ['celeste-classic', 'celeste-two', 'celeste-community', 'cookie-clicker', 'sm64'];
 /* Every script index.html loads, in order, minus boot.js (which starts the
  * auth flow and needs a served page). Read from the page itself so this list
  * cannot drift when a new data file or asset is added. */
@@ -54,14 +153,52 @@ function catalog() {
   };
 }
 
-test('the catalog is ten System apps, one embedded game and the built-in test site', () => {
+test('the catalog is the desktop apps, the file system suite, a calculator, web retro, the vendored games and the built-in test site', () => {
   const { apps, sites, warnings, icons, render, renderCatalogIcon, validIconPath } = catalog();
   assert.deepEqual(Array.from(warnings), [], 'catalog parses without warnings');
   /* Array.from everywhere: the catalogs come from a vm context, so their
    * arrays are not reference-equal to this realm's. */
   assert.deepEqual(Array.from(apps, (a) => a.id), SYSTEM_APPS);
-  assert.deepEqual(Array.from(apps, (a) => a.cat), SYSTEM_APPS.map(() => 'System'));
-  assert.deepEqual(Array.from(apps, (a) => a.svgIcon), SYSTEM_APPS.map(() => true));
+  assert.deepEqual(Array.from(apps, (a) => a.cat), SYSTEM_APPS.map((id) => SYSTEM_CATS[id]));
+  /* Every app uses a built-in SVG icon except the games: each game's default
+   * is its own artwork under data/icons/<id>.png (Web Retro keeps Gams'
+   * raster webretro.png). */
+  const RASTER_ICON_APPS = {
+    'game-2048': 'data/icons/game-2048.png',
+    'bloons-tower-defense-1': 'data/icons/bloons-tower-defense-1.png',
+    'bloons-tower-defense-2': 'data/icons/bloons-tower-defense-2.png',
+    'bloons-tower-defense-5': 'data/icons/bloons-tower-defense-5.png',
+    'bloxorz': 'data/icons/bloxorz.png',
+    'breaking-the-bank': 'data/icons/breaking-the-bank.png',
+    'celeste-classic': 'data/icons/celeste-classic.png',
+    'celeste-two': 'data/icons/celeste-two.png',
+    'celeste-community': 'data/icons/celeste-community.png',
+    'cookie-clicker': 'data/icons/cookie-clicker.png',
+    'drive-mad': 'data/icons/drive-mad.png',
+    'escaping-the-prison': 'data/icons/escaping-the-prison.png',
+    'fleeing-the-complex': 'data/icons/fleeing-the-complex.png',
+    'grey-box-testing': 'data/icons/grey-box-testing.png',
+    'infiltrating-the-airship': 'data/icons/infiltrating-the-airship.png',
+    'mari0': 'data/icons/mari0.png',
+    'offline-paradise': 'data/icons/offline-paradise.png',
+    'pacman': 'data/icons/pacman.png',
+    'ruffle-flash-player': 'data/icons/ruffle-flash-player.png',
+    'slope': 'data/icons/slope.png',
+    'spacebar-clicker': 'data/icons/spacebar-clicker.png',
+    'stack': 'data/icons/stack.png',
+    'stealing-the-diamond': 'data/icons/stealing-the-diamond.png',
+    'stickman-hook': 'data/icons/stickman-hook.png',
+    'sm64': 'data/icons/sm64.png',
+    'super-mario-rpg': 'data/icons/super-mario-rpg.png',
+    'tetris': 'data/icons/tetris.png',
+    'the-impossible-quiz': 'data/icons/the-impossible-quiz.png',
+    'tunnel-rush': 'data/icons/tunnel-rush.png',
+    'web-retro': 'data/icons/webretro.png' };
+  assert.deepEqual(Array.from(apps, (a) => a.svgIcon), SYSTEM_APPS.map((id) => !RASTER_ICON_APPS[id]));
+  const iconById = Object.fromEntries(Array.from(apps, (a) => [a.id, a.icon]));
+  for (const [id, icon] of Object.entries(RASTER_ICON_APPS)) {
+    assert.equal(iconById[id], icon, `${id} should default to its own cropped art`);
+  }
   assert.deepEqual(Array.from(sites, (s) => s.id), ['test-page']);
   const page = { ...sites[0] };
   assert.equal(page.name, 'Test Page');
@@ -81,6 +218,7 @@ test('the catalog is ten System apps, one embedded game and the built-in test si
       assert.ok(!svg.includes('<image'), `${app.id} icon embeds a raster image`);
     } else {
       assert.ok(validIconPath(app.icon), `${app.id} has an unsafe default image path`);
+      assert.ok(fs.existsSync(path.join(ROOT, app.icon)), `${app.id} icon file is missing: ${app.icon}`);
       assert.match(renderCatalogIcon(app.icon, false), /^<img class="icn app-icon-image" src="data\/icons\//);
     }
   }
@@ -145,33 +283,72 @@ test('every catalog entry points at a real, syntactically valid app module', () 
     assert.match(script[1], /registerApp\(/, `${app.id} never registers itself`);
     assert.equal(app.streamed, undefined, `${app.id} should load at boot, not lazily`);
   }
-  /* The game addition is a wrapper only: no game code, assets or repo files
-   * are copied into its app folder. */
-  for (const [id, url] of Object.entries(EMBED_URLS)) {
+  /* The Celeste apps are wrapper + game: the actual game files are vendored
+   * from Math-halper/Celeste, byte-for-byte, one app per game. */
+  for (const [id, page] of Object.entries(GAME_PAGES)) {
     const app = apps.find((entry) => entry.id === id);
     assert.ok(app, `Missing catalog entry for ${id}`);
     const html = source(app.path);
-    assert.ok(html.includes(`const EMBED_URL = '${url}';`), `${id} points at the wrong hosted page`);
-    assert.match(html, /sandbox="[^"]*allow-scripts[^"]*"/);
-    assert.ok(!/sandbox="[^"]*allow-same-origin/.test(html));
-    assert.deepEqual(fs.readdirSync(path.dirname(path.join(ROOT, app.path))).sort(), ['app.html']);
+    assert.ok(html.includes(`const GAME_PAGE = '${page}';`), `${id} points at the wrong game page`);
+    assert.match(html, /src="[^"]*GAME_PAGE[^"]*"/, `${id} does not frame its own game page`);
+    assert.ok(!/sandbox=/.test(html), `${id} frames its own local game page sandboxed`);
+    assert.ok(html.includes('allowfullscreen'), `${id} frame cannot go fullscreen`);
+    assert.ok(html.includes('[data-e="ext"]'), `${id} has no Open in new tab escape hatch`);
+    assert.ok(fs.existsSync(path.join(ROOT, page)), `${id}'s game page is missing`);
+  }
+  /* The vendored games really are the games: their builds are huge. */
+  for (const [p, min] of [
+    ['apps/games/celeste-classic/celeste.js', 1000000],
+    ['apps/games/celeste-classic/celeste.p8.png', 30000],
+    ['apps/games/celeste-two/index.js', 1000000],
+    ['apps/games/celeste-community/celeste_practice_mod.js', 1000000],
+    ['apps/games/celeste-community/celeste2_1.1_practice_mod.js', 1000000],
+    ['apps/games/celeste-community/webek.js', 1000000],
+    ['apps/games/cookie-clicker/main.js', 900000],
+    ['apps/games/slope/slope.html', 20000000],
+    ['apps/games/stickman-hook/stickmanhook.html', 4000000],
+    ['apps/games/fleeing-the-complex/data1.js', 20000000],
+    ['apps/games/grey-box-testing/greyboxtesting.zip-chunk0.js', 20000000],
+    ['apps/games/tunnel-rush/tunnelrush.zip-chunk0.js', 15000000],
+    ['apps/tools/ruffle-flash-player/dd0be85ee9c2092132d1.wasm.js', 15000000],
+    ['apps/games/mari0/love.wasm', 4000000],
+    ['apps/games/mari0/game.data', 3000000],
+    ['apps/games/sm64/sm64.us.f3dex2e.wasm', 15000000],
+    ['apps/games/sm64/sm64.us.f3dex2e.js', 200000],
+  ]) {
+    assert.ok(fs.statSync(path.join(ROOT, p)).size >= min, `${p} is not the real game build`);
+  }
+  /* The game pages are untouched: their "all games" links still go one level
+   * up, and apps/games/index.html is the picker those links expect. */
+  for (const id of PICKER_LINKED) {
+    assert.ok(source(`apps/games/${id}/index.html`).includes('href="../"'),
+      `apps/games/${id}/index.html was edited — its ../ link is gone`);
+  }
+  const picker = source('apps/games/index.html');
+  for (const id of Object.keys(GAME_PAGES)) {
+    assert.ok(picker.includes(`./${id}/`), `apps/games/index.html does not link to ${id}`);
   }
 
-  /* apps/ holds the developer templates, the Celeste wrapper and inbuilt/ —
-   * the folder with every app built into this site. */
+  /* Every app lives inside its category folder — apps/<category>/<folder>/ —
+   * and each category folder holds exactly its own apps. */
+  const CAT_DIRS = { System: 'system', Productivity: 'productivity', Media: 'media', Tools: 'tools', Games: 'games' };
+  for (const app of apps) {
+    assert.ok(app.path.startsWith(`apps/${CAT_DIRS[app.cat]}/`),
+      `${app.id} (${app.cat}) is not filed in apps/${CAT_DIRS[app.cat]}/`);
+  }
+  for (const [cat, dir] of Object.entries(CAT_DIRS)) {
+    const dirs = fs.readdirSync(path.join(ROOT, 'apps', dir), { withFileTypes: true })
+      .filter((e) => e.isDirectory()).map((e) => e.name).sort();
+    /* Array.from: apps lives in the catalog vm realm — copy into this realm
+     * so the arrays compare by structure, not realm identity. */
+    const expected = Array.from(apps).filter((a) => a.cat === cat).map((a) => a.path.split('/')[2]).sort();
+    assert.deepEqual(dirs, expected, `apps/${dir}/ should hold exactly the ${cat} apps`);
+  }
+
+  /* apps/ holds the five category folders plus the developer templates. */
   const folders = fs.readdirSync(path.join(ROOT, 'apps'), { withFileTypes: true })
     .filter((e) => e.isDirectory()).map((e) => e.name).sort();
-  assert.deepEqual(folders, ['_embed', '_template', 'celeste-classic', 'inbuilt']);
-  const inbuilt = fs.readdirSync(path.join(ROOT, 'apps', 'inbuilt'), { withFileTypes: true })
-    .filter((e) => e.isDirectory()).map((e) => e.name).sort();
-  assert.deepEqual(inbuilt, ['about', 'app-center', 'browser', 'customize', 'files',
-    'image-viewer', 'media', 'pdf', 'settings', 'text-editor']);
-  /* The catalog agrees with the tree: only the embedded game sits outside
-   * apps/inbuilt/, and it stays a wrapper folder of its own under apps/. */
-  for (const app of apps) {
-    const home = app.id === 'celeste-classic' ? 'apps/celeste-classic/' : 'apps/inbuilt/';
-    assert.ok(app.path.startsWith(home), `${app.id} should live in ${home}, not ${app.path}`);
-  }
+  assert.deepEqual(folders, ['_embed', '_template', 'games', 'media', 'productivity', 'system', 'tools']);
 });
 
 test('the system manifest still matches the repository exactly', () => {
@@ -212,7 +389,7 @@ test('the system manifest still matches the repository exactly', () => {
     'Manifest and repository disagree — re-run python3 tools/gen-fs-manifest.py');
 });
 
-test('the desktop boots, lists and opens every catalogued app', async () => {
+test('the desktop boots, lists and opens all forty-one catalogued apps', async () => {
   const virtualConsole = new VirtualConsole(), errors = [];
   virtualConsole.on('jsdomError', (err) => errors.push(err.message));
   const dom = new JSDOM('<!doctype html><main id="auth" hidden></main><div id="desktop" hidden></div><div id="toasts"></div>', {
@@ -222,6 +399,19 @@ test('the desktop boots, lists and opens every catalogued app', async () => {
   const { window: w } = dom;
   w.URL.createObjectURL = () => 'blob:mock';
   w.URL.revokeObjectURL = () => {};
+  /* jsdom leaves TextEncoder/TextDecoder off the window (fs-archive.js needs
+   * one to build a ZIP) and its Blob has no arrayBuffer()/text(), which
+   * FS.readBlob/writeBlob use. Every browser has had both since 2015. */
+  w.TextEncoder = TextEncoder;
+  w.TextDecoder = TextDecoder;
+  w.Blob.prototype.arrayBuffer = function () {
+    return new Promise((resolve, reject) => {
+      const reader = new w.FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(new Error('FileReader could not read the blob'));
+      reader.readAsArrayBuffer(this);
+    });
+  };
   const run = (text) => {
     const script = w.document.createElement('script');
     script.textContent = text; w.document.body.appendChild(script); script.remove();
@@ -238,18 +428,20 @@ test('the desktop boots, lists and opens every catalogued app', async () => {
     w.eval("currentUser = {username:'Ada',usernameLower:'ada',displayName:'Ada',createdAt:Date.now()}; userData = MH.defaultData('Ada','ada'); enterDesktop();");
     const wins = w.eval('wins'), APPS = w.eval('APPS');
 
-    // The account defaults point at apps and folders that still exist.
+    // The account defaults point at apps that still exist (plus the home link).
     assert.deepEqual(Array.from(w.eval('userData.settings.pinned')), ['settings', 'appcenter', 'browser']);
     const shortcuts = Array.from(w.eval('userData.desktopIcons'));
-    assert.deepEqual(shortcuts.map((s) => s.target), DEFAULT_ICONS);
+    assert.deepEqual(shortcuts.map((s) => s.target),
+      ['settings', 'browser', 'files', w.eval('FS.home()')]);
     for (const s of shortcuts) {
       if (s.kind === 'app') assert.ok(APPS[s.target], `default shortcut to a removed app: ${s.target}`);
-      else assert.ok(w.eval(`FS.stat(${JSON.stringify(s.target)})`), `default shortcut to a missing path: ${s.target}`);
+      else assert.ok(w.eval('FS').stat(s.target), `default shortcut to a missing path: ${s.target}`);
     }
 
-    // The start menu shows one System section holding every app.
+    // The start menu groups all forty-one apps into their five sections.
     const menu = w.document.querySelector('#startmenu');
-    assert.deepEqual([...menu.querySelectorAll('.sm-cat')].map((e) => e.textContent), ['System']);
+    assert.deepEqual([...menu.querySelectorAll('.sm-cat')].map((e) => e.textContent),
+      ['System', 'Productivity', 'Media', 'Tools', 'Games']);
     assert.deepEqual([...menu.querySelectorAll('.sm-item')].map((e) => e.dataset.app), SYSTEM_APPS);
 
     // The panel only pins apps that exist, and each app really renders.
@@ -261,15 +453,147 @@ test('the desktop boots, lists and opens every catalogued app', async () => {
       const text = body?.textContent || '';
       assert.ok(body && body.innerHTML.length > 100, `${id} rendered nothing`);
       assert.ok(!/hit a snag|Could not load/i.test(text), `${id} reported an error: ${text.slice(0, 140)}`);
-      if (EMBED_URLS[id]) {
+      if (GAME_PAGES[id]) {
         const frame = body.querySelector('iframe.site-frame');
-        assert.ok(frame, `${id} did not render its hosted page`);
-        assert.equal(frame.getAttribute('src'), EMBED_URLS[id]);
-        assert.ok(!frame.getAttribute('sandbox').includes('allow-same-origin'), `${id} frame can access proton storage`);
+        assert.ok(frame, `${id} did not render its game page`);
+        assert.equal(frame.getAttribute('src'), GAME_PAGES[id]);
+        assert.ok(frame.hasAttribute('allowfullscreen'), `${id} frame cannot go fullscreen`);
         assert.ok(body.querySelector('[data-e="ext"]'), `${id} has no direct-link escape hatch`);
       }
       w.closeWin(id, true);
     }
+
+    // The Calculator computes — keypad clicks and keyboard keys alike.
+    w.openApp('calculator');
+    const calc = wins.get('calculator').body;
+    const press = (...keys) => keys.forEach((k) => calc.querySelector(`[data-k="${k}"]`).click());
+    const shown = () => calc.querySelector('#calc-display').textContent;
+    press('1', '2', '*', '3', '=');
+    assert.equal(shown(), '36', 'buttons compute');
+    press('ac', '1', '0', '/', '4', '=');
+    assert.equal(shown(), '2.5', 'decimal results');
+    press('ac', '5', '+', '3', '=');
+    assert.equal(shown(), '8');
+    press('=');
+    assert.equal(shown(), '11', 'pressing = repeats the last operation');
+    press('ac', '1', '/', '0', '=');
+    assert.equal(shown(), 'Error', 'division by zero reports an error');
+    press('7');
+    assert.equal(shown(), '7', 'a digit after an error starts fresh');
+    press('neg', 'back');
+    assert.equal(shown(), '0', 'plus/minus and backspace edit the entry');
+    const key = (k) => calc.querySelector('#calc-wrap')
+      .dispatchEvent(new w.KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true }));
+    key('7'); key('*'); key('6'); key('Enter');
+    assert.equal(shown(), '42', 'the keyboard drives the calculator');
+    key('Escape');
+    assert.equal(shown(), '0', 'Escape clears');
+    w.closeWin('calculator', true);
+
+    // Web Retro's launcher picks a core and offers both ROM sources.
+    w.openApp('web-retro');
+    const retro = wins.get('web-retro').body;
+    assert.deepEqual([...retro.querySelectorAll('[data-core]')].map((b) => b.dataset.core),
+      ['mupen64plus_next', 'snes9x', 'nestopia', 'mgba']);
+    assert.equal(retro.querySelector('#wr-upload').hidden, true, 'no ROM panel before a core is picked');
+    retro.querySelector('[data-core="snes9x"]').click();
+    assert.equal(retro.querySelector('#wr-upload').hidden, false);
+    assert.equal(retro.querySelector('#wr-corename').textContent, 'SNES');
+    assert.ok(retro.querySelector('[data-src="device"]'), 'no "this computer" ROM source');
+    assert.ok(retro.querySelector('[data-src="vfs"]'), 'no "proton Files" ROM source');
+    retro.querySelector('#wr-play').click();
+    assert.match(w.document.querySelector('#toasts').textContent, /Choose a ROM file/);
+    // A ROM imported into the proton file system is listed, then handed to the
+    // emulator over the BroadcastChannel like a device file.
+    const home = w.eval('FS.home()');
+    await w.eval(`FS.writeBlob(${JSON.stringify(home + '/Downloads/nes-rom.nes')}, new Blob([new Uint8Array([0x4e, 0x45, 0x53, 0x1a])]))`);
+    retro.querySelector('[data-src="vfs"]').click();
+    const dl = [...retro.querySelectorAll('[data-dir]')].find((b) => b.dataset.dir.endsWith('/Downloads'));
+    assert.ok(dl, 'proton Files should show the Downloads folder');
+    dl.click();
+    const row = [...retro.querySelectorAll('[data-file]')].find((b) => b.dataset.file.endsWith('nes-rom.nes'));
+    assert.ok(row, 'proton Files should list the imported ROM');
+    row.click();
+    const chSent = [];
+    w.BroadcastChannel = class {
+      constructor(name) { this.name = name; w.__wrCh = this; }
+      postMessage(m) { chSent.push(m); }
+      close() {}
+    };
+    retro.querySelector('#wr-play').click();
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    const frame = retro.querySelector('#wr-frame');
+    assert.ok(frame, 'Play should frame the emulator');
+    assert.match(frame.src, /rom=channel/);
+    w.__wrCh.onmessage({ data: { status: 'ready' } });
+    assert.equal(chSent.length, 1, 'the launch page should get the ROM over the channel');
+    assert.equal(chSent[0].rom.name, 'nes-rom.nes');
+    w.closeWin('web-retro', true);
+
+    // Every open/save asks which file system to use: "your Files" (this
+    // computer) or the proton file system.
+    const askModal = (label) => {
+      const modal = w.document.querySelector('.file-source-backdrop');
+      assert.ok(modal, `${label} does not ask which file system to use`);
+      assert.ok(modal.querySelector('[data-fs="device"]') && modal.querySelector('[data-fs="vfs"]'),
+        `${label} chooser is missing one of the two file systems`);
+      modal.querySelector('[data-fs="cancel"]').click();
+      assert.ok(!w.document.querySelector('.file-source-backdrop'), `${label} chooser does not close`);
+    };
+    w.openApp('image-viewer');
+    wins.get('image-viewer').body.querySelector('#iv-open').click();
+    askModal('Image Viewer Open…');
+    w.closeWin('image-viewer', true);
+    w.openApp('media');
+    wins.get('media').body.querySelector('#md-open').click();
+    askModal('Media Open…');
+    w.closeWin('media', true);
+    w.openApp('pdf');
+    wins.get('pdf').body.querySelector('#pdf-open').click();
+    askModal('PDF Viewer Open…');
+    w.closeWin('pdf', true);
+    w.openApp('files');
+    wins.get('files').body.querySelector('#fm-import').click();
+    askModal('Files Import');
+    wins.get('files').body.querySelector('#fm-download').click();
+    askModal('Files Download');
+    w.closeWin('files', true);
+    w.openApp('settings');
+    wins.get('settings').body.querySelector('#s-export').click();
+    askModal('Settings Export backup');
+    wins.get('settings').body.querySelector('#s-import-btn').click();
+    askModal('Settings Import backup');
+    w.closeWin('settings', true);
+    w.openApp('customize');
+    wins.get('customize').body.querySelector('[data-micon-ask]').click();
+    askModal('Customize "Set image…"');
+    w.closeWin('customize', true);
+
+    // The Text Editor asks on Open, Save and Save a copy — and choosing the
+    // proton file system really saves there.
+    w.eval(`openFSItem(${JSON.stringify(home + '/Documents/Welcome.txt')})`);
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    const teWin = wins.get('text-editor').body;
+    assert.ok(!teWin.querySelector('#te-save').disabled, 'Save should be live for a writable file');
+    teWin.querySelector('#te-open').click();
+    askModal('Text Editor Open…');
+    teWin.querySelector('#te-copy').click();
+    askModal('Text Editor Save a copy…');
+    teWin.querySelector('#te-text').value = 'saved through the chooser';
+    teWin.querySelector('#te-save').click();
+    w.document.querySelector('.file-source-backdrop [data-fs="vfs"]').click();
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    assert.match(w.document.querySelector('#toasts').textContent, /Saved Welcome\.txt/);
+    assert.equal(await w.eval(`FS.read(${JSON.stringify(home + '/Documents/Welcome.txt')})`), 'saved through the chooser');
+    w.closeWin('text-editor', true);
+
+    // Files lists the account's home folder places from the virtual file system.
+    w.openApp('files');
+    const filesBody = wins.get('files').body;
+    for (const dir of ['Desktop', 'Documents', 'Downloads', 'Pictures']) {
+      assert.match(filesBody.textContent, new RegExp(dir), `Files should list ${dir}`);
+    }
+    w.closeWin('files', true);
 
     // The Browser registers the catalogued site and offers it on its home page.
     w.openApp('browser');
@@ -286,9 +610,9 @@ test('the desktop boots, lists and opens every catalogued app', async () => {
     assert.ok(browserBody.querySelector('iframe.site-frame').src.endsWith('/websites/test-page/site.html'));
     w.closeWin('browser', true);
 
-    // Opening a system file routes it to the app FS.appFor() names. proton's
-    // own files are fetched over HTTP, so serve them out of the repository
-    // (the test page lives one folder down, like the real GitHub Pages site).
+    // A system text file opens in the Text Editor — locked, read-only. proton's
+    // own files are fetched over HTTP, so serve them out of the repository (the
+    // test page lives one folder down, like the real GitHub Pages site).
     const served = (url) => {
       const rel = new URL(url).pathname.replace(/^\/+/, '');
       return source(fs.existsSync(path.join(ROOT, rel)) ? rel : rel.split('/').slice(1).join('/'));
@@ -302,13 +626,21 @@ test('the desktop boots, lists and opens every catalogued app', async () => {
     assert.ok(wins.has('text-editor'), 'a system text file opens in the Text Editor');
     await new Promise((resolve) => setTimeout(resolve, 20));
     const editor = wins.get('text-editor').body;
-    assert.match(editor.querySelector('#te-note').textContent, /read-only proton system/,
-      'proton\'s own files open locked');
+    assert.match(editor.querySelector('#te-note').textContent, /read-only proton system/);
     assert.equal(editor.querySelector('#te-text').readOnly, true);
     assert.match(editor.querySelector('#te-text').value, /^# proton/);
     assert.equal(editor.querySelector('#te-save').disabled, true, 'a read-only file cannot be saved in place');
     w.closeWin('text-editor', true);
-    assert.equal(wins.size, 0);
+
+    // A file with no viewer of its own is shown in Files, selected.
+    await w.eval("FS.writeBlob('/home/ada/backup.zip', new Blob([new Uint8Array([1, 2, 3])]))");
+    w.eval("openFSItem('/home/ada/backup.zip')");
+    assert.ok(wins.has('files'), 'Files is the fallback');
+    assert.match(w.document.querySelector('#toasts').textContent, /No viewer for backup\.zip/);
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    assert.ok(wins.get('files').body.querySelector('.sel[data-path="/home/ada/backup.zip"]'),
+      'the fallback selects the file');
+    w.closeWin('files', true);
 
     assert.deepEqual(errors, []);
   } finally { dom.window.close(); }
@@ -358,8 +690,7 @@ test('Customize saves, displays and resets uploaded app icon images', async () =
     const browserWindow = w.eval('wins').get('browser');
     assert.equal(body.querySelector('#cust-files-shortcut'), null, 'Customize still offers a Files shortcut');
     assert.deepEqual([...body.querySelectorAll('#cust-modlist .card b')].map((b) => b.textContent).slice(0, SYSTEM_APPS.length),
-      ['App Center', 'Customize', 'Settings', 'About', 'Browser', 'Files', 'Text Editor',
-        'Image Viewer', 'Media', 'PDF Viewer', 'Celeste Classic']);
+            ['App Center', 'Customize', 'Settings', 'About', 'Browser', 'Calculator', 'Files', 'Text Editor', 'PDF Viewer', 'Image Viewer', 'Media', 'Ruffle Flash Player', 'Web Retro', '2048', 'Bloons Tower Defense 1', 'Bloons Tower Defense 2', 'Bloons Tower Defense 5', 'Bloxorz', 'Breaking The Bank', 'Celeste Classic', 'Celeste Classic 2', 'Celeste Community', 'Cookie Clicker', 'Drive Mad', 'Escaping The Prison', 'Fleeing The Complex', 'Grey Box Testing', 'Infiltrating The Airship', 'Mari0', 'Offline Paradise', 'Pacman', 'Slope', 'Spacebar Clicker', 'Stack', 'Stealing The Diamond', 'Stickman Hook', 'Super Mario 64', 'Super Mario RPG', 'Tetris', 'The Impossible Quiz', 'Tunnel Rush']);
 
     const uploadBrowserIcon = async () => {
       const input = body.querySelector('[data-micon-file="browser"]');
@@ -412,7 +743,8 @@ test('Customize saves, displays and resets uploaded app icon images', async () =
     assert.equal(w.document.querySelector('#startmenu .sm-item[data-app="browser"] img.app-icon-image')?.getAttribute('src'),
       'data/icons/catalog-browser.png', 'reset returns to the configured default icon');
     assert.deepEqual(Array.from(w.eval('userData.settings.pinned')), ['settings', 'appcenter', 'browser']);
-    assert.deepEqual(Array.from(w.eval('userData.desktopIcons'), (s) => s.target), DEFAULT_ICONS);
+    assert.deepEqual(Array.from(w.eval('userData.desktopIcons'), (s) => s.target),
+      ['settings', 'browser', 'files', w.eval('FS.home()')]);
   } finally { w.close(); }
 });
 
@@ -665,6 +997,14 @@ test('the Files app manages the account’s folders and files end to end', async
     area.dispatchEvent(new w.Event('input', { bubbles: true }));
     assert.match(editor.querySelector('#te-status').textContent, /unsaved changes/);
     editor.querySelector('#te-save').click();
+    /* Saving asks which file system to write to — this computer or proton's.
+     * The file lives in the proton file system, so answer that. */
+    await settle();
+    const pickSource = (v) => w.document.querySelector(`.file-source-backdrop [data-fs="${v}"]`).click();
+    assert.ok(w.document.querySelector('.file-source-backdrop [data-fs="vfs"]'),
+      'Save asks which file system to write to');
+    pickSource('vfs');
+    await settle();
     assert.equal(await w.eval(`FS.read('${HOME}/Documents/todo.txt')`), text);
     assert.ok(saved().files.some((f) => f.path === `${HOME}/Documents/todo.txt` && f.content === text), 'saved with the account');
     assert.equal(editor.querySelector('#te-status').textContent.includes('unsaved'), false, 'the dirty flag clears');
@@ -753,6 +1093,8 @@ test('the Files app manages the account’s folders and files end to end', async
     assert.match(body.querySelector('#fm-status').textContent, /Selected 1/, 'the click selected the folder');
     body.querySelector('#fm-download').click();
     await settle();
+    w.document.querySelector('.file-source-backdrop [data-fs="device"]').click(); // to this computer
+    await settle();
     assert.ok(blobs.length > before, 'download produced an archive');
     assert.equal(blobs[blobs.length - 1].type, 'application/zip');
     assert.ok(blobs[blobs.length - 1].size > 100, 'the archive holds the folder, not just a header');
@@ -767,13 +1109,13 @@ test('the Files app manages the account’s folders and files end to end', async
 
     // The proton system tree is browsable but locked.
     body.querySelector('#fm-side [data-go="/apps"]').click();
-    rowOf('/apps/inbuilt').dispatchEvent(new w.MouseEvent('dblclick', { bubbles: true }));
-    rowOf('/apps/inbuilt/files').dispatchEvent(new w.MouseEvent('dblclick', { bubbles: true }));
-    assert.equal(body.querySelector('#fm-path').value, '/apps/inbuilt/files');
-    assert.ok(rows().includes('/apps/inbuilt/files/app.html'), 'the manifest tree is browsable');
+    rowOf('/apps/productivity').dispatchEvent(new w.MouseEvent('dblclick', { bubbles: true }));
+    rowOf('/apps/productivity/files').dispatchEvent(new w.MouseEvent('dblclick', { bubbles: true }));
+    assert.equal(body.querySelector('#fm-path').value, '/apps/productivity/files');
+    assert.ok(rows().includes('/apps/productivity/files/app.html'), 'the manifest tree is browsable');
     assert.equal(body.querySelector('#fm-new-folder').disabled, true, 'nothing can be created in the system tree');
     assert.match(body.querySelector('#fm-status').textContent, /read-only/);
-    assert.throws(() => w.eval("FS.mkdir('/apps/inbuilt/nope')"), /Read-only file system/);
+    assert.throws(() => w.eval("FS.mkdir('/apps/productivity/nope')"), /Read-only file system/);
 
     // Back home: a binary import keeps its exact bytes instead of being read
     // as text, while the imported note.txt above stayed editable text.
@@ -964,7 +1306,7 @@ test('proton’s search engine answers from the repository itself', async () => 
     const must = ['/README.md', '/CREDITS.md', '/LICENSE.txt', '/apps/README.md', '/websites/README.md',
       '/data/icons/README.md', '/index.html', '/assets/core.js', '/assets/fs.js', '/assets/search.js',
       '/assets/styles.css', '/tools/gen-fs-manifest.py', '/tools/gen-search-index.py',
-      '/websites/test-page/site.html', '/apps/celeste-classic/app.html'];
+      '/websites/test-page/site.html', '/apps/games/celeste-classic/app.html', '/UI.md'];
     for (const app of SYSTEM_APPS) {
       const entry = w.eval(`window.PROTON_APPLICATIONS.find((a) => a.id === ${JSON.stringify(app)})`);
       if (entry) must.push('/' + entry.path);
@@ -1028,7 +1370,10 @@ test('proton’s search engine answers from the repository itself', async () => 
       'a document that really is about a word still answers it, however long it is');
     assert.equal(results('zip').answer, true, 'the code that builds ZIPs answers "zip"');
     assert.equal(results('zip').results[0].answer, true);
-    assert.equal(results('zip').mentions > 0 && results('zip').answers > 0, true,
+    /* "zip" is also the name of vendored build files, so its default window
+     * is answers; widen it to see that mentions sit in their own lesser list. */
+    const wide = results('zip', 20);
+    assert.equal(wide.mentions > 0 && wide.answers > 0, true,
       'and the two are kept apart rather than ranked as one list');
     for (const query of ['files', 'celeste', 'test page', 'search index', 'wallpaper', 'licence']) {
       assert.equal(results(query).answer, true, `"${query}" has a real answer in this repository`);

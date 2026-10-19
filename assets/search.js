@@ -88,7 +88,7 @@ const PROTON_SEARCH = (function () {
     /* -ise/-ize and the forms they come from meet on one key ("customise",
      * "customize" and "customising" all end up as "customiz…"). */
     if (t.length > 4) t = t.replace(/is(?=e?$)/, 'iz');
-    return SPELLINGS[t] || t;
+    return Object.hasOwn(SPELLINGS, t) ? SPELLINGS[t] : t;
   }
 
   /* Folded all the way to a fixed point, exactly like tools/gen-search-index.py
@@ -162,7 +162,7 @@ const PROTON_SEARCH = (function () {
      * end of a long word still land somewhere. */
     const terms = corpus().terms || {};
     const out = [];
-    if (terms[token]) out.push({ term: token, weight: 1 });
+    if (Object.hasOwn(terms, token)) out.push({ term: token, weight: 1 });
     for (const term of Object.keys(terms)) {
       if (term !== token && term.startsWith(token)) out.push({ term, weight: 0.55 });
     }

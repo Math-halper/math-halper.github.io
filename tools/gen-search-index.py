@@ -361,7 +361,7 @@ def collect():
         dirnames[:] = sorted(d for d in dirnames if d not in EXCLUDE_DIRS and not d.startswith('_'))
         for fn in sorted(filenames):
             rel = os.path.relpath(os.path.join(dirpath, fn), ROOT).replace(os.sep, '/')
-            if rel in EXCLUDE_FILES:
+            if rel in EXCLUDE_FILES or fn.startswith('_'):
                 continue
             files.append(rel)
     files.sort()
