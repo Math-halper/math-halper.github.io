@@ -460,7 +460,7 @@ function renderPanelApps() {
   const ids = [...new Set([...pinned, ...wins.keys()])].filter((id) => !(userData.hiddenApps || []).includes(id));
   box.innerHTML = ids.filter((id) => APPS[id]).map((id) => {
     const a = APPS[id], run = wins.has(id), act = activeApp === id;
-    return `<button class="pitem ${run ? 'running' : ''} ${act ? 'active' : ''}" data-app="${id}" title="${MH.esc(a.name)}${run ? ' (open)' : ''}"><span>${appIcon(a)}</span>${(pinned.includes(id) && !(userData.settings.components || {}).panelLabels) ? '' : `<span class="pl">${MH.esc(a.name)}</span>`}</button>`;
+    return `<button class="pitem ${run ? 'running' : ''} ${act ? 'active' : ''}" data-app="${id}" title="${MH.esc(a.name)}${run ? ' (open)' : ''}"><span>${appIcon(a)}</span>${(userData.settings.components || {}).panelLabels ? `<span class="pl">${MH.esc(a.name)}</span>` : ''}</button>`;
   }).join('');
   box.querySelectorAll('.pitem').forEach((b) => b.onclick = () => {
     const id = b.dataset.app;

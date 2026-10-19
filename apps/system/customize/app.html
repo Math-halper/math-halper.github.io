@@ -324,7 +324,7 @@ registerApp({
         ['lockButton', iconSvg('lock') + ' Lock button in the panel'],
         ['userButton', iconSvg('user') + ' Account button in the panel'],
         ['startSearch', iconSvg('search') + ' Search box in the proton menu'],
-        ['panelLabels', iconSvg('edit') + ' Names next to pinned panel icons'],
+        ['panelLabels', iconSvg('edit') + ' Names next to panel icons'],
       ];
       body.querySelector('#cust-components').innerHTML = items.map(([key, label]) =>
         `<label style="display:flex;gap:9px;align-items:center;padding:7px 0;font-weight:600"><input type="checkbox" data-comp="${key}" ${c[key] ? 'checked' : ''} style="width:18px;height:18px;accent-color:var(--accent)"> ${label}</label>`).join('') +
