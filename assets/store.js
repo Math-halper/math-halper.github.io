@@ -87,6 +87,10 @@ const MH = {
       version: 1,
       settings: { wallpaper: 'mint', accent: '#ffffff', pinned: ['settings', 'appcenter', 'browser'] },
       desktopIcons: MH.defaultDesktopIcons(),
+      /* The Browser's own chrome, saved with the account and carried by
+       * Settings backups: starred pages and what it visited recently. */
+      bookmarks: [],
+      history: [],
       notes: [{
         id: MH.uid(), title: 'Welcome to proton',
         html: `<p>This desktop is a <b>static clone of Mixt</b> (from <i>proton-arcade/mlp</i>), rebranded and rebuilt to run with <b>no server at all</b>.</p><h2><span style="font-size:19px">Things to try</span></h2><ul><li><b>Files</b> browses your own folders and proton's read-only system tree; text, pictures, audio, video and PDFs open in their own apps — and every open/save asks whether to use <b>your Files</b> (this computer) or the <b>proton file system</b></li><li>The <b>Calculator</b> does quick maths, <b>Web Retro</b> plays your own retro ROMs, and the three <b>Celeste</b> apps (Classic, Classic 2, Community) play the actual game files — vendored from Math-halper/Celeste</li><li>Everything you type here is <b>saved on this device</b>, under your account</li><li>Drag windows, pin apps to the panel, change the wallpaper in Settings</li></ul><p>Have fun!</p>`,

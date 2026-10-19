@@ -4,7 +4,8 @@ Copy the template below for each application, in the order you want them
 in the proton menu. Nothing else needs editing: name, location (path),
 icon, category, description and default window size all live here.
 
-  - Add an app:    copy the template block below (and the app's folder).
+  - Add an app:    copy the template block below (and the app's folder,
+                   under apps/inbuilt/).
   - Remove an app: delete its block (or set enabled=false to keep the
                    block but hide the app).
   - icon= is either a named SVG icon, or a local raster path such as
@@ -28,7 +29,7 @@ proton ships the five desktop System apps (App Center, Customize, Settings,
 About, Browser), the file system suite from main (Files, Text Editor, Image
 Viewer, Media, PDF Viewer — their ids are exactly the ones FS.appFor()
 returns, so double-clicking a file opens it in the right one), a Calculator,
-Web Retro (a vendored webretro emulator build; bring your own ROMs), the
+Web Retro and Ruffle Flash Player (the Tools — Web Retro carries the offline catalog’s classic ROMs and still loads your own), the
 three Celeste Classics apps (Celeste Classic, Celeste Classic 2, Celeste
 Community — game files copied byte-for-byte from github.com/Math-halper/Celeste),
 the two Mario games (Mari0 and Super Mario 64 — game builds copied
@@ -114,7 +115,7 @@ path=apps/system/browser/app.html
 icon=globe
 svg-icon=true
 cat=System
-desc=Visit web addresses and any built-in websites from data/websites.js
+desc=Tabs, back/forward, bookmarks and history — and a search bar that answers from proton's own index of this repository
 w=940
 h=600
 

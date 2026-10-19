@@ -7,7 +7,7 @@
 </head>
 <body>
 <p>This file is a proton app. It is not meant to be opened on its own:
-open <a href="../../../index.html">proton</a> and launch <b>Browser</b> from the
+open <a href="../../index.html">proton</a> and launch <b>Browser</b> from the
 proton menu. The script below is fetched and run by proton's HTML loader
 (assets/html-loader.js) at boot.</p>
 <!-- proton app: everything that registers and renders this app lives in
@@ -16,16 +16,41 @@ proton menu. The script below is fetched and run by proton's HTML loader
 /* proton app module: browser — edit this file to change this app.
  * Loaded by index.html; calls registerApp() (see apps/README.md).
  *
- * The Browser renders BUILT-IN WEBSITES from the SITES registry. Every
- * built-in site is a real HTML page in its own folder:
- * websites/<name>/site.html, listed in the website catalog
- * data/websites.js (same system as the app catalog). Add a site folder
- * + one [website] block there and it shows up here automatically. That
- * catalog holds one entry in this build (Test Page) — the other built-in
- * websites were removed with the non-system apps — and the home page copes
- * with an empty one by saying so.
+ * A real browser shape, with proton's own search engine behind the bar:
+ *
+ *   tabs        one page each, kept alive when you switch away, so a framed
+ *               site does not reload behind your back;
+ *   navigation  every tab has its own back/forward list, plus reload and stop;
+ *   the bar     type an address to go there, or type words to search. Anything
+ *               that is not an address is a query — that is the point of it;
+ *   suggestions live completions while you type: apps, built-in websites,
+ *               proton's own pages, your bookmarks and history, file names,
+ *               and the words this repository actually uses;
+ *   search      proton://search answers from data/search-index.js through
+ *               assets/search.js. The corpus is this repository — its
+ *               documentation, app modules, built-in websites and source
+ *               comments — plus every path in the file system and the app and
+ *               website catalogs. No server, no outside search API, nothing
+ *               typed here ever leaves the browser;
+ *   reader      proton://read shows any text file in the repository with the
+ *               query's matches marked, because a search result you cannot
+ *               read is not much of a result;
+ *   bookmarks   starred pages, and history, both saved with the account
+ *   & history   (userData.bookmarks / userData.history) so Settings backups
+ *               carry them.
+ *
+ * Addresses the bar understands:
+ *   proton://home | search?q=… | read?path=…&q=… | bookmarks | history
+ *   proton://<site id>            a built-in website from data/websites.js
+ *   file:///path/to/page.html     an HTML page from the virtual file system
+ *   https://…                     an external address, in a sandboxed frame
+ *   anything else                 a search
+ *
+ * Built-in websites are standalone pages in websites/<name>/site.html listed
+ * in data/websites.js; they run in a frame and reach this window as
+ * window.parent.__protonSiteCtx (openApp / loadExternal / showHome / showSite).
  * The user's own saved websites live in userData and are managed by
- * apps/app-center and on the Browser home page below.
+ * apps/system/app-center and on the home page below.
  */
 'use strict';
 
@@ -33,128 +58,952 @@ registerApp({
   /* Metadata (name, icon, cat, desc, w, h) lives in the app catalog:
    * data/applications.js — edit it there, not here. */
   render(body, options) {
+    const HOME = 'proton://home';
+    const HISTORY_LIMIT = 60;      // per tab and per account
+    const SNIPPETS = 8;            // results given a real quote from the file
+    const READER_LIMIT = 400000;   // characters a reader page will render
+
+    /* proton's own pages: what the bar completes and search can return. */
+    const PAGES = [
+      { url: HOME, name: 'Home', desc: 'The Browser start page: search, built-in websites and your own saved websites' },
+      { url: 'proton://search', name: 'Search', desc: 'Search this repository with proton’s own search index' },
+      { url: 'proton://bookmarks', name: 'Bookmarks', desc: 'The pages you starred, saved with this account' },
+      { url: 'proton://history', name: 'History', desc: 'What this Browser visited recently, saved with this account' },
+    ];
+    /* Searches worth offering before anyone has typed anything. */
+    const STARTERS = ['files', 'wallpaper', 'backup', 'zip', 'celeste', 'licence', 'desktop shortcut', 'search index'];
+
     const siteList = Object.values(SITES);
-    body.innerHTML = `${bar('Browser', `<button class="btn sm" id="b-home">${iconSvg('home')} Home</button>${siteList.length ? `<select id="b-sites-menu" title="Built-in websites"><option value="">Built-in websites…</option>${siteList.map((s) => `<option value="${s.id}">${MH.esc(s.name)}</option>`).join('')}</select>` : ''}`)}
-    <div class="appbar" style="background:#111"><span>${iconSvg('lock')}</span><input id="b-url" type="text" value="proton://home" style="flex:1;padding:7px 10px"><button class="btn sm primary" id="b-go">Go</button></div>
-    <div class="app-main" id="b-main"></div>`;
-    const main = body.querySelector('#b-main');
-    let navigation = 0, localUrls = [];
-    const clearLocalUrls = () => { localUrls.forEach((url) => URL.revokeObjectURL(url)); localUrls = []; };
-    const leavePage = () => { navigation++; clearLocalUrls(); };
-    const ctx = { openApp, loadExternal, showHome: () => showHome(), showSite };
-    /* Built-in site.html pages run in a frame and reach this context as
+    body.innerHTML = `${bar('Browser', `<div class="brw-tabs" id="b-tabs"></div>
+      <button class="iconbtn brw-newtab" type="button" id="b-newtab" title="New tab">${iconSvg('plus')}</button>
+      ${siteList.length ? `<select id="b-sites-menu" title="Built-in websites"><option value="">Built-in websites…</option>${siteList.map((s) => `<option value="${s.id}">${MH.esc(s.name)}</option>`).join('')}</select>` : ''}
+      <button class="iconbtn" type="button" id="b-bookmarks" title="Bookmarks">${iconSvg('star')}</button>
+      <button class="iconbtn" type="button" id="b-history" title="History">${iconSvg('clock')}</button>`)}
+    <div class="brw-nav">
+      <button class="iconbtn" type="button" id="b-back" title="Back (Alt+←)">${iconSvg('chevron-left')}</button>
+      <button class="iconbtn" type="button" id="b-forward" title="Forward (Alt+→)">${iconSvg('chevron-right')}</button>
+      <button class="iconbtn" type="button" id="b-reload" title="Reload">${iconSvg('refresh')}</button>
+      <button class="iconbtn" type="button" id="b-home" title="Home">${iconSvg('home')}</button>
+      <div class="brw-bar">
+        <span class="brw-bar-ic" id="b-baricon" aria-hidden="true">${iconSvg('search')}</span>
+        <input id="b-url" type="text" value="" placeholder="Search proton or type an address" spellcheck="false" autocomplete="off" aria-label="Search proton or type an address">
+        <button class="iconbtn brw-star" type="button" id="b-star" title="Bookmark this page" aria-pressed="false">${iconSvg('star')}</button>
+        <div class="brw-progress" id="b-progress" hidden><i></i></div>
+        <div class="brw-suggest" id="b-suggest" hidden role="listbox" aria-label="Suggestions"></div>
+      </div>
+      <button class="btn sm primary" type="button" id="b-go">Search</button>
+    </div>
+    <div class="brw-pages" id="b-pages"></div>`;
+
+    const tabsEl = body.querySelector('#b-tabs');
+    const pagesEl = body.querySelector('#b-pages');
+    const urlInput = body.querySelector('#b-url');
+    const barIcon = body.querySelector('#b-baricon');
+    const goBtn = body.querySelector('#b-go');
+    const starBtn = body.querySelector('#b-star');
+    const suggestEl = body.querySelector('#b-suggest');
+    const progressEl = body.querySelector('#b-progress');
+
+    /* ------------------------- state ------------------------- */
+    const tabs = [];
+    let tabSeq = 0, activeId = null, renderSeq = 0;
+    let suggestions = [], suggestAt = -1;
+    const snippetCache = new Map();   // path -> text, so re-searching is instant
+    const timers = [];
+
+    const active = () => tabs.find((t) => t.id === activeId) || null;
+    const later = (fn, ms) => { const id = setTimeout(fn, ms); timers.push(id); return id; };
+    const rel = (path) => String(path || '').replace(/^\/+/, '');
+
+    /* Built-in site pages run in a frame and reach this context as
      * window.parent.__protonSiteCtx (same-origin, this device only). */
+    const ctx = {
+      openApp,
+      loadExternal: (url) => navigate(active() || newTab(), url),
+      showHome: () => navigate(active() || newTab(), HOME),
+      showSite: (id) => navigate(active() || newTab(), 'proton://' + id),
+    };
     window.__protonSiteCtx = ctx;
 
-    function showHome() {
-      leavePage();
-      body.querySelector('#b-url').value = 'proton://home';
+    /* ------------------------- addresses ------------------------- */
+    const LOOKS_LIKE_HOST = /^(?:[\w-]+\.)+[\w-]{2,}(?::\d+)?(?:[/?#]\S*)?$/;
+
+    function parseAddress(raw) {
+      const text = String(raw || '').trim();
+      if (!text) return { kind: 'empty', url: '' };
+      const proton = /^proton:\/\/([^/?#]*)(.*)$/i.exec(text);
+      if (proton) {
+        const name = proton[1].toLowerCase();
+        const params = new URLSearchParams(proton[2].replace(/^\?/, ''));
+        if (!name || name === 'home') return { kind: 'home', url: HOME };
+        if (name === 'search') return { kind: 'search', url: text, query: params.get('q') || '' };
+        if (name === 'read') return { kind: 'read', url: text, path: params.get('path') || '', query: params.get('q') || '' };
+        if (name === 'bookmarks' || name === 'bookmark') return { kind: 'bookmarks', url: 'proton://bookmarks' };
+        if (name === 'history') return { kind: 'history', url: 'proton://history' };
+        return SITES[name] ? { kind: 'site', url: 'proton://' + name, id: name } : { kind: 'unknown', url: text };
+      }
+      if (/^file:\/\//i.test(text)) return { kind: 'file', url: text, path: text.replace(/^file:\/\//i, '') };
+      if (text.startsWith('/')) return { kind: 'file', url: 'file://' + text, path: text };
+      if (/^https?:\/\//i.test(text)) {
+        const url = normalizeUrl(text);
+        return url ? { kind: 'external', url } : { kind: 'search', url: text, query: text };
+      }
+      if (/^localhost(?::\d+)?(?:[/?#]\S*)?$/i.test(text) || LOOKS_LIKE_HOST.test(text)) {
+        const url = normalizeUrl(text);
+        if (url) return { kind: 'external', url };
+      }
+      /* Not an address, so it is a question: search proton's own index. */
+      return { kind: 'search', url: 'proton://search?q=' + encodeURIComponent(text), query: text };
+    }
+    const searchUrl = (query) => 'proton://search?q=' + encodeURIComponent(query);
+    const readUrl = (path, query) => 'proton://read?path=' + encodeURIComponent(path)
+      + (query ? '&q=' + encodeURIComponent(query) : '');
+
+    /* ------------------------- account data ------------------------- */
+    function bookmarks() {
       normalizeUserData();
-      main.innerHTML = `<div class="pad"><h2>Welcome to the (tiny) proton web</h2>
-      <p class="muted">This static site has no server, so the Browser only shows what this repository ships. Real websites can be opened from the address bar too, though many refuse to be embedded.</p>
-      <h3>${iconSvg('book')} Built-in websites</h3>${siteList.length ? `<div class="grid-cards">
-      ${siteList.map((s) => `<div class="card"><div class="card-ic" style="font-size:24px">${catalogIconFor(s.icon, s.svgIcon !== false, 'globe')}</div><h3 style="margin:5px 0 3px">${MH.esc(s.name)}</h3><p class="muted">${MH.esc(s.desc || '')}</p><button class="btn primary" data-site="${s.id}">Visit</button></div>`).join('')}
-      </div>` : '<p class="muted">No built-in websites are catalogued right now. Add a page under <span class="kbd">websites/&lt;name&gt;/site.html</span> plus one <span class="kbd">[website]</span> block in <span class="kbd">data/websites.js</span> and it appears here.</p>'}
-      <h3 style="margin-top:20px">${iconSvg('globe')} Your websites</h3><div class="grid-cards" id="b-sites"></div>
-      <p class="muted" style="margin-top:14px">Adding websites is disabled. Type any address in the bar above to visit it without saving it, or open an HTML file from the virtual file system with <span class="kbd">file:///path/to/page.html</span>.</p></div>`;
-      main.querySelectorAll('[data-site]').forEach((b) => b.onclick = () => showSite(b.dataset.site));
-      const sitesBox = main.querySelector('#b-sites');
+      if (!Array.isArray(userData.bookmarks)) userData.bookmarks = [];
+      userData.bookmarks = userData.bookmarks.filter((b) => b && typeof b.url === 'string');
+      return userData.bookmarks;
+    }
+    function history() {
+      normalizeUserData();
+      if (!Array.isArray(userData.history)) userData.history = [];
+      userData.history = userData.history.filter((h) => h && typeof h.url === 'string');
+      return userData.history;
+    }
+    function recordHistory(url, title) {
+      if (!currentUser) return;
+      const list = history();
+      if (list[0] && list[0].url === url) { list[0].title = title || list[0].title; list[0].at = Date.now(); }
+      else list.unshift({ url, title: title || url, at: Date.now() });
+      if (list.length > HISTORY_LIMIT) list.length = HISTORY_LIMIT;
+      saveData();
+    }
+    const isBookmarked = (url) => bookmarks().some((b) => b.url === url);
+    function toggleBookmark() {
+      const tab = active();
+      if (!tab) return;
+      const list = bookmarks();
+      const at = list.findIndex((b) => b.url === tab.url);
+      if (at >= 0) { list.splice(at, 1); MH.toast('Bookmark removed.'); }
+      else {
+        list.unshift({ id: MH.uid(), url: tab.url, title: tab.title || tab.url, added: Date.now() });
+        MH.toast(`Bookmarked ${tab.title || tab.url}.`);
+      }
+      saveData();
+      drawChrome();
+    }
+
+    /* ------------------------- tabs ------------------------- */
+    function newTab(url, { activate = true } = {}) {
+      const tab = {
+        id: 'brw-tab-' + (++tabSeq), url: HOME, title: 'New tab', target: { kind: 'home', url: HOME },
+        history: [], at: -1, loading: false, token: 0, el: null,
+      };
+      const el = document.createElement('div');
+      el.className = 'brw-page';
+      el.dataset.tab = tab.id;
+      el.hidden = true;
+      pagesEl.appendChild(el);
+      tab.el = el;
+      tabs.push(tab);
+      if (activate) activateTab(tab.id);
+      navigate(tab, url || HOME, { replace: true });
+      return tab;
+    }
+    function closeTab(id) {
+      const at = tabs.findIndex((t) => t.id === id);
+      if (at < 0) return;
+      const [tab] = tabs.splice(at, 1);
+      tab.token++;                       // cancel anything still rendering
+      tab.el?.remove();
+      if (!tabs.length) { newTab(HOME); return; }
+      if (activeId === id) activateTab(tabs[Math.min(at, tabs.length - 1)].id);
+      else drawChrome();
+    }
+    function activateTab(id) {
+      activeId = id;
+      tabs.forEach((tab) => { if (tab.el) tab.el.hidden = tab.id !== id; });
+      const tab = active();
+      if (tab) {
+        urlInput.value = tab.url === HOME ? '' : tab.url;
+        hideSuggestions();
+      }
+      drawChrome();
+    }
+
+    /* ------------------------- navigation ------------------------- */
+    function navigate(tab, raw, opts = {}) {
+      if (!tab) return;
+      const target = parseAddress(raw);
+      if (target.kind === 'empty') return;
+      if (!opts.replace) {
+        tab.history = tab.history.slice(0, tab.at + 1);
+        tab.history.push(target.url);
+        tab.at = tab.history.length - 1;
+        if (tab.history.length > HISTORY_LIMIT) { tab.history.shift(); tab.at--; }
+      } else if (tab.at >= 0) tab.history[tab.at] = target.url;
+      /* Replacing with no history yet is a new tab's first page: it still has
+       * to be the first entry, or Back could never reach it. */
+      else { tab.history = [target.url]; tab.at = 0; }
+      tab.url = target.url;
+      tab.target = target;
+      renderPage(tab);
+      drawChrome();
+      if (tab.id === activeId) urlInput.value = tab.url === HOME ? '' : tab.url;
+      recordHistory(tab.url, tab.title);
+    }
+    function travel(tab, delta) {
+      if (!tab) return;
+      const to = tab.at + delta;
+      if (to < 0 || to >= tab.history.length) return;
+      tab.at = to;
+      tab.target = parseAddress(tab.history[to]);
+      tab.url = tab.target.url || tab.history[to];
+      renderPage(tab);
+      drawChrome();
+      if (tab.id === activeId) urlInput.value = tab.url === HOME ? '' : tab.url;
+      recordHistory(tab.url, tab.title);
+    }
+    function reload(tab) {
+      if (!tab) return;
+      tab.token++;
+      renderPage(tab);
+      drawChrome();
+    }
+    function stop(tab) {
+      if (!tab) return;
+      tab.token++;
+      tab.loading = false;
+      const frame = tab.el?.querySelector('iframe');
+      if (frame) frame.remove();
+      drawChrome();
+    }
+
+    /* A framed page is "loading" until its frame says otherwise; a cross-origin
+     * frame still fires load, and the timeout covers the ones that never do. */
+    function watchFrame(tab, frame) {
+      tab.loading = true;
+      const token = tab.token;
+      frame.addEventListener('load', () => { if (token === tab.token) { tab.loading = false; drawChrome(); } });
+      frame.addEventListener('error', () => { if (token === tab.token) { tab.loading = false; drawChrome(); } });
+      later(() => { if (token === tab.token && tab.loading) { tab.loading = false; drawChrome(); } }, 12000);
+      drawChrome();
+    }
+
+    function renderPage(tab) {
+      if (!tab || !tab.el) return;
+      tab.token++;
+      tab.loading = false;
+      const target = tab.target || parseAddress(tab.url);
+      switch (target.kind) {
+        case 'home': showHome(tab); break;
+        case 'search': showSearch(tab, target.query || ''); break;
+        case 'read': showReader(tab, target.path || '', target.query || ''); break;
+        case 'site': showSite(tab, target.id); break;
+        case 'bookmarks': showBookmarks(tab); break;
+        case 'history': showHistory(tab); break;
+        case 'file': openLocal(tab, target.path); break;
+        case 'external': loadExternal(tab, target.url); break;
+        default: showUnknown(tab, target.url); break;
+      }
+    }
+
+    /* ------------------------- chrome ------------------------- */
+    function drawChrome() {
+      /* Tabs: a title, a close button, and which one you are looking at. */
+      tabsEl.innerHTML = tabs.map((tab) => `
+        <button class="brw-tab${tab.id === activeId ? ' on' : ''}" type="button" data-tab="${tab.id}"
+          title="${MH.esc(tab.url)}">${tab.loading ? `<i class="brw-spin">${iconSvg('refresh')}</i>` : iconFor(tab)}
+          <span>${MH.esc(tab.title || 'New tab')}</span>
+          <i class="brw-tab-x" data-close="${tab.id}" role="button" tabindex="-1" title="Close tab">${iconSvg('x')}</i>
+        </button>`).join('');
+      tabsEl.querySelectorAll('[data-tab]').forEach((el) => {
+        el.onclick = (e) => {
+          const closing = e.target.closest('[data-close]');
+          if (closing) { closeTab(closing.dataset.close); return; }
+          activateTab(el.dataset.tab);
+        };
+        el.onauxclick = (e) => { if (e.button === 1) { e.preventDefault(); closeTab(el.dataset.tab); } };
+      });
+
+      const tab = active();
+      body.querySelector('#b-back').disabled = !tab || tab.at <= 0;
+      body.querySelector('#b-forward').disabled = !tab || tab.at >= tab.history.length - 1;
+      const reloadBtn = body.querySelector('#b-reload');
+      reloadBtn.innerHTML = tab?.loading ? iconSvg('x') : iconSvg('refresh');
+      reloadBtn.title = tab?.loading ? 'Stop loading' : 'Reload';
+      reloadBtn.onclick = () => (tab?.loading ? stop(tab) : reload(tab));
+      starBtn.disabled = !tab;
+      starBtn.classList.toggle('on', !!tab && isBookmarked(tab.url));
+      starBtn.setAttribute('aria-pressed', String(!!tab && isBookmarked(tab.url)));
+      starBtn.title = tab && isBookmarked(tab.url) ? 'Remove bookmark' : 'Bookmark this page';
+      progressEl.hidden = !tabs.some((t) => t.loading);
+
+      /* The bar's icon says what pressing Enter will do. */
+      const typed = parseAddress(urlInput.value);
+      const isAddress = !['search', 'empty'].includes(typed.kind);
+      barIcon.innerHTML = iconSvg(typed.kind === 'external' ? 'globe' : isAddress ? 'lock' : 'search');
+      barIcon.title = typed.kind === 'external' ? 'An address on the internet'
+        : isAddress ? 'Inside proton' : 'Searches this repository';
+      goBtn.textContent = urlInput.value.trim() && !isAddress ? 'Search' : 'Go';
+    }
+    function iconFor(tab) {
+      const kind = tab.target?.kind;
+      if (kind === 'site') {
+        const site = SITES[tab.target.id];
+        return catalogIconFor(site?.icon, site?.svgIcon !== false, 'globe');
+      }
+      if (kind === 'external') return iconSvg('globe');
+      if (kind === 'search') return iconSvg('search');
+      if (kind === 'bookmarks') return iconSvg('star');
+      if (kind === 'history') return iconSvg('clock');
+      if (kind === 'read' || kind === 'file') return iconSvg('file-text');
+      return iconSvg('home');
+    }
+
+    /* ------------------------- suggestions ------------------------- */
+    function showSuggestions(text) {
+      const tab = active();
+      suggestions = PROTON_SEARCH.suggest(text, {
+        limit: 8,
+        pages: PAGES,
+        bookmarks: bookmarks().slice(0, 20),
+        history: history().slice(0, 20),
+      });
+      suggestAt = -1;
+      if (!suggestions.length) { hideSuggestions(); return; }
+      suggestEl.hidden = false;
+      suggestEl.innerHTML = suggestions.map((item, i) => `
+        <button class="brw-sug" type="button" role="option" data-i="${i}" aria-selected="false">
+          ${catalogIconFor(item.icon, item.svgIcon !== false, 'search')}
+          <span class="brw-sug-label">${MH.esc(item.label)}</span>
+          <span class="brw-sug-sub">${MH.esc(item.sub || '')}</span>
+        </button>`).join('');
+      suggestEl.querySelectorAll('[data-i]').forEach((el) => {
+        el.onpointerdown = (e) => { e.preventDefault(); commit(Number(el.dataset.i), tab); };
+        el.onpointerenter = () => selectSuggestion(Number(el.dataset.i));
+      });
+    }
+    function hideSuggestions() {
+      suggestEl.hidden = true;
+      suggestEl.innerHTML = '';
+      suggestions = [];
+      suggestAt = -1;
+    }
+    function selectSuggestion(index) {
+      if (!suggestions.length) return;
+      suggestAt = (index + suggestions.length) % suggestions.length;
+      suggestEl.querySelectorAll('[data-i]').forEach((el) => {
+        const on = Number(el.dataset.i) === suggestAt;
+        el.classList.toggle('on', on);
+        el.setAttribute('aria-selected', String(on));
+        if (on) el.scrollIntoView({ block: 'nearest' });
+      });
+    }
+    /* A suggestion knows what it means: search for words, go to an address,
+     * open an app, visit a built-in website. */
+    function commit(index, tab) {
+      const item = suggestions[index];
+      const target = tab || active() || newTab();
+      hideSuggestions();
+      if (!item) { navigate(target, urlInput.value); return; }
+      if (item.action === 'app') { openApp(item.value); return; }
+      if (item.action === 'site') { navigate(target, 'proton://' + item.value); return; }
+      if (item.action === 'search') { urlInput.value = item.value; navigate(target, searchUrl(item.value)); return; }
+      urlInput.value = item.value;
+      navigate(target, item.value);
+    }
+
+    /* ------------------------- pages ------------------------- */
+    function showHome(tab) {
+      tab.title = 'Home';
+      normalizeUserData();
+      const stats = PROTON_SEARCH.stats();
+      tab.el.innerHTML = `<div class="pad brw-start">
+        <h2 class="brw-start-title">${iconSvg('search')} Search proton</h2>
+        <form class="brw-start-form" id="b-startform">
+          <input id="b-startq" type="text" placeholder="Search this repository — apps, docs, websites, files"
+            autocomplete="off" spellcheck="false" aria-label="Search proton">
+          <button class="btn primary" type="submit">${iconSvg('search')} Search</button>
+        </form>
+        <p class="muted brw-start-note">${stats.docs} documents and ${stats.terms} words indexed from this
+          repository by <span class="kbd">tools/gen-search-index.py</span>, searched by
+          <span class="kbd">assets/search.js</span>. There is no server and no outside search engine:
+          what you type never leaves this browser. Type an address in the bar above to visit it instead.</p>
+        <div class="brw-chips">${STARTERS.map((word) => `<button class="chip brw-chip" type="button" data-q="${MH.esc(word)}">${MH.esc(word)}</button>`).join('')}</div>
+        <div class="brw-quick">
+          <button class="btn sm" type="button" data-go="proton://bookmarks">${iconSvg('star')} Bookmarks</button>
+          <button class="btn sm" type="button" data-go="proton://history">${iconSvg('clock')} History</button>
+          ${APPS.files ? `<button class="btn sm" type="button" data-app="files">${iconSvg('folder')} Files</button>` : ''}
+          ${APPS['text-editor'] ? `<button class="btn sm" type="button" data-app="text-editor">${iconSvg('file-text')} Text Editor</button>` : ''}
+        </div>
+        <h3>${iconSvg('book')} Built-in websites</h3>${siteList.length ? `<div class="grid-cards">
+        ${siteList.map((s) => `<div class="card"><div class="card-ic" style="font-size:24px">${catalogIconFor(s.icon, s.svgIcon !== false, 'globe')}</div><h3 style="margin:5px 0 3px">${MH.esc(s.name)}</h3><p class="muted">${MH.esc(s.desc || '')}</p><button class="btn primary" data-site="${s.id}">Visit</button></div>`).join('')}
+        </div>` : '<p class="muted">No built-in websites are catalogued right now. Add a page under <span class="kbd">websites/&lt;name&gt;/site.html</span> plus one <span class="kbd">[website]</span> block in <span class="kbd">data/websites.js</span> and it appears here.</p>'}
+        <h3 style="margin-top:20px">${iconSvg('globe')} Your websites</h3><div class="grid-cards" id="b-sites"></div>
+        <p class="muted" style="margin-top:14px">Adding websites is disabled. Type any address in the bar above to visit it without saving it, or open an HTML file from the virtual file system with <span class="kbd">file:///path/to/page.html</span>.</p>
+      </div>`;
+      tab.el.querySelectorAll('[data-site]').forEach((b) => b.onclick = () => navigate(tab, 'proton://' + b.dataset.site));
+      tab.el.querySelector('#b-startform').onsubmit = (e) => {
+        e.preventDefault();
+        const query = tab.el.querySelector('#b-startq').value.trim();
+        if (query) navigate(tab, searchUrl(query));
+      };
+      tab.el.querySelectorAll('[data-q]').forEach((b) => b.onclick = () => navigate(tab, searchUrl(b.dataset.q)));
+      tab.el.querySelectorAll('[data-go]').forEach((b) => b.onclick = () => navigate(tab, b.dataset.go));
+      tab.el.querySelectorAll('[data-app]').forEach((b) => b.onclick = () => openApp(b.dataset.app));
+      const sitesBox = tab.el.querySelector('#b-sites');
       sitesBox.innerHTML = userData.websites.length ? userData.websites.map((s) => `
         <div class="card"><div class="card-ic" style="font-size:24px">${catalogIconFor(s.icon, s.svgIcon !== false, 'globe')}</div><h3 style="margin:5px 0 3px">${MH.esc(s.name)}</h3>
         <p class="muted site-url">${MH.esc(s.url)}</p><button class="btn sm primary" data-open="${s.id}">Open</button>
         <button class="btn sm" data-del="${s.id}">Remove</button></div>`).join('')
         : '<p class="muted">No websites saved on this account. Adding websites is disabled.</p>';
-      sitesBox.querySelectorAll('[data-open]').forEach((b) => b.onclick = () => { const s = userData.websites.find((x) => x.id === b.dataset.open); if (s) loadExternal(s.url); });
+      sitesBox.querySelectorAll('[data-open]').forEach((b) => b.onclick = () => {
+        const s = userData.websites.find((x) => x.id === b.dataset.open);
+        if (s) loadExternal(tab, s.url);
+      });
       sitesBox.querySelectorAll('[data-del]').forEach((b) => b.onclick = () => {
-        userData.websites = userData.websites.filter((x) => x.id !== b.dataset.del); saveData(); showHome();
+        userData.websites = userData.websites.filter((x) => x.id !== b.dataset.del);
+        saveData();
+        showHome(tab);
+      });
+      later(() => tab.el.querySelector('#b-startq')?.focus(), 0);
+    }
+
+    /* The results page. Ranked by assets/search.js, filtered by kind, and the
+     * top few results get a real quote from the file instead of its summary. */
+    function showSearch(tab, query) {
+      tab.title = query ? `Search: ${query}` : 'Search';
+      const trimmed = String(query || '').trim();
+      if (!trimmed) {
+        tab.el.innerHTML = `<div class="pad"><h2>${iconSvg('search')} Search proton</h2>
+          <form class="brw-start-form" id="b-qform"><input id="b-q" type="text" autocomplete="off" spellcheck="false"
+            placeholder="apps, docs, websites, files — anything in this repository" aria-label="Search proton">
+            <button class="btn primary" type="submit">${iconSvg('search')} Search</button></form>
+          <div class="brw-chips">${STARTERS.map((word) => `<button class="chip brw-chip" type="button" data-q="${MH.esc(word)}">${MH.esc(word)}</button>`).join('')}</div>
+          <p class="muted">proton searches its own repository, not the internet.</p></div>`;
+        tab.el.querySelector('#b-qform').onsubmit = (e) => {
+          e.preventDefault();
+          const next = tab.el.querySelector('#b-q').value.trim();
+          if (next) navigate(tab, searchUrl(next));
+        };
+        tab.el.querySelectorAll('[data-q]').forEach((b) => b.onclick = () => navigate(tab, searchUrl(b.dataset.q)));
+        later(() => tab.el.querySelector('#b-q')?.focus(), 0);
+        return;
+      }
+      const found = PROTON_SEARCH.search(trimmed, { limit: 60, pages: PAGES });
+      /* An ANSWER is a file this repository is actually about the word in: its
+       * name, title or summary carries it, the catalogs name an app or website
+       * with it, or the file uses it often enough to own it. A MENTION is a
+       * file the word merely turns up in. Only answers are shown as results —
+       * proton is not a dictionary, so one incidental occurrence ("definition"
+       * inside LICENSE.txt) does not get to be the first result. */
+      const answers = found.results.filter((r) => r.answer);
+      const mentions = found.results.filter((r) => !r.answer);
+      const kinds = [...new Set(answers.map((r) => r.kind))];
+      const stats = PROTON_SEARCH.stats();
+      const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
+      const chips = (words) => `<div class="brw-chips">${words.map((word) =>
+        `<button class="chip brw-chip" type="button" data-q="${MH.esc(word)}">${MH.esc(word)}</button>`).join('')}</div>`;
+      const nearby = found.nearby.length
+        ? `<div class="brw-chips"><span class="muted brw-chips-label">Nearest words in the index:</span>${chips(found.nearby.map((n) => n.word)).replace(/^<div class="brw-chips">|<\/div>$/g, '')}</div>`
+        : '';
+      const searchedFor = found.tokens.length > 1
+        ? ` · searched for ${found.tokens.map((t) => `<span class="kbd">${MH.esc(t)}</span>`).join(' ')}` : '';
+      const countLine = !found.results.length ? '' : found.answer
+        ? `${plural(answers.length, 'result')} for <b>“${MH.esc(trimmed)}”</b> in ${found.ms} ms${mentions.length ? ` · plus ${plural(mentions.length, 'file')} that only mention${mentions.length === 1 ? 's' : ''} it` : ''}${searchedFor}`
+        : `Nothing in this repository answers <b>“${MH.esc(trimmed)}”</b> · ${found.ms} ms`;
+      const noAnswer = `<div class="card brw-none"><h3>Nothing in this repository defines or explains “${MH.esc(trimmed)}”</h3>
+        <p class="muted">proton searches this repository, not the English language, and it is not a
+        dictionary: no file here defines, explains or is about <b>“${MH.esc(trimmed)}”</b>, so there is no
+        first result to show. ${mentions.length === 1 ? 'One file mentions' : `${mentions.length} files mention`}
+        the word in passing, and ${mentions.length === 1 ? 'it is' : 'they are'} listed below as
+        <b>mentions</b> — not as an answer.</p>
+        ${nearby}${chips(STARTERS)}</div>`;
+      const noMatches = `<div class="card brw-none"><h3>Nothing in this repository matches “${MH.esc(trimmed)}”</h3>
+        <p class="muted">proton's search covers this repository only — its documentation, apps, built-in
+        websites and files — and never sends your words anywhere. It is not a dictionary, so a word this
+        repository does not use has nothing to show. Check the spelling, try one word instead of a
+        sentence, or type an address (<span class="kbd">https://…</span>) in the bar to visit a site.</p>
+        ${nearby}${chips(STARTERS)}</div>`;
+      tab.el.innerHTML = `<div class="pad brw-results">
+        ${countLine ? `<p class="muted brw-count">${countLine}</p>` : ''}
+        ${kinds.length > 1 ? `<div class="brw-chips" id="b-kinds">
+          <button class="chip brw-chip on" type="button" data-kind="">All ${answers.length}</button>
+          ${kinds.map((kind) => `<button class="chip brw-chip" type="button" data-kind="${kind}">${MH.esc(KIND_LABELS[kind] || kind)} ${answers.filter((r) => r.kind === kind).length}</button>`).join('')}
+        </div>` : ''}
+        ${answers.length ? '<ol class="brw-hits" id="b-hits"></ol>' : ''}
+        ${found.results.length ? '' : noMatches}
+        ${found.results.length && !found.answer ? noAnswer : ''}
+        ${mentions.length ? `<h3 class="brw-mention-h">${found.answer ? 'Also mentioned in passing' : 'Mentioned in passing'} <span class="muted">${mentions.length}</span></h3>
+        <ol class="brw-hits brw-mentions" id="b-mentions"></ol>` : ''}
+        <details class="help brw-engine"><summary>About this search engine</summary>
+          <p class="muted">The index is generated from this repository by
+          <span class="kbd">tools/gen-search-index.py</span> into <span class="kbd">data/search-index.js</span>:
+          ${stats.docs} documents, ${stats.terms} words. <span class="kbd">assets/search.js</span> scores it with
+          tf–idf, boosts words in titles and file names, folds plurals and -ise/-ize spellings together, and adds
+          every path in the file system plus the app and website catalogs at run time. It separates answers from
+          mentions, because a word turning up once in a file is not that file being about the word — and it is not
+          a dictionary: your own files under <span class="kbd">/home/</span> are searched by the Files app.</p></details>
+      </div>`;
+      tab.el.querySelectorAll('[data-q]').forEach((b) => b.onclick = () => navigate(tab, searchUrl(b.dataset.q)));
+      const list = tab.el.querySelector('#b-hits');
+      const mentionList = tab.el.querySelector('#b-mentions');
+      const paintInto = (host, rows) => {
+        if (!host) return;
+        host.innerHTML = rows.map((row, i) => hitHtml(row, i, trimmed)).join('');
+        wireHits(host, rows, trimmed, tab);
+      };
+      const paint = (kind) => {
+        paintInto(list, answers.filter((r) => !kind || r.kind === kind));
+        paintInto(mentionList, mentions);
+      };
+      paint('');
+      tab.el.querySelectorAll('#b-kinds [data-kind]').forEach((chip) => chip.onclick = () => {
+        tab.el.querySelectorAll('#b-kinds [data-kind]').forEach((c) => c.classList.toggle('on', c === chip));
+        paint(chip.dataset.kind);
+      });
+      /* Then replace the top summaries with real quotes from each file. A
+       * mention needs one even more than an answer does: its summary is about
+       * the file, not about your word, so the quote is the only thing that
+       * shows where — and whether — the word really turns up. */
+      const token = tab.token;
+      const quoteThese = [...answers.slice(0, SNIPPETS), ...mentions.slice(0, SNIPPETS)];
+      quoteThese.forEach(async (result) => {
+        const text = await readForSnippet(result.path);
+        if (text === null || token !== tab.token) return;
+        /* Found by path, not by position: filtering re-renders the list in a
+         * different order while these reads are still in flight. */
+        const row = [...tab.el.querySelectorAll('.brw-hit')]
+          .find((li) => li.dataset.path === result.path)?.querySelector('.brw-hit-snippet');
+        if (!row) return;
+        const quote = PROTON_SEARCH.snippet(text, found.tokens);
+        if (quote.length) row.innerHTML = markParts(quote);
       });
     }
-    function showSite(id) {
+    const KIND_LABELS = { app: 'Apps', site: 'Websites', page: 'proton pages', doc: 'Documents', code: 'Code', path: 'Files' };
+
+    function hitHtml(result, index, query) {
+      const tokens = PROTON_SEARCH.queryTokens(query);
+      const title = PROTON_SEARCH.highlight(result.title || result.path, tokens);
+      const summary = PROTON_SEARCH.highlight(result.summary || '', tokens);
+      const kindLabel = KIND_LABELS[result.kind] || result.kind;
+      return `<li class="brw-hit" data-hit="${index}" data-path="${MH.esc(result.path)}">
+        <div class="brw-hit-ic">${result.appId || result.siteId
+          ? catalogIconFor(result.icon, result.svgIcon !== false, result.kind === 'site' ? 'globe' : 'grid')
+          : iconSvg(result.kind === 'doc' ? 'file-text' : result.kind === 'code' ? 'terminal' : 'file')}</div>
+        <div class="brw-hit-body">
+          <a class="brw-hit-title" href="#" data-open="${index}">${markParts(title)}</a>
+          <div class="brw-hit-path"><span class="brw-kind">${MH.esc(kindLabel)}</span>
+            <span class="brw-path">${MH.esc(result.path)}</span>
+            ${result.matched.length ? `<span class="brw-matched">matches ${result.matched.map((m) => MH.esc(m)).join(', ')}</span>` : ''}</div>
+          <p class="brw-hit-snippet">${markParts(summary)}</p>
+          <div class="brw-hit-actions" data-actions="${index}"></div>
+        </div>
+      </li>`;
+    }
+    function wireHits(list, shown, query, tab) {
+      shown.forEach((result, i) => {
+        const box = list.querySelector(`[data-actions="${i}"]`);
+        if (box) {
+          box.innerHTML = resultActions(result, query).map((action, n) =>
+            `<button class="btn sm${action.primary ? ' primary' : ''}" type="button" data-act="${i}:${n}">${iconSvg(action.icon)} ${MH.esc(action.label)}</button>`).join('');
+        }
+      });
+      list.querySelectorAll('[data-open]').forEach((el) => {
+        el.onclick = (e) => { e.preventDefault(); primaryAction(shown[Number(el.dataset.open)], query, tab); };
+      });
+      list.querySelectorAll('[data-act]').forEach((el) => el.onclick = () => {
+        const [i, n] = el.dataset.act.split(':').map(Number);
+        const action = resultActions(shown[i], query, tab)[n];
+        if (action) action.run();
+      });
+    }
+    /* What a result does when you click its title: open the app, visit the
+     * site, frame the page, read the text, or hand the file to its viewer. */
+    function resultActions(result, query) {
+      const acts = [];
+      const go = (url) => () => navigate(active() || newTab(), url);
+      if (result.appId) {
+        acts.push({ label: `Open ${result.title}`, icon: 'grid', primary: true, run: () => openApp(result.appId) });
+        acts.push({ label: 'Read its source', icon: 'file-text', run: go(readUrl(result.path, query)) });
+      } else if (result.siteId) {
+        acts.push({ label: 'Visit', icon: 'globe', primary: true, run: go('proton://' + result.siteId) });
+      } else if (result.kind === 'page') {
+        acts.push({ label: 'Open', icon: 'home', primary: true, run: go(result.path) });
+      } else {
+        const stat = FS.stat(result.path);
+        const isPage = stat?.type === 'file' && ['html', 'htm'].includes(FS.extname(stat.path));
+        const viewer = stat ? FS.appFor(stat.path) : null;
+        const readable = stat?.type === 'file' && !FS.isBinary(stat.path);
+        if (isPage) acts.push({ label: 'Open page', icon: 'globe', primary: true, run: go('file://' + result.path) });
+        else if (viewer && viewer !== 'text-editor' && APPS[viewer]) {
+          acts.push({ label: `Open in ${APPS[viewer].name}`, icon: 'external', primary: true, run: () => openFSItem(result.path) });
+        }
+        if (readable) {
+          acts.push({
+            label: isPage ? 'Read source' : 'Read', icon: 'file-text', primary: !acts.length,
+            run: go(readUrl(result.path, query)),
+          });
+        }
+      }
+      if (APPS.files) acts.push({ label: 'Show in Files', icon: 'folder', run: () => openApp('files', { path: result.path }) });
+      return acts.slice(0, 3);
+    }
+    function primaryAction(result, query, tab) {
+      const acts = resultActions(result, query);
+      const first = acts.find((a) => a.primary) || acts[0];
+      if (first) first.run();
+      else navigate(tab, result.path);
+    }
+    /* Snippets quote the real file, fetched once and cached; a failure just
+     * leaves the summary in place. */
+    async function readForSnippet(path) {
+      if (snippetCache.has(path)) return snippetCache.get(path);
+      if (!FS.stat(path) || FS.isBinary(path)) { snippetCache.set(path, null); return null; }
+      try {
+        const text = await FS.read(path);
+        snippetCache.set(path, text);
+        return text;
+      } catch {
+        snippetCache.set(path, null);
+        return null;
+      }
+    }
+    const markParts = (partsList) => (partsList || []).map((part) =>
+      (part.hit ? `<mark>${MH.esc(part.text)}</mark>` : MH.esc(part.text))).join('');
+
+    /* Any text file in the repository, with the query's matches marked — the
+     * reader a search result deserves. */
+    function showReader(tab, path, query) {
+      const stat = FS.stat(path);
+      if (!stat || stat.type !== 'file') {
+        tab.title = 'Not found';
+        tab.el.innerHTML = `<div class="pad"><h2>${iconSvg('alert')} No such file</h2>
+          <p class="muted"><span class="kbd">${MH.esc(path || '(nothing)')}</span> is not a file in this
+          repository or in your account.</p>
+          <div class="brw-quick"><button class="btn sm" type="button" data-go="proton://home">${iconSvg('home')} Home</button>
+          <button class="btn sm" type="button" data-go="${MH.esc(searchUrl(query || path || ''))}">${iconSvg('search')} Search again</button></div></div>`;
+        tab.el.querySelectorAll('[data-go]').forEach((b) => b.onclick = () => navigate(tab, b.dataset.go));
+        return;
+      }
+      tab.title = stat.name;
+      if (FS.isBinary(stat.path)) {
+        const viewer = FS.appFor(stat.path);
+        tab.el.innerHTML = `<div class="pad"><h2>${iconSvg('file')} ${MH.esc(stat.name)}</h2>
+          <p class="muted">A binary file (${MH.esc(FS.mime(stat.path) || 'unknown type')},
+          ${MH.fmtBytes(stat.size)}) — there is no text to read here.</p>
+          <div class="brw-quick">
+            ${viewer && APPS[viewer] ? `<button class="btn sm primary" type="button" data-open>${iconSvg('external')} Open in ${MH.esc(APPS[viewer].name)}</button>` : ''}
+            ${APPS.files ? '<button class="btn sm" type="button" data-files>Show in Files</button>' : ''}
+            <a class="btn sm" href="${MH.esc(new URL(rel(stat.path), document.baseURI).href)}" download="${MH.esc(stat.name)}">${iconSvg('download')} Download</a>
+          </div></div>`;
+        const open = tab.el.querySelector('[data-open]');
+        if (open) open.onclick = () => openFSItem(stat.path);
+        const files = tab.el.querySelector('[data-files]');
+        if (files) files.onclick = () => openApp('files', { path: stat.path });
+        return;
+      }
+      tab.loading = true;
+      drawChrome();
+      const token = tab.token;
+      (async () => {
+        let text = '';
+        try { text = await FS.read(stat.path); }
+        catch (err) {
+          if (token !== tab.token) return;
+          tab.loading = false;
+          tab.el.innerHTML = `<div class="pad"><h2>${iconSvg('alert')} Could not read ${MH.esc(stat.name)}</h2>
+            <p class="muted">${MH.esc(err.message)}</p></div>`;
+          drawChrome();
+          return;
+        }
+        if (token !== tab.token) return;
+        tab.loading = false;
+        const cut = text.length > READER_LIMIT;
+        const shown = cut ? text.slice(0, READER_LIMIT) : text;
+        const tokens = PROTON_SEARCH.queryTokens(query);
+        const marks = tokens.length ? shown.split(/([A-Za-z0-9][A-Za-z0-9'._-]*)/g) : [];
+        /* Highlight by re-emitting the file word by word: text nodes stay text,
+         * so nothing in the file can inject markup into the reader. */
+        let htmlText = '';
+        let hits = 0;
+        if (tokens.length) {
+          for (let i = 0; i < marks.length; i++) {
+            const piece = marks[i];
+            if (i % 2 === 1 && tokens.includes(PROTON_SEARCH.stemToken(piece.toLowerCase().replace(/[^a-z0-9]/g, '')))) {
+              hits++;
+              htmlText += `<mark>${MH.esc(piece)}</mark>`;
+            } else htmlText += MH.esc(piece);
+          }
+        } else htmlText = MH.esc(shown);
+        const viewer = FS.appFor(stat.path);
+        tab.el.innerHTML = `<div class="brw-reader">
+          <div class="brw-reader-bar">
+            <span class="brw-path">${MH.esc(stat.path)}</span>
+            <span class="muted">${MH.fmtBytes(stat.size)} · ${shown.split('\n').length} lines${stat.user ? ' · your account file' : ' · read-only system file'}</span>
+            ${tokens.length ? `<span class="brw-matches"><button class="iconbtn sm" type="button" data-prev title="Previous match">${iconSvg('chevron-left')}</button>
+              <b data-hitcount>${hits}</b> match${hits === 1 ? '' : 'es'} for “${MH.esc(query)}”
+              <button class="iconbtn sm" type="button" data-next title="Next match">${iconSvg('chevron-right')}</button></span>` : ''}
+            <span class="brw-reader-actions">
+              ${viewer && APPS[viewer] ? `<button class="btn sm" type="button" data-viewer>${iconSvg('external')} Open in ${MH.esc(APPS[viewer].name)}</button>` : ''}
+              ${APPS.files ? '<button class="btn sm" type="button" data-files>' + iconSvg('folder') + ' Show in Files</button>' : ''}
+              ${stat.user ? '' : `<a class="btn sm" href="${MH.esc(new URL(rel(stat.path), document.baseURI).href)}" download="${MH.esc(stat.name)}">${iconSvg('download')} Download</a>`}
+            </span>
+          </div>
+          ${cut ? `<p class="muted brw-cut">Showing the first ${Math.round(READER_LIMIT / 1000)}k characters — download it for the whole file.</p>` : ''}
+          <pre class="brw-reader-text" tabindex="0">${htmlText}</pre>
+        </div>`;
+        const viewerBtn = tab.el.querySelector('[data-viewer]');
+        if (viewerBtn) viewerBtn.onclick = () => openFSItem(stat.path);
+        const filesBtn = tab.el.querySelector('[data-files]');
+        if (filesBtn) filesBtn.onclick = () => openApp('files', { path: stat.path });
+        /* Walk the matches like a search in a page would. */
+        const all = [...tab.el.querySelectorAll('pre mark')];
+        let at = -1;
+        const jump = (delta) => {
+          if (!all.length) return;
+          all.forEach((el) => el.classList.remove('here'));
+          at = (at + delta + all.length) % all.length;
+          all[at].classList.add('here');
+          all[at].scrollIntoView({ block: 'center' });
+        };
+        const prev = tab.el.querySelector('[data-prev]');
+        const next = tab.el.querySelector('[data-next]');
+        if (prev) prev.onclick = () => jump(-1);
+        if (next) next.onclick = () => jump(1);
+        if (all.length) jump(1);
+        drawChrome();
+      })();
+    }
+
+    function showBookmarks(tab) {
+      tab.title = 'Bookmarks';
+      const list = bookmarks();
+      tab.el.innerHTML = `<div class="pad"><h2>${iconSvg('star')} Bookmarks</h2>
+        <p class="muted">Starred pages, saved with this account and included in Settings backups.</p>
+        ${list.length ? `<div class="brw-list">${list.map((b) => `
+          <div class="brw-row" data-url="${MH.esc(b.url)}">
+            <span class="brw-row-ic">${iconSvg(/^proton:/i.test(b.url) ? 'home' : /^https?:/i.test(b.url) ? 'globe' : 'file-text')}</span>
+            <span class="brw-row-main"><a href="#" data-open>${MH.esc(b.title || b.url)}</a>
+              <span class="muted brw-row-sub">${MH.esc(b.url)}${b.added ? ` · ${MH.esc(MH.dateLabel ? MH.dateLabel(b.added) : new Date(b.added).toLocaleString())}` : ''}</span></span>
+            <button class="btn sm" type="button" data-remove>Remove</button>
+          </div>`).join('')}</div>`
+          : `<p class="muted">Nothing bookmarked yet. Press ${iconSvg('star')} in the bar above while looking at a page.</p>`}
+      </div>`;
+      tab.el.querySelectorAll('.brw-row').forEach((row) => {
+        const url = row.dataset.url;
+        row.querySelector('[data-open]').onclick = (e) => { e.preventDefault(); navigate(tab, url); };
+        row.querySelector('[data-remove]').onclick = () => {
+          userData.bookmarks = bookmarks().filter((b) => b.url !== url);
+          saveData();
+          showBookmarks(tab);
+          drawChrome();
+        };
+      });
+    }
+
+    function showHistory(tab) {
+      tab.title = 'History';
+      const list = history();
+      tab.el.innerHTML = `<div class="pad"><h2>${iconSvg('clock')} History</h2>
+        <p class="muted">The last ${HISTORY_LIMIT} pages this Browser visited, saved with this account.</p>
+        ${list.length ? `<div class="brw-quick"><button class="btn sm danger" type="button" id="b-clearhist">${iconSvg('trash')} Clear history</button></div>
+        <div class="brw-list">${list.map((h, i) => `
+          <div class="brw-row" data-i="${i}">
+            <span class="brw-row-ic">${iconSvg(/^proton:/i.test(h.url) ? 'home' : /^https?:/i.test(h.url) ? 'globe' : 'file-text')}</span>
+            <span class="brw-row-main"><a href="#" data-open>${MH.esc(h.title || h.url)}</a>
+              <span class="muted brw-row-sub">${MH.esc(h.url)} · ${MH.esc(ago(h.at))}</span></span>
+            <button class="btn sm" type="button" data-remove>Remove</button>
+          </div>`).join('')}</div>` : '<p class="muted">Nothing visited yet.</p>'}
+      </div>`;
+      tab.el.querySelectorAll('.brw-row').forEach((row) => {
+        const at = Number(row.dataset.i);
+        const item = history()[at];
+        if (!item) return;
+        row.querySelector('[data-open]').onclick = (e) => { e.preventDefault(); navigate(tab, item.url); };
+        row.querySelector('[data-remove]').onclick = () => {
+          userData.history = history().filter((_, n) => n !== at);
+          saveData();
+          showHistory(tab);
+        };
+      });
+      const clear = tab.el.querySelector('#b-clearhist');
+      if (clear) clear.onclick = () => {
+        if (!confirmBox('Clear this account’s Browser history? Bookmarks and files are not touched.')) return;
+        userData.history = [];
+        saveData();
+        showHistory(tab);
+      };
+    }
+    function ago(at) {
+      const seconds = Math.max(0, Math.round((Date.now() - Number(at || 0)) / 1000));
+      if (seconds < 60) return 'just now';
+      if (seconds < 3600) return `${Math.round(seconds / 60)} min ago`;
+      if (seconds < 86400) return `${Math.round(seconds / 3600)} h ago`;
+      return `${Math.round(seconds / 86400)} d ago`;
+    }
+
+    function showSite(tab, id) {
       const site = SITES[id];
-      if (!site) { showHome(); return; }
-      leavePage();
-      body.querySelector('#b-url').value = 'proton://' + id;
-      /* Built-in websites are standalone HTML pages (websites/<name>/site.html),
+      if (!site) { showUnknown(tab, 'proton://' + id); return; }
+      tab.title = site.name;
+      /* Built-in websites are standalone HTML pages (websites/<name>/site.html)
        * loaded in a frame. Their scripts can call back into the desktop via
        * window.parent.__protonSiteCtx (openApp / showSite / showHome). */
-      main.innerHTML = `<iframe class="site-frame" title="${MH.esc(site.name)}" src="${MH.esc(site.page)}" style="width:100%;height:100%;min-height:420px;border:0;display:block;background:#050505"></iframe>`;
+      tab.el.innerHTML = `<iframe class="site-frame" title="${MH.esc(site.name)}" src="${MH.esc(site.page)}" allow="fullscreen"></iframe>`;
+      watchFrame(tab, tab.el.querySelector('iframe'));
     }
+
     /* Open a virtual .html file in a browser frame, not as editable source.
      * System pages use their real site URL so relative assets work. Account
      * files have no HTTP URL: srcdoc + an opaque-origin sandbox prevents
-     * their scripts from accessing the desktop's accounts/localStorage. */
-    async function openLocal(path) {
-      const st = FS.stat(path);
-      if (!st || st.type !== 'file' || !['html', 'htm'].includes(FS.extname(st.path))) {
-        MH.toast('That path is not an HTML file in your account or the system tree.'); return;
-      }
-      leavePage();
-      const token = navigation;
-      body.querySelector('#b-url').value = 'file://' + st.path;
-      const header = `<div class="pad muted" style="padding:7px 14px;flex:none">${MH.esc(st.path)}${st.user ? ' · Account file (sandboxed)' : ' · Read-only system file'}</div>`;
-      main.innerHTML = `<div class="local-page">${header}<iframe title="${MH.esc(st.name)}" class="site-frame" sandbox="allow-scripts ${st.user ? '' : 'allow-same-origin '}allow-forms allow-popups allow-modals" allow="fullscreen"></iframe></div>`;
-      const frame = main.querySelector('iframe');
-      if (!st.user) {
-        frame.src = new URL(st.path.slice(1), document.baseURI).href;
+     * their scripts from accessing the desktop's accounts/localStorage.
+     * Anything that is not HTML goes to the reader instead. */
+    function openLocal(tab, path) {
+      const stat = FS.stat(path);
+      if (!stat || stat.type !== 'file') {
+        tab.title = 'Not found';
+        tab.el.innerHTML = `<div class="pad"><h2>${iconSvg('alert')} Not found</h2>
+          <p class="muted"><span class="kbd">${MH.esc(path)}</span> is not a file in this repository or your account.</p>
+          ${APPS.files ? '<button class="btn sm" type="button" data-files>Show your home folder in Files</button>' : ''}</div>`;
+        const files = tab.el.querySelector('[data-files]');
+        if (files) files.onclick = () => openApp('files', { path: FS.home() });
         return;
       }
-      const urls = [];
-      try {
-        const html = await FS.read(st.path);
-        const doc = new DOMParser().parseFromString(html, 'text/html');
-        /* Resolve sibling images, stylesheets, scripts and media stored in
-         * this account. Blob URLs are revoked on navigation/window close. */
-        for (const el of doc.querySelectorAll('img[src],source[src],video[src],audio[src],script[src],link[href]')) {
-          const attr = el.hasAttribute('src') ? 'src' : 'href';
-          const ref = el.getAttribute(attr)?.trim();
-          if (!ref || /^(?:[a-z][\w+.-]*:|\/\/|#|\?)/i.test(ref)) continue;
-          let relative;
-          try { relative = decodeURIComponent(ref.split(/[?#]/)[0]); } catch { continue; }
-          const asset = FS.stat(FS.normalize(relative, FS.dirname(st.path)));
-          if (!asset || asset.type !== 'file') continue;
-          const url = URL.createObjectURL(await FS.readBlob(asset.path));
-          urls.push(url);
-          el.setAttribute(attr, url);
-        }
-        if (token !== navigation) { urls.forEach((url) => URL.revokeObjectURL(url)); return; }
-        localUrls = urls;
-        frame.srcdoc = '<!doctype html>\n' + doc.documentElement.outerHTML;
-      } catch (err) {
-        urls.forEach((url) => URL.revokeObjectURL(url));
-        if (token === navigation) main.innerHTML = `<div class="pad muted">Could not open ${MH.esc(st.name)}: ${MH.esc(err.message)}</div>`;
+      if (!['html', 'htm'].includes(FS.extname(stat.path))) { navigate(tab, readUrl(stat.path, ''), { replace: true }); return; }
+      tab.title = stat.name;
+      const token = tab.token;
+      const header = `<div class="pad muted brw-filehead">${MH.esc(stat.path)}${stat.user ? ' · Account file (sandboxed)' : ' · Read-only system file'}</div>`;
+      tab.el.innerHTML = `<div class="local-page">${header}<iframe title="${MH.esc(stat.name)}" class="site-frame" sandbox="allow-scripts ${stat.user ? '' : 'allow-same-origin '}allow-forms allow-popups allow-modals" allow="fullscreen"></iframe></div>`;
+      const frame = tab.el.querySelector('iframe');
+      watchFrame(tab, frame);
+      if (!stat.user) {
+        frame.src = new URL(rel(stat.path), document.baseURI).href;
+        return;
       }
+      (async () => {
+        const urls = [];
+        try {
+          const html = await FS.read(stat.path);
+          const doc = new DOMParser().parseFromString(html, 'text/html');
+          /* Resolve sibling images, stylesheets, scripts and media stored in
+           * this account. Blob URLs are revoked on navigation/window close. */
+          for (const el of doc.querySelectorAll('img[src],source[src],video[src],audio[src],script[src],link[href]')) {
+            const attr = el.hasAttribute('src') ? 'src' : 'href';
+            const ref = el.getAttribute(attr)?.trim();
+            if (!ref || /^(?:[a-z][\w+.-]*:|\/\/|#|\?)/i.test(ref)) continue;
+            let relative;
+            try { relative = decodeURIComponent(ref.split(/[?#]/)[0]); } catch { continue; }
+            const asset = FS.stat(FS.normalize(relative, FS.dirname(stat.path)));
+            if (!asset || asset.type !== 'file') continue;
+            const url = URL.createObjectURL(await FS.readBlob(asset.path));
+            urls.push(url);
+            el.setAttribute(attr, url);
+          }
+          if (token !== tab.token) { urls.forEach((url) => URL.revokeObjectURL(url)); return; }
+          tab.localUrls = urls;
+          frame.srcdoc = '<!doctype html>\n' + doc.documentElement.outerHTML;
+        } catch (err) {
+          urls.forEach((url) => URL.revokeObjectURL(url));
+          if (token === tab.token) {
+            tab.loading = false;
+            tab.el.innerHTML = `<div class="pad muted">Could not open ${MH.esc(stat.name)}: ${MH.esc(err.message)}</div>`;
+            drawChrome();
+          }
+        }
+      })();
     }
-    function loadExternal(raw) {
+
+    function loadExternal(tab, raw) {
       const url = normalizeUrl(raw);
       if (!url) { MH.toast('Enter a valid http(s) address.'); return; }
-      leavePage();
-      body.querySelector('#b-url').value = url;
-      main.innerHTML = `<div class="local-page"><div class="pad muted" style="padding:7px 14px;flex:none">Loading <b>${MH.esc(url)}</b> — if blank, this site refuses embedding. <a href="${MH.esc(url)}" target="_blank" rel="noopener">Open in a new tab</a></div><iframe src="${MH.esc(url)}" class="site-frame" sandbox="allow-scripts allow-forms allow-popups allow-modals" title="Web page"></iframe></div>`;
+      tab.title = new URL(url).hostname;
+      tab.el.innerHTML = `<div class="local-page"><div class="pad muted brw-filehead">Loading <b>${MH.esc(url)}</b> — if this stays blank, the site refuses to be embedded. <a href="${MH.esc(url)}" target="_blank" rel="noopener">Open in a new tab</a></div><iframe src="${MH.esc(url)}" class="site-frame" sandbox="allow-scripts allow-forms allow-popups allow-modals" title="Web page"></iframe></div>`;
+      watchFrame(tab, tab.el.querySelector('iframe'));
     }
+
+    function showUnknown(tab, url) {
+      tab.title = 'Unknown page';
+      const words = String(url || '').replace(/^proton:\/\//i, '');
+      tab.el.innerHTML = `<div class="pad"><h2>${iconSvg('alert')} proton doesn't know that page</h2>
+        <p class="muted"><span class="kbd">${MH.esc(url)}</span> is not one of proton's pages, and it is not a
+        built-in website in <span class="kbd">data/websites.js</span>.</p>
+        <div class="brw-quick">
+          <button class="btn sm primary" type="button" data-search>${iconSvg('search')} Search proton for “${MH.esc(words)}”</button>
+          <button class="btn sm" type="button" data-go="proton://home">${iconSvg('home')} Home</button>
+        </div>
+        ${siteList.length ? `<h3 style="margin-top:18px">${iconSvg('book')} Built-in websites</h3><div class="brw-chips">${siteList.map((s) => `<button class="chip brw-chip" type="button" data-site="${s.id}">${MH.esc(s.name)}</button>`).join('')}</div>` : ''}
+      </div>`;
+      tab.el.querySelector('[data-search]').onclick = () => navigate(tab, searchUrl(words));
+      tab.el.querySelector('[data-go]').onclick = () => navigate(tab, HOME);
+      tab.el.querySelectorAll('[data-site]').forEach((b) => b.onclick = () => navigate(tab, 'proton://' + b.dataset.site));
+    }
+
+    /* ------------------------- the bar ------------------------- */
     function go() {
-      const raw = body.querySelector('#b-url').value.trim();
-      if (raw === 'proton://home' || raw === 'home') { showHome(); return; }
-      if (/^file:\/\//i.test(raw) || raw.startsWith('/')) {
-        openLocal(raw.replace(/^file:\/\//i, '')); return;
-      }
-      const id = raw.replace(/^proton:\/\//i, '').split(/[/?#]/)[0].toLowerCase();
-      if (SITES[id]) { showSite(id); return; }
-      if (/^proton:\/\//i.test(raw)) { MH.toast('Unknown built-in website.'); return; }
-      loadExternal(raw);
+      hideSuggestions();
+      const tab = active() || newTab();
+      navigate(tab, urlInput.value);
     }
-    body.openPath = ({ path, url }) => { if (path) openLocal(path); else if (url) loadExternal(url); };
+    urlInput.addEventListener('input', () => { showSuggestions(urlInput.value); drawChrome(); });
+    urlInput.addEventListener('focus', () => { urlInput.select(); if (urlInput.value.trim()) showSuggestions(urlInput.value); });
+    urlInput.addEventListener('blur', () => later(hideSuggestions, 120));
+    urlInput.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowDown' && suggestions.length) { e.preventDefault(); selectSuggestion(suggestAt + 1); }
+      else if (e.key === 'ArrowUp' && suggestions.length) { e.preventDefault(); selectSuggestion(suggestAt - 1); }
+      else if (e.key === 'Escape') hideSuggestions();
+      else if (e.key === 'Enter') { e.preventDefault(); commit(suggestAt, active()); }
+    });
+    goBtn.onclick = go;
+    starBtn.onclick = toggleBookmark;
+    body.querySelector('#b-back').onclick = () => travel(active(), -1);
+    body.querySelector('#b-forward').onclick = () => travel(active(), 1);
+    body.querySelector('#b-home').onclick = () => navigate(active() || newTab(), HOME);
+    body.querySelector('#b-newtab').onclick = () => { const tab = newTab(HOME); urlInput.value = ''; urlInput.focus(); return tab; };
+    body.querySelector('#b-bookmarks').onclick = () => navigate(active() || newTab(), 'proton://bookmarks');
+    body.querySelector('#b-history').onclick = () => navigate(active() || newTab(), 'proton://history');
+    const sitesMenu = body.querySelector('#b-sites-menu');
+    if (sitesMenu) sitesMenu.onchange = (e) => {
+      if (e.target.value) navigate(active() || newTab(), 'proton://' + e.target.value);
+      e.target.value = '';
+    };
+    /* Alt+←/→ travel the active tab's own history; the desktop keeps the rest
+     * of the keyboard. */
+    body.addEventListener('keydown', (e) => {
+      if (!e.altKey || e.ctrlKey || e.metaKey) return;
+      if (e.key === 'ArrowLeft') { e.preventDefault(); travel(active(), -1); }
+      else if (e.key === 'ArrowRight') { e.preventDefault(); travel(active(), 1); }
+      else if (e.key === 'Home') { e.preventDefault(); navigate(active() || newTab(), HOME); }
+    });
+
+    /* Other apps hand the Browser a path, an address or a query. A path goes
+     * through the same door as the bar, so an HTML page is rendered in a frame
+     * and anything else is read. */
+    body.openPath = ({ path, url, query }) => {
+      const tab = active() || newTab();
+      if (query) navigate(tab, searchUrl(query));
+      else if (path) navigate(tab, 'file://' + path);
+      else if (url) navigate(tab, url);
+      else navigate(tab, HOME);
+    };
     body.onDestroy = () => {
-      leavePage();
+      timers.forEach((id) => clearTimeout(id));
+      tabs.forEach((tab) => {
+        tab.token++;
+        (tab.localUrls || []).forEach((url) => URL.revokeObjectURL(url));
+      });
+      tabs.length = 0;
       if (window.__protonSiteCtx === ctx) delete window.__protonSiteCtx;
     };
-    body.querySelector('#b-home').onclick = showHome;
-    body.querySelector('#b-go').onclick = go;
-    const sitesMenu = body.querySelector('#b-sites-menu');
-    if (sitesMenu) sitesMenu.onchange = (e) => { if (e.target.value) showSite(e.target.value); e.target.value = ''; };
-    body.querySelector('#b-url').addEventListener('keydown', (e) => { if (e.key === 'Enter') go(); });
-    if (options.path) openLocal(options.path);
-    else if (options.url) loadExternal(options.url);
-    else showHome();
+
+    /* ------------------------- open ------------------------- */
+    const first = newTab(options.query ? searchUrl(options.query)
+      : options.path ? 'file://' + options.path
+      : options.url || HOME);
+    drawChrome();
   },
 });
 </script>

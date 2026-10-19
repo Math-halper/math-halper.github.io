@@ -101,7 +101,8 @@ exactly where the old one left off.
   Customize and Settings are protected so the desktop stays manageable.
 - **Permanently:** delete its `[application]` block from
   `data/applications.js` (and optionally delete the folder), refresh
-  `data/fs-manifest.js`, and drop anything in `assets/` that only it used.
+  `data/search-index.js` and `data/fs-manifest.js`, and drop anything in
+  `assets/` that only it used.
 
 ## The apps
 
@@ -158,25 +159,28 @@ matching the menu sections (`cat=`, ordered by `CATS` in `assets/core.js`).
 
 `assets/desktop-icons.js` renders per-account `userData.desktopIcons` entries
 (`{id, kind:'app'|'path', target, col, row}`). A new account starts with
-Settings and Browser; an empty array means the user intentionally cleared all
-shortcuts. Icons are *links*, not VFS files: removing an icon leaves the app
-intact. Double-click/Enter opens the target; pointer dragging or Alt+arrow keys
+Settings, Browser, Files and a link to its own home folder; an empty array
+means the user intentionally cleared all shortcuts. Icons are *links*, not VFS
+files: removing an icon leaves the app or file intact. Double-click/Enter opens the target; pointer dragging or Alt+arrow keys
 moves it on a snap grid, with occupied spots swapped. The layout reflows on
 narrow screens without changing the saved positions.
 
 Use the desktop **Add icon** search, right-click the wallpaper or an app in the
 proton menu, drag a menu app onto the wallpaper, or use App Center's **Desktop
-icon** button. Select a shortcut for the touch-friendly **Open selected** or
+icon** button. For a file or folder: right-click the wallpaper → **Add file or
+folder…**, right-click an entry in Files → **Add desktop shortcut**, or drag an
+entry out of Files onto the wallpaper. Select a shortcut for the touch-friendly **Open selected** or
 **Remove selected** buttons, right-click it for **Remove shortcut**, or press
 Delete. Shortcut edits save immediately with the account and are included in
 Settings backups; Customize's Reset restores the defaults.
 
-`kind:'path'` entries (files and folders) can no longer be created: they were
-added from the Files app, by dragging out of Files, or by typing a path in the
-desktop menu, and opening one needed a viewer app. One saved by an older
-account still renders (missing targets are marked), can be moved and removed,
-and reports that nothing can open it — `openFSItem()` in `assets/core.js`
-honours any viewer an app added back registers through `FS.appFor()`.
+`kind:'path'` entries (files and folders) are created again by the Files app,
+the desktop menu and dragging out of Files — all of them go through
+`DesktopIcons.addPath()`. Opening one calls `openFSItem()` in `assets/core.js`,
+which sends folders to Files and files to whichever app `FS.appFor()` names, so
+a shortcut keeps working when an app is added or removed. They follow renames
+(`FS.watch`), mark a missing target instead of failing, and can always be
+moved and removed without touching the file itself.
 
 ### Shared code
 
@@ -186,8 +190,13 @@ catalog — name, location, icon and everything else for every app),
 is the only one left; guide: `websites/README.md`),
 `data/fs-manifest.js` (generated list of every deployed file in this
 repository — the `/` tree of the virtual file system; refresh it with
-`python3 tools/gen-fs-manifest.py`), `assets/fs.js` (the file system API),
-`assets/fs-archive.js` (ZIP downloads), `assets/config-loader.js` (parses both
+`python3 tools/gen-fs-manifest.py`), `data/search-index.js` (generated: the
+searchable prose of this repository — refresh it with
+`python3 tools/gen-search-index.py`), `assets/search.js` (the search engine the
+Browser's bar queries), `assets/fs.js` (the file system API the whole Files
+suite is built on — its header comment documents every method),
+`assets/fs-archive.js` (dependency-free ZIP downloads),
+`assets/config-loader.js` (parses both
 catalogs), `assets/store.js` (accounts/storage and the per-account defaults),
 `assets/core.js` (desktop, windows, registries), `assets/desktop-icons.js`
 (shortcuts), `assets/icons.js` (the SVG set and safe image-icon renderer), `assets/styles.css`,

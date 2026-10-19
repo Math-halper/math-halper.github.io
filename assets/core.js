@@ -4,9 +4,8 @@
  * icon, category, description, window size) live in the catalog
  * data/applications.js, parsed by assets/config-loader.js. proton ships the
  * five desktop System apps, the file system suite (Files, Text Editor, Image
- * Viewer, Media, PDF Viewer — copied from main), a Calculator, Web Retro (a
- * vendored webretro emulator) and the three Celeste Classics games (their
- * actual files, vendored from Math-halper/Celeste).
+ * Viewer, Media, PDF Viewer), a Calculator, Web Retro and Ruffle Flash Player
+ * (the Tools), the bundled games and the three Celeste Classics (41 apps).
  * Built-in websites use the same catalog system (data/websites.js) and are
  * framed by the Browser app (Test Page is the only built-in site).
  * Window chrome/panel styling follows Mixt's Mint-Y theme.
@@ -39,10 +38,15 @@ function normalizeUserData() {
   userData.customApps ||= [];
   userData.websites ||= [];
   userData.hiddenApps ||= [];
+  /* The Browser keeps its bookmarks and history on the account, so an older
+   * account (or an older backup) simply starts with none. */
+  userData.bookmarks ||= [];
+  userData.history ||= [];
   userData.settings.pinned ||= [];
   /* Legacy app ids saved by older versions (e.g. the Calculator used to be
-   * id "math", the PDF Viewer "pdf-viewer"). Those apps are gone, but the
-   * mapping stays so an old pin/shortcut resolves to one id, not two. */
+   * id "math", the PDF Viewer "pdf-viewer"). The mapping stays so an old pin,
+   * shortcut or hidden-apps list resolves to one id, not two — the PDF Viewer
+   * is shipped again under "pdf", the Calculator is still gone. */
   const LEGACY_APP_IDS = { math: 'calculator', 'pdf-viewer': 'pdf' };
   userData.settings.pinned = userData.settings.pinned.map((id) => LEGACY_APP_IDS[id] || id);
   userData.hiddenApps = userData.hiddenApps.map((id) => LEGACY_APP_IDS[id] || id);
@@ -284,15 +288,17 @@ function toggleMin(id) {
   renderPanelApps();
 }
 
-/* options.path hands a virtual file/folder to an app. A running app receives
- * it via body.openPath, so opening a second file reuses the same window. */
+/* options.path hands a virtual file/folder to an app, options.url an address
+ * and options.query something to search for (the Browser takes all three). A
+ * running app receives them via body.openPath, so opening a second file
+ * reuses the same window. */
 function openApp(id, options = {}) {
   const app = APPS[id]; if (!app) return;
   MH.$('startmenu')?.setAttribute('hidden', '');
   document.querySelector('.menu-btn')?.classList.remove('open');
   if (wins.has(id)) {
     focusWin(id);
-    if (options.path || options.url) wins.get(id).body.openPath?.(options);
+    if (options.path || options.url || options.query) wins.get(id).body.openPath?.(options);
     return;
   }
   userData.counters.windowsOpened = (userData.counters.windowsOpened || 0) + 1; saveData();

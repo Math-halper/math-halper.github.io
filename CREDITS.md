@@ -24,7 +24,7 @@ and look wherever a browser-only equivalent exists:
 | `src/apps/sudoku/logic.js`, `checkers`, `chess`, `klondike`, `backgammon` | Sudoku generator/checker was adapted from the original pure-logic file, the other games reimplemented to the same rules — **removed** |
 | `src/apps/team-chat`, `g-talk`, `meetings` | On-device channels/direct chat with a local helper bot; meeting planner — removed earlier (real calls need a server) |
 | `src/apps/admin-vault`, dashboard Admin tab | Vault app that re-checked your account password (removed earlier); account/device stats survive in **Settings** |
-| `src/app-center`, Files/dashboard | **App Center** (hide/restore built-ins; previously saved user apps and sites remain openable/removable per account, the add-from-URL flow is disabled). The virtual Files drive is gone — the file system (`assets/fs.js`) stays, but no app ships to browse it |
+| `src/app-center`, Files/dashboard | **App Center** (hide/restore built-ins; previously saved user apps and sites remain openable/removable per account, the add-from-URL flow is disabled). The virtual Files drive is back: **Files** browses and manages the same file system (`assets/fs.js`), and Text Editor / Image Viewer / Media / PDF Viewer open what it finds |
 | — (modular layer) | **Customize** app: every built-in module's name/icon/category/order is editable and resettable, custom themes & wallpapers can be added/edited/removed/applied, and desktop parts (clock, hint, tray buttons, menu search, panel labels) toggle live — all per-account state with migration |
 | `internet/*` sites | Built-in websites as separate modules loaded into the Browser's SITES registry — **removed** except Test Page, the one entry left in `data/websites.js` |
 | `internet/world-history`, `internet/mixt-guide` | Built-in Browser pages — **removed** with the other websites |
@@ -47,30 +47,10 @@ authors.
 
 ## What this build ships
 
-Everything above describes how proton was built. The current base keeps the
-five desktop System apps — App Center, Customize, Settings, About and
-Browser — and copies the **file system suite** back in from `main`'s
-`apps/inbuilt/` layout (re-homed to `apps/<category>/<name>/` here): Files, Text Editor,
-Image Viewer, Media and PDF Viewer, whose ids are exactly the ones
-`FS.appFor()` returns. On top of main's modules, every open/save in them (and
-in Settings, Customize and Web Retro) now asks which file system to use —
-your Files (this computer) or the proton file system — through the shared
-chooser (`MH.askFileSource` in `assets/store.js`). The three Celeste Classics apps (Celeste Classic,
-Celeste Classic 2, Celeste Community) carry the actual game files, copied
-byte-for-byte from [Math-halper/Celeste](https://github.com/Math-halper/Celeste)
-(classic/, two/ and speed/) — see *Vendored Celeste Classics* below. A small
-Calculator ships again too — new, self-contained code
-(`apps/productivity/calculator/`), not a restore of the removed bundle below — and Web Retro
-(`apps/tools/web-retro/`) re-introduces retro emulation as a vendored webretro build
-(see **Vendored emulator (Web Retro)** below). The older
-bundled apps and game catalogs remain removed:
-
-- **19 bundled apps** — Files, Text Editor, Image Viewer, Notes, Calendar,
-  Contacts, Calculator, Spreadsheet, Presentation, Whiteboard, Logic Sim,
-  Terminal, Media, PDF Viewer and the five local games (Chess, Checkers,
-  Sudoku, Klondike, Backgammon). (Files, Text Editor, Image Viewer, Media
-  and PDF Viewer have since returned, copied from `main`; Calculator returned
-  as new code.)
+  `assets/styles.css` carries the shell's chrome, the classes the shipped apps
+  use (including the file manager/viewer and browser/search blocks), and
+  `tests/` is a single suite for this build, including tests that drive the
+  Files suite end to end.
 - **92 game entries from the older build** — the 19 Proton Arcade titles,
   68 Gams Offline titles and the five local games above (the local five were
   not streamed), catalogued in `data/applications.js` before trimming.
@@ -97,10 +77,25 @@ Nothing in the desktop shell was removed: accounts, the window manager, the
 panel and start menu, per-account desktop shortcuts, the customisation layer,
 the virtual file system (`assets/fs.js`, `data/fs-manifest.js`,
 `assets/fs-archive.js`) and the Browser's ability to open an HTML page from it
-all still work, and the account data model in `assets/store.js` still carries
-the removed apps' data (notes, files, events, contacts, sheets, slides,
-boards), so an older backup still imports and any of these apps can be added
-back with a folder under `apps/` and one catalog block.
+all still work — and the file system now has its apps back, so it is browsable,
+editable and exportable from the desktop itself. The account data model in
+`assets/store.js` still carries the removed apps' data (notes, events,
+contacts, sheets, slides, boards), so an older backup still imports and any of
+those apps can be added back with a folder under `apps/inbuilt/` and one
+catalog block.
+
+The search engine is new in this build rather than inherited, and it exists
+because a static page with no server still needs a way to find things: the only
+corpus it can honestly search is its own repository. `tools/gen-search-index.py`
+generates `data/search-index.js` from the prose of every deployed file,
+`assets/search.js` scores it, and the Browser (`apps/inbuilt/browser/`) grew the
+chrome around it — tabs, back/forward, bookmarks, history, suggestions and a
+reader. No search API is called and no query leaves the browser. It also refuses
+to bluff: a hit is either an **answer** (the repository is about that word here)
+or a **mention** (the word only turns up), the Browser lists answers as results
+and mentions beneath them, and when nothing answers it says so plainly rather
+than promoting an incidental match. proton has no dictionary, so it does not
+pretend to have one.
 
 The provenance table above and the sections that used to follow it (Digital
 Logic Sim, the streamed Proton Arcade and Gams Offline catalogs) are historical:
