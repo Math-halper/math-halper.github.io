@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Run 3 - proton app</title>
+</head>
+<body>
+<p>This file is a proton app. It is not meant to be opened on its own:
+open <a href="../../../index.html">proton</a> and launch <b>Run 3</b> from the
+proton menu. The script below is fetched and run by proton's HTML loader
+(assets/html-loader.js) at boot.</p>
+<!-- MOUNTAIN GAME — proton's wrapper frames the mountain658 page.
+     The game page loads live from mountain658.github.io — proton does not proxy,
+     cache or store it. If it refuses to embed, use Open in new tab. -->
+<script data-proton-app>
+(() => {
+/* proton app module: mountain game embed — edit this file to change this app.
+ * Loaded by index.html; calls registerApp() (see apps/README.md).
+ * Metadata (name, icon, cat, desc, w, h) lives in data/applications.js. */
+'use strict';
+
+/* =====================================================================
+   The mountain game page this app frames.
+   ===================================================================== */
+const EMBED_URL = 'https://mountain658.github.io/run3.html';
+/* --------------------------------------------------------------------- */
+
+registerApp({
+  render(body) {
+    body.innerHTML = `${bar('Run 3', `<span class="muted embed-src" title="${MH.esc(EMBED_URL)}">${MH.esc(EMBED_URL)}</span>
+      <button class="btn sm" data-e="reload">${iconSvg('refresh')} Reload</button>
+      <button class="btn sm primary" data-e="ext">${iconSvg('external')} Open in new tab</button>`)}
+      <div class="app-main local-page"><iframe class="site-frame" title="Run 3" src="${MH.esc(EMBED_URL)}"
+        sandbox="allow-scripts allow-forms allow-popups allow-modals" allow="autoplay; fullscreen; pointer-lock; gamepad" allowfullscreen></iframe></div>
+      <p class="muted" style="flex:none;margin:0;padding:7px 14px;border-top:1px solid var(--line)">Loaded live from
+        <a href="https://mountain658.github.io/run3.html" target="_blank" rel="noopener">mountain658.github.io</a> — proton does not proxy, cache or store it. Blank frame? That site refuses to be
+        embedded; use <b>Open in new tab</b>.</p>`;
+    const frame = body.querySelector('iframe');
+    body.querySelector('[data-e="reload"]').onclick = () => { frame.src = EMBED_URL; };
+    body.querySelector('[data-e="ext"]').onclick = () => window.open(EMBED_URL, '_blank', 'noopener');
+  },
+});
+})();
+</script>
+<style>
+/* The toolbar address, truncated like the Browser's. */
+.embed-src{max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}
+</style>
+</body>
+</html>

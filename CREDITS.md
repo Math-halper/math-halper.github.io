@@ -231,6 +231,18 @@ copies the Gams links point at, and no further rights are claimed or implied.
 The app icons are the Gams collection's own icon images for each game, scaled
 into `data/icons/`.
 
+## Mountain658 games (framed)
+
+Twelve more games are framed from [mountain658.github.io](https://mountain658.github.io/) —
+**Retro Bowl**, **Geometry Dash** (Scratch), Slope 2, Bitlife, Crossy Road, Moto X3M, Subway Surfers, Drift Hunters, Run 3, Paper.io 2, Basketball Stars and Wordle:
+
+- Each app is a thin wrapper (`apps/games/<id>/app.html`) that frames the mountain game page live at `https://mountain658.github.io/<page>.html` in a sandboxed iframe (`allow-scripts allow-forms allow-popups allow-modals`, `allow="autoplay; fullscreen; pointer-lock; gamepad"` with an "Open in new tab" escape hatch). No game files are vendored — the browser loads them from mountain658 at runtime, proton does not proxy, cache or store them.
+- Icons are the mountain collection's own `*.png` images (e.g. `retrobowl.png`, `geometry-dash.png`), scaled into `data/icons/` and set as the catalog default (`icon=data/icons/<id>.png`, `svg-icon=false`).
+
+Geometry Dash is the two Scratch projects mountain frames (`dash/dash.html` → `https://scratch.mit.edu/projects/105500895/embed` and `dash/dash2.html` → `https://scratch.mit.edu/projects/118638917/embed`) via its `dash/dashHome.html` hub. Retro Bowl is the mountain page `retro.html` which itself loads the GameMaker build at `g/retrobowl/index.html` (the same build also ships at `g/retrobowl/` in the mountain repo) plus two fallback servers; the wrapper frames that hub and offers the same three-server switcher inside it.
+
+Each game is © its respective authors (Retro Bowl by New Star Games, Geometry Dash by RobTop Games / Scratch remixes, etc.). The mountain collection carries no license granting redistribution; the frames are here as live embeds of that site, and no further rights are claimed or implied.
+
 ## Vendored emulator (Web Retro)
 
 The Web Retro app (`apps/tools/web-retro/`) vendors the **webretro** emulator —

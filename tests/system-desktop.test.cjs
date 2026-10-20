@@ -50,7 +50,19 @@ const SYSTEM_APPS = ['appcenter', 'customize', 'settings', 'about', 'browser',
   'super-mario-rpg',
   'tetris',
   'the-impossible-quiz',
-  'tunnel-rush'];
+  'tunnel-rush',
+  'retro-bowl',
+  'geometry-dash',
+  'slope-2',
+  'bitlife',
+  'crossy-road',
+  'moto-x3m',
+  'subway-surfers',
+  'drift-hunters',
+  'run-3',
+  'paper-io-2',
+  'basketball-stars',
+  'wordle'];
 /* Menu sections for each app (data/applications.js cat=), in catalog order.
  * Every new app is filed here with its respective section — the catalog test
  * asserts each app's cat matches, and the boot test asserts the five menu
@@ -88,6 +100,18 @@ const SYSTEM_CATS = {
   'tetris': 'Games',
   'the-impossible-quiz': 'Games',
   'tunnel-rush': 'Games',
+  'retro-bowl': 'Games',
+  'geometry-dash': 'Games',
+  'slope-2': 'Games',
+  'bitlife': 'Games',
+  'crossy-road': 'Games',
+  'moto-x3m': 'Games',
+  'subway-surfers': 'Games',
+  'drift-hunters': 'Games',
+  'run-3': 'Games',
+  'paper-io-2': 'Games',
+  'basketball-stars': 'Games',
+  'wordle': 'Games',
   'web-retro': 'Tools',
 };
 /* Each game app frames the game page that ships in its own folder. */
@@ -193,6 +217,18 @@ test('the catalog is the desktop apps, the file system suite, a calculator, web 
     'tetris': 'data/icons/tetris.png',
     'the-impossible-quiz': 'data/icons/the-impossible-quiz.png',
     'tunnel-rush': 'data/icons/tunnel-rush.png',
+    'retro-bowl': 'data/icons/retro-bowl.png',
+    'geometry-dash': 'data/icons/geometry-dash.png',
+    'slope-2': 'data/icons/slope-2.png',
+    'bitlife': 'data/icons/bitlife.png',
+    'crossy-road': 'data/icons/crossy-road.png',
+    'moto-x3m': 'data/icons/moto-x3m.png',
+    'subway-surfers': 'data/icons/subway-surfers.png',
+    'drift-hunters': 'data/icons/drift-hunters.png',
+    'run-3': 'data/icons/run-3.png',
+    'paper-io-2': 'data/icons/paper-io-2.png',
+    'basketball-stars': 'data/icons/basketball-stars.png',
+    'wordle': 'data/icons/wordle.png',
     'web-retro': 'data/icons/webretro.png' };
   assert.deepEqual(Array.from(apps, (a) => a.svgIcon), SYSTEM_APPS.map((id) => !RASTER_ICON_APPS[id]));
   const iconById = Object.fromEntries(Array.from(apps, (a) => [a.id, a.icon]));
@@ -389,7 +425,7 @@ test('the system manifest still matches the repository exactly', () => {
     'Manifest and repository disagree — re-run python3 tools/gen-fs-manifest.py');
 });
 
-test('the desktop boots, lists and opens all forty-one catalogued apps', async () => {
+test('the desktop boots, lists and opens all catalogued apps', async () => {
   const virtualConsole = new VirtualConsole(), errors = [];
   virtualConsole.on('jsdomError', (err) => errors.push(err.message));
   const dom = new JSDOM('<!doctype html><main id="auth" hidden></main><div id="desktop" hidden></div><div id="toasts"></div>', {
@@ -438,7 +474,7 @@ test('the desktop boots, lists and opens all forty-one catalogued apps', async (
       else assert.ok(w.eval('FS').stat(s.target), `default shortcut to a missing path: ${s.target}`);
     }
 
-    // The start menu groups all forty-one apps into their five sections.
+    // The start menu groups all apps into their five sections.
     const menu = w.document.querySelector('#startmenu');
     assert.deepEqual([...menu.querySelectorAll('.sm-cat')].map((e) => e.textContent),
       ['System', 'Productivity', 'Media', 'Tools', 'Games']);
@@ -690,7 +726,7 @@ test('Customize saves, displays and resets uploaded app icon images', async () =
     const browserWindow = w.eval('wins').get('browser');
     assert.equal(body.querySelector('#cust-files-shortcut'), null, 'Customize still offers a Files shortcut');
     assert.deepEqual([...body.querySelectorAll('#cust-modlist .card b')].map((b) => b.textContent).slice(0, SYSTEM_APPS.length),
-            ['App Center', 'Customize', 'Settings', 'About', 'Browser', 'Calculator', 'Files', 'Text Editor', 'PDF Viewer', 'Image Viewer', 'Media', 'Ruffle Flash Player', 'Web Retro', '2048', 'Bloons Tower Defense 1', 'Bloons Tower Defense 2', 'Bloons Tower Defense 5', 'Bloxorz', 'Breaking The Bank', 'Celeste Classic', 'Celeste Classic 2', 'Celeste Community', 'Cookie Clicker', 'Drive Mad', 'Escaping The Prison', 'Fleeing The Complex', 'Grey Box Testing', 'Infiltrating The Airship', 'Mari0', 'Offline Paradise', 'Pacman', 'Slope', 'Spacebar Clicker', 'Stack', 'Stealing The Diamond', 'Stickman Hook', 'Super Mario 64', 'Super Mario RPG', 'Tetris', 'The Impossible Quiz', 'Tunnel Rush']);
+            ['App Center', 'Customize', 'Settings', 'About', 'Browser', 'Calculator', 'Files', 'Text Editor', 'PDF Viewer', 'Image Viewer', 'Media', 'Ruffle Flash Player', 'Web Retro', '2048', 'Bloons Tower Defense 1', 'Bloons Tower Defense 2', 'Bloons Tower Defense 5', 'Bloxorz', 'Breaking The Bank', 'Celeste Classic', 'Celeste Classic 2', 'Celeste Community', 'Cookie Clicker', 'Drive Mad', 'Escaping The Prison', 'Fleeing The Complex', 'Grey Box Testing', 'Infiltrating The Airship', 'Mari0', 'Offline Paradise', 'Pacman', 'Slope', 'Spacebar Clicker', 'Stack', 'Stealing The Diamond', 'Stickman Hook', 'Super Mario 64', 'Super Mario RPG', 'Tetris', 'The Impossible Quiz', 'Tunnel Rush', 'Retro Bowl', 'Geometry Dash', 'Slope 2', 'Bitlife', 'Crossy Road', 'Moto X3M', 'Subway Surfers', 'Drift Hunters', 'Run 3', 'Paper.io 2', 'Basketball Stars', 'Wordle']);
 
     const uploadBrowserIcon = async () => {
       const input = body.querySelector('[data-micon-file="browser"]');

@@ -152,6 +152,18 @@ matching the menu sections (`cat=`, ordered by `CATS` in `assets/core.js`).
 | `games/` | Tetris (`tetris`) — the vendored Flash build and loader shim (from Gams-Offline/Gams `g/g/Ruffle/swfs/`; runs on the shared Ruffle player) plus its wrapper |
 | `games/` | The Impossible Quiz (`the-impossible-quiz`) — the vendored Flash build and loader shim (from Gams-Offline/Gams `g/g/Ruffle/swfs/`; runs on the shared Ruffle player) plus its wrapper |
 | `games/` | Tunnel Rush (`tunnel-rush`) — the vendored WebGL build (from Gams-Offline/Gams `g/g/`) plus its wrapper |
+| `games/` | Retro Bowl (`retro-bowl`) — mountain game embed (mountain658.github.io/retro.html) |
+| `games/` | Geometry Dash (`geometry-dash`) — mountain game embed (mountain658.github.io/dash/dashHome.html, Scratch) |
+| `games/` | Slope 2 (`slope-2`) — mountain game embed (mountain658.github.io/slope2.html) |
+| `games/` | Bitlife (`bitlife`) — mountain game embed (mountain658.github.io/bitlife.html) |
+| `games/` | Crossy Road (`crossy-road`) — mountain game embed (mountain658.github.io/crossyroad.html) |
+| `games/` | Moto X3M (`moto-x3m`) — mountain game embed (mountain658.github.io/motox3mhome.html) |
+| `games/` | Subway Surfers (`subway-surfers`) — mountain game embed (mountain658.github.io/subwaysurfers.html) |
+| `games/` | Drift Hunters (`drift-hunters`) — mountain game embed (mountain658.github.io/Drift-Hunters.html) |
+| `games/` | Run 3 (`run-3`) — mountain game embed (mountain658.github.io/run3.html) |
+| `games/` | Paper.io 2 (`paper-io-2`) — mountain game embed (mountain658.github.io/paperio2.html) |
+| `games/` | Basketball Stars (`basketball-stars`) — mountain game embed (mountain658.github.io/Basket-Ball-Stars.html) |
+| `games/` | Wordle (`wordle`) — mountain game embed (mountain658.github.io/wordle.html) |
 | `_template/` | not an app — the starting point for a new one (copy it into its category folder) |
 | `_embed/` | not an app — the starting point for one that is only a framed page (`EMBED_URL`) |
 
