@@ -27,7 +27,7 @@ idle bakery game, copied byte-for-byte from the offline mirror in
 **23 more games** from that same Gams collection join the Games section —
 Flash classics (Pacman, Tetris, the Henry Stickmin series and more) on the
 shared open-source **Ruffle Flash Player** app, Unity WebGL builds and
-single-file HTML5 games. **12 more games** join them — including **Retro Bowl** and **Geometry Dash** (Scratch) plus Slope 2, Bitlife, Crossy Road, Moto X3M, Subway Surfers, Drift Hunters, Run 3, Paper.io 2, Basketball Stars and Wordle — each vendored directly into `apps/games/<id>/` with its own icon (see `CREDITS.md` for provenance) and an "Open in new tab" escape hatch. A small
+single-file HTML5 games. **7 more games** join them — **Retro Bowl**, Slope 2, Bitlife, Crossy Road, Moto X3M, Subway Surfers and Paper.io 2 — each vendored directly into `apps/games/<id>/` with its own icon (see `CREDITS.md` for provenance) and an "Open in new tab" escape hatch. A small
 **Calculator** (new, self-contained code in `apps/productivity/calculator/`) ships again
 too, and **Web Retro** vendors the
 [webretro](https://github.com/BinBashBanana/webretro) emulator build from
@@ -84,20 +84,12 @@ game bundles and earlier built-in sites remain removed (except Test Page).
 | **The Impossible Quiz** (`the-impossible-quiz`) | Play The Impossible Quiz - the wildly unfair quiz |
 | **Tunnel Rush** (`tunnel-rush`) | Play Tunnel Rush - dodge through the spinning tunnel |
 | **Retro Bowl** (`retro-bowl`) | Play Retro Bowl — the retro American football sim |
-| **Geometry Dash** (`geometry-dash`) | Play Geometry Dash 1 & 2 — the rhythm platformer (Scratch) |
-| **Geometry Dash 1-3** (`geometry-dash-1-3`) | Play Geometry Dash levels 1-3 (Scratch) |
-| **Geometry Dash 4-6** (`geometry-dash-4-6`) | Play Geometry Dash levels 4-6 (Scratch) |
 | **Slope 2** (`slope-2`) | Play Slope 2 — the neon slope sequel |
 | **Bitlife** (`bitlife`) | Play Bitlife — the life simulator |
 | **Crossy Road** (`crossy-road`) | Play Crossy Road — dodge traffic and rivers |
 | **Moto X3M** (`moto-x3m`) | Play Moto X3M 1 & 4 — stunt biking |
 | **Subway Surfers** (`subway-surfers`) | Play Subway Surfers — the endless runner |
-| **Drift Hunters** (`drift-hunters`) | Play Drift Hunters — drift and tune cars |
-| **Drift Hunters (Direct)** (`drift-hunters-game`) | Play Drift Hunters — drift and tune cars (direct Unity build) |
-| **Run 3** (`run-3`) | Play Run 3 — the space tunnel runner |
 | **Paper.io 2** (`paper-io-2`) | Play Paper.io 2 — capture territory |
-| **Basketball Stars** (`basketball-stars`) | Play Basketball Stars — shoot hoops |
-| **Wordle** (`wordle`) | Play Wordle — the daily word puzzle |
 
 Rows are listed in start-menu order: **System**, then **Productivity**, **Media**, **Tools** and **Games**.
 
@@ -128,10 +120,10 @@ runtime dependencies or build step. Optional regression tests use jsdom:
 ## Project layout (everything is a module)
 
 - **Apps:** one folder + HTML file each — `apps/<category>/<name>/app.html`
-  (41 apps in five category folders — `system/`, `productivity/`, `media/`, `tools/`,
-  `games/` — matching the menu sections, plus
-  two starting points: `apps/_template/` for a normal app and `apps/_embed/`
-  for one that is only a framed page — change its single `EMBED_URL` constant).
+  (53 apps in five category folders — `system/`, `productivity/`, `media/`, `tools/`,
+  `games/` — matching the menu sections, plus one starting point:
+  `apps/_template/` for a normal app). Embedded-page apps are not shipped:
+  every app's files live in this repository.
   Every app's name,
   location, icon, category, description and window size is listed in **one
   catalog file** — `data/applications.js`. Add one by copying
@@ -140,9 +132,9 @@ runtime dependencies or build step. Optional regression tests use jsdom:
   deleting that block. Full guide: [`apps/README.md`](apps/README.md).
 - **Built-in websites:** the same catalog system — `data/websites.js`, one
   `[website]` block per site, each page a `websites/<name>/site.html`. One site
-  ships: **Test Page** (`websites/test-page/`), plus `websites/_template/` and
-  `websites/_embed/` (one framed page, one `EMBED_URL` constant to change) as
-  the starting points for a new one. The Browser also visits any address typed
+  ships: **Test Page** (`websites/test-page/`), plus `websites/_template/` as
+  the starting point for a new one. Embedded-page sites are not shipped:
+  every site's files live in this repository. The Browser also visits any address typed
   into its bar, opens HTML files from the virtual file system, and searches its
   own index of this repository (see **Search** below). Guide:
   [`websites/README.md`](websites/README.md).

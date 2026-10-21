@@ -37,12 +37,11 @@ byte-for-byte from github.com/Math-halper/Mario, only the games) and Cookie
 Clicker (Orteil's idle game, copied byte-for-byte from the offline mirror in
 github.com/Gams-Offline/Gams) and 23 more games from that same Gams
 collection (Flash classics on the shared Ruffle player, Unity WebGL builds
-and single-file HTML5 games) plus 12 more (including Retro Bowl
-and Geometry Dash). Each game
+and single-file HTML5 games) plus 7 more (including Retro Bowl). Each game
 app folder is the game's own files plus a thin proton iframe wrapper (see CREDITS.md for provenance), and
 apps/games/index.html is the picker their "all games" links expect.
 
-The start menu groups them by cat=: System (the desktop’s own five), Productivity (Calculator, Files, Text Editor, PDF Viewer), Media (Image Viewer, Media), Tools (Ruffle Flash Player, Web Retro — the players behind the Flash and cartridge games) and Games (48 games: 2048, Bloons Tower Defense 1, Bloons Tower Defense 2, Bloons Tower Defense 5, Bloxorz, Breaking The Bank, Celeste Classic, Celeste Classic 2, Celeste Community, Celeste Classic Practice Mod, Celeste Classic 2 Practice Mod 1.0, Celeste Classic 2 Practice Mod 1.1, Celeste Webek, Celeste Classic Downloads, Cookie Clicker, Drive Mad, Escaping The Prison, Fleeing The Complex, Grey Box Testing, Infiltrating The Airship, Mari0, Offline Paradise, Pacman, Slope, Spacebar Clicker, Stack, Stealing The Diamond, Stickman Hook, Super Mario 64, Super Mario RPG, Tetris, The Impossible Quiz, Tunnel Rush, Retro Bowl, Geometry Dash, Geometry Dash 1-3, Geometry Dash 4-6, Slope 2, Bitlife, Crossy Road, Moto X3M, Subway Surfers, Drift Hunters, Drift Hunters (Direct), Run 3, Paper.io 2, Basketball Stars, Wordle). Block order below is menu order within each section.
+The start menu groups them by cat=: System (the desktop’s own five), Productivity (Calculator, Files, Text Editor, PDF Viewer), Media (Image Viewer, Media), Tools (Ruffle Flash Player, Web Retro — the players behind the Flash and cartridge games) and Games (40 games: 2048, Bloons Tower Defense 1, Bloons Tower Defense 2, Bloons Tower Defense 5, Bloxorz, Breaking The Bank, Celeste Classic, Celeste Classic 2, Celeste Community, Celeste Classic Practice Mod, Celeste Classic 2 Practice Mod 1.0, Celeste Classic 2 Practice Mod 1.1, Celeste Webek, Celeste Classic Downloads, Cookie Clicker, Drive Mad, Escaping The Prison, Fleeing The Complex, Grey Box Testing, Infiltrating The Airship, Mari0, Offline Paradise, Pacman, Slope, Spacebar Clicker, Stack, Stealing The Diamond, Stickman Hook, Super Mario 64, Super Mario RPG, Tetris, The Impossible Quiz, Tunnel Rush, Retro Bowl, Slope 2, Bitlife, Crossy Road, Moto X3M, Subway Surfers, Paper.io 2). Block order below is menu order within each section.
 
 IMPORTANT: an id must not be a bare number — JavaScript object key ordering
   hoists integer-like keys to the front of every APPS iteration (this is why
@@ -581,38 +580,8 @@ desc=Play Retro Bowl — the retro American football sim
 w=980
 h=640
 
-[application]
-id=geometry-dash
-name=Geometry Dash
-path=apps/games/geometry-dash/app.html
-icon=data/icons/geometry-dash.png
-svg-icon=false
-cat=Games
-desc=Play Geometry Dash 1 & 2 — the rhythm platformer (Scratch)
-w=980
-h=640
 
-[application]
-id=geometry-dash-1-3
-name=Geometry Dash 1-3
-path=apps/games/geometry-dash-1-3/app.html
-icon=data/icons/geometry-dash.png
-svg-icon=false
-cat=Games
-desc=Play Geometry Dash levels 1-3 (Scratch)
-w=980
-h=640
 
-[application]
-id=geometry-dash-4-6
-name=Geometry Dash 4-6
-path=apps/games/geometry-dash-4-6/app.html
-icon=data/icons/geometry-dash.png
-svg-icon=false
-cat=Games
-desc=Play Geometry Dash levels 4-6 (Scratch)
-w=980
-h=640
 
 [application]
 id=slope-2
@@ -669,38 +638,8 @@ desc=Play Subway Surfers — the endless runner
 w=980
 h=640
 
-[application]
-id=drift-hunters
-name=Drift Hunters
-path=apps/games/drift-hunters/app.html
-icon=data/icons/drift-hunters.png
-svg-icon=false
-cat=Games
-desc=Play Drift Hunters — drift and tune cars
-w=980
-h=640
 
-[application]
-id=drift-hunters-game
-name=Drift Hunters (Direct)
-path=apps/games/drift-hunters-game/app.html
-icon=data/icons/drift-hunters.png
-svg-icon=false
-cat=Games
-desc=Play Drift Hunters — drift and tune cars (direct Unity build)
-w=980
-h=640
 
-[application]
-id=run-3
-name=Run 3
-path=apps/games/run-3/app.html
-icon=data/icons/run-3.png
-svg-icon=false
-cat=Games
-desc=Play Run 3 — the space tunnel runner
-w=980
-h=640
 
 [application]
 id=paper-io-2
@@ -713,46 +652,9 @@ desc=Play Paper.io 2 — capture territory
 w=980
 h=640
 
-[application]
-id=basketball-stars
-name=Basketball Stars
-path=apps/games/basketball-stars/app.html
-icon=data/icons/basketball-stars.png
-svg-icon=false
-cat=Games
-desc=Play Basketball Stars — shoot hoops
-w=980
-h=640
 
-[application]
-id=wordle
-name=Wordle
-path=apps/games/wordle/app.html
-icon=data/icons/wordle.png
-svg-icon=false
-cat=Games
-desc=Play Wordle — the daily word puzzle
-w=980
-h=640
 
-/* TEMPLATE — an app that is only an embedded page. Copy apps/_embed/,
-   rename it, change the EMBED_URL constant in its app.html, then
-   uncomment a block like this one (and delete these lines).
-   Set cat= to the menu section the app belongs in — System, Productivity,
-   Media or Games — so it lands in the right group, and put its folder in
-   apps/<category>/ to match:
-
-[application]
-id=my-embed
-name=My Embed
-path=apps/<category>/my-embed/app.html
-icon=globe
-svg-icon=true
-cat=System
-desc=Frames https://example.com in a window
-w=980
-h=640
-
-*/
+/* Embedded-page apps are not shipped: every app is a local app
+   (copy apps/_template/) whose files live in this repository. */
 
 `;

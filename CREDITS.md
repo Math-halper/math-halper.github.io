@@ -66,7 +66,7 @@ authors.
   re-implementation inspired by Sebastian Lague's MIT-licensed Digital Logic
   Sim, which also carried upstream's JetBrains Mono NL fonts under SIL OFL
   1.1). **Test Page** was kept and rewritten as this build's smoke test, so
-  `websites/` still exists with that one site (plus `_template/` and `_embed/`) and
+  `websites/` still exists with that one site (plus `_template/`) and
   `data/websites.js` still holds one `[website]` block; the Browser also copes
   with an empty catalog if it is removed.
 - **The styles, icons and tests that only those apps used** —
@@ -239,28 +239,24 @@ into `data/icons/`.
 
 ## Mountain658 games (vendored)
 
-Provenance note: twelve games in `apps/games/` — Retro Bowl, Geometry
-Dash, Slope 2, Bitlife, Crossy Road, Moto X3M, Subway Surfers, Drift
-Hunters, Run 3, Paper.io 2, Basketball Stars and Wordle — were copied
-from [mountain658/mountain658.github.io](https://github.com/mountain658/mountain658.github.io)
+Provenance note: seven games in `apps/games/` — Retro Bowl, Slope 2,
+Bitlife, Crossy Road, Moto X3M, Subway Surfers and Paper.io 2 — were
+copied from [mountain658/mountain658.github.io](https://github.com/mountain658/mountain658.github.io)
 (collection: [mountain658.github.io](https://mountain658.github.io/));
 Subway Surfers' Unity build also came from mountain658/SubwaySurfers,
 wired to its local `SanFrancisco.json`. Credit for collecting and
 hosting these builds goes to mountain658; each game is © its respective
-authors (e.g. Retro Bowl by New Star Games, Geometry Dash by RobTop
-Games / the Scratch remix authors, Subway Surfers by SYBO/Kiloo). The
-collection carries no licence granting redistribution — the files are
-mirrored here as-is and no further rights are claimed or implied; if
-you hold rights in a bundled game and want it removed, open an issue or
-pull request. The app icons are the collection's own PNGs in
-`data/icons/`. Game files were copied file-for-file except for dropping
-the collection's analytics/site chrome and making absolute links
-relative. Some copied pages retain their upstream inner loads:
-Geometry Dash's Scratch players, Run 3's framed build, Basketball
-Stars' gadget assets, Wordle's selector servers, and Drift Hunters'
-remote server choices — its local build files are, as shipped
-upstream, Git-LFS pointers (the real data file is 135 MB, over
-GitHub's 100 MB Pages file limit).
+authors (e.g. Retro Bowl by New Star Games, Subway Surfers by
+SYBO/Kiloo). The collection carries no licence granting redistribution
+— the files are mirrored here as-is and no further rights are claimed
+or implied; if you hold rights in a bundled game and want it removed,
+open an issue or pull request. The app icons are the collection's own
+PNGs in `data/icons/`. Game files were copied file-for-file except for
+dropping the collection's analytics/site chrome and making absolute
+links relative. Games from that collection whose pages only embedded a
+remote build (Geometry Dash's Scratch players, Run 3's framed build,
+Basketball Stars' gadget assets, Wordle's selector servers and Drift
+Hunters' remote server choices) are not shipped.
 
 ## Vendored emulator (Web Retro)
 
