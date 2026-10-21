@@ -463,10 +463,18 @@ test('the cover search bar and Sign in button gate the desktop with data/passwor
     'the cover search bar should be the password field');
   assert.match(index, /<button type="button" id="cover-signin" class="cover-signin">Sign in<\/button>/,
     'the cover should have a working Sign in button');
-  assert.ok(!index.includes('cover-signin cover-broken'), 'Sign in must not be a dead cover control');
+  assert.ok(!index.includes('cover-signin cover-decoy'), 'Sign in must not be a dead cover control');
+  /* The cover must not give any indication that it is broken: no outage
+   * banner, no error chip, no unavailable labels, no zeroed progress. */
+  for (const sign of ['cover-status', 'Practice is temporarily unavailable', 'MH-503',
+    'Skill service offline', 'Recommendations could not be refreshed', '>Unavailable<', 'width:0%']) {
+    assert.ok(!index.includes(sign), `the cover should not show "${sign}"`);
+  }
   const boot = source('assets/boot.js');
   assert.ok(boot.includes("fetch('data/password.txt'"), 'the gate should read data/password.txt');
   assert.ok(!boot.includes('isPageReload'), 'a refresh must not skip the password gate');
+  assert.ok(!boot.includes('coverUnavailable') && !boot.includes('cover-status'),
+    'clicking a cover control should not report that anything is unavailable');
 
   const virtualConsole = new VirtualConsole(), errors = [];
   virtualConsole.on('jsdomError', (err) => errors.push(err.message));
@@ -511,21 +519,31 @@ test('the cover search bar and Sign in button gate the desktop with data/passwor
     const cover = w.document.querySelector('#cover');
     const desktop = w.document.querySelector('#desktop');
     const input = w.document.querySelector('#cover-q');
-    const status = () => w.document.querySelector('#cover-status').textContent;
+    const wait = (ms) => new Promise((r) => setTimeout(r, ms));
     assert.equal(cover.hidden, false, 'the cover should be shown first');
     assert.equal(desktop.hidden, true, 'the desktop should start hidden behind the gate');
+    assert.equal(w.document.querySelector('#cover-status'), null,
+      'the cover should have no status banner');
+    const coverText = cover.textContent;
 
-    /* The bottom button is not a bypass: with no password it only prompts. */
+    /* A decorative cover control does nothing and says nothing. */
+    w.document.querySelector('.cover-decoy').click();
+    assert.equal(desktop.hidden, true);
+    assert.equal(cover.textContent, coverText, 'a dead cover control should not change the page');
+
+    /* The bottom button is not a bypass: with no password it stays silent. */
     w.document.querySelector('#cover-enter').click();
     assert.equal(desktop.hidden, true, 'the bottom button must not bypass the password');
-    assert.match(status(), /Enter the desktop password/);
+    assert.equal(cover.textContent, coverText, 'an empty sign-in should not prompt or report an error');
 
-    /* A wrong password typed in the search bar and Sign in keeps it hidden. */
+    /* A wrong password typed in the search bar and Sign in keeps the
+     * desktop hidden, with no visible response either. */
     input.value = 'not the password';
     w.document.querySelector('#cover-signin').click();
-    await until(() => /Incorrect password/.test(status()), 'the wrong-password message');
+    await wait(80);
     assert.equal(desktop.hidden, true, 'a wrong password must not open the desktop');
     assert.equal(cover.hidden, false);
+    assert.equal(cover.textContent, coverText, 'a wrong password should not change the cover');
 
     /* The password from data/password.txt, then Sign in, opens the desktop
      * on a fresh local profile. */

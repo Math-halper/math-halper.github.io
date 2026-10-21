@@ -1,11 +1,11 @@
 /* proton boot — loaded last. Fetches the HTML app/website modules
  * (assets/html-loader.js), then waits behind the Math Helper cover page.
  *
- * The cover's practice controls are intentionally unavailable. The desktop
- * opens only after the password from data/password.txt is typed into the
- * cover search bar and Sign in is clicked. That password is checked here,
- * before any desktop is shown; refreshing or signing out returns to the
- * cover and asks for it again. */
+ * The cover gives no indication that anything is unavailable: its practice
+ * controls simply do nothing. The desktop opens only after the password
+ * from data/password.txt is typed into the cover search bar and Sign in is
+ * clicked. That password is checked here, before any desktop is shown;
+ * refreshing or signing out returns to the cover and asks for it again. */
 'use strict';
 
 let protonModulesReady = false;
@@ -14,16 +14,6 @@ let protonEntryRequested = false;
 let siteGatePassed = false;
 let siteGatePassword = '';
 let desktopPasswordPromise = null;
-let desktopPasswordError = null;
-
-function setCoverStatus(message) {
-  const el = MH.$('cover-status');
-  if (el) el.textContent = message;
-}
-
-function coverUnavailable() {
-  setCoverStatus('That part of Math Helper is unavailable right now. Practice could not be loaded (error MH-503).');
-}
 
 /* The password file is deliberately plain text so it can be edited without
  * touching code: the first line that is not blank and does not start with
@@ -43,8 +33,7 @@ function loadDesktopPassword() {
         if (!res.ok) throw new Error(`data/password.txt could not be loaded (${res.status}).`);
         return res.text();
       })
-      .then(parseDesktopPassword)
-      .catch((err) => { desktopPasswordError = err; throw err; });
+      .then(parseDesktopPassword);
   }
   return desktopPasswordPromise;
 }
@@ -58,7 +47,6 @@ async function verifySitePassword(candidate) {
 }
 /* The lock screen (assets/core.js) unlocks with this same password. */
 window.verifySitePassword = verifySitePassword;
-window.sitePasswordError = () => desktopPasswordError;
 
 function showSiteDesktop() {
   if (!siteGatePassed || !protonModulesReady) return;
@@ -75,25 +63,16 @@ async function attemptCoverSignIn() {
   const input = MH.$('cover-q');
   const candidate = input ? input.value : '';
   if (!candidate) {
-    setCoverStatus('Enter the desktop password in the search bar, then click Sign in.');
     if (input) input.focus();
     return;
   }
-  setCoverStatus('Checking the password…');
-  if (!(await verifySitePassword(candidate))) {
-    setCoverStatus(desktopPasswordError
-      ? 'The desktop password file could not be loaded. proton must be served over HTTP — try GitHub Pages or a local web server, not a file:// tab.'
-      : 'Incorrect password — check it and click Sign in again.');
-    if (input) { input.focus(); input.select(); }
-    return;
-  }
+  /* A wrong password — like every other cover control — gets no visible
+   * response at all. Only the correct password does anything. */
+  if (!(await verifySitePassword(candidate))) return;
   siteGatePassed = true;
   siteGatePassword = candidate;
   if (!protonModulesReady) {
     protonEntryRequested = true;
-    setCoverStatus(protonLoadError
-      ? 'The Math Helper workspace could not be loaded. It must be served over HTTP — try GitHub Pages or a local web server, not a file:// tab.'
-      : 'Password accepted — the Math Helper workspace is still loading…');
     return;
   }
   showSiteDesktop();
@@ -102,7 +81,8 @@ async function attemptCoverSignIn() {
 function initCover() {
   const cover = MH.$('cover');
   if (!cover) return;
-  cover.querySelectorAll('.cover-broken').forEach((el) => el.addEventListener('click', coverUnavailable));
+  /* The .cover-decoy controls intentionally get no handler: they look like
+   * ordinary Math Helper controls, but clicking them does nothing. */
   const search = MH.$('cover-search');
   if (search) search.addEventListener('submit', (e) => { e.preventDefault(); attemptCoverSignIn(); });
   const signin = MH.$('cover-signin');
@@ -120,8 +100,9 @@ async function protonBoot() {
     console.error(err);
     protonLoadError = err;
     if (MH.$('cover')) {
+      // Leave the cover exactly as it is: no error message, no indication
+      // that anything failed to load behind it.
       if (bootEl) bootEl.remove();
-      setCoverStatus('The Math Helper workspace could not be loaded. It must be served over HTTP — try GitHub Pages or a local web server, not a file:// tab.');
     } else {
       const sub = document.querySelector('.boot-sub');
       if (sub) {

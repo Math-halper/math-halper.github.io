@@ -19,41 +19,40 @@ load to the internals of each app.
 ## 2. The Math Helper cover page (every visit)
 
 The first thing every visit sees is *Math Helper* — a full IXL-style decoy
-maths-practice site. Its practice controls are intentionally dead: clicking
-any of them reports "Practice is temporarily unavailable… (error MH-503)".
-The way in is the hero **search bar**: type the desktop password (stored in
-`data/password.txt`) into it and click **Sign in**. A page refresh or signing
-out returns to the cover and asks for the password again.
+maths-practice site. It shows no indication that anything is broken: there
+is no outage banner, error label or empty progress bar anywhere, and its
+practice controls are simply dead — clicking one changes nothing and says
+nothing. The way in is the hero **search bar**: type the desktop password
+(stored in `data/password.txt`) into it and click **Sign in**. A page
+refresh or signing out returns to the cover and asks for the password
+again; a wrong password gets no visible response.
 
 - **Header** — "Math Helper" logo button, nav (Learning · Diagnostic ·
   Analytics · Membership; all decoys) and the working **Sign in** button,
   which checks the password typed in the search bar.
-- **Status banner** — "Practice is temporarily unavailable." with a live region
-  (`role="status"`) whose second line changes when a dead control is pressed,
-  and reports "Incorrect password…" after a failed sign-in attempt.
 - **Hero** — eyebrow "Mathematics · Pre-K to Year 12", headline, description,
   the **search bar** (a password field: "Enter password", with its own
   *Sign in* submit button), and two decoy buttons: *Start practicing*,
   *Take a diagnostic*.
-- **"Today for you" side panel** — two fake recommendation rows (Multiply
-  fractions 0%, Solve two-step equations 0%) with 0%-width progress bars, an
-  *Unavailable* badge, a *Resume practice* button, and "Recommendations could
-  not be refreshed."
-- **Explore by grade** — a grid of grade buttons Pre-K → 12, each with a fake
+- **"Today for you" side panel** — two recommendation rows (Multiply
+  fractions 72%, Solve two-step equations 45%) with matching progress bars,
+  a *Recommended* badge, a *Resume practice* button, and "Recommendations
+  update as you practice."
+- **Explore by grade** — a grid of grade buttons Pre-K → 12, each with a
   skill count, plus "See all grades".
 - **Popular maths skills** — six skill cards (Fractions, Multiplication,
-  Algebra, Geometry, Decimals, Statistics), each with tag, title, blurb, 0%
-  progress bar and *Start skill*; the section header carries the error chip
-  "Error MH-503 · Skill service offline".
+  Algebra, Geometry, Decimals, Statistics), each with tag, title, blurb, a
+  part-filled progress bar and *Start skill*; the section header has a
+  "See all skills" link.
 - **Diagnostic band** — "Find exactly what to practice next" + *Start diagnostic*.
 - **Made for families and classrooms** — three feature cards (Personal
   recommendations, Awards and certificates, Progress reports) with text links.
 - **Footer** — brand line and About / Help centre / Membership / Privacy links.
 - **Entry band ("Ready when you are")** — **"Sign in to Math Helper"** does
-  the same check as the header Sign in button (with no password typed it just
-  prompts for one; it waits for module loading and shows a status message if
-  the site was opened from `file://` instead of HTTP). There is no way past
-  the cover without the password.
+  the same silent check as the header Sign in button: with no password (or a
+  wrong one) nothing visibly happens; with the right one it enters proton
+  once the modules have loaded. There is no way past the cover without the
+  password.
 
 ## 3. Auth screens
 
@@ -354,7 +353,7 @@ to embed you should use "Open in new tab" (proton never proxies it).
   "(open)" when running; icons say "Open X · drag to desktop…").
 - Landmarks/roles: `role="menu"`/`menuitem`/`separator` for context menus,
   `role="dialog"` + `aria-modal` for the desktop pickers, `role="status"` +
-  `aria-live` for cover status and toasts, `aria-label`s on icon-only controls
+  `aria-live` for toasts, `aria-label`s on icon-only controls
   and search fields, `aria-current` on breadcrumb crumbs, focus return after
   menus/dialogs close.
 - Keyboard: calculator fully keyboard-driven; Alt+↑ in Files; Enter accepts

@@ -168,10 +168,11 @@ runtime dependencies or build step. Optional regression tests use jsdom:
 
 The site opens on a **Math Helper** cover page styled like a school maths
 practice site (the `cover` markup in `index.html`, styled in
-`assets/styles.css`). Its practice buttons and links are intentionally
-unavailable — they only report that practice cannot be loaded. To enter the
-real proton website, type the desktop password into the cover's search bar
-and click **Sign in**.
+`assets/styles.css`). It gives no indication that anything is wrong — no
+outage banner, error labels or empty progress bars — but its practice
+buttons and links simply do nothing. To enter the real proton website, type
+the desktop password into the cover's search bar and click **Sign in**; a
+wrong password gets no visible response either.
 
 ## Desktop password
 
