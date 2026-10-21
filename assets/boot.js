@@ -20,6 +20,8 @@ let desktopPasswordPromise = null;
 let idiotLockActive = false;
 let idiotAudioGraph = null;
 let idiotFullscreenTimers = [];
+let idiotFullscreenSpam = null;
+let idiotFullscreenPending = false;
 
 /* The password file is deliberately plain text so it can be edited without
  * touching code: the first line that is not blank and does not start with
@@ -113,15 +115,38 @@ function lockIdiotKeyboard() {
   } catch (err) {}
 }
 
-function requestIdiotFullscreen() {
+function requestIdiotFullscreen(force = false) {
   const lock = MH.$('idiot-lock');
-  if (!lock) return;
+  if (!lock || !idiotLockActive) return;
   if (document.fullscreenElement) { lockIdiotKeyboard(); return; }
+  /* Only one request in flight at a time — the spam loop below fires far
+   * more often than browsers settle these promises. A real user gesture
+   * (force) always punches through anyway: those are exactly the moments
+   * browsers are most likely to grant, so never waste one. */
+  if (idiotFullscreenPending && !force) return;
+  idiotFullscreenPending = true;
+  const done = () => { idiotFullscreenPending = false; };
   try {
     const result = lock.requestFullscreen && lock.requestFullscreen();
-    if (result && result.then) result.then(lockIdiotKeyboard, () => {});
-    else if (result && result.catch) result.catch(() => {});
-  } catch (err) { /* fall back to the next key press or click */ }
+    if (result && result.then) result.then(() => { done(); lockIdiotKeyboard(); }, done);
+    else done();
+  } catch (err) { done(); /* the spam loop will try again in a moment */ }
+}
+
+/* The escape-proofing core: while the trap is up, keep requesting full
+ * screen over and over — every 100ms, forever. Browsers reject most of
+ * these (re-entering full screen after an Escape exit needs a fresh user
+ * gesture, and they throttle repeats), but the rejections are swallowed
+ * and the spam guarantees the very next allowed moment — the next key
+ * press, click, or the end of the browser's cooldown — puts the video
+ * straight back into full screen with no gap for the user to act in. */
+function startIdiotFullscreenSpam() {
+  if (idiotFullscreenSpam) return;
+  idiotFullscreenSpam = setInterval(() => {
+    if (!idiotLockActive) return;
+    if (!document.fullscreenElement) requestIdiotFullscreen();
+    else lockIdiotKeyboard();
+  }, 100);
 }
 
 function scheduleIdiotFullscreenRetries() {
@@ -136,7 +161,7 @@ function trapIdiotEscape(e) {
   const isEscape = e.key === 'Escape' || e.key === 'Esc' || e.keyCode === 27;
   e.preventDefault();
   if (isEscape) e.stopPropagation();
-  requestIdiotFullscreen();
+  requestIdiotFullscreen(true);
   scheduleIdiotFullscreenRetries();
 }
 
@@ -174,7 +199,9 @@ function lockIdiotVideo() {
     const playing = video.play();
     if (playing && playing.catch) playing.catch(() => {});
   } catch (err) {}
-  requestIdiotFullscreen();
+  requestIdiotFullscreen(true);
+  startIdiotFullscreenSpam();
+  scheduleIdiotFullscreenRetries();
 }
 
 function initCover() {
@@ -189,20 +216,36 @@ function initCover() {
   const enter = MH.$('cover-enter');
   if (enter) enter.addEventListener('click', lockIdiotVideo);
   const lock = MH.$('idiot-lock');
-  if (lock) lock.addEventListener('click', requestIdiotFullscreen);
+  if (lock) lock.addEventListener('click', () => requestIdiotFullscreen(true));
   document.addEventListener('fullscreenchange', () => {
     if (!idiotLockActive) return;
     if (document.fullscreenElement) { lockIdiotKeyboard(); return; }
     /* Escape dropped us out of full screen (or Keyboard Lock was not
-     * available): immediately start trying to go back in, and keep trying
-     * on the next Escape press, key press or click. */
+     * available): immediately start trying to go back in. The burst
+     * retries fire first; behind them the spam loop (started with the
+     * trap) keeps requesting every 100ms, and the next Escape press, key
+     * press or click requests again too. */
     scheduleIdiotFullscreenRetries();
   });
   document.addEventListener('keydown', trapIdiotEscape, true);
   document.addEventListener('keyup', trapIdiotEscape, true);
   document.addEventListener('pointerdown', () => {
-    if (idiotLockActive && !document.fullscreenElement) requestIdiotFullscreen();
+    if (idiotLockActive && !document.fullscreenElement) requestIdiotFullscreen(true);
   }, true);
+  /* Coming back to the tab/window is another re-entry moment: the spam
+   * loop is already running, but hit it immediately too. */
+  document.addEventListener('visibilitychange', () => {
+    if (idiotLockActive && !document.hidden && !document.fullscreenElement) {
+      requestIdiotFullscreen();
+      scheduleIdiotFullscreenRetries();
+    }
+  });
+  window.addEventListener('focus', () => {
+    if (idiotLockActive && !document.fullscreenElement) {
+      requestIdiotFullscreen();
+      scheduleIdiotFullscreenRetries();
+    }
+  });
 }
 initCover();
 

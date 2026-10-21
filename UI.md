@@ -57,8 +57,10 @@ visible response.
   looping *You Are An Idiot* video (`assets/youare.mp4`, vendored in this
   repository). Escape is captured with the Keyboard Lock API where the
   browser supports it; if the browser still drops out of full screen, the
-  trap immediately re-requests it and retries on the next Escape press, key
-  press or click. The only way into proton remains the header **Sign in**
+  trap spams full-screen requests — a 100ms loop for as long as the trap is
+  up, plus an immediate burst on every Escape press, key press, click and
+  tab/window refocus — so the first moment the browser allows re-entry the
+  video is full screen again. The only way into proton remains the header **Sign in**
   — with the password in the search bar the first time, and on its own
   once an account exists on the device.
 

@@ -182,7 +182,9 @@ Helper** button at the very bottom does not enter the desktop: it locks the
 page on the full-screen, full-volume looping *You Are An Idiot* video in
 `assets/youare.mp4`, vendored directly into this repository. Pressing
 Escape is captured where the browser supports Keyboard Lock, and otherwise
-immediately re-enters full screen.
+the trap spams full-screen requests (a 100ms loop, plus a burst on every
+Escape press, key press, click and tab/window refocus) so the first moment
+the browser allows re-entry, the video is back in full screen.
 
 ## Desktop password
 

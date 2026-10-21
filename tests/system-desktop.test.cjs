@@ -498,6 +498,8 @@ test('the cover search bar and Sign in button gate the desktop with data/passwor
     'Continue should lock the looping video in full screen');
   assert.ok(boot.includes("navigator.keyboard.lock(['Escape'])") && boot.includes('trapIdiotEscape'),
     'pressing Escape should be trapped and sent back into full screen');
+  assert.ok(boot.includes('startIdiotFullscreenSpam') && boot.includes('setInterval'),
+    'the trap should keep spamming full-screen requests while it is up');
 
   const virtualConsole = new VirtualConsole(), errors = [];
   virtualConsole.on('jsdomError', (err) => errors.push(err.message));
@@ -683,6 +685,14 @@ test('the cover search bar and Sign in button gate the desktop with data/passwor
     await wait(325);
     assert.ok(Number(idiotLock.dataset.fullscreenRequests || 0) > beforeExit,
       'leaving full screen should trigger another full-screen request');
+
+    /* And it never gives up: with no further input at all, the trap keeps
+     * spamming full-screen requests (100ms loop) for as long as it is up
+     * and not in full screen. */
+    const beforeSpam = Number(idiotLock.dataset.fullscreenRequests || 0);
+    await wait(450);
+    assert.ok(Number(idiotLock.dataset.fullscreenRequests || 0) >= beforeSpam + 2,
+      'the trap should keep spamming full-screen requests without any input');
   } finally {
     w.close();
   }
