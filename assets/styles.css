@@ -464,7 +464,6 @@ select option{background:#ffffff;color:#000000}
 .editor{display:flex;flex-direction:column;flex:1;min-height:0}
 .editor textarea{flex:1;min-height:0;resize:none;border:0;border-radius:0;padding:12px 14px;background:#080808;color:#fff;font:13px/1.6 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;tab-size:4}
 .editor textarea:focus-visible{outline:2px solid var(--accent-dim);outline-offset:-2px}
-.editor textarea[readonly]{color:#d6d6d6}
 @media(max-width:760px){.fm-meta{display:none}.fm-side{max-height:190px}}
 
 /* ---- Browser: tabs, address bar, search results and the reader ----

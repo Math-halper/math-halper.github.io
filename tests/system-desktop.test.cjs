@@ -725,7 +725,7 @@ test('the desktop boots, lists and opens all catalogued apps', async () => {
     await new Promise((resolve) => setTimeout(resolve, 20));
     const editor = wins.get('text-editor').body;
     assert.match(editor.querySelector('#te-note').textContent, /read-only proton system/);
-    assert.equal(editor.querySelector('#te-text').readOnly, true);
+    assert.equal(editor.querySelector('#te-text').readOnly, false, 'a system file opens as an editable draft, not a locked box with a caret');
     assert.match(editor.querySelector('#te-text').value, /^# proton/);
     assert.equal(editor.querySelector('#te-save').disabled, true, 'a read-only file cannot be saved in place');
     w.closeWin('text-editor', true);
@@ -1280,11 +1280,21 @@ test('every kind of file has an app that opens it', async () => {
     w.eval("openFSItem('/data/applications.js')");
     await settle();
     const editor = wins.get('text-editor').body;
-    assert.equal(editor.querySelector('#te-text').readOnly, true, 'proton’s own files are read-only');
+    assert.equal(editor.querySelector('#te-text').readOnly, false, 'proton’s own files open as editable drafts');
     assert.match(editor.querySelector('#te-text').value, /PROTON_APPLICATIONS_TEXT/);
     assert.equal(editor.querySelector('#te-save').disabled, true);
+    const originalText = editor.querySelector('#te-text').value;
+    editor.querySelector('#te-text').value = 'edited draft only';
+    editor.querySelector('#te-text').dispatchEvent(new w.Event('input', { bubbles: true }));
+    assert.match(editor.querySelector('#te-status').textContent, /unsaved changes/, 'typing in the draft marks it dirty');
     editor.querySelector('#te-copy').click();
-    assert.match(editor.querySelector('#te-note').textContent, /Save a copy to/, 'but they can be copied into your home folder');
+    assert.match(editor.querySelector('#te-note').textContent, /Save a copy to/, 'and the draft can be copied into your home folder');
+    w.document.querySelector('.file-source-backdrop [data-fs="vfs"]').click();
+    await settle();
+    editor.querySelector('#te-ask-ok').click();
+    await settle();
+    assert.equal(await w.eval("FS.read('/home/ada/applications.js')"), 'edited draft only', 'the edited copy landed in the home folder');
+    assert.equal(await w.eval("FS.read('/data/applications.js')"), originalText, 'the read-only original never changed');
     w.closeWin('text-editor', true);
 
     // A file with no viewer of its own falls back to Files, already selected.

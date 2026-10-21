@@ -19,9 +19,11 @@ loader (assets/html-loader.js) at boot.</p>
  * FS.appFor() sends every non-binary file without a more specific viewer here
  * (.txt, .md, .js, .css, .json, …), and openFSItem() in assets/core.js opens
  * this window with { path }. Files under /home/<you> are editable and saved
- * with FS.write(); proton's own tree (/apps, /assets, /data, …) is read-only,
- * so those open locked with a "save a copy to your home folder" action — a
- * static website cannot rewrite its own files.
+ * with FS.write(); proton's own tree (/apps, /assets, /data, …) cannot be
+ * rewritten by a static website, so those files open as editable drafts:
+ * the text can be changed freely, and "Save a copy…" writes the draft into
+ * your home folder while the original stays untouched. A file opened from
+ * the device is likewise an editable draft until it is saved somewhere.
  *
  * Prompts are inline forms in the note bar, never window.prompt(): they keep
  * the text you are editing on screen while you type a path.
@@ -89,10 +91,10 @@ registerApp({
       const words = text.trim() ? text.trim().split(/\s+/).length : 0;
       const size = MH.fmtBytes(new Blob([text]).size);
       status.innerHTML = st
-        ? `<span>${esc(st.path)}</span><span>${st.user ? 'Your account' : 'Read-only system file'}</span><span>${size}</span>
+        ? `<span>${esc(st.path)}</span><span>${st.user ? 'Your account' : 'Read-only system original · editable draft'}</span><span>${size}</span>
            <span style="margin-left:auto">${words} words · ${text.length} characters${dirty ? ' · <b>unsaved changes</b>' : ''}</span>`
         : deviceName
-          ? `<span>${esc(deviceName)}</span><span>Your Files (this computer)</span><span>${size}</span>
+          ? `<span>${esc(deviceName)}</span><span>Your Files (this computer) · editable draft</span><span>${size}</span>
            <span style="margin-left:auto">${words} words · ${text.length} characters${dirty ? ' · <b>unsaved changes</b>' : ''}</span>`
         : `<span>No file open</span><span style="margin-left:auto">${words} words · ${text.length} characters${dirty ? ' · <b>unsaved changes</b>' : ''}</span>`;
     }
@@ -107,8 +109,8 @@ registerApp({
       syncButtons();
       const files = myTextFiles().slice(0, 40);
       say(`<b>Text Editor</b> — open a file below, or use <b>Open…</b> / <b>New</b> above. Anything in
-           <b>Files</b> that is plain text opens here; proton's own read-only system files open locked,
-           with <b>Save a copy…</b>.`);
+           <b>Files</b> that is plain text opens here; proton's own system files open as editable
+           drafts, with <b>Save a copy…</b> for the changed copy.`);
       main.innerHTML = `<div class="pad" style="overflow:auto;height:100%">
         <h2 style="margin:0 0 4px">${iconSvg('file-text')} Nothing open yet</h2>
         <p class="muted" style="margin-top:0">Everything you save lives in this browser, under your account, inside
@@ -130,14 +132,18 @@ registerApp({
       updateStatus();
     }
     function editorScreen(text = '') {
-      const editable = !!path && FS.isWritable(path);
-      main.innerHTML = `<textarea id="te-text" spellcheck="false" aria-label="File contents"${editable ? '' : ' readonly aria-readonly="true"'}></textarea>`;
+      /* Every document on screen is editable: your own files save in place,
+       * while a read-only system file (or one opened from the device) is an
+       * editable draft whose changes leave through Save/Save a copy. The
+       * textarea is therefore never readonly — a caret that cannot delete
+       * or type is a bug, not a lock. */
+      main.innerHTML = `<textarea id="te-text" spellcheck="false" aria-label="File contents"></textarea>`;
       const area = q('#te-text');
       area.value = text;
-      area.oninput = () => { if (editable) dirty = true; updateStatus(); };
+      area.oninput = () => { dirty = true; updateStatus(); };
       /* Tab types spaces instead of moving focus out of the editor. */
       area.onkeydown = (e) => {
-        if (e.key !== 'Tab' || !editable) return;
+        if (e.key !== 'Tab') return;
         e.preventDefault();
         const { selectionStart: s, selectionEnd: t } = area;
         area.value = area.value.slice(0, s) + '  ' + area.value.slice(t);
@@ -189,7 +195,7 @@ registerApp({
         title: 'Open a text file', value: path || '', ok: 'Open',
         placeholder: FS.join(HOME, 'Documents', 'notes.txt'),
         list: [...myTextFiles(), ...systemTextFiles()],
-        help: 'Type a path or pick a file. Folders open in Files; proton system files open read-only.',
+        help: 'Type a path or pick a file. Folders open in Files; proton system files open as editable drafts.',
         onSubmit: (raw) => {
           const p = FS.normalize(raw), st = FS.stat(p);
           if (!st) throw new Error(`No such file: ${p}`);
@@ -265,7 +271,8 @@ registerApp({
         editorScreen(text);
         say(FS.isWritable(target)
           ? `Editing <b>${esc(target)}</b> — saved in this browser, under your account. <b>Ctrl+S</b> saves.`
-          : `<b>${esc(target)}</b> is part of the read-only proton system, so it cannot be changed here.
+          : `<b>${esc(target)}</b> is part of the read-only proton system: edit the draft freely,
+             then save the copy into your home folder — the original never changes.
              <button class="btn sm" type="button" data-act>${iconSvg('copy')} Save a copy to your home folder</button>`);
       } catch (err) {
         if (token !== loading) return;
@@ -339,7 +346,7 @@ registerApp({
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); save(); }
     });
     body.openPath = ({ path: p } = {}) => { if (p) load(p); };
-    body.beforeClose = () => (!dirty || confirmBox(`Discard the unsaved changes in ${FS.basename(path)}?`));
+    body.beforeClose = () => (!dirty || confirmBox(`Discard the unsaved changes in ${path ? FS.basename(path) : (deviceName || 'this draft')}?`));
 
     /* ------------------------------- start ------------------------------ */
     if (options.path) load(options.path);
