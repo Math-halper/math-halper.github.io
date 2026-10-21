@@ -14,7 +14,6 @@ let protonModulesReady = false;
 let protonLoadError = null;
 let protonEntryRequested = false;
 let siteGatePassed = false;
-let siteGatePassword = '';
 let desktopPasswordPromise = null;
 let idiotLockActive = false;
 let idiotAudioGraph = null;
@@ -59,9 +58,9 @@ function showSiteDesktop() {
   if (cover) cover.hidden = true;
   const auth = MH.$('auth');
   if (auth) auth.hidden = true;
-  const entered = siteGatePassword;
-  siteGatePassword = '';
-  enterSiteDesktop(entered);
+  /* With no local account yet, enterSiteDesktop shows the Create your
+   * account page instead of the desktop; renderSetup un-hides #auth. */
+  enterSiteDesktop();
 }
 
 async function attemptCoverSignIn() {
@@ -75,7 +74,6 @@ async function attemptCoverSignIn() {
    * response at all. Only the correct password does anything. */
   if (!(await verifySitePassword(candidate))) return;
   siteGatePassed = true;
-  siteGatePassword = candidate;
   if (!protonModulesReady) {
     protonEntryRequested = true;
     return;

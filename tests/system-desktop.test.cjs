@@ -574,15 +574,32 @@ test('the cover search bar and Sign in button gate the desktop with data/passwor
     assert.equal(cover.hidden, false);
     assert.equal(cover.textContent, coverText, 'a wrong password should not change the cover');
 
-    /* The password from data/password.txt, then Sign in, opens the desktop
-     * on a fresh local profile. */
+    /* The password from data/password.txt, then Sign in, shows the Create
+     * your account page when this browser has no local account yet. */
     input.value = password;
     w.document.querySelector('#cover-signin').click();
-    await until(() => desktop.hidden === false, 'the desktop after Sign in');
-    assert.equal(cover.hidden, true, 'the cover should hide once signed in');
-    assert.equal(w.eval('currentUser.username'), 'student');
-    assert.ok(w.localStorage.getItem('mhOS.accounts.v1').includes('student'),
-      'the first sign-in should create the local desktop profile');
+    await until(() => w.document.querySelector('#setup-form'), 'the account creation page on first sign-in');
+    assert.equal(cover.hidden, true, 'the cover should hide once the gate is passed');
+    assert.equal(desktop.hidden, true, 'the desktop should wait for account creation on first sign-in');
+    assert.equal(w.document.querySelector('#auth').hidden, false,
+      'the account creation page should be visible on first sign-in');
+    assert.match(w.document.querySelector('#auth').textContent, /Create your account/,
+      'the first sign-in should show the Create your account page');
+    assert.ok(!w.localStorage.getItem('mhOS.accounts.v1')?.includes('student'),
+      'the first sign-in should not silently create a Student profile');
+
+    /* Creating the account enters the desktop as that account. */
+    w.document.querySelector('#su-name').value = 'Ada';
+    w.document.querySelector('#su-user').value = 'ada';
+    w.document.querySelector('#su-pass').value = 'account-password';
+    w.document.querySelector('#su-pass2').value = 'account-password';
+    w.document.querySelector('#setup-form').dispatchEvent(new w.Event('submit', { bubbles: true, cancelable: true }));
+    await until(() => desktop.hidden === false, 'the desktop after creating the account');
+    assert.equal(w.document.querySelector('#auth').hidden, true,
+      'the account creation page should hide once the account is created');
+    assert.equal(w.eval('currentUser.username'), 'ada');
+    assert.ok(w.localStorage.getItem('mhOS.accounts.v1').includes('ada'),
+      'creating the account should store the local desktop profile');
 
     /* Locking asks for that same file password, not anything else. */
     w.eval('lockDesktop()');
@@ -599,6 +616,21 @@ test('the cover search bar and Sign in button gate the desktop with data/passwor
     await until(() => desktop.hidden === false, 'the desktop after unlocking');
 
     /* Signing out returns to the cover with the password cleared. */
+    w.eval('signOut()');
+    assert.equal(desktop.hidden, true);
+    assert.equal(cover.hidden, false, 'signing out should show the cover gate again');
+    assert.equal(input.value, '', 'signing out should clear the password field');
+
+    /* With an account now on this device, the same gate opens its desktop
+     * directly — the account creation page is first-sign-in only. */
+    input.value = password;
+    w.document.querySelector('#cover-signin').click();
+    await until(() => desktop.hidden === false, 'the desktop for the existing account');
+    assert.equal(cover.hidden, true, 'the cover should hide for the existing account');
+    assert.equal(w.document.querySelector('#auth').hidden, true,
+      'an existing account should not see the account creation page again');
+    assert.equal(w.eval('currentUser.username'), 'ada',
+      'the existing account should reopen after the gate');
     w.eval('signOut()');
     assert.equal(desktop.hidden, true);
     assert.equal(cover.hidden, false, 'signing out should show the cover gate again');

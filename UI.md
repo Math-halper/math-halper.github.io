@@ -60,15 +60,17 @@ response.
 
 ## 3. Auth screens
 
-Desktop entry itself needs no account form: the cover password gate (above)
-opens the local profile used last time, creating a "Student" profile on the
-first sign-in. The three card screens below share one shell — the atom logo,
-an `h1` title, a subtitle line, and the form body, centred on a dark
+Once an account exists on this device, desktop entry needs no account form:
+the cover password gate (above) opens the local profile used last time. On
+the very first sign-in, when no local account exists yet, the gate instead
+shows **Create your account**, and submitting it creates the profile and
+enters the desktop. The three card screens below share one shell — the atom
+logo, an `h1` title, a subtitle line, and the form body, centred on a dark
 backdrop — and cover locking plus the extra local profiles managed from
 Settings.
 
-- **Create your account** ("Create an account" link, or Settings → Create
-  another account) —
+- **Create your account** (shown after the cover gate on the first sign-in,
+  via the "Create an account" link, or Settings → Create another account) —
   explains the no-server model in a note. Fields: **Display name**, **Username**
   (letters/numbers/`_`, 3–20 chars), **Email** (optional, never sent anywhere),
   **Password** and **Confirm password** (6+ chars). Inline error line for

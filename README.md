@@ -188,10 +188,11 @@ save it, and reload the website. The default password is `proton`.
 
 1. Every visit — fresh or refreshed — starts on the cover. Signing out
    returns there too, with the password field cleared.
-2. The first successful sign-in creates a local desktop profile named
-   **Student**; later sign-ins reopen the profile used last time, so the
-   desktop, files and settings are still there. `Lock` asks for the same
-   `data/password.txt` password without signing out.
+2. On the first successful sign-in — when this browser has no local
+   account yet — the **Create your account** page appears; creating the
+   account enters its desktop. Later sign-ins reopen the profile used last
+   time, so the desktop, files and settings are still there. `Lock` asks
+   for the same `data/password.txt` password without signing out.
 3. More local profiles can still be created later from Settings.
 
 There is no server, so profile data lives **only in this browser**
