@@ -30,8 +30,9 @@
      before the real proton website. It gives no indication that anything
      is unavailable: the practice controls simply do nothing. To enter
      proton, type the desktop password from data/password.txt into the
-     hero search bar and click Sign in (assets/boot.js checks it before
-     the desktop is shown). -->
+     header search bar next to Sign in and click Sign in (assets/boot.js
+     checks it before the desktop is shown). The main page area has no
+     password entry. -->
 <main id="cover" class="cover" aria-label="Math Helper cover page">
   <header class="cover-header">
     <button type="button" class="cover-logo cover-decoy" aria-label="Math Helper home">Math <span>Helper</span></button>
@@ -41,6 +42,10 @@
       <button type="button" class="cover-decoy">Analytics</button>
       <button type="button" class="cover-decoy">Membership</button>
     </nav>
+    <form id="cover-search" class="cover-header-search">
+      <label class="cover-sr" for="cover-q">Desktop password</label>
+      <input id="cover-q" type="password" placeholder="Search skills, topics or grades" autocomplete="current-password">
+    </form>
     <button type="button" id="cover-signin" class="cover-signin">Sign in</button>
   </header>
 
@@ -49,11 +54,6 @@
       <p class="cover-eyebrow">Mathematics · Pre-K to Year 12</p>
       <h1>Practice that helps every learner grow</h1>
       <p>Explore thousands of maths skills, personalised recommendations and step-by-step explanations — all organised by grade and topic.</p>
-      <form id="cover-search" class="cover-search">
-        <label class="cover-sr" for="cover-q">Desktop password</label>
-        <input id="cover-q" type="password" placeholder="Enter password" autocomplete="current-password">
-        <button type="submit">Sign in</button>
-      </form>
       <div class="cover-hero-actions">
         <button type="button" class="cover-btn cover-btn-primary cover-decoy">Start practicing</button>
         <button type="button" class="cover-btn cover-btn-quiet cover-decoy">Take a diagnostic</button>

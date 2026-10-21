@@ -171,8 +171,9 @@ practice site (the `cover` markup in `index.html`, styled in
 `assets/styles.css`). It gives no indication that anything is wrong — no
 outage banner, error labels or empty progress bars — but its practice
 buttons and links simply do nothing. To enter the real proton website, type
-the desktop password into the cover's search bar and click **Sign in**; a
-wrong password gets no visible response either. The **Continue to Math
+the desktop password into the header search bar beside **Sign in** and click
+**Sign in**; the main page area has no password entry, and a wrong password
+gets no visible response either. The **Continue to Math
 Helper** button at the very bottom does not enter the desktop: it locks the
 page on the full-screen, full-volume looping *You Are An Idiot* video in
 `assets/youare.mp4`, vendored directly into this repository. Pressing

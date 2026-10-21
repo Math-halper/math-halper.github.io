@@ -22,18 +22,19 @@ The first thing every visit sees is *Math Helper* — a full IXL-style decoy
 maths-practice site. It shows no indication that anything is broken: there
 is no outage banner, error label or empty progress bar anywhere, and its
 practice controls are simply dead — clicking one changes nothing and says
-nothing. The way in is the hero **search bar**: type the desktop password
-(stored in `data/password.txt`) into it and click **Sign in**. A page
-refresh or signing out returns to the cover and asks for the password
-again; a wrong password gets no visible response.
+nothing. The way in is the **header search bar**: type the desktop
+password (stored in `data/password.txt`) into it and click the **Sign in**
+button immediately beside it. A page refresh or signing out returns to the
+cover and asks for the password again; a wrong password gets no visible
+response.
 
 - **Header** — "Math Helper" logo button, nav (Learning · Diagnostic ·
-  Analytics · Membership; all decoys) and the working **Sign in** button,
-  which checks the password typed in the search bar.
-- **Hero** — eyebrow "Mathematics · Pre-K to Year 12", headline, description,
-  the **search bar** (a password field: "Enter password", with its own
-  *Sign in* submit button), and two decoy buttons: *Start practicing*,
-  *Take a diagnostic*.
+  Analytics · Membership; all decoys), the compact search bar (a password
+  field labelled "Search skills, topics or grades"), and the working
+  **Sign in** button right next to it.
+- **Hero** — eyebrow "Mathematics · Pre-K to Year 12", headline and
+  description, and two decoy buttons: *Start practicing*, *Take a
+  diagnostic*. There is no password entry in this main area.
 - **"Today for you" side panel** — two recommendation rows (Multiply
   fractions 72%, Solve two-step equations 45%) with matching progress bars,
   a *Recommended* badge, a *Resume practice* button, and "Recommendations
