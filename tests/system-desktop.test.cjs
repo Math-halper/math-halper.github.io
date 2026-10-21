@@ -3,8 +3,8 @@
  * main), a Calculator and Web Retro (a vendored webretro emulator, no ROMs
  * included), and the vendored game apps — the Celeste Classics trio
  * (github.com/Math-halper/Celeste), Cookie Clicker plus 23 more games
- * (github.com/Gams-Offline/Gams), 12 more games vendored from
- * mountain658/mountain658.github.io, and Mari0 + Super Mario 64
+ * (github.com/Gams-Offline/Gams), 12 more vendored games,
+ * and Mari0 + Super Mario 64
  * (github.com/Math-halper/Mario, only the game builds) — each a thin wrapper
  * around the actual game files, copied byte-for-byte.
  * The one built-in website is Test Page, the Browser smoke test. These tests

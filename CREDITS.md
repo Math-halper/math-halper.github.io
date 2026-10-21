@@ -233,80 +233,28 @@ into `data/icons/`.
 
 ## Mountain658 games (vendored)
 
-Twelve more games ship under `apps/games/`, copied directly into this
-repository from [mountain658/mountain658.github.io](https://github.com/mountain658/mountain658.github.io)
-(the collection at [mountain658.github.io](https://mountain658.github.io/)) —
-**Retro Bowl**, **Geometry Dash**, Slope 2, Bitlife, Crossy Road, Moto X3M,
-Subway Surfers, Drift Hunters, Run 3, Paper.io 2, Basketball Stars and Wordle.
-Credit for collecting and hosting these builds goes to mountain658; each game
-itself is © its respective authors (for example Retro Bowl by New Star Games,
-Geometry Dash by RobTop Games and the Scratch remix authors, Subway Surfers
-by SYBO/Kiloo). The mountain collection carries no license granting
-redistribution; the files are mirrored here as-is, exactly as with the Gams
-games above, and no further rights are claimed or implied. If you hold rights
-in a bundled game and want it removed, open an issue or pull request.
-
-How each was vendored (no `apps/_embed` embedded-page wrappers are used —
-every wrapper frames a page that ships in its own folder, unsandboxed, like
-the other vendored games; the only edits to game files are the ones listed):
-
-- **Retro Bowl** (`apps/games/retro-bowl/`) — mountain's `g/retrobowl/`
-  GameMaker HTML5 build (`index.html` + `html5game/`, `img/`, `js/`), copied
-  file-for-file. Entry page edited only to drop mountain's Cloudflare beacon.
-- **Geometry Dash** (`apps/games/geometry-dash/`) — mountain's `dash/`
-  (`dashHome.html` hub, `dash.html`, `dash2.html`) plus its
-  `everypage.js`/`load.js`/`fullScreen.js` helpers. Absolute `/dash/…` and `/`
-  links were made relative and the beacon dropped. The hub links to the two
-  Scratch projects mountain ships (`105500895` for levels 1–3, `118638917`
-  for 4–6); those Scratch players load from scratch.mit.edu, as upstream —
-  mountain ships no local Geometry Dash build to copy.
-- **Slope 2** (`apps/games/slope-2/`) — mountain's `g/slope-2/` Unity WebGL
-  build. Entry page edited only to drop the beacon and `/js/main.js`
-  mountain chrome and to use the local logo as favicon.
-- **Bitlife** (`apps/games/bitlife/`) — mountain's `g/bitlife/` Unity WebGL
-  build (`Build/` + `TemplateData/`). Entry page edited only to drop the beacon.
-- **Crossy Road** (`apps/games/crossy-road/`) — mountain's `g/crossyroad/`
-  Poki/three.js build. Entry page edited only to drop the beacon and
-  `/js/main.js` mountain chrome.
-- **Moto X3M** (`apps/games/moto-x3m/`) — mountain's `g/moto-x3m/` HTML5
-  build (`motox3m.min.js` + `assets/`). Entry page edited only to drop the
-  beacon and `/everypage.js` mountain chrome.
-- **Subway Surfers** (`apps/games/subway-surfers/`) — mountain's
-  `g/subway-surfers/` Poki Unity loader files, plus the San Francisco Unity
-  build (`SanFrancisco.json`, `.data.unityweb`, `.wasm.code.unityweb`,
-  `.wasm.framework.unityweb`) from
-  [mountain658/SubwaySurfers](https://github.com/mountain658/SubwaySurfers).
-  `index.html` edited only to point `unityWebglBuildUrl` at the local
-  `SanFrancisco.json` (it pointed at that repo's raw URL) and drop the beacon,
-  so the whole game now loads from this repository.
-- **Drift Hunters** (`apps/games/drift-hunters/`) — mountain's
-  `Drift-Hunters.html` server hub (links made local: `./index.html`, `../`)
-  plus `g/drifthunters/` (`Build/` + `TemplateData/`) and the
-  `everypage.js`/`load.js`/`fullScreen.js` helpers. Upstream's
-  `Build/*.unityweb` data/code files in the mountain repo are Git-LFS
-  pointers — the real `ItchIO.data.unityweb` is 135 MB, over GitHub's
-  100 MB single-file limit for Pages — so the hub's Server 1 build is copied
-  as shipped upstream and Servers 2–3 remain the hub's own remote choices,
-  exactly as mountain offers them.
-- **Run 3** (`apps/games/run-3/`) — mountain's `run3.html` plus its helpers,
-  back-link made relative. Mountain ships no local Run 3 build; its page
-  frames the lekug.github.io HTML5 build, and that inner frame is upstream's
-  own, credited here.
-- **Paper.io 2** (`apps/games/paper-io-2/`) — mountain's `g/paperio2/`
-  (`paperio2.html` + `css/`, `images/`, `js/`). Entry page edited only to
-  drop the beacon.
-- **Basketball Stars** (`apps/games/basketball-stars/`) — mountain's
-  `zBasketBallStarts.html` (renamed `basketball-stars.html`) plus
-  `everypage.js`. Mountain ships this as a Google-gadget page whose assets
-  load from the gadget proxy for sites.google.com's
-  basketballlegendunblocked; that inner loading is upstream's own.
-- **Wordle** (`apps/games/wordle/`) — mountain's `zwordle.html` (renamed
-  `wordle.html`) plus `everypage.js`. Mountain ships a server-selector page
-  (engaging-data, octokatherine/word-master, hellowordl, devangthakkar's
-  archive); those inner choices are upstream's own.
-- **Icons** — the mountain collection's own `*.png` images (e.g.
-  `retrobowl.png`, `geometry-dash.png`), copied into `data/icons/`
-  (`icon=data/icons/<id>.png`, `svg-icon=false`).
+Provenance note: twelve games in `apps/games/` — Retro Bowl, Geometry
+Dash, Slope 2, Bitlife, Crossy Road, Moto X3M, Subway Surfers, Drift
+Hunters, Run 3, Paper.io 2, Basketball Stars and Wordle — were copied
+from [mountain658/mountain658.github.io](https://github.com/mountain658/mountain658.github.io)
+(collection: [mountain658.github.io](https://mountain658.github.io/));
+Subway Surfers' Unity build also came from mountain658/SubwaySurfers,
+wired to its local `SanFrancisco.json`. Credit for collecting and
+hosting these builds goes to mountain658; each game is © its respective
+authors (e.g. Retro Bowl by New Star Games, Geometry Dash by RobTop
+Games / the Scratch remix authors, Subway Surfers by SYBO/Kiloo). The
+collection carries no licence granting redistribution — the files are
+mirrored here as-is and no further rights are claimed or implied; if
+you hold rights in a bundled game and want it removed, open an issue or
+pull request. The app icons are the collection's own PNGs in
+`data/icons/`. Game files were copied file-for-file except for dropping
+the collection's analytics/site chrome and making absolute links
+relative. Some copied pages retain their upstream inner loads:
+Geometry Dash's Scratch players, Run 3's framed build, Basketball
+Stars' gadget assets, Wordle's selector servers, and Drift Hunters'
+remote server choices — its local build files are, as shipped
+upstream, Git-LFS pointers (the real data file is 135 MB, over
+GitHub's 100 MB Pages file limit).
 
 ## Vendored emulator (Web Retro)
 

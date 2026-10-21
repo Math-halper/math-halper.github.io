@@ -12,9 +12,10 @@ proton menu. The script below is fetched and run by proton's HTML loader
 (assets/html-loader.js) at boot.</p>
 <!-- VENDORED GAME — proton's wrapper plus the game's own files.
 
-     Every file in this folder except this wrapper is copied from
-     mountain658/mountain658.github.io (g/bitlife/ — the Unity WebGL build (Build/ + TemplateData/); its index.html is edited only to drop the Cloudflare beacon) — see CREDITS.md
-     (Mountain658 games, vendored). 
+     Every file in this folder except this wrapper is copied into this
+     repository — see CREDITS.md for provenance. The only edits to the
+     game files are the ones noted in CREDITS.md.
+
      The wrapper frames this folder's own game page — a local page, so the
      frame is NOT sandboxed and may use keyboard, mouse, audio and fullscreen
      like any desktop app. Click the game once to give it keyboard focus. -->
@@ -39,9 +40,8 @@ registerApp({
       <div class="app-main local-page"><iframe class="site-frame" title="Bitlife" src="${MH.esc(GAME_PAGE)}"
         allow="autoplay; fullscreen; pointer-lock; gamepad" allowfullscreen></iframe></div>
       <p class="muted" style="flex:none;margin:0;padding:7px 14px;border-top:1px solid var(--line)">The game files
-        ship with this app — copied from
-        <a href="https://github.com/mountain658/mountain658.github.io" target="_blank" rel="noopener">mountain658/mountain658.github.io</a>
-        (g/bitlife/ — the Unity WebGL build (Build/ + TemplateData/); its index.html is edited only to drop the Cloudflare beacon). Game © its respective authors; see CREDITS.md.</p>`;
+        ship with this app — copied into this repository. Game © its respective
+        authors; see CREDITS.md for provenance.</p>`;
     const frame = body.querySelector('iframe');
     body.querySelector('[data-e="reload"]').onclick = () => { frame.src = GAME_PAGE; };
     body.querySelector('[data-e="ext"]').onclick = () => window.open(GAME_PAGE, '_blank', 'noopener');
