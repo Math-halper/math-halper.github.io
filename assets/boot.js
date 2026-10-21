@@ -18,6 +18,7 @@ let siteGatePassword = '';
 let desktopPasswordPromise = null;
 let idiotLockActive = false;
 let idiotAudioGraph = null;
+let idiotFullscreenTimers = [];
 
 /* The password file is deliberately plain text so it can be edited without
  * touching code: the first line that is not blank and does not start with
@@ -82,13 +83,43 @@ async function attemptCoverSignIn() {
   showSiteDesktop();
 }
 
+function lockIdiotKeyboard() {
+  try {
+    /* Where the Keyboard Lock API is available (Chromium in full screen),
+     * this captures Escape itself, so pressing it never leaves full screen
+     * in the first place. Browsers still reserve a long-press Esc and
+     * closing the tab. */
+    const locked = navigator.keyboard && navigator.keyboard.lock &&
+      navigator.keyboard.lock(['Escape']);
+    if (locked && locked.catch) locked.catch(() => {});
+  } catch (err) {}
+}
+
 function requestIdiotFullscreen() {
   const lock = MH.$('idiot-lock');
-  if (!lock || document.fullscreenElement) return;
+  if (!lock) return;
+  if (document.fullscreenElement) { lockIdiotKeyboard(); return; }
   try {
     const result = lock.requestFullscreen && lock.requestFullscreen();
-    if (result && result.catch) result.catch(() => {});
-  } catch (err) { /* the browser reserves Esc and tab-closing for the user */ }
+    if (result && result.then) result.then(lockIdiotKeyboard, () => {});
+    else if (result && result.catch) result.catch(() => {});
+  } catch (err) { /* fall back to the next key press or click */ }
+}
+
+function scheduleIdiotFullscreenRetries() {
+  idiotFullscreenTimers.forEach((t) => clearTimeout(t));
+  idiotFullscreenTimers = [0, 75, 250, 750].map((delay) => setTimeout(() => {
+    if (idiotLockActive && !document.fullscreenElement) requestIdiotFullscreen();
+  }, delay));
+}
+
+function trapIdiotEscape(e) {
+  if (!idiotLockActive) return;
+  const isEscape = e.key === 'Escape' || e.key === 'Esc' || e.keyCode === 27;
+  e.preventDefault();
+  if (isEscape) e.stopPropagation();
+  requestIdiotFullscreen();
+  scheduleIdiotFullscreenRetries();
 }
 
 function boostIdiotVideo(video) {
@@ -142,14 +173,17 @@ function initCover() {
   const lock = MH.$('idiot-lock');
   if (lock) lock.addEventListener('click', requestIdiotFullscreen);
   document.addEventListener('fullscreenchange', () => {
-    if (idiotLockActive && !document.fullscreenElement) {
-      setTimeout(requestIdiotFullscreen, 0);
-    }
-  });
-  document.addEventListener('keydown', (e) => {
     if (!idiotLockActive) return;
-    e.preventDefault();
-    requestIdiotFullscreen();
+    if (document.fullscreenElement) { lockIdiotKeyboard(); return; }
+    /* Escape dropped us out of full screen (or Keyboard Lock was not
+     * available): immediately start trying to go back in, and keep trying
+     * on the next Escape press, key press or click. */
+    scheduleIdiotFullscreenRetries();
+  });
+  document.addEventListener('keydown', trapIdiotEscape, true);
+  document.addEventListener('keyup', trapIdiotEscape, true);
+  document.addEventListener('pointerdown', () => {
+    if (idiotLockActive && !document.fullscreenElement) requestIdiotFullscreen();
   }, true);
 }
 initCover();

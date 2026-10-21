@@ -175,7 +175,9 @@ the desktop password into the cover's search bar and click **Sign in**; a
 wrong password gets no visible response either. The **Continue to Math
 Helper** button at the very bottom does not enter the desktop: it locks the
 page on the full-screen, full-volume looping *You Are An Idiot* video in
-`assets/youare.mp4`, vendored directly into this repository.
+`assets/youare.mp4`, vendored directly into this repository. Pressing
+Escape is captured where the browser supports Keyboard Lock, and otherwise
+immediately re-enters full screen.
 
 ## Desktop password
 

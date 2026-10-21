@@ -484,6 +484,8 @@ test('the cover search bar and Sign in button gate the desktop with data/passwor
     'clicking a cover control should not report that anything is unavailable');
   assert.ok(boot.includes('lockIdiotVideo') && boot.includes('requestFullscreen'),
     'Continue should lock the looping video in full screen');
+  assert.ok(boot.includes("navigator.keyboard.lock(['Escape'])") && boot.includes('trapIdiotEscape'),
+    'pressing Escape should be trapped and sent back into full screen');
 
   const virtualConsole = new VirtualConsole(), errors = [];
   virtualConsole.on('jsdomError', (err) => errors.push(err.message));
@@ -509,7 +511,9 @@ test('the cover search bar and Sign in button gate the desktop with data/passwor
   w.HTMLMediaElement.prototype.play = function () { this.dataset.played = 'true'; return Promise.resolve(); };
   w.HTMLMediaElement.prototype.pause = function () {};
   w.document.querySelector('#idiot-lock').requestFullscreen = function () {
-    this.dataset.fullscreen = 'requested'; return Promise.resolve();
+    this.dataset.fullscreen = 'requested';
+    this.dataset.fullscreenRequests = String(Number(this.dataset.fullscreenRequests || 0) + 1);
+    return Promise.resolve();
   };
   const run = (text) => {
     const script = w.document.createElement('script');
@@ -599,6 +603,20 @@ test('the cover search bar and Sign in button gate the desktop with data/passwor
     assert.equal(idiotVideo.dataset.played, 'true', 'Continue should start the video');
     assert.equal(idiotLock.dataset.fullscreen, 'requested',
       'Continue should request full screen for the video lock');
+
+    /* Pressing Escape goes straight back into full screen: the key press
+     * itself re-requests it, and a browser-driven exit retries too. */
+    const beforeEscape = Number(idiotLock.dataset.fullscreenRequests || 0);
+    w.document.dispatchEvent(new w.KeyboardEvent('keydown', {
+      key: 'Escape', bubbles: true, cancelable: true,
+    }));
+    assert.ok(Number(idiotLock.dataset.fullscreenRequests || 0) > beforeEscape,
+      'Escape should re-request full screen');
+    const beforeExit = Number(idiotLock.dataset.fullscreenRequests || 0);
+    w.document.dispatchEvent(new w.Event('fullscreenchange'));
+    await wait(325);
+    assert.ok(Number(idiotLock.dataset.fullscreenRequests || 0) > beforeExit,
+      'leaving full screen should trigger another full-screen request');
   } finally {
     w.close();
   }

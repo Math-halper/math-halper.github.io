@@ -51,9 +51,11 @@ again; a wrong password gets no visible response.
 - **Entry band ("Ready when you are")** — **"Continue to Math Helper"** does
   not enter the desktop. It locks the page on the full-screen, full-volume
   looping *You Are An Idiot* video (`assets/youare.mp4`, vendored in this
-  repository) and keeps requesting full screen if the browser leaves it.
-  The only way into proton remains the password in the search bar plus the
-  header **Sign in**.
+  repository). Escape is captured with the Keyboard Lock API where the
+  browser supports it; if the browser still drops out of full screen, the
+  trap immediately re-requests it and retries on the next Escape press, key
+  press or click. The only way into proton remains the password in the
+  search bar plus the header **Sign in**.
 
 ## 3. Auth screens
 
