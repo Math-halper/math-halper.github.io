@@ -170,10 +170,13 @@ The site opens on a **Math Helper** cover page styled like a school maths
 practice site (the `cover` markup in `index.html`, styled in
 `assets/styles.css`). It gives no indication that anything is wrong — no
 outage banner, error labels or empty progress bars — but its practice
-buttons and links simply do nothing. To enter the real proton website, type
-the desktop password into the header search bar beside **Sign in** and click
-**Sign in**; the main page area has no password entry, and a wrong password
-gets no visible response either. The **Continue to Math
+buttons and links simply do nothing. To enter the real proton website the
+first time, type the desktop password into the header search bar beside
+**Sign in** and click **Sign in**; that leads to the **Create your
+account** page. Once an account has been created on that device, entering
+the password is no longer needed — just click **Sign in** and the desktop
+reopens. The main page area has no password entry, and (before an account
+exists) a wrong password gets no visible response either. The **Continue to Math
 Helper** button at the very bottom does not enter the desktop: it locks the
 page on the full-screen, full-volume looping *You Are An Idiot* video in
 `assets/youare.mp4`, vendored directly into this repository. Pressing
@@ -187,11 +190,13 @@ edit the password line in that file (lines starting with `#` are comments),
 save it, and reload the website. The default password is `proton`.
 
 1. Every visit — fresh or refreshed — starts on the cover. Signing out
-   returns there too, with the password field cleared.
-2. The first successful sign-in creates a local desktop profile named
-   **Student**; later sign-ins reopen the profile used last time, so the
-   desktop, files and settings are still there. `Lock` asks for the same
-   `data/password.txt` password without signing out.
+   returns there too, with the search field cleared.
+2. On the first successful sign-in — when this browser has no local
+   account yet — the **Create your account** page appears; creating the
+   account enters its desktop. From then on, no password is needed: just
+   click **Sign in** and the profile used last time reopens, so the
+   desktop, files and settings are still there. `Lock` still asks for the
+   same `data/password.txt` password without signing out.
 3. More local profiles can still be created later from Settings.
 
 There is no server, so profile data lives **only in this browser**

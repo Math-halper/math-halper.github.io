@@ -28,11 +28,9 @@
 
 <!-- Math Helper cover page. This is the public, IXL-style cover shown
      before the real proton website. It gives no indication that anything
-     is unavailable: the practice controls simply do nothing. To enter
-     proton, type the desktop password from data/password.txt into the
-     header search bar next to Sign in and click Sign in (assets/boot.js
-     checks it before the desktop is shown). The main page area has no
-     password entry. -->
+     is unavailable: the practice controls simply do nothing. The header
+     Sign in control is checked by assets/boot.js before the desktop is
+     shown. -->
 <main id="cover" class="cover" aria-label="Math Helper cover page">
   <header class="cover-header">
     <button type="button" class="cover-logo cover-decoy" aria-label="Math Helper home">Math <span>Helper</span></button>
@@ -43,8 +41,8 @@
       <button type="button" class="cover-decoy">Membership</button>
     </nav>
     <form id="cover-search" class="cover-header-search">
-      <label class="cover-sr" for="cover-q">Desktop password</label>
-      <input id="cover-q" type="password" placeholder="Search skills, topics or grades" autocomplete="current-password">
+      <label class="cover-sr" for="cover-q">Search skills</label>
+      <input id="cover-q" type="search" placeholder="Search skills, topics or grades" autocomplete="off">
     </form>
     <button type="button" id="cover-signin" class="cover-signin">Sign in</button>
   </header>

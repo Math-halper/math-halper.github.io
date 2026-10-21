@@ -653,13 +653,17 @@ function renderLock() {
     locked = false; a.hidden = true; MH.$('desktop').hidden = false;
   };
 }
-/* Which local profile the desktop opens after the password gate. The gate
+/* Which local profile the desktop opens after cover entry. The gate
  * itself (cover search bar + Sign in, data/password.txt) lives in
  * assets/boot.js; this just chooses whose saved desktop to show: the
  * profile used last time when there is one, otherwise the earliest local
- * profile, otherwise a fresh "student" profile created on the spot. */
+ * profile. On the very first sign-in — when this browser has no local
+ * account yet — the Create your account page is shown instead, and
+ * submitting it creates the profile and enters the desktop. Once an
+ * account exists, boot.js lets Sign in straight through to here with no
+ * password, so an existing account always lands on its desktop. */
 const DESKTOP_PROFILE_KEY = 'mhOS.desktopProfile.v1';
-async function enterSiteDesktop(enteredPassword = '') {
+async function enterSiteDesktop() {
   MH.setSession('');
   const accounts = MH.accounts();
   let account = accounts[localStorage.getItem(DESKTOP_PROFILE_KEY) || ''];
@@ -668,16 +672,10 @@ async function enterSiteDesktop(enteredPassword = '') {
       .sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0))[0];
   }
   if (!account) {
-    const salt = MH.uid() + MH.uid();
-    account = {
-      username: 'student', usernameLower: 'student', displayName: 'Student',
-      email: '', avatar: '', color: COLORS[0], salt,
-      hash: await MH.hashPassword(enteredPassword, salt), createdAt: Date.now(),
-    };
-    accounts[account.usernameLower] = account;
-    MH.saveAccounts(accounts);
+    renderSetup(false);
+    return null;
   }
-  const key = account.usernameLower || String(account.username || 'student').toLowerCase();
+  const key = account.usernameLower || String(account.username || '').toLowerCase();
   localStorage.setItem(DESKTOP_PROFILE_KEY, key);
   currentUser = account;
   userData = MH.loadJSON(MH.userKey(key), MH.defaultData(account.displayName, key));
@@ -689,7 +687,9 @@ async function enterSiteDesktop(enteredPassword = '') {
 
 function route() {
   // A fresh page load always starts signed out: refreshing returns to the
-  // cover and asks for the desktop password (data/password.txt) again.
+  // cover, where the desktop password (data/password.txt) is asked for
+  // again only until an account exists on this device — from then on a
+  // plain Sign in click is enough (see attemptCoverSignIn in boot.js).
   MH.setSession('');
   currentUser = null; userData = null; locked = false;
   const cover = MH.$('cover');
