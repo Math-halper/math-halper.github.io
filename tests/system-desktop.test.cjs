@@ -459,10 +459,12 @@ test('the cover search bar and Sign in button gate the desktop with data/passwor
     .map((l) => l.trim()).find((l) => l && !l.startsWith('#'));
   assert.ok(password, 'data/password.txt should contain a password line');
   const index = source('index.html');
-  assert.match(index, /<input id="cover-q" type="password"[^>]*placeholder="Enter password"/,
-    'the cover search bar should be the password field');
-  assert.match(index, /<button type="button" id="cover-signin" class="cover-signin">Sign in<\/button>/,
-    'the cover should have a working Sign in button');
+  assert.match(index, /<form id="cover-search" class="cover-header-search">\s*<label class="cover-sr" for="cover-q">Desktop password<\/label>\s*<input id="cover-q" type="password"[^>]*placeholder="Search skills, topics or grades"/,
+    'the header search bar next to Sign in should be the password field');
+  assert.match(index, /<\/form>\s*<button type="button" id="cover-signin" class="cover-signin">Sign in<\/button>/,
+    'the cover should have a working Sign in button right next to the search bar');
+  assert.ok(!index.includes('placeholder="Enter password"'),
+    'the main cover area should not show an Enter password field');
   assert.ok(!index.includes('cover-signin cover-decoy'), 'Sign in must not be a dead cover control');
   /* The cover must not give any indication that it is broken: no outage
    * banner, no error chip, no unavailable labels, no zeroed progress. */
@@ -539,6 +541,12 @@ test('the cover search bar and Sign in button gate the desktop with data/passwor
     const desktop = w.document.querySelector('#desktop');
     const input = w.document.querySelector('#cover-q');
     const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+    assert.equal(input.closest('.cover-header-search').nextElementSibling.id, 'cover-signin',
+      'the password search bar should sit right next to Sign in in the header');
+    assert.equal(w.document.querySelector('.cover-hero').querySelector('#cover-q'), null,
+      'the main hero area should not contain the password entry');
+    assert.ok(!w.document.querySelector('.cover-hero').textContent.includes('Enter password'),
+      'the main hero area should not mention entering a password');
     assert.equal(cover.hidden, false, 'the cover should be shown first');
     assert.equal(desktop.hidden, true, 'the desktop should start hidden behind the gate');
     assert.equal(w.document.querySelector('#cover-status'), null,
