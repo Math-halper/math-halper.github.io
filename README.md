@@ -59,6 +59,11 @@ game bundles and earlier built-in sites remain removed (except Test Page).
 | **Celeste Classic** (`celeste-classic`) | Play the original PICO-8 Celeste Classic — its actual game files, vendored from Math-halper/Celeste |
 | **Celeste Classic 2** (`celeste-two`) | Play Celeste Classic 2: Lani's Trek — its actual game files, vendored from Math-halper/Celeste |
 | **Celeste Community** (`celeste-community`) | The Celeste Classic community hub — practice mods, downloads and links (vendored from Math-halper/Celeste) |
+| **Celeste Classic Practice Mod** (`celeste-practice-mod`) | Play the Celeste Classic practice mod |
+| **Celeste Classic 2 Practice Mod 1.0** (`celeste-two-practice-mod-1-0`) | Play the Celeste Classic 2 v1.0 practice mod |
+| **Celeste Classic 2 Practice Mod 1.1** (`celeste-two-practice-mod-1-1`) | Play the Celeste Classic 2 v1.1 practice mod |
+| **Celeste Webek** (`celeste-webek`) | Play Webek - a Celeste Classic PICO-8 game |
+| **Celeste Classic Downloads** (`celeste-downloads`) | Celeste Classic downloads - standalone builds and links |
 | **Cookie Clicker** (`cookie-clicker`) | Play Cookie Clicker — Orteil's idle bakery game (offline mirror, vendored from Gams-Offline/Gams) |
 | **Drive Mad** (`drive-mad`) | Play Drive Mad - the physics driving game |
 | **Escaping The Prison** (`escaping-the-prison`) | Play Escaping The Prison - a Henry Stickmin adventure |
@@ -80,12 +85,15 @@ game bundles and earlier built-in sites remain removed (except Test Page).
 | **Tunnel Rush** (`tunnel-rush`) | Play Tunnel Rush - dodge through the spinning tunnel |
 | **Retro Bowl** (`retro-bowl`) | Play Retro Bowl — the retro American football sim |
 | **Geometry Dash** (`geometry-dash`) | Play Geometry Dash 1 & 2 — the rhythm platformer (Scratch) |
+| **Geometry Dash 1-3** (`geometry-dash-1-3`) | Play Geometry Dash levels 1-3 (Scratch) |
+| **Geometry Dash 4-6** (`geometry-dash-4-6`) | Play Geometry Dash levels 4-6 (Scratch) |
 | **Slope 2** (`slope-2`) | Play Slope 2 — the neon slope sequel |
 | **Bitlife** (`bitlife`) | Play Bitlife — the life simulator |
 | **Crossy Road** (`crossy-road`) | Play Crossy Road — dodge traffic and rivers |
 | **Moto X3M** (`moto-x3m`) | Play Moto X3M 1 & 4 — stunt biking |
 | **Subway Surfers** (`subway-surfers`) | Play Subway Surfers — the endless runner |
 | **Drift Hunters** (`drift-hunters`) | Play Drift Hunters — drift and tune cars |
+| **Drift Hunters (Direct)** (`drift-hunters-game`) | Play Drift Hunters — drift and tune cars (direct Unity build) |
 | **Run 3** (`run-3`) | Play Run 3 — the space tunnel runner |
 | **Paper.io 2** (`paper-io-2`) | Play Paper.io 2 — capture territory |
 | **Basketball Stars** (`basketball-stars`) | Play Basketball Stars — shoot hoops |

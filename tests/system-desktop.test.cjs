@@ -33,6 +33,11 @@ const SYSTEM_APPS = ['appcenter', 'customize', 'settings', 'about', 'browser',
   'celeste-classic',
   'celeste-two',
   'celeste-community',
+  'celeste-practice-mod',
+  'celeste-two-practice-mod-1-0',
+  'celeste-two-practice-mod-1-1',
+  'celeste-webek',
+  'celeste-downloads',
   'cookie-clicker',
   'drive-mad',
   'escaping-the-prison',
@@ -54,12 +59,15 @@ const SYSTEM_APPS = ['appcenter', 'customize', 'settings', 'about', 'browser',
   'tunnel-rush',
   'retro-bowl',
   'geometry-dash',
+  'geometry-dash-1-3',
+  'geometry-dash-4-6',
   'slope-2',
   'bitlife',
   'crossy-road',
   'moto-x3m',
   'subway-surfers',
   'drift-hunters',
+  'drift-hunters-game',
   'run-3',
   'paper-io-2',
   'basketball-stars',
@@ -81,6 +89,11 @@ const SYSTEM_CATS = {
   'celeste-classic': 'Games',
   'celeste-two': 'Games',
   'celeste-community': 'Games',
+  'celeste-practice-mod': 'Games',
+  'celeste-two-practice-mod-1-0': 'Games',
+  'celeste-two-practice-mod-1-1': 'Games',
+  'celeste-webek': 'Games',
+  'celeste-downloads': 'Games',
   'cookie-clicker': 'Games',
   'drive-mad': 'Games',
   'escaping-the-prison': 'Games',
@@ -103,12 +116,15 @@ const SYSTEM_CATS = {
   'tunnel-rush': 'Games',
   'retro-bowl': 'Games',
   'geometry-dash': 'Games',
+  'geometry-dash-1-3': 'Games',
+  'geometry-dash-4-6': 'Games',
   'slope-2': 'Games',
   'bitlife': 'Games',
   'crossy-road': 'Games',
   'moto-x3m': 'Games',
   'subway-surfers': 'Games',
   'drift-hunters': 'Games',
+  'drift-hunters-game': 'Games',
   'run-3': 'Games',
   'paper-io-2': 'Games',
   'basketball-stars': 'Games',
@@ -126,6 +142,11 @@ const GAME_PAGES = {
   'celeste-classic': 'apps/games/celeste-classic/index.html',
   'celeste-two': 'apps/games/celeste-two/index.html',
   'celeste-community': 'apps/games/celeste-community/index.html',
+  'celeste-practice-mod': 'apps/games/celeste-community/practice_mod_c.html',
+  'celeste-two-practice-mod-1-0': 'apps/games/celeste-community/cc2_practice_mod_1.0.html',
+  'celeste-two-practice-mod-1-1': 'apps/games/celeste-community/cc2_practice_mod_1.1.html',
+  'celeste-webek': 'apps/games/celeste-community/webek.html',
+  'celeste-downloads': 'apps/games/celeste-community/downloads.html',
   'cookie-clicker': 'apps/games/cookie-clicker/index.html',
   'drive-mad': 'apps/games/drive-mad/drivemad.html',
   'escaping-the-prison': 'apps/games/escaping-the-prison/escapingtheprison.html',
@@ -147,12 +168,15 @@ const GAME_PAGES = {
   'tunnel-rush': 'apps/games/tunnel-rush/tunnelrush.html',
   'retro-bowl': 'apps/games/retro-bowl/index.html',
   'geometry-dash': 'apps/games/geometry-dash/dashHome.html',
+  'geometry-dash-1-3': 'apps/games/geometry-dash/dash.html',
+  'geometry-dash-4-6': 'apps/games/geometry-dash/dash2.html',
   'slope-2': 'apps/games/slope-2/index.html',
   'bitlife': 'apps/games/bitlife/index.html',
   'crossy-road': 'apps/games/crossy-road/index.html',
   'moto-x3m': 'apps/games/moto-x3m/index.html',
   'subway-surfers': 'apps/games/subway-surfers/index.html',
   'drift-hunters': 'apps/games/drift-hunters/drift-hunters.html',
+  'drift-hunters-game': 'apps/games/drift-hunters/index.html',
   'run-3': 'apps/games/run-3/run3.html',
   'paper-io-2': 'apps/games/paper-io-2/paperio2.html',
   'basketball-stars': 'apps/games/basketball-stars/basketball-stars.html',
@@ -210,6 +234,11 @@ test('the catalog is the desktop apps, the file system suite, a calculator, web 
     'celeste-classic': 'data/icons/celeste-classic.png',
     'celeste-two': 'data/icons/celeste-two.png',
     'celeste-community': 'data/icons/celeste-community.png',
+    'celeste-practice-mod': 'data/icons/celeste-community.png',
+    'celeste-two-practice-mod-1-0': 'data/icons/celeste-two.png',
+    'celeste-two-practice-mod-1-1': 'data/icons/celeste-two.png',
+    'celeste-webek': 'data/icons/celeste-community.png',
+    'celeste-downloads': 'data/icons/celeste-community.png',
     'cookie-clicker': 'data/icons/cookie-clicker.png',
     'drive-mad': 'data/icons/drive-mad.png',
     'escaping-the-prison': 'data/icons/escaping-the-prison.png',
@@ -232,12 +261,15 @@ test('the catalog is the desktop apps, the file system suite, a calculator, web 
     'tunnel-rush': 'data/icons/tunnel-rush.png',
     'retro-bowl': 'data/icons/retro-bowl.png',
     'geometry-dash': 'data/icons/geometry-dash.png',
+    'geometry-dash-1-3': 'data/icons/geometry-dash.png',
+    'geometry-dash-4-6': 'data/icons/geometry-dash.png',
     'slope-2': 'data/icons/slope-2.png',
     'bitlife': 'data/icons/bitlife.png',
     'crossy-road': 'data/icons/crossy-road.png',
     'moto-x3m': 'data/icons/moto-x3m.png',
     'subway-surfers': 'data/icons/subway-surfers.png',
     'drift-hunters': 'data/icons/drift-hunters.png',
+    'drift-hunters-game': 'data/icons/drift-hunters.png',
     'run-3': 'data/icons/run-3.png',
     'paper-io-2': 'data/icons/paper-io-2.png',
     'basketball-stars': 'data/icons/basketball-stars.png',
@@ -406,6 +438,47 @@ test('every catalog entry points at a real, syntactically valid app module', () 
   const folders = fs.readdirSync(path.join(ROOT, 'apps'), { withFileTypes: true })
     .filter((e) => e.isDirectory()).map((e) => e.name).sort();
   assert.deepEqual(folders, ['_embed', '_template', 'games', 'media', 'productivity', 'system', 'tools']);
+});
+
+test('every game HTML file is its own game and none of its assets are missing', () => {
+  /* Walk apps/games like the manifest does: every .html that is not a
+   * proton wrapper (app.html) and not the picker itself must be the
+   * GAME_PAGE of exactly one catalogued game — so a page added to a
+   * multi-page folder cannot hide inside another game's app. */
+  const walk = (dir, prefix = '') => fs.readdirSync(path.join(ROOT, dir), { withFileTypes: true }).flatMap((e) => {
+    const rel = prefix + e.name;
+    if (e.isDirectory()) return walk(path.join(dir, e.name), rel + '/');
+    return e.name.endsWith('.html') ? [rel] : [];
+  });
+  const pages = walk('apps/games', 'apps/games/')
+    .filter((rel) => !rel.endsWith('/app.html') && rel !== 'apps/games/index.html')
+    .sort();
+  assert.deepEqual([...Object.values(GAME_PAGES)].sort(), pages,
+    'every game HTML file should be its own catalogued game');
+  for (const page of pages) {
+    const html = source(page);
+    assert.match(html, /<(?:html|head|body)[\s>]/i, `${page} does not look like an HTML page`);
+    /* Every asset the page loads (scripts, styles, images, frames) must
+     * ship beside it — a missing one is a broken game, even when the
+     * proton wrapper around it is fine. Navigation <a> links are not
+     * assets and may leave the app, so they are not checked here. */
+    for (const m of html.matchAll(/<(?:script|link|img|iframe|source|video|audio|embed)\b[^>]*?\b(?:src|href)\s*=\s*["']([^"']+)/gi)) {
+      const ref = m[1].trim();
+      if (!ref || /^(?:#|https?:\/\/|data:|blob:|mailto:|javascript:|\/\/)/i.test(ref)) continue;
+      const clean = ref.split('#')[0].split('?')[0];
+      if (!clean) continue;
+      const target = clean.startsWith('/')
+        ? path.join(ROOT, clean)
+        : path.join(ROOT, path.dirname(page), clean);
+      assert.ok(fs.existsSync(target), `${page} loads missing asset ${ref}`);
+    }
+    /* Inline scripts must at least parse. */
+    for (const m of html.matchAll(/<script(?![^>]*\bsrc\s*=)([^>]*)>([\s\S]*?)<\/script>/gi)) {
+      if (/\btype\s*=\s*["'](?!text\/javascript|module)[^"']+["']/i.test(m[1])) continue;
+      const code = m[2].trim();
+      if (code) assert.doesNotThrow(() => new vm.Script(code, { filename: page }), `Syntax error in inline script in ${page}`);
+    }
+  }
 });
 
 test('the system manifest still matches the repository exactly', () => {
@@ -747,7 +820,7 @@ test('Customize saves, displays and resets uploaded app icon images', async () =
     const browserWindow = w.eval('wins').get('browser');
     assert.equal(body.querySelector('#cust-files-shortcut'), null, 'Customize still offers a Files shortcut');
     assert.deepEqual([...body.querySelectorAll('#cust-modlist .card b')].map((b) => b.textContent).slice(0, SYSTEM_APPS.length),
-            ['App Center', 'Customize', 'Settings', 'About', 'Browser', 'Calculator', 'Files', 'Text Editor', 'PDF Viewer', 'Image Viewer', 'Media', 'Ruffle Flash Player', 'Web Retro', '2048', 'Bloons Tower Defense 1', 'Bloons Tower Defense 2', 'Bloons Tower Defense 5', 'Bloxorz', 'Breaking The Bank', 'Celeste Classic', 'Celeste Classic 2', 'Celeste Community', 'Cookie Clicker', 'Drive Mad', 'Escaping The Prison', 'Fleeing The Complex', 'Grey Box Testing', 'Infiltrating The Airship', 'Mari0', 'Offline Paradise', 'Pacman', 'Slope', 'Spacebar Clicker', 'Stack', 'Stealing The Diamond', 'Stickman Hook', 'Super Mario 64', 'Super Mario RPG', 'Tetris', 'The Impossible Quiz', 'Tunnel Rush', 'Retro Bowl', 'Geometry Dash', 'Slope 2', 'Bitlife', 'Crossy Road', 'Moto X3M', 'Subway Surfers', 'Drift Hunters', 'Run 3', 'Paper.io 2', 'Basketball Stars', 'Wordle']);
+            ['App Center', 'Customize', 'Settings', 'About', 'Browser', 'Calculator', 'Files', 'Text Editor', 'PDF Viewer', 'Image Viewer', 'Media', 'Ruffle Flash Player', 'Web Retro', '2048', 'Bloons Tower Defense 1', 'Bloons Tower Defense 2', 'Bloons Tower Defense 5', 'Bloxorz', 'Breaking The Bank', 'Celeste Classic', 'Celeste Classic 2', 'Celeste Community', 'Celeste Classic Practice Mod', 'Celeste Classic 2 Practice Mod 1.0', 'Celeste Classic 2 Practice Mod 1.1', 'Celeste Webek', 'Celeste Classic Downloads', 'Cookie Clicker', 'Drive Mad', 'Escaping The Prison', 'Fleeing The Complex', 'Grey Box Testing', 'Infiltrating The Airship', 'Mari0', 'Offline Paradise', 'Pacman', 'Slope', 'Spacebar Clicker', 'Stack', 'Stealing The Diamond', 'Stickman Hook', 'Super Mario 64', 'Super Mario RPG', 'Tetris', 'The Impossible Quiz', 'Tunnel Rush', 'Retro Bowl', 'Geometry Dash', 'Geometry Dash 1-3', 'Geometry Dash 4-6', 'Slope 2', 'Bitlife', 'Crossy Road', 'Moto X3M', 'Subway Surfers', 'Drift Hunters', 'Drift Hunters (Direct)', 'Run 3', 'Paper.io 2', 'Basketball Stars', 'Wordle']);
 
     const uploadBrowserIcon = async () => {
       const input = body.querySelector('[data-micon-file="browser"]');

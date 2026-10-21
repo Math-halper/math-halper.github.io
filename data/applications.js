@@ -42,7 +42,7 @@ and Geometry Dash). Each game
 app folder is the game's own files plus a thin proton iframe wrapper (see CREDITS.md for provenance), and
 apps/games/index.html is the picker their "all games" links expect.
 
-The start menu groups them by cat=: System (the desktop’s own five), Productivity (Calculator, Files, Text Editor, PDF Viewer), Media (Image Viewer, Media), Tools (Ruffle Flash Player, Web Retro — the players behind the Flash and cartridge games) and Games (40 games: 2048, Bloons Tower Defense 1, Bloons Tower Defense 2, Bloons Tower Defense 5, Bloxorz, Breaking The Bank, Celeste Classic, Celeste Classic 2, Celeste Community, Cookie Clicker, Drive Mad, Escaping The Prison, Fleeing The Complex, Grey Box Testing, Infiltrating The Airship, Mari0, Offline Paradise, Pacman, Slope, Spacebar Clicker, Stack, Stealing The Diamond, Stickman Hook, Super Mario 64, Super Mario RPG, Tetris, The Impossible Quiz, Tunnel Rush, Retro Bowl, Geometry Dash, Slope 2, Bitlife, Crossy Road, Moto X3M, Subway Surfers, Drift Hunters, Run 3, Paper.io 2, Basketball Stars, Wordle). Block order below is menu order within each section.
+The start menu groups them by cat=: System (the desktop’s own five), Productivity (Calculator, Files, Text Editor, PDF Viewer), Media (Image Viewer, Media), Tools (Ruffle Flash Player, Web Retro — the players behind the Flash and cartridge games) and Games (48 games: 2048, Bloons Tower Defense 1, Bloons Tower Defense 2, Bloons Tower Defense 5, Bloxorz, Breaking The Bank, Celeste Classic, Celeste Classic 2, Celeste Community, Celeste Classic Practice Mod, Celeste Classic 2 Practice Mod 1.0, Celeste Classic 2 Practice Mod 1.1, Celeste Webek, Celeste Classic Downloads, Cookie Clicker, Drive Mad, Escaping The Prison, Fleeing The Complex, Grey Box Testing, Infiltrating The Airship, Mari0, Offline Paradise, Pacman, Slope, Spacebar Clicker, Stack, Stealing The Diamond, Stickman Hook, Super Mario 64, Super Mario RPG, Tetris, The Impossible Quiz, Tunnel Rush, Retro Bowl, Geometry Dash, Geometry Dash 1-3, Geometry Dash 4-6, Slope 2, Bitlife, Crossy Road, Moto X3M, Subway Surfers, Drift Hunters, Drift Hunters (Direct), Run 3, Paper.io 2, Basketball Stars, Wordle). Block order below is menu order within each section.
 
 IMPORTANT: an id must not be a bare number — JavaScript object key ordering
   hoists integer-like keys to the front of every APPS iteration (this is why
@@ -307,6 +307,61 @@ w=980
 h=640
 
 [application]
+id=celeste-practice-mod
+name=Celeste Classic Practice Mod
+path=apps/games/celeste-practice-mod/app.html
+icon=data/icons/celeste-community.png
+svg-icon=false
+cat=Games
+desc=Play the Celeste Classic practice mod
+w=980
+h=640
+
+[application]
+id=celeste-two-practice-mod-1-0
+name=Celeste Classic 2 Practice Mod 1.0
+path=apps/games/celeste-two-practice-mod-1-0/app.html
+icon=data/icons/celeste-two.png
+svg-icon=false
+cat=Games
+desc=Play the Celeste Classic 2 v1.0 practice mod
+w=980
+h=640
+
+[application]
+id=celeste-two-practice-mod-1-1
+name=Celeste Classic 2 Practice Mod 1.1
+path=apps/games/celeste-two-practice-mod-1-1/app.html
+icon=data/icons/celeste-two.png
+svg-icon=false
+cat=Games
+desc=Play the Celeste Classic 2 v1.1 practice mod
+w=980
+h=640
+
+[application]
+id=celeste-webek
+name=Celeste Webek
+path=apps/games/celeste-webek/app.html
+icon=data/icons/celeste-community.png
+svg-icon=false
+cat=Games
+desc=Play Webek - a Celeste Classic PICO-8 game
+w=980
+h=640
+
+[application]
+id=celeste-downloads
+name=Celeste Classic Downloads
+path=apps/games/celeste-downloads/app.html
+icon=data/icons/celeste-community.png
+svg-icon=false
+cat=Games
+desc=Celeste Classic downloads - standalone builds and links
+w=980
+h=640
+
+[application]
 id=cookie-clicker
 name=Cookie Clicker
 path=apps/games/cookie-clicker/app.html
@@ -538,6 +593,28 @@ w=980
 h=640
 
 [application]
+id=geometry-dash-1-3
+name=Geometry Dash 1-3
+path=apps/games/geometry-dash-1-3/app.html
+icon=data/icons/geometry-dash.png
+svg-icon=false
+cat=Games
+desc=Play Geometry Dash levels 1-3 (Scratch)
+w=980
+h=640
+
+[application]
+id=geometry-dash-4-6
+name=Geometry Dash 4-6
+path=apps/games/geometry-dash-4-6/app.html
+icon=data/icons/geometry-dash.png
+svg-icon=false
+cat=Games
+desc=Play Geometry Dash levels 4-6 (Scratch)
+w=980
+h=640
+
+[application]
 id=slope-2
 name=Slope 2
 path=apps/games/slope-2/app.html
@@ -600,6 +677,17 @@ icon=data/icons/drift-hunters.png
 svg-icon=false
 cat=Games
 desc=Play Drift Hunters — drift and tune cars
+w=980
+h=640
+
+[application]
+id=drift-hunters-game
+name=Drift Hunters (Direct)
+path=apps/games/drift-hunters-game/app.html
+icon=data/icons/drift-hunters.png
+svg-icon=false
+cat=Games
+desc=Play Drift Hunters — drift and tune cars (direct Unity build)
 w=980
 h=640
 

@@ -105,25 +105,29 @@ content.
 
 ## Vendored Celeste Classics
 
-The three Celeste apps carry the **actual game files**, copied byte-for-byte
-from [Math-halper/Celeste](https://github.com/Math-halper/Celeste) (that
-repository's `classic/`, `two/` and `speed/` folders), one app per game:
+The Celeste apps carry the **actual game files**, copied from
+[Math-halper/Celeste](https://github.com/Math-halper/Celeste) (that
+repository's `classic/`, `two/` and `speed/` folders):
 
 - `apps/games/celeste-classic/` — Celeste Classic (the PICO-8 export of *Celeste
   Classic* by Maddy Thorson & Noel Berry), from `classic/`
 - `apps/games/celeste-two/` — *Celeste Classic 2: Lani's Trek* (community follow-up),
   from `two/`
 - `apps/games/celeste-community/` — the Celeste Classic community hub, its practice
-  mods, downloads and WebEK tool, from `speed/`
+  mods, downloads and WebEK tool, from `speed/`. Five separate apps
+  (`celeste-practice-mod`, `celeste-two-practice-mod-1-0`,
+  `celeste-two-practice-mod-1-1`, `celeste-webek`, `celeste-downloads`) frame
+  the hub's own pages directly, so every page in the folder is its own game;
+  the pages stay in this shared folder so their relative paths keep working.
 
-Each app folder is the game's own pages plus proton's thin iframe wrapper
-(`app.html`); nothing in the game files was edited. The pages' "all games"
-links go one level up (`href="../"`), as on the source site — `apps/games/index.html`
-is that picker: proton's own "all games" page listing every game in the folder
-(the source repository's root selector is not used). A few hub links point at
-site-absolute
-paths the source site itself doesn't host (`/glossary/` and friends) and stay
-unresolved here, as they do upstream.
+Each app folder is the game's own pages plus proton's thin iframe wrappers
+(`app.html`). The only edits to the game files are link fixes in the community
+hub and practice pages: their site-absolute links (`/glossary/` and friends)
+now point at the Celeste Classic community site that hosts those pages, so
+they resolve instead of landing on this site's missing root paths. The pages'
+"all games" links go one level up (`href="../"`), as on the source site —
+`apps/games/index.html` is that picker: proton's own "all games" page listing
+every game in the folder (the source repository's root selector is not used).
 
 The app icons for `celeste-classic` and `celeste-two` are a shared pixel-art
 image uploaded by the repository maintainer; `celeste-community` keeps its
@@ -182,8 +186,10 @@ copied byte-for-byte from the offline mirror in
 [Gams-Offline/Gams](https://github.com/Gams-Offline/Gams) (`g/g/cookie/` —
 itself the [ozh/cookieclicker](https://github.com/ozh/cookieclicker) mirror;
 its README travels with the game). The one omission is `img/Thumbs.db`, a
-Windows Explorer thumbnail cache that is not part of the game. Nothing in
-the game files was edited.
+Windows Explorer thumbnail cache that is not part of the game. The only
+edits here are a page link fix (the "Try the beta!" link now gives the
+upstream beta address in full) and a tiny `showads.js` placeholder for the
+ad-detection script the mirror did not include; the game build is untouched.
 
 The game is self-contained — its own `img/`, `snd/`, `loc/` translations and
 minigames all ship in the folder — and saves to the browser's localStorage.

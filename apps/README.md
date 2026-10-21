@@ -133,6 +133,11 @@ matching the menu sections (`cat=`, ordered by `CATS` in `assets/core.js`).
 | `games/` | Celeste Classic (`celeste-classic`) — the vendored PICO-8 game (from Math-halper/Celeste `classic/`) plus its wrapper |
 | `games/` | Celeste Classic 2 (`celeste-two`) — the vendored Lani's Trek game (from Math-halper/Celeste `two/`) plus its wrapper |
 | `games/` | Celeste Community (`celeste-community`) — the vendored community hub, practice mods and tools (from Math-halper/Celeste `speed/`) plus its wrapper |
+| `games/` | Celeste Classic Practice Mod (`celeste-practice-mod`) — the Celeste Community practice-mod page (in `celeste-community/`) plus its wrapper |
+| `games/` | Celeste Classic 2 Practice Mod 1.0 (`celeste-two-practice-mod-1-0`) — the Celeste Community page (in `celeste-community/`) plus its wrapper |
+| `games/` | Celeste Classic 2 Practice Mod 1.1 (`celeste-two-practice-mod-1-1`) — the Celeste Community page (in `celeste-community/`) plus its wrapper |
+| `games/` | Celeste Webek (`celeste-webek`) — the Celeste Community page (in `celeste-community/`) plus its wrapper |
+| `games/` | Celeste Classic Downloads (`celeste-downloads`) — the Celeste Community downloads page (in `celeste-community/`) plus its wrapper |
 | `games/` | Cookie Clicker (`cookie-clicker`) — the vendored offline mirror of Orteil's game (from Gams-Offline/Gams `g/g/cookie/`, minus `img/Thumbs.db`) plus its wrapper |
 | `games/` | Drive Mad (`drive-mad`) — the vendored WebGL build (from Gams-Offline/Gams `g/g/`) plus its wrapper |
 | `games/` | Escaping The Prison (`escaping-the-prison`) — the vendored Flash build and loader shim (from Gams-Offline/Gams `g/g/Ruffle/swfs/`; runs on the shared Ruffle player) plus its wrapper |
@@ -154,12 +159,15 @@ matching the menu sections (`cat=`, ordered by `CATS` in `assets/core.js`).
 | `games/` | Tunnel Rush (`tunnel-rush`) — the vendored WebGL build (from Gams-Offline/Gams `g/g/`) plus its wrapper |
 | `games/` | Retro Bowl (`retro-bowl`) — the GameMaker HTML5 build plus its wrapper |
 | `games/` | Geometry Dash (`geometry-dash`) — the hub + Scratch pages plus its wrapper |
+| `games/` | Geometry Dash 1-3 (`geometry-dash-1-3`) — the dash page (in `geometry-dash/`) plus its wrapper |
+| `games/` | Geometry Dash 4-6 (`geometry-dash-4-6`) — the dash page (in `geometry-dash/`) plus its wrapper |
 | `games/` | Slope 2 (`slope-2`) — the Unity WebGL build plus its wrapper |
 | `games/` | Bitlife (`bitlife`) — the Unity WebGL build plus its wrapper |
 | `games/` | Crossy Road (`crossy-road`) — the HTML5 build plus its wrapper |
 | `games/` | Moto X3M (`moto-x3m`) — the HTML5 build plus its wrapper |
 | `games/` | Subway Surfers (`subway-surfers`) — the loader + San Francisco Unity build plus its wrapper |
 | `games/` | Drift Hunters (`drift-hunters`) — the server hub + Unity build plus its wrapper |
+| `games/` | Drift Hunters (Direct) (`drift-hunters-game`) — the Unity page (in `drift-hunters/`) plus its wrapper |
 | `games/` | Run 3 (`run-3`) — the tunnel-runner page plus its wrapper |
 | `games/` | Paper.io 2 (`paper-io-2`) — the HTML5 build plus its wrapper |
 | `games/` | Basketball Stars (`basketball-stars`) — the gadget page plus its wrapper |
