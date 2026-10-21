@@ -53,16 +53,9 @@ see [`data/icons/README.md`](../data/icons/README.md).
 
 1. Copy the `apps/_template/` folder into the category folder it belongs in
    and rename it, e.g. `apps/games/my-app/`.
-   If the app is only **one framed page** — a build, a doc, another site —
-   copy `apps/_embed/` instead and skip to step 3: its module is a toolbar
-   (address, Reload, Open in new tab) plus a full-height sandboxed `<iframe>`,
-   and the only thing to change is one constant at the top of its script:
-   `const EMBED_URL = 'https://example.com/';`. The frame is sandboxed
-   **without** `allow-same-origin` so an embedded page cannot reach proton's
-   localStorage, and the toolbar keeps an **Open in new tab** escape hatch for
-   sites that refuse framing (`X-Frame-Options` / `frame-ancestors`).
-   `websites/_embed/` is the same thing as a built-in website instead of an
-   app. Template folders are never registered or deployed —
+   Embedded-page apps are not shipped: every app's files live in this
+   repository, framed only if they are a local page in the app's own
+   folder. Template folders are never registered or deployed —
    `tools/gen-fs-manifest.py` skips every underscore-prefixed folder.
 2. Add ONE `[application]` block to `data/applications.js` (copy the template
    in that file's header): `id`, `name`, `path=apps/<category>/my-app/app.html`, `icon`
@@ -133,6 +126,11 @@ matching the menu sections (`cat=`, ordered by `CATS` in `assets/core.js`).
 | `games/` | Celeste Classic (`celeste-classic`) — the vendored PICO-8 game (from Math-halper/Celeste `classic/`) plus its wrapper |
 | `games/` | Celeste Classic 2 (`celeste-two`) — the vendored Lani's Trek game (from Math-halper/Celeste `two/`) plus its wrapper |
 | `games/` | Celeste Community (`celeste-community`) — the vendored community hub, practice mods and tools (from Math-halper/Celeste `speed/`) plus its wrapper |
+| `games/` | Celeste Classic Practice Mod (`celeste-practice-mod`) — the Celeste Community practice-mod page (in `celeste-community/`) plus its wrapper |
+| `games/` | Celeste Classic 2 Practice Mod 1.0 (`celeste-two-practice-mod-1-0`) — the Celeste Community page (in `celeste-community/`) plus its wrapper |
+| `games/` | Celeste Classic 2 Practice Mod 1.1 (`celeste-two-practice-mod-1-1`) — the Celeste Community page (in `celeste-community/`) plus its wrapper |
+| `games/` | Celeste Webek (`celeste-webek`) — the Celeste Community page (in `celeste-community/`) plus its wrapper |
+| `games/` | Celeste Classic Downloads (`celeste-downloads`) — the Celeste Community downloads page (in `celeste-community/`) plus its wrapper |
 | `games/` | Cookie Clicker (`cookie-clicker`) — the vendored offline mirror of Orteil's game (from Gams-Offline/Gams `g/g/cookie/`, minus `img/Thumbs.db`) plus its wrapper |
 | `games/` | Drive Mad (`drive-mad`) — the vendored WebGL build (from Gams-Offline/Gams `g/g/`) plus its wrapper |
 | `games/` | Escaping The Prison (`escaping-the-prison`) — the vendored Flash build and loader shim (from Gams-Offline/Gams `g/g/Ruffle/swfs/`; runs on the shared Ruffle player) plus its wrapper |
@@ -152,20 +150,14 @@ matching the menu sections (`cat=`, ordered by `CATS` in `assets/core.js`).
 | `games/` | Tetris (`tetris`) — the vendored Flash build and loader shim (from Gams-Offline/Gams `g/g/Ruffle/swfs/`; runs on the shared Ruffle player) plus its wrapper |
 | `games/` | The Impossible Quiz (`the-impossible-quiz`) — the vendored Flash build and loader shim (from Gams-Offline/Gams `g/g/Ruffle/swfs/`; runs on the shared Ruffle player) plus its wrapper |
 | `games/` | Tunnel Rush (`tunnel-rush`) — the vendored WebGL build (from Gams-Offline/Gams `g/g/`) plus its wrapper |
-| `games/` | Retro Bowl (`retro-bowl`) — the vendored GameMaker build (from mountain658 `g/retrobowl/`) plus its wrapper |
-| `games/` | Geometry Dash (`geometry-dash`) — the vendored mountain hub + Scratch pages (from mountain658 `dash/`) plus its wrapper |
-| `games/` | Slope 2 (`slope-2`) — the vendored Unity WebGL build (from mountain658 `g/slope-2/`) plus its wrapper |
-| `games/` | Bitlife (`bitlife`) — the vendored Unity WebGL build (from mountain658 `g/bitlife/`) plus its wrapper |
-| `games/` | Crossy Road (`crossy-road`) — the vendored HTML5 build (from mountain658 `g/crossyroad/`) plus its wrapper |
-| `games/` | Moto X3M (`moto-x3m`) — the vendored HTML5 build (from mountain658 `g/moto-x3m/`) plus its wrapper |
-| `games/` | Subway Surfers (`subway-surfers`) — the vendored loader + San Francisco Unity build (from mountain658 `g/subway-surfers/` and mountain658/SubwaySurfers) plus its wrapper |
-| `games/` | Drift Hunters (`drift-hunters`) — the vendored server hub + Unity build (from mountain658 `Drift-Hunters.html` and `g/drifthunters/`) plus its wrapper |
-| `games/` | Run 3 (`run-3`) — the vendored mountain page (from mountain658 `run3.html`; inner lekug build credited in CREDITS.md) plus its wrapper |
-| `games/` | Paper.io 2 (`paper-io-2`) — the vendored HTML5 build (from mountain658 `g/paperio2/`) plus its wrapper |
-| `games/` | Basketball Stars (`basketball-stars`) — the vendored mountain gadget page (from mountain658 `zBasketBallStarts.html`) plus its wrapper |
-| `games/` | Wordle (`wordle`) — the vendored mountain selector page (from mountain658 `zwordle.html`) plus its wrapper |
+| `games/` | Retro Bowl (`retro-bowl`) — the GameMaker HTML5 build plus its wrapper |
+| `games/` | Slope 2 (`slope-2`) — the Unity WebGL build plus its wrapper |
+| `games/` | Bitlife (`bitlife`) — the Unity WebGL build plus its wrapper |
+| `games/` | Crossy Road (`crossy-road`) — the HTML5 build plus its wrapper |
+| `games/` | Moto X3M (`moto-x3m`) — the HTML5 build plus its wrapper |
+| `games/` | Subway Surfers (`subway-surfers`) — the loader + San Francisco Unity build plus its wrapper |
+| `games/` | Paper.io 2 (`paper-io-2`) — the HTML5 build plus its wrapper |
 | `_template/` | not an app — the starting point for a new one (copy it into its category folder) |
-| `_embed/` | not an app — the starting point for one that is only a framed page (`EMBED_URL`) |
 
 ### Desktop shortcut workflow
 

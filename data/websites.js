@@ -43,18 +43,7 @@ icon=flask
 svg-icon=true
 desc=TEST SITE: automated checks plus buttons, forms, clock, counter, canvas and storage to try the Browser with
 
-/* TEMPLATE — a site that is only an embedded page. Copy websites/_embed/,
-   rename it, change the EMBED_URL constant in its index.html, then
-   uncomment a block like this one (and delete these lines):
-
-[website]
-id=my-embed
-name=My Embed
-path=websites/my-embed/index.html
-icon=globe
-svg-icon=true
-desc=Frames https://example.com
-
-*/
+/* Embedded-page sites are not shipped: every site is a local page
+   (copy websites/_template/) whose files live in this repository. */
 
 `;

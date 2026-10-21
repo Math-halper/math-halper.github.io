@@ -27,8 +27,7 @@ idle bakery game, copied byte-for-byte from the offline mirror in
 **23 more games** from that same Gams collection join the Games section —
 Flash classics (Pacman, Tetris, the Henry Stickmin series and more) on the
 shared open-source **Ruffle Flash Player** app, Unity WebGL builds and
-single-file HTML5 games. **12 more games** from
-[mountain658.github.io](https://mountain658.github.io/) join them — including **Retro Bowl** and **Geometry Dash** (Scratch) plus Slope 2, Bitlife, Crossy Road, Moto X3M, Subway Surfers, Drift Hunters, Run 3, Paper.io 2, Basketball Stars and Wordle — each vendored directly into `apps/games/<id>/` with its own icon (game files copied from mountain658 — see `CREDITS.md`) and an "Open in new tab" escape hatch. A small
+single-file HTML5 games. **7 more games** join them — **Retro Bowl**, Slope 2, Bitlife, Crossy Road, Moto X3M, Subway Surfers and Paper.io 2 — each vendored directly into `apps/games/<id>/` with its own icon (see `CREDITS.md` for provenance) and an "Open in new tab" escape hatch. A small
 **Calculator** (new, self-contained code in `apps/productivity/calculator/`) ships again
 too, and **Web Retro** vendors the
 [webretro](https://github.com/BinBashBanana/webretro) emulator build from
@@ -60,6 +59,11 @@ game bundles and earlier built-in sites remain removed (except Test Page).
 | **Celeste Classic** (`celeste-classic`) | Play the original PICO-8 Celeste Classic — its actual game files, vendored from Math-halper/Celeste |
 | **Celeste Classic 2** (`celeste-two`) | Play Celeste Classic 2: Lani's Trek — its actual game files, vendored from Math-halper/Celeste |
 | **Celeste Community** (`celeste-community`) | The Celeste Classic community hub — practice mods, downloads and links (vendored from Math-halper/Celeste) |
+| **Celeste Classic Practice Mod** (`celeste-practice-mod`) | Play the Celeste Classic practice mod |
+| **Celeste Classic 2 Practice Mod 1.0** (`celeste-two-practice-mod-1-0`) | Play the Celeste Classic 2 v1.0 practice mod |
+| **Celeste Classic 2 Practice Mod 1.1** (`celeste-two-practice-mod-1-1`) | Play the Celeste Classic 2 v1.1 practice mod |
+| **Celeste Webek** (`celeste-webek`) | Play Webek - a Celeste Classic PICO-8 game |
+| **Celeste Classic Downloads** (`celeste-downloads`) | Celeste Classic downloads - standalone builds and links |
 | **Cookie Clicker** (`cookie-clicker`) | Play Cookie Clicker — Orteil's idle bakery game (offline mirror, vendored from Gams-Offline/Gams) |
 | **Drive Mad** (`drive-mad`) | Play Drive Mad - the physics driving game |
 | **Escaping The Prison** (`escaping-the-prison`) | Play Escaping The Prison - a Henry Stickmin adventure |
@@ -79,18 +83,13 @@ game bundles and earlier built-in sites remain removed (except Test Page).
 | **Tetris** (`tetris`) | Play Tetris - the falling-blocks classic |
 | **The Impossible Quiz** (`the-impossible-quiz`) | Play The Impossible Quiz - the wildly unfair quiz |
 | **Tunnel Rush** (`tunnel-rush`) | Play Tunnel Rush - dodge through the spinning tunnel |
-| **Retro Bowl** (`retro-bowl`) | Play Retro Bowl — the retro American football sim from mountain658 |
-| **Geometry Dash** (`geometry-dash`) | Play Geometry Dash 1 & 2 — the rhythm platformer from mountain658 (Scratch) |
-| **Slope 2** (`slope-2`) | Play Slope 2 — the neon slope sequel from mountain658 |
-| **Bitlife** (`bitlife`) | Play Bitlife — the life simulator from mountain658 |
-| **Crossy Road** (`crossy-road`) | Play Crossy Road — dodge traffic and rivers from mountain658 |
-| **Moto X3M** (`moto-x3m`) | Play Moto X3M 1 & 4 — stunt biking from mountain658 |
-| **Subway Surfers** (`subway-surfers`) | Play Subway Surfers — the endless runner from mountain658 |
-| **Drift Hunters** (`drift-hunters`) | Play Drift Hunters — drift and tune cars from mountain658 |
-| **Run 3** (`run-3`) | Play Run 3 — the space tunnel runner from mountain658 |
-| **Paper.io 2** (`paper-io-2`) | Play Paper.io 2 — capture territory from mountain658 |
-| **Basketball Stars** (`basketball-stars`) | Play Basketball Stars — shoot hoops from mountain658 |
-| **Wordle** (`wordle`) | Play Wordle — the daily word puzzle from mountain658 |
+| **Retro Bowl** (`retro-bowl`) | Play Retro Bowl — the retro American football sim |
+| **Slope 2** (`slope-2`) | Play Slope 2 — the neon slope sequel |
+| **Bitlife** (`bitlife`) | Play Bitlife — the life simulator |
+| **Crossy Road** (`crossy-road`) | Play Crossy Road — dodge traffic and rivers |
+| **Moto X3M** (`moto-x3m`) | Play Moto X3M 1 & 4 — stunt biking |
+| **Subway Surfers** (`subway-surfers`) | Play Subway Surfers — the endless runner |
+| **Paper.io 2** (`paper-io-2`) | Play Paper.io 2 — capture territory |
 
 Rows are listed in start-menu order: **System**, then **Productivity**, **Media**, **Tools** and **Games**.
 
@@ -121,10 +120,10 @@ runtime dependencies or build step. Optional regression tests use jsdom:
 ## Project layout (everything is a module)
 
 - **Apps:** one folder + HTML file each — `apps/<category>/<name>/app.html`
-  (41 apps in five category folders — `system/`, `productivity/`, `media/`, `tools/`,
-  `games/` — matching the menu sections, plus
-  two starting points: `apps/_template/` for a normal app and `apps/_embed/`
-  for one that is only a framed page — change its single `EMBED_URL` constant).
+  (53 apps in five category folders — `system/`, `productivity/`, `media/`, `tools/`,
+  `games/` — matching the menu sections, plus one starting point:
+  `apps/_template/` for a normal app). Embedded-page apps are not shipped:
+  every app's files live in this repository.
   Every app's name,
   location, icon, category, description and window size is listed in **one
   catalog file** — `data/applications.js`. Add one by copying
@@ -133,9 +132,9 @@ runtime dependencies or build step. Optional regression tests use jsdom:
   deleting that block. Full guide: [`apps/README.md`](apps/README.md).
 - **Built-in websites:** the same catalog system — `data/websites.js`, one
   `[website]` block per site, each page a `websites/<name>/site.html`. One site
-  ships: **Test Page** (`websites/test-page/`), plus `websites/_template/` and
-  `websites/_embed/` (one framed page, one `EMBED_URL` constant to change) as
-  the starting points for a new one. The Browser also visits any address typed
+  ships: **Test Page** (`websites/test-page/`), plus `websites/_template/` as
+  the starting point for a new one. Embedded-page sites are not shipped:
+  every site's files live in this repository. The Browser also visits any address typed
   into its bar, opens HTML files from the virtual file system, and searches its
   own index of this repository (see **Search** below). Guide:
   [`websites/README.md`](websites/README.md).

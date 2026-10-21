@@ -3,19 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Run 3 - proton app</title>
+<title>Celeste Classic 2 Practice Mod 1.0 - proton app</title>
 </head>
 <body>
 <p>This file is a proton app. It is not meant to be opened on its own:
-open <a href="../../../index.html">proton</a> and launch <b>Run 3</b> from the
+open <a href="../../../index.html">proton</a> and launch <b>Celeste Classic 2 Practice Mod 1.0</b> from the
 proton menu. The script below is fetched and run by proton's HTML loader
 (assets/html-loader.js) at boot.</p>
 <!-- VENDORED GAME — proton's wrapper plus the game's own files.
 
-     Every file in this folder except this wrapper is copied from
-     mountain658/mountain658.github.io (run3.html plus mountain's everypage.js/load.js/fullScreen.js helpers; links edited from / to the local games picker) — see CREDITS.md
-     (Mountain658 games, vendored). Mountain ships no local Run 3 build — run3.html is its page framing the lekug.github.io HTML5 build; that inner frame is upstream's own and is credited in CREDITS.md.
-     The wrapper frames this folder's own game page — a local page, so the
+     This app frames one page from the Celeste Community collection
+     (apps/games/celeste-community/) so the page is its own game in the
+     proton menu. The page and its builds stay in that shared folder,
+     from Math-halper/Celeste (link fixes noted in CREDITS.md), so their
+     relative script and image paths keep working.
+
+     The wrapper frames the game page — a local page, so the
      frame is NOT sandboxed and may use keyboard, mouse, audio and fullscreen
      like any desktop app. Click the game once to give it keyboard focus. -->
 <script data-proton-app>
@@ -26,22 +29,21 @@ proton menu. The script below is fetched and run by proton's HTML loader
 'use strict';
 
 /* =====================================================================
-   The game page that ships in this folder.
+   The game page that ships with this app.
    ===================================================================== */
-const GAME_PAGE = 'apps/games/run-3/run3.html';
+const GAME_PAGE = 'apps/games/celeste-community/cc2_practice_mod_1.0.html';
 /* --------------------------------------------------------------------- */
 
 registerApp({
   render(body) {
-    body.innerHTML = `${bar('Run 3', `<span class="muted embed-src" title="${MH.esc(GAME_PAGE)}">${MH.esc(GAME_PAGE)}</span>
+    body.innerHTML = `${bar('Celeste Classic 2 Practice Mod 1.0', `<span class="muted embed-src" title="${MH.esc(GAME_PAGE)}">${MH.esc(GAME_PAGE)}</span>
       <button class="btn sm" data-e="reload">${iconSvg('refresh')} Reload</button>
       <button class="btn sm primary" data-e="ext">${iconSvg('external')} Open in new tab</button>`)}
-      <div class="app-main local-page"><iframe class="site-frame" title="Run 3" src="${MH.esc(GAME_PAGE)}"
+      <div class="app-main local-page"><iframe class="site-frame" title="Celeste Classic 2 Practice Mod 1.0" src="${MH.esc(GAME_PAGE)}"
         allow="autoplay; fullscreen; pointer-lock; gamepad" allowfullscreen></iframe></div>
-      <p class="muted" style="flex:none;margin:0;padding:7px 14px;border-top:1px solid var(--line)">The game files
-        ship with this app — copied from
-        <a href="https://github.com/mountain658/mountain658.github.io" target="_blank" rel="noopener">mountain658/mountain658.github.io</a>
-        (run3.html plus mountain's everypage.js/load.js/fullScreen.js helpers; links edited from / to the local games picker). Game © its respective authors; see CREDITS.md.</p>`;
+      <p class="muted" style="flex:none;margin:0;padding:7px 14px;border-top:1px solid var(--line)">The game page
+        ships with the Celeste Community app — copied verbatim from
+        <a href="https://github.com/Math-halper/Celeste" target="_blank" rel="noopener">Math-halper/Celeste</a>.</p>`;
     const frame = body.querySelector('iframe');
     body.querySelector('[data-e="reload"]').onclick = () => { frame.src = GAME_PAGE; };
     body.querySelector('[data-e="ext"]').onclick = () => window.open(GAME_PAGE, '_blank', 'noopener');

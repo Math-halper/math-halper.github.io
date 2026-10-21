@@ -3,8 +3,8 @@
  * main), a Calculator and Web Retro (a vendored webretro emulator, no ROMs
  * included), and the vendored game apps — the Celeste Classics trio
  * (github.com/Math-halper/Celeste), Cookie Clicker plus 23 more games
- * (github.com/Gams-Offline/Gams), 12 more games vendored from
- * mountain658/mountain658.github.io, and Mari0 + Super Mario 64
+ * (github.com/Gams-Offline/Gams), 12 more vendored games,
+ * and Mari0 + Super Mario 64
  * (github.com/Math-halper/Mario, only the game builds) — each a thin wrapper
  * around the actual game files, copied byte-for-byte.
  * The one built-in website is Test Page, the Browser smoke test. These tests
@@ -33,6 +33,11 @@ const SYSTEM_APPS = ['appcenter', 'customize', 'settings', 'about', 'browser',
   'celeste-classic',
   'celeste-two',
   'celeste-community',
+  'celeste-practice-mod',
+  'celeste-two-practice-mod-1-0',
+  'celeste-two-practice-mod-1-1',
+  'celeste-webek',
+  'celeste-downloads',
   'cookie-clicker',
   'drive-mad',
   'escaping-the-prison',
@@ -53,17 +58,12 @@ const SYSTEM_APPS = ['appcenter', 'customize', 'settings', 'about', 'browser',
   'the-impossible-quiz',
   'tunnel-rush',
   'retro-bowl',
-  'geometry-dash',
   'slope-2',
   'bitlife',
   'crossy-road',
   'moto-x3m',
   'subway-surfers',
-  'drift-hunters',
-  'run-3',
-  'paper-io-2',
-  'basketball-stars',
-  'wordle'];
+  'paper-io-2'];
 /* Menu sections for each app (data/applications.js cat=), in catalog order.
  * Every new app is filed here with its respective section — the catalog test
  * asserts each app's cat matches, and the boot test asserts the five menu
@@ -81,6 +81,11 @@ const SYSTEM_CATS = {
   'celeste-classic': 'Games',
   'celeste-two': 'Games',
   'celeste-community': 'Games',
+  'celeste-practice-mod': 'Games',
+  'celeste-two-practice-mod-1-0': 'Games',
+  'celeste-two-practice-mod-1-1': 'Games',
+  'celeste-webek': 'Games',
+  'celeste-downloads': 'Games',
   'cookie-clicker': 'Games',
   'drive-mad': 'Games',
   'escaping-the-prison': 'Games',
@@ -102,17 +107,12 @@ const SYSTEM_CATS = {
   'the-impossible-quiz': 'Games',
   'tunnel-rush': 'Games',
   'retro-bowl': 'Games',
-  'geometry-dash': 'Games',
   'slope-2': 'Games',
   'bitlife': 'Games',
   'crossy-road': 'Games',
   'moto-x3m': 'Games',
   'subway-surfers': 'Games',
-  'drift-hunters': 'Games',
-  'run-3': 'Games',
   'paper-io-2': 'Games',
-  'basketball-stars': 'Games',
-  'wordle': 'Games',
   'web-retro': 'Tools',
 };
 /* Each game app frames the game page that ships in its own folder. */
@@ -126,6 +126,11 @@ const GAME_PAGES = {
   'celeste-classic': 'apps/games/celeste-classic/index.html',
   'celeste-two': 'apps/games/celeste-two/index.html',
   'celeste-community': 'apps/games/celeste-community/index.html',
+  'celeste-practice-mod': 'apps/games/celeste-community/practice_mod_c.html',
+  'celeste-two-practice-mod-1-0': 'apps/games/celeste-community/cc2_practice_mod_1.0.html',
+  'celeste-two-practice-mod-1-1': 'apps/games/celeste-community/cc2_practice_mod_1.1.html',
+  'celeste-webek': 'apps/games/celeste-community/webek.html',
+  'celeste-downloads': 'apps/games/celeste-community/downloads.html',
   'cookie-clicker': 'apps/games/cookie-clicker/index.html',
   'drive-mad': 'apps/games/drive-mad/drivemad.html',
   'escaping-the-prison': 'apps/games/escaping-the-prison/escapingtheprison.html',
@@ -146,17 +151,12 @@ const GAME_PAGES = {
   'the-impossible-quiz': 'apps/games/the-impossible-quiz/theimpossiblequiz.html',
   'tunnel-rush': 'apps/games/tunnel-rush/tunnelrush.html',
   'retro-bowl': 'apps/games/retro-bowl/index.html',
-  'geometry-dash': 'apps/games/geometry-dash/dashHome.html',
   'slope-2': 'apps/games/slope-2/index.html',
   'bitlife': 'apps/games/bitlife/index.html',
   'crossy-road': 'apps/games/crossy-road/index.html',
   'moto-x3m': 'apps/games/moto-x3m/index.html',
   'subway-surfers': 'apps/games/subway-surfers/index.html',
-  'drift-hunters': 'apps/games/drift-hunters/drift-hunters.html',
-  'run-3': 'apps/games/run-3/run3.html',
   'paper-io-2': 'apps/games/paper-io-2/paperio2.html',
-  'basketball-stars': 'apps/games/basketball-stars/basketball-stars.html',
-  'wordle': 'apps/games/wordle/wordle.html',
 };
 /* Games whose pages carry the source sites' href="../" all-games link. */
 const PICKER_LINKED = ['celeste-classic', 'celeste-two', 'celeste-community', 'cookie-clicker', 'sm64'];
@@ -210,6 +210,11 @@ test('the catalog is the desktop apps, the file system suite, a calculator, web 
     'celeste-classic': 'data/icons/celeste-classic.png',
     'celeste-two': 'data/icons/celeste-two.png',
     'celeste-community': 'data/icons/celeste-community.png',
+    'celeste-practice-mod': 'data/icons/celeste-community.png',
+    'celeste-two-practice-mod-1-0': 'data/icons/celeste-two.png',
+    'celeste-two-practice-mod-1-1': 'data/icons/celeste-two.png',
+    'celeste-webek': 'data/icons/celeste-community.png',
+    'celeste-downloads': 'data/icons/celeste-community.png',
     'cookie-clicker': 'data/icons/cookie-clicker.png',
     'drive-mad': 'data/icons/drive-mad.png',
     'escaping-the-prison': 'data/icons/escaping-the-prison.png',
@@ -231,17 +236,12 @@ test('the catalog is the desktop apps, the file system suite, a calculator, web 
     'the-impossible-quiz': 'data/icons/the-impossible-quiz.png',
     'tunnel-rush': 'data/icons/tunnel-rush.png',
     'retro-bowl': 'data/icons/retro-bowl.png',
-    'geometry-dash': 'data/icons/geometry-dash.png',
     'slope-2': 'data/icons/slope-2.png',
     'bitlife': 'data/icons/bitlife.png',
     'crossy-road': 'data/icons/crossy-road.png',
     'moto-x3m': 'data/icons/moto-x3m.png',
     'subway-surfers': 'data/icons/subway-surfers.png',
-    'drift-hunters': 'data/icons/drift-hunters.png',
-    'run-3': 'data/icons/run-3.png',
     'paper-io-2': 'data/icons/paper-io-2.png',
-    'basketball-stars': 'data/icons/basketball-stars.png',
-    'wordle': 'data/icons/wordle.png',
     'web-retro': 'data/icons/webretro.png' };
   assert.deepEqual(Array.from(apps, (a) => a.svgIcon), SYSTEM_APPS.map((id) => !RASTER_ICON_APPS[id]));
   const iconById = Object.fromEntries(Array.from(apps, (a) => [a.id, a.icon]));
@@ -278,7 +278,7 @@ test('the catalog is the desktop apps, the file system suite, a calculator, web 
   /* websites/ is back, but only with the catalogued site and the template. */
   const siteFolders = fs.readdirSync(path.join(ROOT, 'websites'), { withFileTypes: true })
     .filter((e) => e.isDirectory()).map((e) => e.name).sort();
-  assert.deepEqual(siteFolders, ['_embed', '_template', 'test-page']);
+  assert.deepEqual(siteFolders, ['_template', 'test-page']);
   const index = source('index.html');
   assert.ok(!index.includes('game-icons.js') && !index.includes('game-host.js'));
 });
@@ -405,7 +405,48 @@ test('every catalog entry points at a real, syntactically valid app module', () 
   /* apps/ holds the five category folders plus the developer templates. */
   const folders = fs.readdirSync(path.join(ROOT, 'apps'), { withFileTypes: true })
     .filter((e) => e.isDirectory()).map((e) => e.name).sort();
-  assert.deepEqual(folders, ['_embed', '_template', 'games', 'media', 'productivity', 'system', 'tools']);
+  assert.deepEqual(folders, ['_template', 'games', 'media', 'productivity', 'system', 'tools']);
+});
+
+test('every game HTML file is its own game and none of its assets are missing', () => {
+  /* Walk apps/games like the manifest does: every .html that is not a
+   * proton wrapper (app.html) and not the picker itself must be the
+   * GAME_PAGE of exactly one catalogued game — so a page added to a
+   * multi-page folder cannot hide inside another game's app. */
+  const walk = (dir, prefix = '') => fs.readdirSync(path.join(ROOT, dir), { withFileTypes: true }).flatMap((e) => {
+    const rel = prefix + e.name;
+    if (e.isDirectory()) return walk(path.join(dir, e.name), rel + '/');
+    return e.name.endsWith('.html') ? [rel] : [];
+  });
+  const pages = walk('apps/games', 'apps/games/')
+    .filter((rel) => !rel.endsWith('/app.html') && rel !== 'apps/games/index.html')
+    .sort();
+  assert.deepEqual([...Object.values(GAME_PAGES)].sort(), pages,
+    'every game HTML file should be its own catalogued game');
+  for (const page of pages) {
+    const html = source(page);
+    assert.match(html, /<(?:html|head|body)[\s>]/i, `${page} does not look like an HTML page`);
+    /* Every asset the page loads (scripts, styles, images, frames) must
+     * ship beside it — a missing one is a broken game, even when the
+     * proton wrapper around it is fine. Navigation <a> links are not
+     * assets and may leave the app, so they are not checked here. */
+    for (const m of html.matchAll(/<(?:script|link|img|iframe|source|video|audio|embed)\b[^>]*?\b(?:src|href)\s*=\s*["']([^"']+)/gi)) {
+      const ref = m[1].trim();
+      if (!ref || /^(?:#|https?:\/\/|data:|blob:|mailto:|javascript:|\/\/)/i.test(ref)) continue;
+      const clean = ref.split('#')[0].split('?')[0];
+      if (!clean) continue;
+      const target = clean.startsWith('/')
+        ? path.join(ROOT, clean)
+        : path.join(ROOT, path.dirname(page), clean);
+      assert.ok(fs.existsSync(target), `${page} loads missing asset ${ref}`);
+    }
+    /* Inline scripts must at least parse. */
+    for (const m of html.matchAll(/<script(?![^>]*\bsrc\s*=)([^>]*)>([\s\S]*?)<\/script>/gi)) {
+      if (/\btype\s*=\s*["'](?!text\/javascript|module)[^"']+["']/i.test(m[1])) continue;
+      const code = m[2].trim();
+      if (code) assert.doesNotThrow(() => new vm.Script(code, { filename: page }), `Syntax error in inline script in ${page}`);
+    }
+  }
 });
 
 test('the system manifest still matches the repository exactly', () => {
@@ -747,7 +788,7 @@ test('Customize saves, displays and resets uploaded app icon images', async () =
     const browserWindow = w.eval('wins').get('browser');
     assert.equal(body.querySelector('#cust-files-shortcut'), null, 'Customize still offers a Files shortcut');
     assert.deepEqual([...body.querySelectorAll('#cust-modlist .card b')].map((b) => b.textContent).slice(0, SYSTEM_APPS.length),
-            ['App Center', 'Customize', 'Settings', 'About', 'Browser', 'Calculator', 'Files', 'Text Editor', 'PDF Viewer', 'Image Viewer', 'Media', 'Ruffle Flash Player', 'Web Retro', '2048', 'Bloons Tower Defense 1', 'Bloons Tower Defense 2', 'Bloons Tower Defense 5', 'Bloxorz', 'Breaking The Bank', 'Celeste Classic', 'Celeste Classic 2', 'Celeste Community', 'Cookie Clicker', 'Drive Mad', 'Escaping The Prison', 'Fleeing The Complex', 'Grey Box Testing', 'Infiltrating The Airship', 'Mari0', 'Offline Paradise', 'Pacman', 'Slope', 'Spacebar Clicker', 'Stack', 'Stealing The Diamond', 'Stickman Hook', 'Super Mario 64', 'Super Mario RPG', 'Tetris', 'The Impossible Quiz', 'Tunnel Rush', 'Retro Bowl', 'Geometry Dash', 'Slope 2', 'Bitlife', 'Crossy Road', 'Moto X3M', 'Subway Surfers', 'Drift Hunters', 'Run 3', 'Paper.io 2', 'Basketball Stars', 'Wordle']);
+            ['App Center', 'Customize', 'Settings', 'About', 'Browser', 'Calculator', 'Files', 'Text Editor', 'PDF Viewer', 'Image Viewer', 'Media', 'Ruffle Flash Player', 'Web Retro', '2048', 'Bloons Tower Defense 1', 'Bloons Tower Defense 2', 'Bloons Tower Defense 5', 'Bloxorz', 'Breaking The Bank', 'Celeste Classic', 'Celeste Classic 2', 'Celeste Community', 'Celeste Classic Practice Mod', 'Celeste Classic 2 Practice Mod 1.0', 'Celeste Classic 2 Practice Mod 1.1', 'Celeste Webek', 'Celeste Classic Downloads', 'Cookie Clicker', 'Drive Mad', 'Escaping The Prison', 'Fleeing The Complex', 'Grey Box Testing', 'Infiltrating The Airship', 'Mari0', 'Offline Paradise', 'Pacman', 'Slope', 'Spacebar Clicker', 'Stack', 'Stealing The Diamond', 'Stickman Hook', 'Super Mario 64', 'Super Mario RPG', 'Tetris', 'The Impossible Quiz', 'Tunnel Rush', 'Retro Bowl', 'Slope 2', 'Bitlife', 'Crossy Road', 'Moto X3M', 'Subway Surfers', 'Paper.io 2']);
 
     const uploadBrowserIcon = async () => {
       const input = body.querySelector('[data-micon-file="browser"]');
@@ -805,41 +846,30 @@ test('Customize saves, displays and resets uploaded app icon images', async () =
   } finally { w.close(); }
 });
 
-/* apps/_embed and websites/_embed are the "just frame a page" starting
- * points: one EMBED_URL constant to change and nothing else to edit. */
-test('the embed templates are one constant away from a working embed', () => {
+/* Embedded-page apps/sites are not shipped: apps/_embed and websites/_embed
+ * (the EMBED_URL templates) are gone, and so is every game whose page only
+ * framed a remote build - a shipped game must be files in this repository. */
+test('embedded-page templates and remote-embedded games are not shipped', () => {
   const { apps, sites } = catalog();
-  const ctx = vm.createContext({ window: {} });
-  vm.runInContext(source('data/fs-manifest.js'), ctx);
-  const listed = new Set(Array.from(ctx.window.PROTON_FS_MANIFEST, (e) => e.p));
-
-  for (const p of ['apps/_embed/app.html', 'websites/_embed/index.html']) {
-    const html = source(p);
-    /* Exactly one place to change, and it is a plain https string constant. */
-    const urls = [...html.matchAll(/^const EMBED_URL = '([^']*)';$/gm)].map((m) => m[1]);
-    assert.equal(urls.length, 1, `${p} should have one EMBED_URL constant to change`);
-    assert.match(urls[0], /^https:\/\/[^'"\s]+$/, `${p}'s EMBED_URL is not a plain https address`);
-    assert.match(html, /CHANGE ME/, `${p} no longer marks the line to change`);
-
-    // A template is a starting point: never registered, never deployed.
-    assert.ok(!apps.some((a) => a.path === p), `${p} must not be in the app catalog`);
-    assert.ok(!sites.some((s) => s.path === p), `${p} must not be in the website catalog`);
-    assert.equal(listed.has(p), false, `${p} must stay out of the generated manifest`);
-
-    // Both parse as JavaScript, and both frame the page safely.
-    const script = html.match(/<script(?: data-proton-app)?>([\s\S]*?)<\/script>/);
-    assert.ok(script, `${p} has no script block`);
-    assert.doesNotThrow(() => new vm.Script(script[1], { filename: p }), `Syntax error in ${p}`);
-    assert.match(html, /<iframe/, `${p} embeds nothing`);
-    assert.match(html, /sandbox="[^"]*allow-scripts[^"]*"/, `${p}'s frame is not sandboxed`);
-    assert.ok(!/sandbox="[^"]*allow-same-origin/.test(html),
-      `${p} must not give an embedded page same-origin access to proton's storage`);
-    assert.match(html, /Open in new tab/, `${p} needs an escape hatch for sites that refuse framing`);
+  for (const gone of ['apps/_embed', 'websites/_embed',
+    'apps/games/geometry-dash', 'apps/games/geometry-dash-1-3', 'apps/games/geometry-dash-4-6',
+    'apps/games/drift-hunters', 'apps/games/drift-hunters-game', 'apps/games/run-3',
+    'apps/games/basketball-stars', 'apps/games/wordle']) {
+    assert.equal(fs.existsSync(path.join(ROOT, gone)), false, `${gone} should be gone`);
   }
-
-  /* The commented-out example blocks in both catalogs must stay comments. */
-  assert.ok(!apps.some((a) => a.id === 'my-embed'));
-  assert.ok(!sites.some((s) => s.id === 'my-embed'));
+  for (const id of ['my-embed', 'geometry-dash', 'geometry-dash-1-3', 'geometry-dash-4-6',
+    'drift-hunters', 'drift-hunters-game', 'run-3', 'basketball-stars', 'wordle']) {
+    assert.ok(!apps.some((a) => a.id === id), `${id} should not be catalogued`);
+  }
+  assert.ok(!sites.some((s) => s.id === 'my-embed'), 'my-embed should not be a site');
+  assert.ok(!source('data/applications.js').includes('EMBED_URL'), 'app catalog still mentions EMBED_URL');
+  assert.ok(!source('data/websites.js').includes('EMBED_URL'), 'site catalog still mentions EMBED_URL');
+  /* No shipped game page frames a remote page as the game itself. */
+  for (const page of Object.values(GAME_PAGES)) {
+    const html = source(page);
+    assert.ok(!/<iframe\b[^>]*\bsrc\s*=\s*["']https?:\/\//i.test(html), `${page} frames a remote page`);
+    assert.ok(!/\.src\s*=\s*['"]https?:\/\//.test(html), `${page} points a frame at a remote page`);
+  }
 });
 
 /* The built-in test site is the smoke test for the Browser, so it has to
@@ -1376,7 +1406,7 @@ test('proton’s search engine answers from the repository itself', async () => 
       assert.ok(!indexed.has(p), `${p} is machine-written and should not be indexed`);
     }
     assert.ok(![...indexed].some((p) => p.startsWith('/tests/') || p.includes('/_')),
-      'the tests and the _template/_embed starting points are not deployed');
+      'the tests and the _template starting point are not deployed');
 
     /* The generator and the engine must fold words the same way, or a query
      * never meets the document it should. Every indexed term is a fixed point
