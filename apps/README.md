@@ -152,6 +152,18 @@ matching the menu sections (`cat=`, ordered by `CATS` in `assets/core.js`).
 | `games/` | Tetris (`tetris`) — the vendored Flash build and loader shim (from Gams-Offline/Gams `g/g/Ruffle/swfs/`; runs on the shared Ruffle player) plus its wrapper |
 | `games/` | The Impossible Quiz (`the-impossible-quiz`) — the vendored Flash build and loader shim (from Gams-Offline/Gams `g/g/Ruffle/swfs/`; runs on the shared Ruffle player) plus its wrapper |
 | `games/` | Tunnel Rush (`tunnel-rush`) — the vendored WebGL build (from Gams-Offline/Gams `g/g/`) plus its wrapper |
+| `games/` | Retro Bowl (`retro-bowl`) — the vendored GameMaker build (from mountain658 `g/retrobowl/`) plus its wrapper |
+| `games/` | Geometry Dash (`geometry-dash`) — the vendored mountain hub + Scratch pages (from mountain658 `dash/`) plus its wrapper |
+| `games/` | Slope 2 (`slope-2`) — the vendored Unity WebGL build (from mountain658 `g/slope-2/`) plus its wrapper |
+| `games/` | Bitlife (`bitlife`) — the vendored Unity WebGL build (from mountain658 `g/bitlife/`) plus its wrapper |
+| `games/` | Crossy Road (`crossy-road`) — the vendored HTML5 build (from mountain658 `g/crossyroad/`) plus its wrapper |
+| `games/` | Moto X3M (`moto-x3m`) — the vendored HTML5 build (from mountain658 `g/moto-x3m/`) plus its wrapper |
+| `games/` | Subway Surfers (`subway-surfers`) — the vendored loader + San Francisco Unity build (from mountain658 `g/subway-surfers/` and mountain658/SubwaySurfers) plus its wrapper |
+| `games/` | Drift Hunters (`drift-hunters`) — the vendored server hub + Unity build (from mountain658 `Drift-Hunters.html` and `g/drifthunters/`) plus its wrapper |
+| `games/` | Run 3 (`run-3`) — the vendored mountain page (from mountain658 `run3.html`; inner lekug build credited in CREDITS.md) plus its wrapper |
+| `games/` | Paper.io 2 (`paper-io-2`) — the vendored HTML5 build (from mountain658 `g/paperio2/`) plus its wrapper |
+| `games/` | Basketball Stars (`basketball-stars`) — the vendored mountain gadget page (from mountain658 `zBasketBallStarts.html`) plus its wrapper |
+| `games/` | Wordle (`wordle`) — the vendored mountain selector page (from mountain658 `zwordle.html`) plus its wrapper |
 | `_template/` | not an app — the starting point for a new one (copy it into its category folder) |
 | `_embed/` | not an app — the starting point for one that is only a framed page (`EMBED_URL`) |
 
