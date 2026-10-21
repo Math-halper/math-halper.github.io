@@ -16,20 +16,24 @@ load to the internals of each app.
   "Your browser desktop", and an animated progress bar. It fades out once boot
   finishes (0.4s fade).
 
-## 2. The Math Helper cover page (first visit only)
+## 2. The Math Helper cover page (every visit)
 
-The first thing a **fresh** visit sees is *Math Helper* — a full IXL-style decoy
-maths-practice site. Every control on it is intentionally dead: clicking any of
-them reports "Practice is temporarily unavailable… (error MH-503)". The one
-working control is the entry button at the very bottom. A page **refresh skips
-the cover** entirely and goes straight to sign-in.
+The first thing every visit sees is *Math Helper* — a full IXL-style decoy
+maths-practice site. Its practice controls are intentionally dead: clicking
+any of them reports "Practice is temporarily unavailable… (error MH-503)".
+The way in is the hero **search bar**: type the desktop password (stored in
+`data/password.txt`) into it and click **Sign in**. A page refresh or signing
+out returns to the cover and asks for the password again.
 
 - **Header** — "Math Helper" logo button, nav (Learning · Diagnostic ·
-  Analytics · Membership) and a **Sign in** button; all decoys.
+  Analytics · Membership; all decoys) and the working **Sign in** button,
+  which checks the password typed in the search bar.
 - **Status banner** — "Practice is temporarily unavailable." with a live region
-  (`role="status"`) whose second line changes when a dead control is pressed.
+  (`role="status"`) whose second line changes when a dead control is pressed,
+  and reports "Incorrect password…" after a failed sign-in attempt.
 - **Hero** — eyebrow "Mathematics · Pre-K to Year 12", headline, description,
-  a skill **search box** (decoy), and two buttons: *Start practicing*,
+  the **search bar** (a password field: "Enter password", with its own
+  *Sign in* submit button), and two decoy buttons: *Start practicing*,
   *Take a diagnostic*.
 - **"Today for you" side panel** — two fake recommendation rows (Multiply
   fractions 0%, Solve two-step equations 0%) with 0%-width progress bars, an
@@ -45,17 +49,23 @@ the cover** entirely and goes straight to sign-in.
 - **Made for families and classrooms** — three feature cards (Personal
   recommendations, Awards and certificates, Progress reports) with text links.
 - **Footer** — brand line and About / Help centre / Membership / Privacy links.
-- **Entry band ("Ready when you are")** — the one live control:
-  **"Continue to Math Helper"** removes the cover and enters proton (it waits
-  for module loading and shows a status message if the site was opened from
-  `file://` instead of HTTP).
+- **Entry band ("Ready when you are")** — **"Sign in to Math Helper"** does
+  the same check as the header Sign in button (with no password typed it just
+  prompts for one; it waits for module loading and shows a status message if
+  the site was opened from `file://` instead of HTTP). There is no way past
+  the cover without the password.
 
 ## 3. Auth screens
 
-All three auth screens share one card shell: the atom logo, an `h1` title, a
-subtitle line, and the form body, centred on a dark backdrop.
+Desktop entry itself needs no account form: the cover password gate (above)
+opens the local profile used last time, creating a "Student" profile on the
+first sign-in. The three card screens below share one shell — the atom logo,
+an `h1` title, a subtitle line, and the form body, centred on a dark
+backdrop — and cover locking plus the extra local profiles managed from
+Settings.
 
-- **Create your account** (first launch, or "Create an account" link) —
+- **Create your account** ("Create an account" link, or Settings → Create
+  another account) —
   explains the no-server model in a note. Fields: **Display name**, **Username**
   (letters/numbers/`_`, 3–20 chars), **Email** (optional, never sent anywhere),
   **Password** and **Confirm password** (6+ chars). Inline error line for
@@ -70,9 +80,11 @@ subtitle line, and the form body, centred on a dark backdrop.
   that refreshing signs you out while **Lock** only hides the desktop.
 - **Desktop locked** — avatar circle + display name + `@username`, a single
   **Password** field (autofocused), *Unlock* button, and a "Sign out instead"
-  link. Incorrect passwords get "Incorrect password — try again."
+  link. It asks for the same `data/password.txt` desktop password as the
+  cover gate. Incorrect passwords get "Incorrect password — try again."
 
-Every page load starts signed out; the username list is remembered on device.
+Every page load starts signed out, back on the cover; the profile used last
+time is remembered on device and reopens after the password gate.
 
 ## 4. The desktop surface
 
@@ -209,7 +221,8 @@ not be saved.", etc.).
   - **Start over** — "Reset customisations" (danger button).
 - **Settings** — account-side configuration, sectioned with icons:
   **Wallpaper** and **Accent colour** pickers; **Profile** (display name,
-  email + Save); **Change password** (current, new, confirm); **Backup
+  email + Save); **Desktop password** (a note that it lives in
+  `data/password.txt` and is changed by editing that file); **Backup
   (export / import everything for this account)** — "Export backup (.json)…"
   and "Import backup…"; quick actions (Lock, Sign out, open Customize, add
   account); **Accounts on this device** (list of local accounts); and a
@@ -349,6 +362,6 @@ to embed you should use "Open in new tab" (proton never proxies it).
 - Double-click opens desktop shortcuts; drag moves them; start-menu apps drag
   onto the desktop; Files entries can be dragged out or right-clicked for
   "Add desktop shortcut".
-- Everything is per-account and on-device: refreshing signs you out (Lock is
-  the way to hide without signing out), and Settings can export/import a JSON
-  backup or delete the account entirely.
+- Everything is per-account and on-device: refreshing signs you out to the
+  cover password gate (Lock is the way to hide without signing out), and
+  Settings can export/import a JSON backup or delete the account entirely.

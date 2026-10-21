@@ -28,8 +28,9 @@
 
 <!-- Math Helper cover page. This is the public, IXL-style decoy shown
      before the real proton website. Its practice controls deliberately
-     report that practice is unavailable; the only working control is the
-     "Continue to Math Helper" button at the very bottom (assets/boot.js). -->
+     report that practice is unavailable. To enter proton, type the desktop
+     password from data/password.txt into the hero search bar and click
+     Sign in (assets/boot.js checks it before the desktop is shown). -->
 <main id="cover" class="cover" aria-label="Math Helper cover page">
   <header class="cover-header">
     <button type="button" class="cover-logo cover-broken" aria-label="Math Helper home">Math <span>Helper</span></button>
@@ -39,7 +40,7 @@
       <button type="button" class="cover-broken">Analytics</button>
       <button type="button" class="cover-broken">Membership</button>
     </nav>
-    <button type="button" class="cover-signin cover-broken">Sign in</button>
+    <button type="button" id="cover-signin" class="cover-signin">Sign in</button>
   </header>
 
   <div class="cover-status" role="status" aria-live="polite">
@@ -53,9 +54,9 @@
       <h1>Practice that helps every learner grow</h1>
       <p>Explore thousands of maths skills, personalised recommendations and step-by-step explanations — all organised by grade and topic.</p>
       <form id="cover-search" class="cover-search">
-        <label class="cover-sr" for="cover-q">Search skills</label>
-        <input id="cover-q" type="search" placeholder="Search skills, topics or grades">
-        <button type="submit">Search</button>
+        <label class="cover-sr" for="cover-q">Desktop password</label>
+        <input id="cover-q" type="password" placeholder="Enter password" autocomplete="current-password">
+        <button type="submit">Sign in</button>
       </form>
       <div class="cover-hero-actions">
         <button type="button" class="cover-btn cover-btn-primary cover-broken">Start practicing</button>
@@ -131,8 +132,8 @@
   <section class="cover-entry" aria-labelledby="cover-entry-title">
     <p class="cover-eyebrow">Math Helper workspace</p>
     <h2 id="cover-entry-title">Ready when you are</h2>
-    <p>Continue to the full Math Helper website.</p>
-    <button type="button" id="cover-enter" class="cover-enter">Continue to Math Helper</button>
+    <p>Enter the desktop password in the search bar above, then sign in to open the full Math Helper website.</p>
+    <button type="button" id="cover-enter" class="cover-enter">Sign in to Math Helper</button>
   </section>
 </main>
 

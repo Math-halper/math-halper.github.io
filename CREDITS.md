@@ -18,7 +18,7 @@ and look wherever a browser-only equivalent exists:
 | Upstream (Mixt) | Here (proton) |
 | --- | --- |
 | Mint-Y theme `src/gui/src/css/mixt.css` (accent `#68b723`, light gradient title bars, dark bottom panel) | Panel layout/chrome reimplemented in `assets/styles.css`, with the palette changed to black-and-white for proton |
-| Server accounts, `admin` first sign-in, whitelist | First-launch account creation stored **only in this browser** (localStorage), salted password hash, sign-in on every refresh, lock screen |
+| Server accounts, `admin` first sign-in, whitelist | Local profiles stored **only in this browser** (localStorage), a shared desktop password in `data/password.txt` asked on every refresh, lock screen |
 | IndexedDB app storage (`src/apps/shared/localdb.js`) | Per-account localStorage state, export/import backup in Settings |
 | `src/apps/notes`, `calendar`, `spreadsheet`, `whiteboard`, `presentation`, `terminal`, `pdf-editor`, `media`, `mail`, `contacts` | Were browser-only rewrites with the same core behaviour — **removed**; see below |
 | `src/apps/sudoku/logic.js`, `checkers`, `chess`, `klondike`, `backgammon` | Sudoku generator/checker was adapted from the original pure-logic file, the other games reimplemented to the same rules — **removed** |

@@ -1,9 +1,10 @@
 /* proton — storage + accounts (browser-only, localStorage).
  *
  * No server exists on a static site, so accounts live on THIS device only.
- * Passwords are never stored in plain text: we keep a per-user random salt
- * and a SHA-256 hash (crypto.subtle). Where subtle crypto is unavailable
- * (non-secure context) we fall back to a salted FNV-1a hash and say so.
+ * Desktop entry is gated by the shared password in data/password.txt
+ * (checked by assets/boot.js); the per-account salt + SHA-256 hash kept
+ * here (crypto.subtle, with a salted FNV-1a fallback where subtle crypto is
+ * unavailable) is only the local profile record created from it.
  *
  * Data layout:
  *   mhOS.accounts.v1       { [usernameLower]: account }

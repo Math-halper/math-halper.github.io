@@ -452,6 +452,115 @@ test('the system manifest still matches the repository exactly', () => {
     'Manifest and repository disagree — re-run python3 tools/gen-fs-manifest.py');
 });
 
+test('the cover search bar and Sign in button gate the desktop with data/password.txt', async () => {
+  /* The editable password file: the first line that is not blank and does
+   * not start with # is the password. */
+  const password = source('data/password.txt').split(/\r?\n/)
+    .map((l) => l.trim()).find((l) => l && !l.startsWith('#'));
+  assert.ok(password, 'data/password.txt should contain a password line');
+  const index = source('index.html');
+  assert.match(index, /<input id="cover-q" type="password"[^>]*placeholder="Enter password"/,
+    'the cover search bar should be the password field');
+  assert.match(index, /<button type="button" id="cover-signin" class="cover-signin">Sign in<\/button>/,
+    'the cover should have a working Sign in button');
+  assert.ok(!index.includes('cover-signin cover-broken'), 'Sign in must not be a dead cover control');
+  const boot = source('assets/boot.js');
+  assert.ok(boot.includes("fetch('data/password.txt'"), 'the gate should read data/password.txt');
+  assert.ok(!boot.includes('isPageReload'), 'a refresh must not skip the password gate');
+
+  const virtualConsole = new VirtualConsole(), errors = [];
+  virtualConsole.on('jsdomError', (err) => errors.push(err.message));
+  const dom = new JSDOM(index, {
+    url: 'https://math-halper.github.io/', runScripts: 'dangerously',
+    pretendToBeVisual: true, virtualConsole,
+  });
+  const { window: w } = dom;
+  w.URL.createObjectURL = () => 'blob:mock';
+  w.URL.revokeObjectURL = () => {};
+  w.Element.prototype.scrollIntoView = function () {};
+  w.TextEncoder = TextEncoder;
+  w.TextDecoder = TextDecoder;
+  w.Blob.prototype.arrayBuffer = function () {
+    return new Promise((resolve, reject) => {
+      const reader = new w.FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(new Error('FileReader could not read the blob'));
+      reader.readAsArrayBuffer(this);
+    });
+  };
+  const run = (text) => {
+    const script = w.document.createElement('script');
+    script.textContent = text; w.document.body.appendChild(script); script.remove();
+  };
+  const until = async (pred, label) => {
+    for (let i = 0; i < 200; i++) {
+      if (pred()) return;
+      await new Promise((r) => setTimeout(r, 10));
+    }
+    assert.fail(`timed out waiting for ${label}; jsdom errors: ${errors.join(' | ')}`);
+  };
+  try {
+    for (const p of SHELL) run(source(p));
+    w.fetchText = async (p) => source(p);
+    w.fetch = async (url) => ({
+      ok: true, status: 200,
+      text: async () => source(new URL(url, w.location.href).pathname.slice(1)),
+    });
+    run(boot);
+    await until(() => w.eval('protonModulesReady') === true, 'the desktop modules to load');
+    const cover = w.document.querySelector('#cover');
+    const desktop = w.document.querySelector('#desktop');
+    const input = w.document.querySelector('#cover-q');
+    const status = () => w.document.querySelector('#cover-status').textContent;
+    assert.equal(cover.hidden, false, 'the cover should be shown first');
+    assert.equal(desktop.hidden, true, 'the desktop should start hidden behind the gate');
+
+    /* The bottom button is not a bypass: with no password it only prompts. */
+    w.document.querySelector('#cover-enter').click();
+    assert.equal(desktop.hidden, true, 'the bottom button must not bypass the password');
+    assert.match(status(), /Enter the desktop password/);
+
+    /* A wrong password typed in the search bar and Sign in keeps it hidden. */
+    input.value = 'not the password';
+    w.document.querySelector('#cover-signin').click();
+    await until(() => /Incorrect password/.test(status()), 'the wrong-password message');
+    assert.equal(desktop.hidden, true, 'a wrong password must not open the desktop');
+    assert.equal(cover.hidden, false);
+
+    /* The password from data/password.txt, then Sign in, opens the desktop
+     * on a fresh local profile. */
+    input.value = password;
+    w.document.querySelector('#cover-signin').click();
+    await until(() => desktop.hidden === false, 'the desktop after Sign in');
+    assert.equal(cover.hidden, true, 'the cover should hide once signed in');
+    assert.equal(w.eval('currentUser.username'), 'student');
+    assert.ok(w.localStorage.getItem('mhOS.accounts.v1').includes('student'),
+      'the first sign-in should create the local desktop profile');
+
+    /* Locking asks for that same file password, not anything else. */
+    w.eval('lockDesktop()');
+    assert.equal(desktop.hidden, true);
+    const lockPass = w.document.querySelector('#lk-pass');
+    const lockForm = w.document.querySelector('#lock-form');
+    lockPass.value = 'not the password';
+    lockForm.dispatchEvent(new w.Event('submit', { bubbles: true, cancelable: true }));
+    await until(() => /Incorrect password/.test(w.document.querySelector('#lk-err').textContent),
+      'the wrong lock password message');
+    assert.equal(desktop.hidden, true, 'a wrong lock password must not unlock');
+    lockPass.value = password;
+    lockForm.dispatchEvent(new w.Event('submit', { bubbles: true, cancelable: true }));
+    await until(() => desktop.hidden === false, 'the desktop after unlocking');
+
+    /* Signing out returns to the cover with the password cleared. */
+    w.eval('signOut()');
+    assert.equal(desktop.hidden, true);
+    assert.equal(cover.hidden, false, 'signing out should show the cover gate again');
+    assert.equal(input.value, '', 'signing out should clear the password field');
+  } finally {
+    w.close();
+  }
+});
+
 test('the desktop boots, lists and opens all catalogued apps', async () => {
   const virtualConsole = new VirtualConsole(), errors = [];
   virtualConsole.on('jsdomError', (err) => errors.push(err.message));
@@ -1379,7 +1488,7 @@ test('proton’s search engine answers from the repository itself', async () => 
     /* Machine-written files have no prose, and the tests and the copy-me
      * templates are not part of the deployed site. */
     for (const p of ['/package.json', '/package-lock.json', '/.gitignore', '/.nojekyll',
-      '/data/fs-manifest.js', '/data/search-index.js']) {
+      '/data/fs-manifest.js', '/data/search-index.js', '/data/password.txt']) {
       assert.ok(!indexed.has(p), `${p} is machine-written and should not be indexed`);
     }
     assert.ok(![...indexed].some((p) => p.startsWith('/tests/') || p.includes('/_')),

@@ -47,9 +47,11 @@ SELF = 'data/search-index.js'
 # underscore-prefixed copy-me templates are not part of the deployed site.
 EXCLUDE_DIRS = {'.git', '.arena', 'node_modules', '__pycache__', '.cache', '.pytest_cache',
                 '.venv', 'dist', 'build', 'coverage', '.next', 'tests'}
-# Machine-written or machine-only files: no prose worth searching.
+# Machine-written or machine-only files: no prose worth searching. The
+# desktop password file is excluded too — its contents are a credential,
+# not prose, and must never surface as a search result.
 EXCLUDE_FILES = {'package-lock.json', 'package.json', '.nojekyll', '.gitignore',
-                 'data/fs-manifest.js', SELF}
+                 'data/fs-manifest.js', 'data/password.txt', SELF}
 
 # Per-document caps keep one long file (LICENSE.txt, a big app module) from
 # dominating the index. Text beyond the cap is still on disk and still
