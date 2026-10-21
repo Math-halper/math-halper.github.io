@@ -150,13 +150,6 @@ matching the menu sections (`cat=`, ordered by `CATS` in `assets/core.js`).
 | `games/` | Tetris (`tetris`) — the vendored Flash build and loader shim (from Gams-Offline/Gams `g/g/Ruffle/swfs/`; runs on the shared Ruffle player) plus its wrapper |
 | `games/` | The Impossible Quiz (`the-impossible-quiz`) — the vendored Flash build and loader shim (from Gams-Offline/Gams `g/g/Ruffle/swfs/`; runs on the shared Ruffle player) plus its wrapper |
 | `games/` | Tunnel Rush (`tunnel-rush`) — the vendored WebGL build (from Gams-Offline/Gams `g/g/`) plus its wrapper |
-| `games/` | Retro Bowl (`retro-bowl`) — the GameMaker HTML5 build plus its wrapper |
-| `games/` | Slope 2 (`slope-2`) — the Unity WebGL build plus its wrapper |
-| `games/` | Bitlife (`bitlife`) — the Unity WebGL build plus its wrapper |
-| `games/` | Crossy Road (`crossy-road`) — the HTML5 build plus its wrapper |
-| `games/` | Moto X3M (`moto-x3m`) — the HTML5 build plus its wrapper |
-| `games/` | Subway Surfers (`subway-surfers`) — the loader + San Francisco Unity build plus its wrapper |
-| `games/` | Paper.io 2 (`paper-io-2`) — the HTML5 build plus its wrapper |
 | `_template/` | not an app — the starting point for a new one (copy it into its category folder) |
 
 ### Desktop shortcut workflow

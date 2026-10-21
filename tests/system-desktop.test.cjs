@@ -56,14 +56,8 @@ const SYSTEM_APPS = ['appcenter', 'customize', 'settings', 'about', 'browser',
   'super-mario-rpg',
   'tetris',
   'the-impossible-quiz',
-  'tunnel-rush',
-  'retro-bowl',
-  'slope-2',
-  'bitlife',
-  'crossy-road',
-  'moto-x3m',
-  'subway-surfers',
-  'paper-io-2'];
+  'tunnel-rush'];
+
 /* Menu sections for each app (data/applications.js cat=), in catalog order.
  * Every new app is filed here with its respective section — the catalog test
  * asserts each app's cat matches, and the boot test asserts the five menu
@@ -106,13 +100,6 @@ const SYSTEM_CATS = {
   'tetris': 'Games',
   'the-impossible-quiz': 'Games',
   'tunnel-rush': 'Games',
-  'retro-bowl': 'Games',
-  'slope-2': 'Games',
-  'bitlife': 'Games',
-  'crossy-road': 'Games',
-  'moto-x3m': 'Games',
-  'subway-surfers': 'Games',
-  'paper-io-2': 'Games',
   'web-retro': 'Tools',
 };
 /* Each game app frames the game page that ships in its own folder. */
@@ -150,13 +137,6 @@ const GAME_PAGES = {
   'tetris': 'apps/games/tetris/tetris.html',
   'the-impossible-quiz': 'apps/games/the-impossible-quiz/theimpossiblequiz.html',
   'tunnel-rush': 'apps/games/tunnel-rush/tunnelrush.html',
-  'retro-bowl': 'apps/games/retro-bowl/index.html',
-  'slope-2': 'apps/games/slope-2/index.html',
-  'bitlife': 'apps/games/bitlife/index.html',
-  'crossy-road': 'apps/games/crossy-road/index.html',
-  'moto-x3m': 'apps/games/moto-x3m/index.html',
-  'subway-surfers': 'apps/games/subway-surfers/index.html',
-  'paper-io-2': 'apps/games/paper-io-2/paperio2.html',
 };
 /* Games whose pages carry the source sites' href="../" all-games link. */
 const PICKER_LINKED = ['celeste-classic', 'celeste-two', 'celeste-community', 'cookie-clicker', 'sm64'];
@@ -235,13 +215,6 @@ test('the catalog is the desktop apps, the file system suite, a calculator, web 
     'tetris': 'data/icons/tetris.png',
     'the-impossible-quiz': 'data/icons/the-impossible-quiz.png',
     'tunnel-rush': 'data/icons/tunnel-rush.png',
-    'retro-bowl': 'data/icons/retro-bowl.png',
-    'slope-2': 'data/icons/slope-2.png',
-    'bitlife': 'data/icons/bitlife.png',
-    'crossy-road': 'data/icons/crossy-road.png',
-    'moto-x3m': 'data/icons/moto-x3m.png',
-    'subway-surfers': 'data/icons/subway-surfers.png',
-    'paper-io-2': 'data/icons/paper-io-2.png',
     'web-retro': 'data/icons/webretro.png' };
   assert.deepEqual(Array.from(apps, (a) => a.svgIcon), SYSTEM_APPS.map((id) => !RASTER_ICON_APPS[id]));
   const iconById = Object.fromEntries(Array.from(apps, (a) => [a.id, a.icon]));
@@ -364,14 +337,6 @@ test('every catalog entry points at a real, syntactically valid app module', () 
     ['apps/games/mari0/game.data', 3000000],
     ['apps/games/sm64/sm64.us.f3dex2e.wasm', 15000000],
     ['apps/games/sm64/sm64.us.f3dex2e.js', 200000],
-    ['apps/games/retro-bowl/html5game/RetroBowl.js', 5000000],
-    ['apps/games/slope-2/WebGL2Players v1.1.data.unityweb', 2000000],
-    ['apps/games/bitlife/Build/BitLife.data.unityweb', 10000000],
-    ['apps/games/crossy-road/scripts/game.min.js', 500000],
-    ['apps/games/moto-x3m/motox3m.min.js', 1000000],
-    ['apps/games/subway-surfers/SanFrancisco.data.unityweb', 20000000],
-    ['apps/games/subway-surfers/SanFrancisco.wasm.code.unityweb', 20000000],
-    ['apps/games/paper-io-2/js/app-new-gm.js', 400000],
   ]) {
     assert.ok(fs.statSync(path.join(ROOT, p)).size >= min, `${p} is not the real game build`);
   }
@@ -788,7 +753,7 @@ test('Customize saves, displays and resets uploaded app icon images', async () =
     const browserWindow = w.eval('wins').get('browser');
     assert.equal(body.querySelector('#cust-files-shortcut'), null, 'Customize still offers a Files shortcut');
     assert.deepEqual([...body.querySelectorAll('#cust-modlist .card b')].map((b) => b.textContent).slice(0, SYSTEM_APPS.length),
-            ['App Center', 'Customize', 'Settings', 'About', 'Browser', 'Calculator', 'Files', 'Text Editor', 'PDF Viewer', 'Image Viewer', 'Media', 'Ruffle Flash Player', 'Web Retro', '2048', 'Bloons Tower Defense 1', 'Bloons Tower Defense 2', 'Bloons Tower Defense 5', 'Bloxorz', 'Breaking The Bank', 'Celeste Classic', 'Celeste Classic 2', 'Celeste Community', 'Celeste Classic Practice Mod', 'Celeste Classic 2 Practice Mod 1.0', 'Celeste Classic 2 Practice Mod 1.1', 'Celeste Webek', 'Celeste Classic Downloads', 'Cookie Clicker', 'Drive Mad', 'Escaping The Prison', 'Fleeing The Complex', 'Grey Box Testing', 'Infiltrating The Airship', 'Mari0', 'Offline Paradise', 'Pacman', 'Slope', 'Spacebar Clicker', 'Stack', 'Stealing The Diamond', 'Stickman Hook', 'Super Mario 64', 'Super Mario RPG', 'Tetris', 'The Impossible Quiz', 'Tunnel Rush', 'Retro Bowl', 'Slope 2', 'Bitlife', 'Crossy Road', 'Moto X3M', 'Subway Surfers', 'Paper.io 2']);
+            ['App Center', 'Customize', 'Settings', 'About', 'Browser', 'Calculator', 'Files', 'Text Editor', 'PDF Viewer', 'Image Viewer', 'Media', 'Ruffle Flash Player', 'Web Retro', '2048', 'Bloons Tower Defense 1', 'Bloons Tower Defense 2', 'Bloons Tower Defense 5', 'Bloxorz', 'Breaking The Bank', 'Celeste Classic', 'Celeste Classic 2', 'Celeste Community', 'Celeste Classic Practice Mod', 'Celeste Classic 2 Practice Mod 1.0', 'Celeste Classic 2 Practice Mod 1.1', 'Celeste Webek', 'Celeste Classic Downloads', 'Cookie Clicker', 'Drive Mad', 'Escaping The Prison', 'Fleeing The Complex', 'Grey Box Testing', 'Infiltrating The Airship', 'Mari0', 'Offline Paradise', 'Pacman', 'Slope', 'Spacebar Clicker', 'Stack', 'Stealing The Diamond', 'Stickman Hook', 'Super Mario 64', 'Super Mario RPG', 'Tetris', 'The Impossible Quiz', 'Tunnel Rush']);
 
     const uploadBrowserIcon = async () => {
       const input = body.querySelector('[data-micon-file="browser"]');
@@ -852,13 +817,11 @@ test('Customize saves, displays and resets uploaded app icon images', async () =
 test('embedded-page templates and remote-embedded games are not shipped', () => {
   const { apps, sites } = catalog();
   for (const gone of ['apps/_embed', 'websites/_embed',
-    'apps/games/geometry-dash', 'apps/games/geometry-dash-1-3', 'apps/games/geometry-dash-4-6',
     'apps/games/drift-hunters', 'apps/games/drift-hunters-game', 'apps/games/run-3',
     'apps/games/basketball-stars', 'apps/games/wordle']) {
     assert.equal(fs.existsSync(path.join(ROOT, gone)), false, `${gone} should be gone`);
   }
-  for (const id of ['my-embed', 'geometry-dash', 'geometry-dash-1-3', 'geometry-dash-4-6',
-    'drift-hunters', 'drift-hunters-game', 'run-3', 'basketball-stars', 'wordle']) {
+  for (const id of ['my-embed', 'drift-hunters', 'drift-hunters-game', 'run-3', 'basketball-stars', 'wordle']) {
     assert.ok(!apps.some((a) => a.id === id), `${id} should not be catalogued`);
   }
   assert.ok(!sites.some((s) => s.id === 'my-embed'), 'my-embed should not be a site');
@@ -1056,10 +1019,13 @@ test('the Files app manages the account’s folders and files end to end', async
     assert.ok(body.querySelector('#fm-side [data-go="/apps"]'), 'the sidebar lists the read-only system tree');
     assert.match(body.querySelector('#fm-status').textContent, /Your home: 3 files, 4 folders/);
 
-    // Double-click walks into a folder.
-    rowOf(`${HOME}/Documents`).dispatchEvent(new w.MouseEvent('dblclick', { bubbles: true }));
+    // A plain click walks into a folder (and a plain click on a file opens it).
+    rowOf(`${HOME}/Documents`).dispatchEvent(new w.MouseEvent('click', { bubbles: true }));
     assert.equal(body.querySelector('#fm-path').value, `${HOME}/Documents`);
     assert.deepEqual(rows(), [`${HOME}/Documents/Ideas.txt`, `${HOME}/Documents/Welcome.txt`]);
+    rowOf(`${HOME}/Documents/Welcome.txt`).dispatchEvent(new w.MouseEvent('click', { bubbles: true }));
+    assert.ok(wins.has('text-editor'), 'a plain click on a file opens it');
+    w.closeWin('text-editor', true);
 
     // New folder: created in the VFS, listed, and saved with the account.
     body.querySelector('#fm-new-folder').click();
@@ -1148,7 +1114,7 @@ test('the Files app manages the account’s folders and files end to end', async
     const imported = new w.File(['imported bytes'], 'note.txt', { type: 'text/plain' });
     const fileInput = body.querySelector('#fm-file');
     Object.defineProperty(fileInput, 'files', { configurable: true, value: [imported] });
-    rowOf(`${HOME}/Documents`).dispatchEvent(new w.MouseEvent('dblclick', { bubbles: true }));
+    rowOf(`${HOME}/Documents`).dispatchEvent(new w.MouseEvent('click', { bubbles: true }));
     await fileInput.onchange({ target: fileInput });
     await settle();
     assert.equal(w.eval(`FS.stat('${HOME}/Documents/note.txt')?.size`), 14, 'the imported file is in the account');
@@ -1176,8 +1142,9 @@ test('the Files app manages the account’s folders and files end to end', async
     const before = blobs.length;
     body.querySelector('#fm-up').click();                    // back out to /home/ada
     assert.equal(body.querySelector('#fm-path').value, HOME);
-    rowOf(`${HOME}/Documents`).dispatchEvent(new w.MouseEvent('click', { bubbles: true }));
-    assert.match(body.querySelector('#fm-status').textContent, /Selected 1/, 'the click selected the folder');
+    rowOf(`${HOME}/Documents`).dispatchEvent(new w.MouseEvent('click', { bubbles: true, ctrlKey: true }));
+    assert.match(body.querySelector('#fm-status').textContent, /Selected 1/, 'Ctrl-click selected the folder without opening it');
+    assert.equal(body.querySelector('#fm-path').value, HOME, 'Ctrl-click did not navigate into it');
     body.querySelector('#fm-download').click();
     await settle();
     w.document.querySelector('.file-source-backdrop [data-fs="device"]').click(); // to this computer
@@ -1187,7 +1154,7 @@ test('the Files app manages the account’s folders and files end to end', async
     assert.ok(blobs[blobs.length - 1].size > 100, 'the archive holds the folder, not just a header');
 
     // Delete removes it from the account (confirm() is stubbed to yes).
-    rowOf(`${HOME}/Documents`).dispatchEvent(new w.MouseEvent('dblclick', { bubbles: true }));
+    rowOf(`${HOME}/Documents`).dispatchEvent(new w.MouseEvent('click', { bubbles: true }));
     menu = openMenu(`${HOME}/Documents/Notes`);
     clickLabel(menu, 'Delete');
     assert.equal(w.eval(`FS.exists('${HOME}/Documents/Notes')`), false, 'the folder is gone');
@@ -1196,8 +1163,8 @@ test('the Files app manages the account’s folders and files end to end', async
 
     // The proton system tree is browsable but locked.
     body.querySelector('#fm-side [data-go="/apps"]').click();
-    rowOf('/apps/productivity').dispatchEvent(new w.MouseEvent('dblclick', { bubbles: true }));
-    rowOf('/apps/productivity/files').dispatchEvent(new w.MouseEvent('dblclick', { bubbles: true }));
+    rowOf('/apps/productivity').dispatchEvent(new w.MouseEvent('click', { bubbles: true }));
+    rowOf('/apps/productivity/files').dispatchEvent(new w.MouseEvent('click', { bubbles: true }));
     assert.equal(body.querySelector('#fm-path').value, '/apps/productivity/files');
     assert.ok(rows().includes('/apps/productivity/files/app.html'), 'the manifest tree is browsable');
     assert.equal(body.querySelector('#fm-new-folder').disabled, true, 'nothing can be created in the system tree');
@@ -1208,7 +1175,7 @@ test('the Files app manages the account’s folders and files end to end', async
     // as text, while the imported note.txt above stayed editable text.
     body.querySelector(`#fm-side [data-go="${HOME}"]`).click();   // sidebar: Home
     assert.equal(body.querySelector('#fm-path').value, HOME);
-    rowOf(`${HOME}/Documents`).dispatchEvent(new w.MouseEvent('dblclick', { bubbles: true }));
+    rowOf(`${HOME}/Documents`).dispatchEvent(new w.MouseEvent('click', { bubbles: true }));
     const picture = new w.File([new Uint8Array([137, 80, 78, 71])], 'dot.png', { type: 'image/png' });
     Object.defineProperty(fileInput, 'files', { configurable: true, value: [picture] });
     await fileInput.onchange({ target: fileInput });
