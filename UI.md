@@ -48,11 +48,12 @@ again; a wrong password gets no visible response.
 - **Made for families and classrooms** — three feature cards (Personal
   recommendations, Awards and certificates, Progress reports) with text links.
 - **Footer** — brand line and About / Help centre / Membership / Privacy links.
-- **Entry band ("Ready when you are")** — **"Sign in to Math Helper"** does
-  the same silent check as the header Sign in button: with no password (or a
-  wrong one) nothing visibly happens; with the right one it enters proton
-  once the modules have loaded. There is no way past the cover without the
-  password.
+- **Entry band ("Ready when you are")** — **"Continue to Math Helper"** does
+  not enter the desktop. It locks the page on the full-screen, full-volume
+  looping *You Are An Idiot* video (`assets/youare.mp4`, vendored in this
+  repository) and keeps requesting full screen if the browser leaves it.
+  The only way into proton remains the password in the search bar plus the
+  header **Sign in**.
 
 ## 3. Auth screens
 

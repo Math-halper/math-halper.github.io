@@ -103,6 +103,16 @@ those builds are no longer bundled here. Their upstream projects' licences and
 copyrights are unaffected, and this repository grants no rights in their game
 content.
 
+## Vendored cover video
+
+`assets/youare.mp4` is the looping *You Are An Idiot* video used by the
+cover's bottom **Continue to Math Helper** button, copied directly into this
+repository from the `media/youare.mp4` file in the
+[Mist0090/youareanidiot.cc](https://github.com/Mist0090/youareanidiot.cc)
+mirror of [youareanidiot.cc](https://youareanidiot.cc/). All rights in the
+video and its audio remain with their original creators; this repository
+grants no rights in that content.
+
 ## Vendored Celeste Classics
 
 The Celeste apps carry the **actual game files**, copied from

@@ -470,11 +470,20 @@ test('the cover search bar and Sign in button gate the desktop with data/passwor
     'Skill service offline', 'Recommendations could not be refreshed', '>Unavailable<', 'width:0%']) {
     assert.ok(!index.includes(sign), `the cover should not show "${sign}"`);
   }
+  assert.match(index, /<button type="button" id="cover-enter" class="cover-enter">Continue to Math Helper<\/button>/,
+    'the bottom button should be Continue to Math Helper');
+  assert.match(index, /<video id="idiot-video" src="assets\/youare\.mp4" loop/,
+    'the Continue trap should use the video file vendored in this repository');
+  assert.ok(fs.existsSync(path.join(ROOT, 'assets/youare.mp4')), 'assets/youare.mp4 should be in the repository');
+  assert.ok(fs.statSync(path.join(ROOT, 'assets/youare.mp4')).size > 1_000_000,
+    'assets/youare.mp4 should contain the real video, not a placeholder');
   const boot = source('assets/boot.js');
   assert.ok(boot.includes("fetch('data/password.txt'"), 'the gate should read data/password.txt');
   assert.ok(!boot.includes('isPageReload'), 'a refresh must not skip the password gate');
   assert.ok(!boot.includes('coverUnavailable') && !boot.includes('cover-status'),
     'clicking a cover control should not report that anything is unavailable');
+  assert.ok(boot.includes('lockIdiotVideo') && boot.includes('requestFullscreen'),
+    'Continue should lock the looping video in full screen');
 
   const virtualConsole = new VirtualConsole(), errors = [];
   virtualConsole.on('jsdomError', (err) => errors.push(err.message));
@@ -495,6 +504,12 @@ test('the cover search bar and Sign in button gate the desktop with data/passwor
       reader.onerror = () => reject(new Error('FileReader could not read the blob'));
       reader.readAsArrayBuffer(this);
     });
+  };
+  /* jsdom cannot play media or enter full screen; record both instead. */
+  w.HTMLMediaElement.prototype.play = function () { this.dataset.played = 'true'; return Promise.resolve(); };
+  w.HTMLMediaElement.prototype.pause = function () {};
+  w.document.querySelector('#idiot-lock').requestFullscreen = function () {
+    this.dataset.fullscreen = 'requested'; return Promise.resolve();
   };
   const run = (text) => {
     const script = w.document.createElement('script');
@@ -530,11 +545,6 @@ test('the cover search bar and Sign in button gate the desktop with data/passwor
     w.document.querySelector('.cover-decoy').click();
     assert.equal(desktop.hidden, true);
     assert.equal(cover.textContent, coverText, 'a dead cover control should not change the page');
-
-    /* The bottom button is not a bypass: with no password it stays silent. */
-    w.document.querySelector('#cover-enter').click();
-    assert.equal(desktop.hidden, true, 'the bottom button must not bypass the password');
-    assert.equal(cover.textContent, coverText, 'an empty sign-in should not prompt or report an error');
 
     /* A wrong password typed in the search bar and Sign in keeps the
      * desktop hidden, with no visible response either. */
@@ -574,6 +584,21 @@ test('the cover search bar and Sign in button gate the desktop with data/passwor
     assert.equal(desktop.hidden, true);
     assert.equal(cover.hidden, false, 'signing out should show the cover gate again');
     assert.equal(input.value, '', 'signing out should clear the password field');
+
+    /* The bottom Continue to Math Helper button does not enter the desktop:
+     * it locks the page on the full-screen, full-volume looping video. */
+    const idiotLock = w.document.querySelector('#idiot-lock');
+    const idiotVideo = w.document.querySelector('#idiot-video');
+    assert.equal(idiotLock.hidden, true);
+    w.document.querySelector('#cover-enter').click();
+    assert.equal(desktop.hidden, true, 'Continue must not bypass the password gate');
+    assert.equal(idiotLock.hidden, false, 'Continue should reveal the video lock');
+    assert.equal(idiotVideo.loop, true, 'the video should loop indefinitely');
+    assert.equal(idiotVideo.muted, false, 'the video should not be muted');
+    assert.equal(idiotVideo.volume, 1, 'the video should be at full volume');
+    assert.equal(idiotVideo.dataset.played, 'true', 'Continue should start the video');
+    assert.equal(idiotLock.dataset.fullscreen, 'requested',
+      'Continue should request full screen for the video lock');
   } finally {
     w.close();
   }

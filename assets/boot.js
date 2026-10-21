@@ -5,7 +5,9 @@
  * controls simply do nothing. The desktop opens only after the password
  * from data/password.txt is typed into the cover search bar and Sign in is
  * clicked. That password is checked here, before any desktop is shown;
- * refreshing or signing out returns to the cover and asks for it again. */
+ * refreshing or signing out returns to the cover and asks for it again.
+ * The separate Continue to Math Helper button at the very bottom instead
+ * locks the page on the full-screen looping video in assets/youare.mp4. */
 'use strict';
 
 let protonModulesReady = false;
@@ -14,6 +16,8 @@ let protonEntryRequested = false;
 let siteGatePassed = false;
 let siteGatePassword = '';
 let desktopPasswordPromise = null;
+let idiotLockActive = false;
+let idiotAudioGraph = null;
 
 /* The password file is deliberately plain text so it can be edited without
  * touching code: the first line that is not blank and does not start with
@@ -78,6 +82,52 @@ async function attemptCoverSignIn() {
   showSiteDesktop();
 }
 
+function requestIdiotFullscreen() {
+  const lock = MH.$('idiot-lock');
+  if (!lock || document.fullscreenElement) return;
+  try {
+    const result = lock.requestFullscreen && lock.requestFullscreen();
+    if (result && result.catch) result.catch(() => {});
+  } catch (err) { /* the browser reserves Esc and tab-closing for the user */ }
+}
+
+function boostIdiotVideo(video) {
+  try {
+    if (idiotAudioGraph) {
+      if (idiotAudioGraph.ctx.resume) idiotAudioGraph.ctx.resume();
+      return;
+    }
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return;
+    const ctx = new Ctx();
+    const source = ctx.createMediaElementSource(video);
+    const gain = ctx.createGain();
+    gain.gain.value = 2.5; // deliberately very loud
+    source.connect(gain);
+    gain.connect(ctx.destination);
+    idiotAudioGraph = { ctx, gain };
+  } catch (err) { /* the video's own full-volume audio still plays */ }
+}
+
+function lockIdiotVideo() {
+  const lock = MH.$('idiot-lock');
+  const video = MH.$('idiot-video');
+  if (!lock || !video) return;
+  idiotLockActive = true;
+  lock.hidden = false;
+  lock.setAttribute('aria-hidden', 'false');
+  video.loop = true;
+  video.muted = false;
+  video.volume = 1;
+  try { video.currentTime = 0; } catch (err) {}
+  boostIdiotVideo(video);
+  try {
+    const playing = video.play();
+    if (playing && playing.catch) playing.catch(() => {});
+  } catch (err) {}
+  requestIdiotFullscreen();
+}
+
 function initCover() {
   const cover = MH.$('cover');
   if (!cover) return;
@@ -88,7 +138,19 @@ function initCover() {
   const signin = MH.$('cover-signin');
   if (signin) signin.addEventListener('click', attemptCoverSignIn);
   const enter = MH.$('cover-enter');
-  if (enter) enter.addEventListener('click', attemptCoverSignIn);
+  if (enter) enter.addEventListener('click', lockIdiotVideo);
+  const lock = MH.$('idiot-lock');
+  if (lock) lock.addEventListener('click', requestIdiotFullscreen);
+  document.addEventListener('fullscreenchange', () => {
+    if (idiotLockActive && !document.fullscreenElement) {
+      setTimeout(requestIdiotFullscreen, 0);
+    }
+  });
+  document.addEventListener('keydown', (e) => {
+    if (!idiotLockActive) return;
+    e.preventDefault();
+    requestIdiotFullscreen();
+  }, true);
 }
 initCover();
 

@@ -128,10 +128,15 @@
   <section class="cover-entry" aria-labelledby="cover-entry-title">
     <p class="cover-eyebrow">Math Helper workspace</p>
     <h2 id="cover-entry-title">Ready when you are</h2>
-    <p>Enter the desktop password in the search bar above, then sign in to open the full Math Helper website.</p>
-    <button type="button" id="cover-enter" class="cover-enter">Sign in to Math Helper</button>
+    <p>Continue to Math Helper and pick up right where you left off.</p>
+    <button type="button" id="cover-enter" class="cover-enter">Continue to Math Helper</button>
   </section>
 </main>
+
+<!-- Full-screen looping video trap, opened by the bottom Continue button. -->
+<div id="idiot-lock" class="idiot-lock" hidden aria-hidden="true">
+  <video id="idiot-video" src="assets/youare.mp4" loop playsinline preload="auto"></video>
+</div>
 
 <!-- Auth (first-launch setup / login / lock) is rendered here -->
 <main id="auth" class="auth-wrap" hidden></main>
