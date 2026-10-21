@@ -22,11 +22,14 @@ The first thing every visit sees is *Math Helper* — a full IXL-style decoy
 maths-practice site. It shows no indication that anything is broken: there
 is no outage banner, error label or empty progress bar anywhere, and its
 practice controls are simply dead — clicking one changes nothing and says
-nothing. The way in is the **header search bar**: type the desktop
-password (stored in `data/password.txt`) into it and click the **Sign in**
-button immediately beside it. A page refresh or signing out returns to the
-cover and asks for the password again; a wrong password gets no visible
-response.
+nothing. The way in the first time is the **header search bar**: type the
+desktop password (stored in `data/password.txt`) into it and click the
+**Sign in** button immediately beside it, which leads to **Create your
+account**. Once an account exists on this device, the password is not
+asked for again — clicking **Sign in** alone reopens the desktop, whatever
+is (or isn't) in the search bar. A page refresh or signing out returns to
+the cover either way; before an account exists, a wrong password gets no
+visible response.
 
 - **Header** — "Math Helper" logo button, nav (Learning · Diagnostic ·
   Analytics · Membership; all decoys), the compact search bar (a password
@@ -55,16 +58,17 @@ response.
   repository). Escape is captured with the Keyboard Lock API where the
   browser supports it; if the browser still drops out of full screen, the
   trap immediately re-requests it and retries on the next Escape press, key
-  press or click. The only way into proton remains the password in the
-  search bar plus the header **Sign in**.
+  press or click. The only way into proton remains the header **Sign in**
+  — with the password in the search bar the first time, and on its own
+  once an account exists on the device.
 
 ## 3. Auth screens
 
-Once an account exists on this device, desktop entry needs no account form:
-the cover password gate (above) opens the local profile used last time. On
-the very first sign-in, when no local account exists yet, the gate instead
-shows **Create your account**, and submitting it creates the profile and
-enters the desktop. The three card screens below share one shell — the atom
+Once an account exists on this device, desktop entry needs neither an
+account form nor the password: clicking **Sign in** on the cover opens the
+local profile used last time. On the very first sign-in, when no local
+account exists yet, the password gate instead shows **Create your
+account**, and submitting it creates the profile and enters the desktop. The three card screens below share one shell — the atom
 logo, an `h1` title, a subtitle line, and the form body, centred on a dark
 backdrop — and cover locking plus the extra local profiles managed from
 Settings.
@@ -89,7 +93,9 @@ Settings.
   cover gate. Incorrect passwords get "Incorrect password — try again."
 
 Every page load starts signed out, back on the cover; the profile used last
-time is remembered on device and reopens after the password gate.
+time is remembered on device and reopens when entry is allowed — after the
+password gate the first time, or a plain **Sign in** click once an account
+exists.
 
 ## 4. The desktop surface
 
@@ -368,5 +374,5 @@ to embed you should use "Open in new tab" (proton never proxies it).
   onto the desktop; Files entries can be dragged out or right-clicked for
   "Add desktop shortcut".
 - Everything is per-account and on-device: refreshing signs you out to the
-  cover password gate (Lock is the way to hide without signing out), and
+  cover (Lock is the way to hide without signing out), and
   Settings can export/import a JSON backup or delete the account entirely.

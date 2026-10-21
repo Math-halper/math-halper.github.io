@@ -485,6 +485,8 @@ test('the cover search bar and Sign in button gate the desktop with data/passwor
     'assets/youare.mp4 should contain the real video, not a placeholder');
   const boot = source('assets/boot.js');
   assert.ok(boot.includes("fetch('data/password.txt'"), 'the gate should read data/password.txt');
+  assert.ok(boot.includes('hasLocalAccount') && boot.includes('MH.accounts()'),
+    'once an account exists on this device, Sign in should not need the password again');
   assert.ok(!boot.includes('isPageReload'), 'a refresh must not skip the password gate');
   assert.ok(!boot.includes('coverUnavailable') && !boot.includes('cover-status'),
     'clicking a cover control should not report that anything is unavailable');
@@ -574,6 +576,18 @@ test('the cover search bar and Sign in button gate the desktop with data/passwor
     assert.equal(cover.hidden, false);
     assert.equal(cover.textContent, coverText, 'a wrong password should not change the cover');
 
+    /* With no account on this device yet, pressing Sign in without
+     * entering the password does nothing either: the password is still
+     * needed to reach the account creation page the first time. */
+    input.value = '';
+    w.document.querySelector('#cover-signin').click();
+    await wait(80);
+    assert.equal(desktop.hidden, true, 'Sign in without the password must not open the desktop before an account exists');
+    assert.equal(cover.hidden, false);
+    assert.equal(w.document.querySelector('#setup-form'), null,
+      'Sign in without the password must not reach account creation before an account exists');
+    assert.equal(cover.textContent, coverText, 'an empty Sign in should not change the cover');
+
     /* The password from data/password.txt, then Sign in, shows the Create
      * your account page when this browser has no local account yet. */
     input.value = password;
@@ -621,9 +635,10 @@ test('the cover search bar and Sign in button gate the desktop with data/passwor
     assert.equal(cover.hidden, false, 'signing out should show the cover gate again');
     assert.equal(input.value, '', 'signing out should clear the password field');
 
-    /* With an account now on this device, the same gate opens its desktop
-     * directly — the account creation page is first-sign-in only. */
-    input.value = password;
+    /* With an account now on this device, just pressing Sign in — without
+     * entering the password again — opens its desktop directly. The
+     * account creation page is first-sign-in only. */
+    input.value = '';
     w.document.querySelector('#cover-signin').click();
     await until(() => desktop.hidden === false, 'the desktop for the existing account');
     assert.equal(cover.hidden, true, 'the cover should hide for the existing account');

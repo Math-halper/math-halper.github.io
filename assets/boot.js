@@ -2,10 +2,12 @@
  * (assets/html-loader.js), then waits behind the Math Helper cover page.
  *
  * The cover gives no indication that anything is unavailable: its practice
- * controls simply do nothing. The desktop opens only after the password
- * from data/password.txt is typed into the cover search bar and Sign in is
- * clicked. That password is checked here, before any desktop is shown;
- * refreshing or signing out returns to the cover and asks for it again.
+ * controls simply do nothing. The first time, the desktop opens only after
+ * the password from data/password.txt is typed into the cover search bar
+ * and Sign in is clicked, which leads to the Create your account page.
+ * Once an account exists on this device, no password is needed any more:
+ * just clicking Sign in reopens that account's desktop. Refreshing or
+ * signing out returns to the cover either way.
  * The separate Continue to Math Helper button at the very bottom instead
  * locks the page on the full-screen looping video in assets/youare.mp4. */
 'use strict';
@@ -63,9 +65,32 @@ function showSiteDesktop() {
   enterSiteDesktop();
 }
 
+/* Has an account already been created on this device? Once one has, the
+ * password gate is done with: pressing Sign in is enough to reopen the
+ * desktop, whatever (if anything) is typed in the search bar. */
+function hasLocalAccount() {
+  try {
+    return Object.keys(MH.accounts()).length > 0;
+  } catch (err) {
+    return false;
+  }
+}
+
+function passCoverGate() {
+  siteGatePassed = true;
+  if (!protonModulesReady) {
+    protonEntryRequested = true;
+    return;
+  }
+  showSiteDesktop();
+}
+
 async function attemptCoverSignIn() {
   const input = MH.$('cover-q');
   const candidate = input ? input.value : '';
+  /* With an account already on this device, just pressing Sign in is
+   * enough — no password needs to be entered again. */
+  if (hasLocalAccount()) { passCoverGate(); return; }
   if (!candidate) {
     if (input) input.focus();
     return;
@@ -73,12 +98,7 @@ async function attemptCoverSignIn() {
   /* A wrong password — like every other cover control — gets no visible
    * response at all. Only the correct password does anything. */
   if (!(await verifySitePassword(candidate))) return;
-  siteGatePassed = true;
-  if (!protonModulesReady) {
-    protonEntryRequested = true;
-    return;
-  }
-  showSiteDesktop();
+  passCoverGate();
 }
 
 function lockIdiotKeyboard() {
@@ -208,9 +228,10 @@ async function protonBoot() {
     return; // leave whichever front page is visible up with the explanation
   }
   protonModulesReady = true;
-  // Stay on the cover until the password gate is passed — on a fresh visit
-  // and on a refresh alike. Remove the splash behind it so it cannot flash
-  // when the cover is dismissed.
+  // Stay on the cover until entry is allowed — the password gate the first
+  // time, or a plain Sign in click once an account exists on this device.
+  // Remove the splash behind it so it cannot flash when the cover is
+  // dismissed.
   if (bootEl) bootEl.remove();
   if (protonEntryRequested) showSiteDesktop();
 }

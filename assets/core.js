@@ -653,13 +653,15 @@ function renderLock() {
     locked = false; a.hidden = true; MH.$('desktop').hidden = false;
   };
 }
-/* Which local profile the desktop opens after the password gate. The gate
+/* Which local profile the desktop opens after cover entry. The gate
  * itself (cover search bar + Sign in, data/password.txt) lives in
  * assets/boot.js; this just chooses whose saved desktop to show: the
  * profile used last time when there is one, otherwise the earliest local
  * profile. On the very first sign-in — when this browser has no local
  * account yet — the Create your account page is shown instead, and
- * submitting it creates the profile and enters the desktop. */
+ * submitting it creates the profile and enters the desktop. Once an
+ * account exists, boot.js lets Sign in straight through to here with no
+ * password, so an existing account always lands on its desktop. */
 const DESKTOP_PROFILE_KEY = 'mhOS.desktopProfile.v1';
 async function enterSiteDesktop() {
   MH.setSession('');
@@ -685,7 +687,9 @@ async function enterSiteDesktop() {
 
 function route() {
   // A fresh page load always starts signed out: refreshing returns to the
-  // cover and asks for the desktop password (data/password.txt) again.
+  // cover, where the desktop password (data/password.txt) is asked for
+  // again only until an account exists on this device — from then on a
+  // plain Sign in click is enough (see attemptCoverSignIn in boot.js).
   MH.setSession('');
   currentUser = null; userData = null; locked = false;
   const cover = MH.$('cover');
