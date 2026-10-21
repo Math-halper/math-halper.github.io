@@ -78,6 +78,7 @@ game bundles and earlier built-in sites remain removed (except Test Page).
 | **Stack** (`stack`) | Play Stack - time the falling blocks |
 | **Stealing The Diamond** (`stealing-the-diamond`) | Play Stealing The Diamond - a Henry Stickmin adventure |
 | **Stickman Hook** (`stickman-hook`) | Play Stickman Hook - swing through the levels |
+| **Subway Surfers** (`subway-surfers`) | Play Subway Surfers - dodge the trains and outrun the guard (WebGL, vendored from RohanChacko/Subway-Surfers) |
 | **Super Mario 64** (`sm64`) | Play the Super Mario 64 WebAssembly browser build (unofficial fan port, vendored from Math-halper/Mario) |
 | **Super Mario RPG** (`super-mario-rpg`) | Play Super Mario RPG in Web Retro - the catalog’s classic ROM included |
 | **Tetris** (`tetris`) | Play Tetris - the falling-blocks classic |
@@ -181,7 +182,9 @@ Helper** button at the very bottom does not enter the desktop: it locks the
 page on the full-screen, full-volume looping *You Are An Idiot* video in
 `assets/youare.mp4`, vendored directly into this repository. Pressing
 Escape is captured where the browser supports Keyboard Lock, and otherwise
-immediately re-enters full screen.
+the trap spams full-screen requests (a 100ms loop, plus a burst on every
+Escape press, key press, click and tab/window refocus) so the first moment
+the browser allows re-entry, the video is back in full screen.
 
 ## Desktop password
 
