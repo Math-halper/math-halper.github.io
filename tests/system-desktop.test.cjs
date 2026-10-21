@@ -852,13 +852,11 @@ test('Customize saves, displays and resets uploaded app icon images', async () =
 test('embedded-page templates and remote-embedded games are not shipped', () => {
   const { apps, sites } = catalog();
   for (const gone of ['apps/_embed', 'websites/_embed',
-    'apps/games/geometry-dash', 'apps/games/geometry-dash-1-3', 'apps/games/geometry-dash-4-6',
     'apps/games/drift-hunters', 'apps/games/drift-hunters-game', 'apps/games/run-3',
     'apps/games/basketball-stars', 'apps/games/wordle']) {
     assert.equal(fs.existsSync(path.join(ROOT, gone)), false, `${gone} should be gone`);
   }
-  for (const id of ['my-embed', 'geometry-dash', 'geometry-dash-1-3', 'geometry-dash-4-6',
-    'drift-hunters', 'drift-hunters-game', 'run-3', 'basketball-stars', 'wordle']) {
+  for (const id of ['my-embed', 'drift-hunters', 'drift-hunters-game', 'run-3', 'basketball-stars', 'wordle']) {
     assert.ok(!apps.some((a) => a.id === id), `${id} should not be catalogued`);
   }
   assert.ok(!sites.some((s) => s.id === 'my-embed'), 'my-embed should not be a site');

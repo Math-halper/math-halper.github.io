@@ -254,7 +254,7 @@ open an issue or pull request. The app icons are the collection's own
 PNGs in `data/icons/`. Game files were copied file-for-file except for
 dropping the collection's analytics/site chrome and making absolute
 links relative. Games from that collection whose pages only embedded a
-remote build (Geometry Dash's Scratch players, Run 3's framed build,
+remote build (Run 3's framed build,
 Basketball Stars' gadget assets, Wordle's selector servers and Drift
 Hunters' remote server choices) are not shipped.
 
