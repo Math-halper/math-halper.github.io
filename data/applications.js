@@ -515,6 +515,17 @@ w=980
 h=640
 
 [application]
+id=subway-surfers
+name=Subway Surfers
+path=apps/games/subway-surfers/app.html
+icon=data/icons/subway-surfers.png
+svg-icon=false
+cat=Games
+desc=Play Subway Surfers - dodge the trains and outrun the guard
+w=980
+h=640
+
+[application]
 id=sm64
 name=Super Mario 64
 path=apps/games/sm64/app.html

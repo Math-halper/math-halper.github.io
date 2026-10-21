@@ -248,6 +248,19 @@ The app icons are the Gams collection's own icon images for each game, scaled
 into `data/icons/`.
 
 
+## Vendored Subway Surfers
+
+The Subway Surfers app (`apps/games/subway-surfers/`) vendors the WebGL 2.0
+endless-runner by [Rohan Chacko](https://github.com/RohanChacko/Subway-Surfers)
+(MIT — the upstream `LICENSE` ships beside the game):
+
+- Every file in the app folder except proton's `app.html` wrapper is copied
+  byte-for-byte from that repository: `game.html`, `style.css`, the `libs/`,
+  `src/` and `assets/` (textures, sprites and background music). Nothing was
+  edited; the game's own page runs as-is inside the wrapper's frame.
+- The app icon is the game's own `player.png` sprite, squared onto a
+  transparent 250×250 canvas as `data/icons/subway-surfers.png`.
+
 ## Vendored emulator (Web Retro)
 
 The Web Retro app (`apps/tools/web-retro/`) vendors the **webretro** emulator —

@@ -52,6 +52,7 @@ const SYSTEM_APPS = ['appcenter', 'customize', 'settings', 'about', 'browser',
   'stack',
   'stealing-the-diamond',
   'stickman-hook',
+  'subway-surfers',
   'sm64',
   'super-mario-rpg',
   'tetris',
@@ -95,6 +96,7 @@ const SYSTEM_CATS = {
   'stack': 'Games',
   'stealing-the-diamond': 'Games',
   'stickman-hook': 'Games',
+  'subway-surfers': 'Games',
   'sm64': 'Games',
   'super-mario-rpg': 'Games',
   'tetris': 'Games',
@@ -132,6 +134,7 @@ const GAME_PAGES = {
   'stack': 'apps/games/stack/stack.html',
   'stealing-the-diamond': 'apps/games/stealing-the-diamond/stealingthediamond.html',
   'stickman-hook': 'apps/games/stickman-hook/stickmanhook.html',
+  'subway-surfers': 'apps/games/subway-surfers/game.html',
   'sm64': 'apps/games/sm64/index.html',
   'super-mario-rpg': 'apps/games/super-mario-rpg/supermariorpg.html',
   'tetris': 'apps/games/tetris/tetris.html',
@@ -210,6 +213,7 @@ test('the catalog is the desktop apps, the file system suite, a calculator, web 
     'stack': 'data/icons/stack.png',
     'stealing-the-diamond': 'data/icons/stealing-the-diamond.png',
     'stickman-hook': 'data/icons/stickman-hook.png',
+    'subway-surfers': 'data/icons/subway-surfers.png',
     'sm64': 'data/icons/sm64.png',
     'super-mario-rpg': 'data/icons/super-mario-rpg.png',
     'tetris': 'data/icons/tetris.png',
@@ -985,7 +989,7 @@ test('Customize saves, displays and resets uploaded app icon images', async () =
     const browserWindow = w.eval('wins').get('browser');
     assert.equal(body.querySelector('#cust-files-shortcut'), null, 'Customize still offers a Files shortcut');
     assert.deepEqual([...body.querySelectorAll('#cust-modlist .card b')].map((b) => b.textContent).slice(0, SYSTEM_APPS.length),
-            ['App Center', 'Customize', 'Settings', 'About', 'Browser', 'Calculator', 'Files', 'Text Editor', 'PDF Viewer', 'Image Viewer', 'Media', 'Ruffle Flash Player', 'Web Retro', '2048', 'Bloons Tower Defense 1', 'Bloons Tower Defense 2', 'Bloons Tower Defense 5', 'Bloxorz', 'Breaking The Bank', 'Celeste Classic', 'Celeste Classic 2', 'Celeste Community', 'Celeste Classic Practice Mod', 'Celeste Classic 2 Practice Mod 1.0', 'Celeste Classic 2 Practice Mod 1.1', 'Celeste Webek', 'Celeste Classic Downloads', 'Cookie Clicker', 'Drive Mad', 'Escaping The Prison', 'Fleeing The Complex', 'Grey Box Testing', 'Infiltrating The Airship', 'Mari0', 'Offline Paradise', 'Pacman', 'Slope', 'Spacebar Clicker', 'Stack', 'Stealing The Diamond', 'Stickman Hook', 'Super Mario 64', 'Super Mario RPG', 'Tetris', 'The Impossible Quiz', 'Tunnel Rush']);
+            ['App Center', 'Customize', 'Settings', 'About', 'Browser', 'Calculator', 'Files', 'Text Editor', 'PDF Viewer', 'Image Viewer', 'Media', 'Ruffle Flash Player', 'Web Retro', '2048', 'Bloons Tower Defense 1', 'Bloons Tower Defense 2', 'Bloons Tower Defense 5', 'Bloxorz', 'Breaking The Bank', 'Celeste Classic', 'Celeste Classic 2', 'Celeste Community', 'Celeste Classic Practice Mod', 'Celeste Classic 2 Practice Mod 1.0', 'Celeste Classic 2 Practice Mod 1.1', 'Celeste Webek', 'Celeste Classic Downloads', 'Cookie Clicker', 'Drive Mad', 'Escaping The Prison', 'Fleeing The Complex', 'Grey Box Testing', 'Infiltrating The Airship', 'Mari0', 'Offline Paradise', 'Pacman', 'Slope', 'Spacebar Clicker', 'Stack', 'Stealing The Diamond', 'Stickman Hook', 'Subway Surfers', 'Super Mario 64', 'Super Mario RPG', 'Tetris', 'The Impossible Quiz', 'Tunnel Rush']);
 
     const uploadBrowserIcon = async () => {
       const input = body.querySelector('[data-micon-file="browser"]');
