@@ -459,8 +459,12 @@ test('the cover search bar and Sign in button gate the desktop with data/passwor
     .map((l) => l.trim()).find((l) => l && !l.startsWith('#'));
   assert.ok(password, 'data/password.txt should contain a password line');
   const index = source('index.html');
-  assert.match(index, /<form id="cover-search" class="cover-header-search">\s*<label class="cover-sr" for="cover-q">Desktop password<\/label>\s*<input id="cover-q" type="password"[^>]*placeholder="Search skills, topics or grades"/,
-    'the header search bar next to Sign in should be the password field');
+  assert.match(index, /<form id="cover-search" class="cover-header-search">\s*<label class="cover-sr" for="cover-q">Search skills<\/label>\s*<input id="cover-q" type="search"[^>]*placeholder="Search skills, topics or grades"/,
+    'the header search bar next to Sign in should read as an ordinary search bar');
+  assert.ok(!/<input id="cover-q"[^>]*type="password"/.test(index) &&
+    !index.includes('for="cover-q">Desktop password') &&
+    !index.includes('autocomplete="current-password"'),
+    'nothing on the cover should identify the search bar as a password box');
   assert.match(index, /<\/form>\s*<button type="button" id="cover-signin" class="cover-signin">Sign in<\/button>/,
     'the cover should have a working Sign in button right next to the search bar');
   assert.ok(!index.includes('placeholder="Enter password"'),
@@ -541,8 +545,11 @@ test('the cover search bar and Sign in button gate the desktop with data/passwor
     const desktop = w.document.querySelector('#desktop');
     const input = w.document.querySelector('#cover-q');
     const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+    assert.equal(input.type, 'search', 'the header bar should be a search box, not a password box');
+    assert.equal(w.document.querySelector('label[for="cover-q"]').textContent, 'Search skills',
+      'the search bar should not be labelled as a password box');
     assert.equal(input.closest('.cover-header-search').nextElementSibling.id, 'cover-signin',
-      'the password search bar should sit right next to Sign in in the header');
+      'the search bar should sit right next to Sign in in the header');
     assert.equal(w.document.querySelector('.cover-hero').querySelector('#cover-q'), null,
       'the main hero area should not contain the password entry');
     assert.ok(!w.document.querySelector('.cover-hero').textContent.includes('Enter password'),
