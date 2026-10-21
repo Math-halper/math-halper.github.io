@@ -590,6 +590,7 @@ function renderSetup(backToLogin) {
     };
     MH.saveAccounts(accounts);
     currentUser = accounts[key];
+    localStorage.setItem(DESKTOP_PROFILE_KEY, key);
     userData = MH.defaultData(currentUser.displayName, currentUser.usernameLower || currentUser.username);
     MH.saveJSON(MH.userKey(key), userData);
     MH.$('auth').hidden = true;
@@ -620,6 +621,7 @@ function renderLogin() {
       return;
     }
     currentUser = acc;
+    localStorage.setItem(DESKTOP_PROFILE_KEY, key);
     userData = MH.loadJSON(MH.userKey(key), MH.defaultData(acc.displayName, acc.usernameLower || acc.username));
     enterDesktop();
   };
@@ -639,15 +641,69 @@ function renderLock() {
   MH.$('lk-out').onclick = signOut;
   MH.$('lock-form').onsubmit = async (e) => {
     e.preventDefault();
-    if (!(await MH.verifyPassword(MH.$('lk-pass').value, currentUser))) { MH.$('lk-err').textContent = 'Incorrect password — try again.'; return; }
+    /* Unlocking asks for the same desktop password as the cover gate
+     * (data/password.txt, checked by assets/boot.js). Older builds checked
+     * the account's own password hash, so keep that as a fallback for any
+     * context where the gate script is not present. */
+    const candidate = MH.$('lk-pass').value;
+    const ok = typeof verifySitePassword === 'function'
+      ? await verifySitePassword(candidate)
+      : await MH.verifyPassword(candidate, currentUser);
+    if (!ok) { MH.$('lk-err').textContent = 'Incorrect password — try again.'; return; }
     locked = false; a.hidden = true; MH.$('desktop').hidden = false;
   };
 }
-function route() {
-  // A fresh page load always starts signed out: refreshing asks for the
-  // password again (the username is remembered in the sign-in list).
+/* Which local profile the desktop opens after the password gate. The gate
+ * itself (cover search bar + Sign in, data/password.txt) lives in
+ * assets/boot.js; this just chooses whose saved desktop to show: the
+ * profile used last time when there is one, otherwise the earliest local
+ * profile, otherwise a fresh "student" profile created on the spot. */
+const DESKTOP_PROFILE_KEY = 'mhOS.desktopProfile.v1';
+async function enterSiteDesktop(enteredPassword = '') {
   MH.setSession('');
-  currentUser = null; userData = null;
+  const accounts = MH.accounts();
+  let account = accounts[localStorage.getItem(DESKTOP_PROFILE_KEY) || ''];
+  if (!account) {
+    account = Object.values(accounts)
+      .sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0))[0];
+  }
+  if (!account) {
+    const salt = MH.uid() + MH.uid();
+    account = {
+      username: 'student', usernameLower: 'student', displayName: 'Student',
+      email: '', avatar: '', color: COLORS[0], salt,
+      hash: await MH.hashPassword(enteredPassword, salt), createdAt: Date.now(),
+    };
+    accounts[account.usernameLower] = account;
+    MH.saveAccounts(accounts);
+  }
+  const key = account.usernameLower || String(account.username || 'student').toLowerCase();
+  localStorage.setItem(DESKTOP_PROFILE_KEY, key);
+  currentUser = account;
+  userData = MH.loadJSON(MH.userKey(key), MH.defaultData(account.displayName, key));
+  MH.$('auth').hidden = true;
+  enterDesktop();
+  MH.toast(`Welcome, ${account.displayName}!`);
+  return account;
+}
+
+function route() {
+  // A fresh page load always starts signed out: refreshing returns to the
+  // cover and asks for the desktop password (data/password.txt) again.
+  MH.setSession('');
+  currentUser = null; userData = null; locked = false;
+  const cover = MH.$('cover');
+  if (cover) {
+    cover.hidden = false;
+    MH.$('auth').hidden = true;
+    MH.$('desktop').hidden = true;
+    const q = MH.$('cover-q');
+    if (q) { q.value = ''; setTimeout(() => q.focus(), 0); }
+    document.title = 'Math Helper — Math Practice';
+    return;
+  }
+  /* No cover on the page (a bare test harness): fall back to the account
+   * screens so the desktop still has a way in. */
   const accounts = MH.accounts();
   if (!Object.keys(accounts).length) { renderSetup(false); return; }
   renderLogin();

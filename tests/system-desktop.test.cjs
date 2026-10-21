@@ -56,14 +56,8 @@ const SYSTEM_APPS = ['appcenter', 'customize', 'settings', 'about', 'browser',
   'super-mario-rpg',
   'tetris',
   'the-impossible-quiz',
-  'tunnel-rush',
-  'retro-bowl',
-  'slope-2',
-  'bitlife',
-  'crossy-road',
-  'moto-x3m',
-  'subway-surfers',
-  'paper-io-2'];
+  'tunnel-rush'];
+
 /* Menu sections for each app (data/applications.js cat=), in catalog order.
  * Every new app is filed here with its respective section — the catalog test
  * asserts each app's cat matches, and the boot test asserts the five menu
@@ -106,13 +100,6 @@ const SYSTEM_CATS = {
   'tetris': 'Games',
   'the-impossible-quiz': 'Games',
   'tunnel-rush': 'Games',
-  'retro-bowl': 'Games',
-  'slope-2': 'Games',
-  'bitlife': 'Games',
-  'crossy-road': 'Games',
-  'moto-x3m': 'Games',
-  'subway-surfers': 'Games',
-  'paper-io-2': 'Games',
   'web-retro': 'Tools',
 };
 /* Each game app frames the game page that ships in its own folder. */
@@ -150,13 +137,6 @@ const GAME_PAGES = {
   'tetris': 'apps/games/tetris/tetris.html',
   'the-impossible-quiz': 'apps/games/the-impossible-quiz/theimpossiblequiz.html',
   'tunnel-rush': 'apps/games/tunnel-rush/tunnelrush.html',
-  'retro-bowl': 'apps/games/retro-bowl/index.html',
-  'slope-2': 'apps/games/slope-2/index.html',
-  'bitlife': 'apps/games/bitlife/index.html',
-  'crossy-road': 'apps/games/crossy-road/index.html',
-  'moto-x3m': 'apps/games/moto-x3m/index.html',
-  'subway-surfers': 'apps/games/subway-surfers/index.html',
-  'paper-io-2': 'apps/games/paper-io-2/paperio2.html',
 };
 /* Games whose pages carry the source sites' href="../" all-games link. */
 const PICKER_LINKED = ['celeste-classic', 'celeste-two', 'celeste-community', 'cookie-clicker', 'sm64'];
@@ -235,13 +215,6 @@ test('the catalog is the desktop apps, the file system suite, a calculator, web 
     'tetris': 'data/icons/tetris.png',
     'the-impossible-quiz': 'data/icons/the-impossible-quiz.png',
     'tunnel-rush': 'data/icons/tunnel-rush.png',
-    'retro-bowl': 'data/icons/retro-bowl.png',
-    'slope-2': 'data/icons/slope-2.png',
-    'bitlife': 'data/icons/bitlife.png',
-    'crossy-road': 'data/icons/crossy-road.png',
-    'moto-x3m': 'data/icons/moto-x3m.png',
-    'subway-surfers': 'data/icons/subway-surfers.png',
-    'paper-io-2': 'data/icons/paper-io-2.png',
     'web-retro': 'data/icons/webretro.png' };
   assert.deepEqual(Array.from(apps, (a) => a.svgIcon), SYSTEM_APPS.map((id) => !RASTER_ICON_APPS[id]));
   const iconById = Object.fromEntries(Array.from(apps, (a) => [a.id, a.icon]));
@@ -364,14 +337,6 @@ test('every catalog entry points at a real, syntactically valid app module', () 
     ['apps/games/mari0/game.data', 3000000],
     ['apps/games/sm64/sm64.us.f3dex2e.wasm', 15000000],
     ['apps/games/sm64/sm64.us.f3dex2e.js', 200000],
-    ['apps/games/retro-bowl/html5game/RetroBowl.js', 5000000],
-    ['apps/games/slope-2/WebGL2Players v1.1.data.unityweb', 2000000],
-    ['apps/games/bitlife/Build/BitLife.data.unityweb', 10000000],
-    ['apps/games/crossy-road/scripts/game.min.js', 500000],
-    ['apps/games/moto-x3m/motox3m.min.js', 1000000],
-    ['apps/games/subway-surfers/SanFrancisco.data.unityweb', 20000000],
-    ['apps/games/subway-surfers/SanFrancisco.wasm.code.unityweb', 20000000],
-    ['apps/games/paper-io-2/js/app-new-gm.js', 400000],
   ]) {
     assert.ok(fs.statSync(path.join(ROOT, p)).size >= min, `${p} is not the real game build`);
   }
@@ -485,6 +450,176 @@ test('the system manifest still matches the repository exactly', () => {
   const onDisk = walk('.').filter((p) => p !== 'data/fs-manifest.js').sort();
   assert.deepEqual(Array.from(entries, (e) => e.p).filter((p) => p !== 'data/fs-manifest.js').sort(), onDisk,
     'Manifest and repository disagree — re-run python3 tools/gen-fs-manifest.py');
+});
+
+test('the cover search bar and Sign in button gate the desktop with data/password.txt', async () => {
+  /* The editable password file: the first line that is not blank and does
+   * not start with # is the password. */
+  const password = source('data/password.txt').split(/\r?\n/)
+    .map((l) => l.trim()).find((l) => l && !l.startsWith('#'));
+  assert.ok(password, 'data/password.txt should contain a password line');
+  const index = source('index.html');
+  assert.match(index, /<input id="cover-q" type="password"[^>]*placeholder="Enter password"/,
+    'the cover search bar should be the password field');
+  assert.match(index, /<button type="button" id="cover-signin" class="cover-signin">Sign in<\/button>/,
+    'the cover should have a working Sign in button');
+  assert.ok(!index.includes('cover-signin cover-decoy'), 'Sign in must not be a dead cover control');
+  /* The cover must not give any indication that it is broken: no outage
+   * banner, no error chip, no unavailable labels, no zeroed progress. */
+  for (const sign of ['cover-status', 'Practice is temporarily unavailable', 'MH-503',
+    'Skill service offline', 'Recommendations could not be refreshed', '>Unavailable<', 'width:0%']) {
+    assert.ok(!index.includes(sign), `the cover should not show "${sign}"`);
+  }
+  assert.match(index, /<button type="button" id="cover-enter" class="cover-enter">Continue to Math Helper<\/button>/,
+    'the bottom button should be Continue to Math Helper');
+  assert.match(index, /<video id="idiot-video" src="assets\/youare\.mp4" loop/,
+    'the Continue trap should use the video file vendored in this repository');
+  assert.ok(fs.existsSync(path.join(ROOT, 'assets/youare.mp4')), 'assets/youare.mp4 should be in the repository');
+  assert.ok(fs.statSync(path.join(ROOT, 'assets/youare.mp4')).size > 1_000_000,
+    'assets/youare.mp4 should contain the real video, not a placeholder');
+  const boot = source('assets/boot.js');
+  assert.ok(boot.includes("fetch('data/password.txt'"), 'the gate should read data/password.txt');
+  assert.ok(!boot.includes('isPageReload'), 'a refresh must not skip the password gate');
+  assert.ok(!boot.includes('coverUnavailable') && !boot.includes('cover-status'),
+    'clicking a cover control should not report that anything is unavailable');
+  assert.ok(boot.includes('lockIdiotVideo') && boot.includes('requestFullscreen'),
+    'Continue should lock the looping video in full screen');
+  assert.ok(boot.includes("navigator.keyboard.lock(['Escape'])") && boot.includes('trapIdiotEscape'),
+    'pressing Escape should be trapped and sent back into full screen');
+
+  const virtualConsole = new VirtualConsole(), errors = [];
+  virtualConsole.on('jsdomError', (err) => errors.push(err.message));
+  const dom = new JSDOM(index, {
+    url: 'https://math-halper.github.io/', runScripts: 'dangerously',
+    pretendToBeVisual: true, virtualConsole,
+  });
+  const { window: w } = dom;
+  w.URL.createObjectURL = () => 'blob:mock';
+  w.URL.revokeObjectURL = () => {};
+  w.Element.prototype.scrollIntoView = function () {};
+  w.TextEncoder = TextEncoder;
+  w.TextDecoder = TextDecoder;
+  w.Blob.prototype.arrayBuffer = function () {
+    return new Promise((resolve, reject) => {
+      const reader = new w.FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(new Error('FileReader could not read the blob'));
+      reader.readAsArrayBuffer(this);
+    });
+  };
+  /* jsdom cannot play media or enter full screen; record both instead. */
+  w.HTMLMediaElement.prototype.play = function () { this.dataset.played = 'true'; return Promise.resolve(); };
+  w.HTMLMediaElement.prototype.pause = function () {};
+  w.document.querySelector('#idiot-lock').requestFullscreen = function () {
+    this.dataset.fullscreen = 'requested';
+    this.dataset.fullscreenRequests = String(Number(this.dataset.fullscreenRequests || 0) + 1);
+    return Promise.resolve();
+  };
+  const run = (text) => {
+    const script = w.document.createElement('script');
+    script.textContent = text; w.document.body.appendChild(script); script.remove();
+  };
+  const until = async (pred, label) => {
+    for (let i = 0; i < 200; i++) {
+      if (pred()) return;
+      await new Promise((r) => setTimeout(r, 10));
+    }
+    assert.fail(`timed out waiting for ${label}; jsdom errors: ${errors.join(' | ')}`);
+  };
+  try {
+    for (const p of SHELL) run(source(p));
+    w.fetchText = async (p) => source(p);
+    w.fetch = async (url) => ({
+      ok: true, status: 200,
+      text: async () => source(new URL(url, w.location.href).pathname.slice(1)),
+    });
+    run(boot);
+    await until(() => w.eval('protonModulesReady') === true, 'the desktop modules to load');
+    const cover = w.document.querySelector('#cover');
+    const desktop = w.document.querySelector('#desktop');
+    const input = w.document.querySelector('#cover-q');
+    const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+    assert.equal(cover.hidden, false, 'the cover should be shown first');
+    assert.equal(desktop.hidden, true, 'the desktop should start hidden behind the gate');
+    assert.equal(w.document.querySelector('#cover-status'), null,
+      'the cover should have no status banner');
+    const coverText = cover.textContent;
+
+    /* A decorative cover control does nothing and says nothing. */
+    w.document.querySelector('.cover-decoy').click();
+    assert.equal(desktop.hidden, true);
+    assert.equal(cover.textContent, coverText, 'a dead cover control should not change the page');
+
+    /* A wrong password typed in the search bar and Sign in keeps the
+     * desktop hidden, with no visible response either. */
+    input.value = 'not the password';
+    w.document.querySelector('#cover-signin').click();
+    await wait(80);
+    assert.equal(desktop.hidden, true, 'a wrong password must not open the desktop');
+    assert.equal(cover.hidden, false);
+    assert.equal(cover.textContent, coverText, 'a wrong password should not change the cover');
+
+    /* The password from data/password.txt, then Sign in, opens the desktop
+     * on a fresh local profile. */
+    input.value = password;
+    w.document.querySelector('#cover-signin').click();
+    await until(() => desktop.hidden === false, 'the desktop after Sign in');
+    assert.equal(cover.hidden, true, 'the cover should hide once signed in');
+    assert.equal(w.eval('currentUser.username'), 'student');
+    assert.ok(w.localStorage.getItem('mhOS.accounts.v1').includes('student'),
+      'the first sign-in should create the local desktop profile');
+
+    /* Locking asks for that same file password, not anything else. */
+    w.eval('lockDesktop()');
+    assert.equal(desktop.hidden, true);
+    const lockPass = w.document.querySelector('#lk-pass');
+    const lockForm = w.document.querySelector('#lock-form');
+    lockPass.value = 'not the password';
+    lockForm.dispatchEvent(new w.Event('submit', { bubbles: true, cancelable: true }));
+    await until(() => /Incorrect password/.test(w.document.querySelector('#lk-err').textContent),
+      'the wrong lock password message');
+    assert.equal(desktop.hidden, true, 'a wrong lock password must not unlock');
+    lockPass.value = password;
+    lockForm.dispatchEvent(new w.Event('submit', { bubbles: true, cancelable: true }));
+    await until(() => desktop.hidden === false, 'the desktop after unlocking');
+
+    /* Signing out returns to the cover with the password cleared. */
+    w.eval('signOut()');
+    assert.equal(desktop.hidden, true);
+    assert.equal(cover.hidden, false, 'signing out should show the cover gate again');
+    assert.equal(input.value, '', 'signing out should clear the password field');
+
+    /* The bottom Continue to Math Helper button does not enter the desktop:
+     * it locks the page on the full-screen, full-volume looping video. */
+    const idiotLock = w.document.querySelector('#idiot-lock');
+    const idiotVideo = w.document.querySelector('#idiot-video');
+    assert.equal(idiotLock.hidden, true);
+    w.document.querySelector('#cover-enter').click();
+    assert.equal(desktop.hidden, true, 'Continue must not bypass the password gate');
+    assert.equal(idiotLock.hidden, false, 'Continue should reveal the video lock');
+    assert.equal(idiotVideo.loop, true, 'the video should loop indefinitely');
+    assert.equal(idiotVideo.muted, false, 'the video should not be muted');
+    assert.equal(idiotVideo.volume, 1, 'the video should be at full volume');
+    assert.equal(idiotVideo.dataset.played, 'true', 'Continue should start the video');
+    assert.equal(idiotLock.dataset.fullscreen, 'requested',
+      'Continue should request full screen for the video lock');
+
+    /* Pressing Escape goes straight back into full screen: the key press
+     * itself re-requests it, and a browser-driven exit retries too. */
+    const beforeEscape = Number(idiotLock.dataset.fullscreenRequests || 0);
+    w.document.dispatchEvent(new w.KeyboardEvent('keydown', {
+      key: 'Escape', bubbles: true, cancelable: true,
+    }));
+    assert.ok(Number(idiotLock.dataset.fullscreenRequests || 0) > beforeEscape,
+      'Escape should re-request full screen');
+    const beforeExit = Number(idiotLock.dataset.fullscreenRequests || 0);
+    w.document.dispatchEvent(new w.Event('fullscreenchange'));
+    await wait(325);
+    assert.ok(Number(idiotLock.dataset.fullscreenRequests || 0) > beforeExit,
+      'leaving full screen should trigger another full-screen request');
+  } finally {
+    w.close();
+  }
 });
 
 test('the desktop boots, lists and opens all catalogued apps', async () => {
@@ -725,7 +860,7 @@ test('the desktop boots, lists and opens all catalogued apps', async () => {
     await new Promise((resolve) => setTimeout(resolve, 20));
     const editor = wins.get('text-editor').body;
     assert.match(editor.querySelector('#te-note').textContent, /read-only proton system/);
-    assert.equal(editor.querySelector('#te-text').readOnly, true);
+    assert.equal(editor.querySelector('#te-text').readOnly, false, 'a system file opens as an editable draft, not a locked box with a caret');
     assert.match(editor.querySelector('#te-text').value, /^# proton/);
     assert.equal(editor.querySelector('#te-save').disabled, true, 'a read-only file cannot be saved in place');
     w.closeWin('text-editor', true);
@@ -788,7 +923,7 @@ test('Customize saves, displays and resets uploaded app icon images', async () =
     const browserWindow = w.eval('wins').get('browser');
     assert.equal(body.querySelector('#cust-files-shortcut'), null, 'Customize still offers a Files shortcut');
     assert.deepEqual([...body.querySelectorAll('#cust-modlist .card b')].map((b) => b.textContent).slice(0, SYSTEM_APPS.length),
-            ['App Center', 'Customize', 'Settings', 'About', 'Browser', 'Calculator', 'Files', 'Text Editor', 'PDF Viewer', 'Image Viewer', 'Media', 'Ruffle Flash Player', 'Web Retro', '2048', 'Bloons Tower Defense 1', 'Bloons Tower Defense 2', 'Bloons Tower Defense 5', 'Bloxorz', 'Breaking The Bank', 'Celeste Classic', 'Celeste Classic 2', 'Celeste Community', 'Celeste Classic Practice Mod', 'Celeste Classic 2 Practice Mod 1.0', 'Celeste Classic 2 Practice Mod 1.1', 'Celeste Webek', 'Celeste Classic Downloads', 'Cookie Clicker', 'Drive Mad', 'Escaping The Prison', 'Fleeing The Complex', 'Grey Box Testing', 'Infiltrating The Airship', 'Mari0', 'Offline Paradise', 'Pacman', 'Slope', 'Spacebar Clicker', 'Stack', 'Stealing The Diamond', 'Stickman Hook', 'Super Mario 64', 'Super Mario RPG', 'Tetris', 'The Impossible Quiz', 'Tunnel Rush', 'Retro Bowl', 'Slope 2', 'Bitlife', 'Crossy Road', 'Moto X3M', 'Subway Surfers', 'Paper.io 2']);
+            ['App Center', 'Customize', 'Settings', 'About', 'Browser', 'Calculator', 'Files', 'Text Editor', 'PDF Viewer', 'Image Viewer', 'Media', 'Ruffle Flash Player', 'Web Retro', '2048', 'Bloons Tower Defense 1', 'Bloons Tower Defense 2', 'Bloons Tower Defense 5', 'Bloxorz', 'Breaking The Bank', 'Celeste Classic', 'Celeste Classic 2', 'Celeste Community', 'Celeste Classic Practice Mod', 'Celeste Classic 2 Practice Mod 1.0', 'Celeste Classic 2 Practice Mod 1.1', 'Celeste Webek', 'Celeste Classic Downloads', 'Cookie Clicker', 'Drive Mad', 'Escaping The Prison', 'Fleeing The Complex', 'Grey Box Testing', 'Infiltrating The Airship', 'Mari0', 'Offline Paradise', 'Pacman', 'Slope', 'Spacebar Clicker', 'Stack', 'Stealing The Diamond', 'Stickman Hook', 'Super Mario 64', 'Super Mario RPG', 'Tetris', 'The Impossible Quiz', 'Tunnel Rush']);
 
     const uploadBrowserIcon = async () => {
       const input = body.querySelector('[data-micon-file="browser"]');
@@ -852,13 +987,11 @@ test('Customize saves, displays and resets uploaded app icon images', async () =
 test('embedded-page templates and remote-embedded games are not shipped', () => {
   const { apps, sites } = catalog();
   for (const gone of ['apps/_embed', 'websites/_embed',
-    'apps/games/geometry-dash', 'apps/games/geometry-dash-1-3', 'apps/games/geometry-dash-4-6',
     'apps/games/drift-hunters', 'apps/games/drift-hunters-game', 'apps/games/run-3',
     'apps/games/basketball-stars', 'apps/games/wordle']) {
     assert.equal(fs.existsSync(path.join(ROOT, gone)), false, `${gone} should be gone`);
   }
-  for (const id of ['my-embed', 'geometry-dash', 'geometry-dash-1-3', 'geometry-dash-4-6',
-    'drift-hunters', 'drift-hunters-game', 'run-3', 'basketball-stars', 'wordle']) {
+  for (const id of ['my-embed', 'drift-hunters', 'drift-hunters-game', 'run-3', 'basketball-stars', 'wordle']) {
     assert.ok(!apps.some((a) => a.id === id), `${id} should not be catalogued`);
   }
   assert.ok(!sites.some((s) => s.id === 'my-embed'), 'my-embed should not be a site');
@@ -1056,10 +1189,13 @@ test('the Files app manages the account’s folders and files end to end', async
     assert.ok(body.querySelector('#fm-side [data-go="/apps"]'), 'the sidebar lists the read-only system tree');
     assert.match(body.querySelector('#fm-status').textContent, /Your home: 3 files, 4 folders/);
 
-    // Double-click walks into a folder.
-    rowOf(`${HOME}/Documents`).dispatchEvent(new w.MouseEvent('dblclick', { bubbles: true }));
+    // A plain click walks into a folder (and a plain click on a file opens it).
+    rowOf(`${HOME}/Documents`).dispatchEvent(new w.MouseEvent('click', { bubbles: true }));
     assert.equal(body.querySelector('#fm-path').value, `${HOME}/Documents`);
     assert.deepEqual(rows(), [`${HOME}/Documents/Ideas.txt`, `${HOME}/Documents/Welcome.txt`]);
+    rowOf(`${HOME}/Documents/Welcome.txt`).dispatchEvent(new w.MouseEvent('click', { bubbles: true }));
+    assert.ok(wins.has('text-editor'), 'a plain click on a file opens it');
+    w.closeWin('text-editor', true);
 
     // New folder: created in the VFS, listed, and saved with the account.
     body.querySelector('#fm-new-folder').click();
@@ -1148,7 +1284,7 @@ test('the Files app manages the account’s folders and files end to end', async
     const imported = new w.File(['imported bytes'], 'note.txt', { type: 'text/plain' });
     const fileInput = body.querySelector('#fm-file');
     Object.defineProperty(fileInput, 'files', { configurable: true, value: [imported] });
-    rowOf(`${HOME}/Documents`).dispatchEvent(new w.MouseEvent('dblclick', { bubbles: true }));
+    rowOf(`${HOME}/Documents`).dispatchEvent(new w.MouseEvent('click', { bubbles: true }));
     await fileInput.onchange({ target: fileInput });
     await settle();
     assert.equal(w.eval(`FS.stat('${HOME}/Documents/note.txt')?.size`), 14, 'the imported file is in the account');
@@ -1176,8 +1312,9 @@ test('the Files app manages the account’s folders and files end to end', async
     const before = blobs.length;
     body.querySelector('#fm-up').click();                    // back out to /home/ada
     assert.equal(body.querySelector('#fm-path').value, HOME);
-    rowOf(`${HOME}/Documents`).dispatchEvent(new w.MouseEvent('click', { bubbles: true }));
-    assert.match(body.querySelector('#fm-status').textContent, /Selected 1/, 'the click selected the folder');
+    rowOf(`${HOME}/Documents`).dispatchEvent(new w.MouseEvent('click', { bubbles: true, ctrlKey: true }));
+    assert.match(body.querySelector('#fm-status').textContent, /Selected 1/, 'Ctrl-click selected the folder without opening it');
+    assert.equal(body.querySelector('#fm-path').value, HOME, 'Ctrl-click did not navigate into it');
     body.querySelector('#fm-download').click();
     await settle();
     w.document.querySelector('.file-source-backdrop [data-fs="device"]').click(); // to this computer
@@ -1187,7 +1324,7 @@ test('the Files app manages the account’s folders and files end to end', async
     assert.ok(blobs[blobs.length - 1].size > 100, 'the archive holds the folder, not just a header');
 
     // Delete removes it from the account (confirm() is stubbed to yes).
-    rowOf(`${HOME}/Documents`).dispatchEvent(new w.MouseEvent('dblclick', { bubbles: true }));
+    rowOf(`${HOME}/Documents`).dispatchEvent(new w.MouseEvent('click', { bubbles: true }));
     menu = openMenu(`${HOME}/Documents/Notes`);
     clickLabel(menu, 'Delete');
     assert.equal(w.eval(`FS.exists('${HOME}/Documents/Notes')`), false, 'the folder is gone');
@@ -1196,8 +1333,8 @@ test('the Files app manages the account’s folders and files end to end', async
 
     // The proton system tree is browsable but locked.
     body.querySelector('#fm-side [data-go="/apps"]').click();
-    rowOf('/apps/productivity').dispatchEvent(new w.MouseEvent('dblclick', { bubbles: true }));
-    rowOf('/apps/productivity/files').dispatchEvent(new w.MouseEvent('dblclick', { bubbles: true }));
+    rowOf('/apps/productivity').dispatchEvent(new w.MouseEvent('click', { bubbles: true }));
+    rowOf('/apps/productivity/files').dispatchEvent(new w.MouseEvent('click', { bubbles: true }));
     assert.equal(body.querySelector('#fm-path').value, '/apps/productivity/files');
     assert.ok(rows().includes('/apps/productivity/files/app.html'), 'the manifest tree is browsable');
     assert.equal(body.querySelector('#fm-new-folder').disabled, true, 'nothing can be created in the system tree');
@@ -1208,7 +1345,7 @@ test('the Files app manages the account’s folders and files end to end', async
     // as text, while the imported note.txt above stayed editable text.
     body.querySelector(`#fm-side [data-go="${HOME}"]`).click();   // sidebar: Home
     assert.equal(body.querySelector('#fm-path').value, HOME);
-    rowOf(`${HOME}/Documents`).dispatchEvent(new w.MouseEvent('dblclick', { bubbles: true }));
+    rowOf(`${HOME}/Documents`).dispatchEvent(new w.MouseEvent('click', { bubbles: true }));
     const picture = new w.File([new Uint8Array([137, 80, 78, 71])], 'dot.png', { type: 'image/png' });
     Object.defineProperty(fileInput, 'files', { configurable: true, value: [picture] });
     await fileInput.onchange({ target: fileInput });
@@ -1280,11 +1417,21 @@ test('every kind of file has an app that opens it', async () => {
     w.eval("openFSItem('/data/applications.js')");
     await settle();
     const editor = wins.get('text-editor').body;
-    assert.equal(editor.querySelector('#te-text').readOnly, true, 'proton’s own files are read-only');
+    assert.equal(editor.querySelector('#te-text').readOnly, false, 'proton’s own files open as editable drafts');
     assert.match(editor.querySelector('#te-text').value, /PROTON_APPLICATIONS_TEXT/);
     assert.equal(editor.querySelector('#te-save').disabled, true);
+    const originalText = editor.querySelector('#te-text').value;
+    editor.querySelector('#te-text').value = 'edited draft only';
+    editor.querySelector('#te-text').dispatchEvent(new w.Event('input', { bubbles: true }));
+    assert.match(editor.querySelector('#te-status').textContent, /unsaved changes/, 'typing in the draft marks it dirty');
     editor.querySelector('#te-copy').click();
-    assert.match(editor.querySelector('#te-note').textContent, /Save a copy to/, 'but they can be copied into your home folder');
+    assert.match(editor.querySelector('#te-note').textContent, /Save a copy to/, 'and the draft can be copied into your home folder');
+    w.document.querySelector('.file-source-backdrop [data-fs="vfs"]').click();
+    await settle();
+    editor.querySelector('#te-ask-ok').click();
+    await settle();
+    assert.equal(await w.eval("FS.read('/home/ada/applications.js')"), 'edited draft only', 'the edited copy landed in the home folder');
+    assert.equal(await w.eval("FS.read('/data/applications.js')"), originalText, 'the read-only original never changed');
     w.closeWin('text-editor', true);
 
     // A file with no viewer of its own falls back to Files, already selected.
@@ -1402,7 +1549,7 @@ test('proton’s search engine answers from the repository itself', async () => 
     /* Machine-written files have no prose, and the tests and the copy-me
      * templates are not part of the deployed site. */
     for (const p of ['/package.json', '/package-lock.json', '/.gitignore', '/.nojekyll',
-      '/data/fs-manifest.js', '/data/search-index.js']) {
+      '/data/fs-manifest.js', '/data/search-index.js', '/data/password.txt']) {
       assert.ok(!indexed.has(p), `${p} is machine-written and should not be indexed`);
     }
     assert.ok(![...indexed].some((p) => p.startsWith('/tests/') || p.includes('/_')),

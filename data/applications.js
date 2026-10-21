@@ -37,11 +37,11 @@ byte-for-byte from github.com/Math-halper/Mario, only the games) and Cookie
 Clicker (Orteil's idle game, copied byte-for-byte from the offline mirror in
 github.com/Gams-Offline/Gams) and 23 more games from that same Gams
 collection (Flash classics on the shared Ruffle player, Unity WebGL builds
-and single-file HTML5 games) plus 7 more (including Retro Bowl). Each game
+and single-file HTML5 games). Each game
 app folder is the game's own files plus a thin proton iframe wrapper (see CREDITS.md for provenance), and
 apps/games/index.html is the picker their "all games" links expect.
 
-The start menu groups them by cat=: System (the desktop’s own five), Productivity (Calculator, Files, Text Editor, PDF Viewer), Media (Image Viewer, Media), Tools (Ruffle Flash Player, Web Retro — the players behind the Flash and cartridge games) and Games (40 games: 2048, Bloons Tower Defense 1, Bloons Tower Defense 2, Bloons Tower Defense 5, Bloxorz, Breaking The Bank, Celeste Classic, Celeste Classic 2, Celeste Community, Celeste Classic Practice Mod, Celeste Classic 2 Practice Mod 1.0, Celeste Classic 2 Practice Mod 1.1, Celeste Webek, Celeste Classic Downloads, Cookie Clicker, Drive Mad, Escaping The Prison, Fleeing The Complex, Grey Box Testing, Infiltrating The Airship, Mari0, Offline Paradise, Pacman, Slope, Spacebar Clicker, Stack, Stealing The Diamond, Stickman Hook, Super Mario 64, Super Mario RPG, Tetris, The Impossible Quiz, Tunnel Rush, Retro Bowl, Slope 2, Bitlife, Crossy Road, Moto X3M, Subway Surfers, Paper.io 2). Block order below is menu order within each section.
+The start menu groups them by cat=: System (the desktop’s own five), Productivity (Calculator, Files, Text Editor, PDF Viewer), Media (Image Viewer, Media), Tools (Ruffle Flash Player, Web Retro — the players behind the Flash and cartridge games) and Games (33 games: 2048, Bloons Tower Defense 1, Bloons Tower Defense 2, Bloons Tower Defense 5, Bloxorz, Breaking The Bank, Celeste Classic, Celeste Classic 2, Celeste Community, Celeste Classic Practice Mod, Celeste Classic 2 Practice Mod 1.0, Celeste Classic 2 Practice Mod 1.1, Celeste Webek, Celeste Classic Downloads, Cookie Clicker, Drive Mad, Escaping The Prison, Fleeing The Complex, Grey Box Testing, Infiltrating The Airship, Mari0, Offline Paradise, Pacman, Slope, Spacebar Clicker, Stack, Stealing The Diamond, Stickman Hook, Super Mario 64, Super Mario RPG, Tetris, The Impossible Quiz, Tunnel Rush). Block order below is menu order within each section.
 
 IMPORTANT: an id must not be a bare number — JavaScript object key ordering
   hoists integer-like keys to the front of every APPS iteration (this is why
@@ -569,88 +569,18 @@ desc=Play Tunnel Rush - dodge through the spinning tunnel
 w=980
 h=640
 
-[application]
-id=retro-bowl
-name=Retro Bowl
-path=apps/games/retro-bowl/app.html
-icon=data/icons/retro-bowl.png
-svg-icon=false
-cat=Games
-desc=Play Retro Bowl — the retro American football sim
-w=980
-h=640
 
 
 
 
-[application]
-id=slope-2
-name=Slope 2
-path=apps/games/slope-2/app.html
-icon=data/icons/slope-2.png
-svg-icon=false
-cat=Games
-desc=Play Slope 2 — the neon slope sequel
-w=980
-h=640
-
-[application]
-id=bitlife
-name=Bitlife
-path=apps/games/bitlife/app.html
-icon=data/icons/bitlife.png
-svg-icon=false
-cat=Games
-desc=Play Bitlife — the life simulator
-w=980
-h=640
-
-[application]
-id=crossy-road
-name=Crossy Road
-path=apps/games/crossy-road/app.html
-icon=data/icons/crossy-road.png
-svg-icon=false
-cat=Games
-desc=Play Crossy Road — dodge traffic and rivers
-w=980
-h=640
-
-[application]
-id=moto-x3m
-name=Moto X3M
-path=apps/games/moto-x3m/app.html
-icon=data/icons/moto-x3m.png
-svg-icon=false
-cat=Games
-desc=Play Moto X3M 1 & 4 — stunt biking
-w=980
-h=640
-
-[application]
-id=subway-surfers
-name=Subway Surfers
-path=apps/games/subway-surfers/app.html
-icon=data/icons/subway-surfers.png
-svg-icon=false
-cat=Games
-desc=Play Subway Surfers — the endless runner
-w=980
-h=640
 
 
 
 
-[application]
-id=paper-io-2
-name=Paper.io 2
-path=apps/games/paper-io-2/app.html
-icon=data/icons/paper-io-2.png
-svg-icon=false
-cat=Games
-desc=Play Paper.io 2 — capture territory
-w=980
-h=640
+
+
+
+
 
 
 

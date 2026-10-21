@@ -18,7 +18,7 @@ and look wherever a browser-only equivalent exists:
 | Upstream (Mixt) | Here (proton) |
 | --- | --- |
 | Mint-Y theme `src/gui/src/css/mixt.css` (accent `#68b723`, light gradient title bars, dark bottom panel) | Panel layout/chrome reimplemented in `assets/styles.css`, with the palette changed to black-and-white for proton |
-| Server accounts, `admin` first sign-in, whitelist | First-launch account creation stored **only in this browser** (localStorage), salted password hash, sign-in on every refresh, lock screen |
+| Server accounts, `admin` first sign-in, whitelist | Local profiles stored **only in this browser** (localStorage), a shared desktop password in `data/password.txt` asked on every refresh, lock screen |
 | IndexedDB app storage (`src/apps/shared/localdb.js`) | Per-account localStorage state, export/import backup in Settings |
 | `src/apps/notes`, `calendar`, `spreadsheet`, `whiteboard`, `presentation`, `terminal`, `pdf-editor`, `media`, `mail`, `contacts` | Were browser-only rewrites with the same core behaviour — **removed**; see below |
 | `src/apps/sudoku/logic.js`, `checkers`, `chess`, `klondike`, `backgammon` | Sudoku generator/checker was adapted from the original pure-logic file, the other games reimplemented to the same rules — **removed** |
@@ -102,6 +102,16 @@ Logic Sim, the streamed Proton Arcade and Gams Offline catalogs) are historical:
 those builds are no longer bundled here. Their upstream projects' licences and
 copyrights are unaffected, and this repository grants no rights in their game
 content.
+
+## Vendored cover video
+
+`assets/youare.mp4` is the looping *You Are An Idiot* video used by the
+cover's bottom **Continue to Math Helper** button, copied directly into this
+repository from the `media/youare.mp4` file in the
+[Mist0090/youareanidiot.cc](https://github.com/Mist0090/youareanidiot.cc)
+mirror of [youareanidiot.cc](https://youareanidiot.cc/). All rights in the
+video and its audio remain with their original creators; this repository
+grants no rights in that content.
 
 ## Vendored Celeste Classics
 
@@ -237,26 +247,6 @@ copies the Gams links point at, and no further rights are claimed or implied.
 The app icons are the Gams collection's own icon images for each game, scaled
 into `data/icons/`.
 
-## Mountain658 games (vendored)
-
-Provenance note: seven games in `apps/games/` — Retro Bowl, Slope 2,
-Bitlife, Crossy Road, Moto X3M, Subway Surfers and Paper.io 2 — were
-copied from [mountain658/mountain658.github.io](https://github.com/mountain658/mountain658.github.io)
-(collection: [mountain658.github.io](https://mountain658.github.io/));
-Subway Surfers' Unity build also came from mountain658/SubwaySurfers,
-wired to its local `SanFrancisco.json`. Credit for collecting and
-hosting these builds goes to mountain658; each game is © its respective
-authors (e.g. Retro Bowl by New Star Games, Subway Surfers by
-SYBO/Kiloo). The collection carries no licence granting redistribution
-— the files are mirrored here as-is and no further rights are claimed
-or implied; if you hold rights in a bundled game and want it removed,
-open an issue or pull request. The app icons are the collection's own
-PNGs in `data/icons/`. Game files were copied file-for-file except for
-dropping the collection's analytics/site chrome and making absolute
-links relative. Games from that collection whose pages only embedded a
-remote build (Geometry Dash's Scratch players, Run 3's framed build,
-Basketball Stars' gadget assets, Wordle's selector servers and Drift
-Hunters' remote server choices) are not shipped.
 
 ## Vendored emulator (Web Retro)
 

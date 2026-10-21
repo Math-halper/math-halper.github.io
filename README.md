@@ -27,7 +27,7 @@ idle bakery game, copied byte-for-byte from the offline mirror in
 **23 more games** from that same Gams collection join the Games section —
 Flash classics (Pacman, Tetris, the Henry Stickmin series and more) on the
 shared open-source **Ruffle Flash Player** app, Unity WebGL builds and
-single-file HTML5 games. **7 more games** join them — **Retro Bowl**, Slope 2, Bitlife, Crossy Road, Moto X3M, Subway Surfers and Paper.io 2 — each vendored directly into `apps/games/<id>/` with its own icon (see `CREDITS.md` for provenance) and an "Open in new tab" escape hatch. A small
+single-file HTML5 games. A small
 **Calculator** (new, self-contained code in `apps/productivity/calculator/`) ships again
 too, and **Web Retro** vendors the
 [webretro](https://github.com/BinBashBanana/webretro) emulator build from
@@ -83,13 +83,6 @@ game bundles and earlier built-in sites remain removed (except Test Page).
 | **Tetris** (`tetris`) | Play Tetris - the falling-blocks classic |
 | **The Impossible Quiz** (`the-impossible-quiz`) | Play The Impossible Quiz - the wildly unfair quiz |
 | **Tunnel Rush** (`tunnel-rush`) | Play Tunnel Rush - dodge through the spinning tunnel |
-| **Retro Bowl** (`retro-bowl`) | Play Retro Bowl — the retro American football sim |
-| **Slope 2** (`slope-2`) | Play Slope 2 — the neon slope sequel |
-| **Bitlife** (`bitlife`) | Play Bitlife — the life simulator |
-| **Crossy Road** (`crossy-road`) | Play Crossy Road — dodge traffic and rivers |
-| **Moto X3M** (`moto-x3m`) | Play Moto X3M 1 & 4 — stunt biking |
-| **Subway Surfers** (`subway-surfers`) | Play Subway Surfers — the endless runner |
-| **Paper.io 2** (`paper-io-2`) | Play Paper.io 2 — capture territory |
 
 Rows are listed in start-menu order: **System**, then **Productivity**, **Media**, **Tools** and **Games**.
 
@@ -175,25 +168,37 @@ runtime dependencies or build step. Optional regression tests use jsdom:
 
 The site opens on a **Math Helper** cover page styled like a school maths
 practice site (the `cover` markup in `index.html`, styled in
-`assets/styles.css`). Its practice buttons and links are intentionally
-unavailable — they only report that practice cannot be loaded. Scroll to the
-very bottom and click **Continue to Math Helper** to enter the real proton
-website.
+`assets/styles.css`). It gives no indication that anything is wrong — no
+outage banner, error labels or empty progress bars — but its practice
+buttons and links simply do nothing. To enter the real proton website, type
+the desktop password into the cover's search bar and click **Sign in**; a
+wrong password gets no visible response either. The **Continue to Math
+Helper** button at the very bottom does not enter the desktop: it locks the
+page on the full-screen, full-volume looping *You Are An Idiot* video in
+`assets/youare.mp4`, vendored directly into this repository. Pressing
+Escape is captured where the browser supports Keyboard Lock, and otherwise
+immediately re-enters full screen.
 
-## First launch = create your account
+## Desktop password
 
-1. After continuing from the cover, first launch asks you to create an
-   account (display name, username, password 6+ chars).
-2. **Refreshing the page signs you out** and skips the cover, going straight to
-   the sign-in screen — your username is listed, but you must enter your
-   password again, exactly like signing out. `Lock` hides the desktop behind
-   your password without signing out during a visit.
-3. Add more accounts later from Settings, or from the sign-in screen.
+The password is stored in **`data/password.txt`** so it is easy to change:
+edit the password line in that file (lines starting with `#` are comments),
+save it, and reload the website. The default password is `proton`.
 
-There is no server, so accounts and data live **only in this browser**
-(localStorage). Passwords are stored as salted SHA-256 hashes, never plain
-text, and never leave the device. Clearing browser data deletes everything —
-export a backup from **Settings → Backup** first.
+1. Every visit — fresh or refreshed — starts on the cover. Signing out
+   returns there too, with the password field cleared.
+2. The first successful sign-in creates a local desktop profile named
+   **Student**; later sign-ins reopen the profile used last time, so the
+   desktop, files and settings are still there. `Lock` asks for the same
+   `data/password.txt` password without signing out.
+3. More local profiles can still be created later from Settings.
+
+There is no server, so profile data lives **only in this browser**
+(localStorage) and never leaves the device. Clearing browser data deletes
+everything — export a backup from **Settings → Backup** first. Note that
+the desktop password is a simple gate, not real security: because proton is
+a static site, `data/password.txt` is readable by anyone who can view the
+site's files, exactly like every other file here.
 
 ## Desktop shortcuts
 

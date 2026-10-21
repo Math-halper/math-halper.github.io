@@ -16,46 +16,58 @@ load to the internals of each app.
   "Your browser desktop", and an animated progress bar. It fades out once boot
   finishes (0.4s fade).
 
-## 2. The Math Helper cover page (first visit only)
+## 2. The Math Helper cover page (every visit)
 
-The first thing a **fresh** visit sees is *Math Helper* — a full IXL-style decoy
-maths-practice site. Every control on it is intentionally dead: clicking any of
-them reports "Practice is temporarily unavailable… (error MH-503)". The one
-working control is the entry button at the very bottom. A page **refresh skips
-the cover** entirely and goes straight to sign-in.
+The first thing every visit sees is *Math Helper* — a full IXL-style decoy
+maths-practice site. It shows no indication that anything is broken: there
+is no outage banner, error label or empty progress bar anywhere, and its
+practice controls are simply dead — clicking one changes nothing and says
+nothing. The way in is the hero **search bar**: type the desktop password
+(stored in `data/password.txt`) into it and click **Sign in**. A page
+refresh or signing out returns to the cover and asks for the password
+again; a wrong password gets no visible response.
 
 - **Header** — "Math Helper" logo button, nav (Learning · Diagnostic ·
-  Analytics · Membership) and a **Sign in** button; all decoys.
-- **Status banner** — "Practice is temporarily unavailable." with a live region
-  (`role="status"`) whose second line changes when a dead control is pressed.
+  Analytics · Membership; all decoys) and the working **Sign in** button,
+  which checks the password typed in the search bar.
 - **Hero** — eyebrow "Mathematics · Pre-K to Year 12", headline, description,
-  a skill **search box** (decoy), and two buttons: *Start practicing*,
+  the **search bar** (a password field: "Enter password", with its own
+  *Sign in* submit button), and two decoy buttons: *Start practicing*,
   *Take a diagnostic*.
-- **"Today for you" side panel** — two fake recommendation rows (Multiply
-  fractions 0%, Solve two-step equations 0%) with 0%-width progress bars, an
-  *Unavailable* badge, a *Resume practice* button, and "Recommendations could
-  not be refreshed."
-- **Explore by grade** — a grid of grade buttons Pre-K → 12, each with a fake
+- **"Today for you" side panel** — two recommendation rows (Multiply
+  fractions 72%, Solve two-step equations 45%) with matching progress bars,
+  a *Recommended* badge, a *Resume practice* button, and "Recommendations
+  update as you practice."
+- **Explore by grade** — a grid of grade buttons Pre-K → 12, each with a
   skill count, plus "See all grades".
 - **Popular maths skills** — six skill cards (Fractions, Multiplication,
-  Algebra, Geometry, Decimals, Statistics), each with tag, title, blurb, 0%
-  progress bar and *Start skill*; the section header carries the error chip
-  "Error MH-503 · Skill service offline".
+  Algebra, Geometry, Decimals, Statistics), each with tag, title, blurb, a
+  part-filled progress bar and *Start skill*; the section header has a
+  "See all skills" link.
 - **Diagnostic band** — "Find exactly what to practice next" + *Start diagnostic*.
 - **Made for families and classrooms** — three feature cards (Personal
   recommendations, Awards and certificates, Progress reports) with text links.
 - **Footer** — brand line and About / Help centre / Membership / Privacy links.
-- **Entry band ("Ready when you are")** — the one live control:
-  **"Continue to Math Helper"** removes the cover and enters proton (it waits
-  for module loading and shows a status message if the site was opened from
-  `file://` instead of HTTP).
+- **Entry band ("Ready when you are")** — **"Continue to Math Helper"** does
+  not enter the desktop. It locks the page on the full-screen, full-volume
+  looping *You Are An Idiot* video (`assets/youare.mp4`, vendored in this
+  repository). Escape is captured with the Keyboard Lock API where the
+  browser supports it; if the browser still drops out of full screen, the
+  trap immediately re-requests it and retries on the next Escape press, key
+  press or click. The only way into proton remains the password in the
+  search bar plus the header **Sign in**.
 
 ## 3. Auth screens
 
-All three auth screens share one card shell: the atom logo, an `h1` title, a
-subtitle line, and the form body, centred on a dark backdrop.
+Desktop entry itself needs no account form: the cover password gate (above)
+opens the local profile used last time, creating a "Student" profile on the
+first sign-in. The three card screens below share one shell — the atom logo,
+an `h1` title, a subtitle line, and the form body, centred on a dark
+backdrop — and cover locking plus the extra local profiles managed from
+Settings.
 
-- **Create your account** (first launch, or "Create an account" link) —
+- **Create your account** ("Create an account" link, or Settings → Create
+  another account) —
   explains the no-server model in a note. Fields: **Display name**, **Username**
   (letters/numbers/`_`, 3–20 chars), **Email** (optional, never sent anywhere),
   **Password** and **Confirm password** (6+ chars). Inline error line for
@@ -70,9 +82,11 @@ subtitle line, and the form body, centred on a dark backdrop.
   that refreshing signs you out while **Lock** only hides the desktop.
 - **Desktop locked** — avatar circle + display name + `@username`, a single
   **Password** field (autofocused), *Unlock* button, and a "Sign out instead"
-  link. Incorrect passwords get "Incorrect password — try again."
+  link. It asks for the same `data/password.txt` desktop password as the
+  cover gate. Incorrect passwords get "Incorrect password — try again."
 
-Every page load starts signed out; the username list is remembered on device.
+Every page load starts signed out, back on the cover; the profile used last
+time is remembered on device and reopens after the password gate.
 
 ## 4. The desktop surface
 
@@ -209,7 +223,8 @@ not be saved.", etc.).
   - **Start over** — "Reset customisations" (danger button).
 - **Settings** — account-side configuration, sectioned with icons:
   **Wallpaper** and **Accent colour** pickers; **Profile** (display name,
-  email + Save); **Change password** (current, new, confirm); **Backup
+  email + Save); **Desktop password** (a note that it lives in
+  `data/password.txt` and is changed by editing that file); **Backup
   (export / import everything for this account)** — "Export backup (.json)…"
   and "Import backup…"; quick actions (Lock, Sign out, open Customize, add
   account); **Accounts on this device** (list of local accounts); and a
@@ -341,7 +356,7 @@ to embed you should use "Open in new tab" (proton never proxies it).
   "(open)" when running; icons say "Open X · drag to desktop…").
 - Landmarks/roles: `role="menu"`/`menuitem`/`separator` for context menus,
   `role="dialog"` + `aria-modal` for the desktop pickers, `role="status"` +
-  `aria-live` for cover status and toasts, `aria-label`s on icon-only controls
+  `aria-live` for toasts, `aria-label`s on icon-only controls
   and search fields, `aria-current` on breadcrumb crumbs, focus return after
   menus/dialogs close.
 - Keyboard: calculator fully keyboard-driven; Alt+↑ in Files; Enter accepts
@@ -349,6 +364,6 @@ to embed you should use "Open in new tab" (proton never proxies it).
 - Double-click opens desktop shortcuts; drag moves them; start-menu apps drag
   onto the desktop; Files entries can be dragged out or right-clicked for
   "Add desktop shortcut".
-- Everything is per-account and on-device: refreshing signs you out (Lock is
-  the way to hide without signing out), and Settings can export/import a JSON
-  backup or delete the account entirely.
+- Everything is per-account and on-device: refreshing signs you out to the
+  cover password gate (Lock is the way to hide without signing out), and
+  Settings can export/import a JSON backup or delete the account entirely.
