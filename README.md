@@ -27,7 +27,7 @@ idle bakery game, copied byte-for-byte from the offline mirror in
 **23 more games** from that same Gams collection join the Games section —
 Flash classics (Pacman, Tetris, the Henry Stickmin series and more) on the
 shared open-source **Ruffle Flash Player** app, Unity WebGL builds and
-single-file HTML5 games. **7 more games** join them — **Retro Bowl**, Slope 2, Bitlife, Crossy Road, Moto X3M, Subway Surfers and Paper.io 2 — each vendored directly into `apps/games/<id>/` with its own icon (see `CREDITS.md` for provenance) and an "Open in new tab" escape hatch. A small
+single-file HTML5 games. A small
 **Calculator** (new, self-contained code in `apps/productivity/calculator/`) ships again
 too, and **Web Retro** vendors the
 [webretro](https://github.com/BinBashBanana/webretro) emulator build from
@@ -83,13 +83,6 @@ game bundles and earlier built-in sites remain removed (except Test Page).
 | **Tetris** (`tetris`) | Play Tetris - the falling-blocks classic |
 | **The Impossible Quiz** (`the-impossible-quiz`) | Play The Impossible Quiz - the wildly unfair quiz |
 | **Tunnel Rush** (`tunnel-rush`) | Play Tunnel Rush - dodge through the spinning tunnel |
-| **Retro Bowl** (`retro-bowl`) | Play Retro Bowl — the retro American football sim |
-| **Slope 2** (`slope-2`) | Play Slope 2 — the neon slope sequel |
-| **Bitlife** (`bitlife`) | Play Bitlife — the life simulator |
-| **Crossy Road** (`crossy-road`) | Play Crossy Road — dodge traffic and rivers |
-| **Moto X3M** (`moto-x3m`) | Play Moto X3M 1 & 4 — stunt biking |
-| **Subway Surfers** (`subway-surfers`) | Play Subway Surfers — the endless runner |
-| **Paper.io 2** (`paper-io-2`) | Play Paper.io 2 — capture territory |
 
 Rows are listed in start-menu order: **System**, then **Productivity**, **Media**, **Tools** and **Games**.
 

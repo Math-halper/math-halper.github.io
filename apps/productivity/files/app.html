@@ -530,7 +530,16 @@ registerApp({
       const open = (path, kind) => { if (kind === 'dir') nav(path); else openFSItem(path); };
       scroll.querySelectorAll('[data-path]').forEach((el) => {
         const path = el.dataset.path, kind = el.dataset.kind;
-        el.onclick = (e) => pick(e, path);
+        /* A plain click opens the folder or file. This also fixes real
+         * double-clicks: picking used to re-render the row after the first
+         * click, so the second click landed on a replacement element and no
+         * dblclick ever reached the original row. Ctrl/Cmd-click and
+         * Shift-click stay selection-only for multi-select actions. */
+        el.onclick = (e) => {
+          if (e.ctrlKey || e.metaKey || e.shiftKey) { pick(e, path); return; }
+          sel.clear(); sel.add(path); anchor = path;
+          open(path, kind);
+        };
         el.ondblclick = () => open(path, kind);
         el.oncontextmenu = (e) => {
           if (!sel.has(path)) { sel.clear(); sel.add(path); anchor = path; draw(); }
