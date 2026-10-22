@@ -3,14 +3,16 @@
  * Everything ordinary on the cover runs here, entirely in the browser:
  * skill search, grade browsing, generated practice questions with instant
  * marking, a six-question diagnostic that builds an action plan, personal
- * recommendations, awards, analytics and membership-plan selection.
- * Progress is stored separately from the desktop accounts under
- * proton2.math-helper.v1 (see assets/store.js).
+ * recommendations, awards, analytics, membership-plan selection and the
+ * waitlist. Progress and waitlist entries are stored separately from the
+ * desktop accounts under proton2.math-helper.v1 (see assets/store.js).
+ * Joining the waitlist requires the site password, verified through
+ * window.verifySitePassword (data/password.txt); a desktop account alone
+ * never waitlists anyone.
  *
- * Two cover controls deliberately do NOT belong to this app and are left
- * alone: the header Sign in button (the proton desktop gate in
- * assets/boot.js) and the bottom Continue to Math Helper button (the
- * full-screen video in assets/boot.js). */
+ * The one cover control deliberately left alone is the header Sign in
+ * button — the desktop gate in assets/boot.js. It is not a Math Helper
+ * action and is not needed to join the waitlist. */
 'use strict';
 
 (function initMathHelper() {
@@ -75,6 +77,7 @@
       points: 0,
       diagnostic: { completed: 0, lastScore: null, lastTotal: 0, lastAt: '', recommendedIds: [] },
       history: [],
+      waitlist: [],
     };
   }
 
@@ -89,6 +92,7 @@
         skillStats: stored.skillStats || {},
         diagnostic: { ...base.diagnostic, ...(stored.diagnostic || {}) },
         history: Array.isArray(stored.history) ? stored.history : [],
+        waitlist: Array.isArray(stored.waitlist) ? stored.waitlist : [],
       };
     } catch (err) {
       return base;
@@ -551,15 +555,99 @@
   function showMembership() {
     practice = null; diagnosticRun = null;
     const plans = [
-      { name: 'Free', price: '$0', detail: 'Practice library, progress tracking and one diagnostic plan on this device.' },
-      { name: 'Family', price: '$8/month', detail: 'Everything in Free, plus family goals, printable certificates and weekly progress summaries.' },
-      { name: 'Classroom', price: '$15/month', detail: 'Everything in Family, plus classroom groups, assignments and class analytics.' },
+      { name: 'Free', price: '$0', detail: 'Practice library, progress tracking and one diagnostic plan on this device.', waitlist: false },
+      { name: 'Family', price: '$8/month', detail: 'Everything in Free, plus family goals, printable certificates and weekly progress summaries. Join the waitlist to be first in line.', waitlist: true },
+      { name: 'Classroom', price: '$15/month', detail: 'Everything in Family, plus classroom groups, assignments and class analytics. Join the waitlist to be first in line.', waitlist: true },
     ];
+    const waitlisted = (name) => state.waitlist.some((entry) => entry.plan === name);
     setWorkspace(`<div class="cover-workspace-head"><div><p class="cover-eyebrow">Membership</p><h2>Choose your Math Helper plan</h2>
-      <p>Your current plan is <strong>${esc(state.membershipPlan)}</strong>. Selecting a plan updates it instantly on this device — no payment is taken on this static site.</p></div></div>
+      <p>Your current plan is <strong>${esc(state.membershipPlan)}</strong>. The Free plan is active instantly on this device. Family and Classroom are not open yet — join the waitlist to hold your place. Joining needs the site password; having a desktop account alone is not enough.</p></div></div>
       <div class="cover-plan-grid">${plans.map((plan) => `<article class="${state.membershipPlan === plan.name ? 'cover-plan-current' : ''}">
         <span class="cover-skill-tag">${esc(plan.name)}</span><h3>${esc(plan.price)}</h3><p>${esc(plan.detail)}</p>
-        <button type="button" class="cover-btn ${state.membershipPlan === plan.name ? '' : 'cover-btn-primary'}" data-plan="${esc(plan.name)}" ${state.membershipPlan === plan.name ? 'disabled' : ''}>${state.membershipPlan === plan.name ? 'Current plan' : `Choose ${esc(plan.name)}`}</button></article>`).join('')}</div>`);
+        ${plan.waitlist
+          ? (waitlisted(plan.name)
+            ? `<button type="button" class="cover-btn" disabled>On the waitlist</button>`
+            : `<button type="button" class="cover-btn cover-btn-primary" data-waitlist-plan="${esc(plan.name)}">Join the ${esc(plan.name)} waitlist</button>`)
+          : `<button type="button" class="cover-btn ${state.membershipPlan === plan.name ? '' : 'cover-btn-primary'}" data-plan="${esc(plan.name)}" ${state.membershipPlan === plan.name ? 'disabled' : ''}>${state.membershipPlan === plan.name ? 'Current plan' : `Choose ${esc(plan.name)}`}</button>`}
+        </article>`).join('')}</div>
+      <div class="cover-workspace-actions">
+        <button type="button" class="cover-btn" data-cover-action="waitlist">Join the waitlist</button>
+        ${state.waitlist.length ? `<button type="button" class="cover-btn" data-cover-action="waitlist">View waitlist (${state.waitlist.length})</button>` : ''}
+      </div>
+      ${state.waitlist.length ? `<div class="cover-waitlist-summary"><h3>You are on the waitlist</h3>${state.waitlist.map((entry, i) => `<p><strong>#${i + 1}</strong> ${esc(entry.plan)} — ${esc(entry.name)} (${esc(entry.email)})</p>`).join('')}</div>` : ''}`);
+  }
+
+  function showWaitlist(selectedPlan, message, values) {
+    practice = null; diagnosticRun = null;
+    const plan = ['Family', 'Classroom'].includes(selectedPlan) ? selectedPlan : 'Family';
+    const vals = values || {};
+    setWorkspace(`<div class="cover-workspace-head"><div><p class="cover-eyebrow">Waitlist</p><h2>Join the Math Helper waitlist</h2>
+      <p>Family and Classroom memberships open soon. Add your name and email, choose a plan, and enter the site password to hold your place. A desktop account on its own does <em>not</em> join the waitlist — the password is what confirms your spot.</p></div></div>
+      <form id="waitlist-form" class="cover-waitlist-form">
+        <label>Your name <input id="waitlist-name" name="name" type="text" autocomplete="name" required value="${esc(vals.name || '')}"></label>
+        <label>Email <input id="waitlist-email" name="email" type="email" autocomplete="email" required value="${esc(vals.email || '')}"></label>
+        <label>Plan <select id="waitlist-plan" name="plan">
+          <option value="Family" ${plan === 'Family' ? 'selected' : ''}>Family — $8/month</option>
+          <option value="Classroom" ${plan === 'Classroom' ? 'selected' : ''}>Classroom — $15/month</option>
+        </select></label>
+        <label>Site password <input id="waitlist-password" name="password" type="password" autocomplete="off" required></label>
+        <button type="submit" class="cover-btn cover-btn-primary">Join waitlist</button>
+      </form>
+      ${message ? `<p class="cover-waitlist-message ${message.ok ? 'cover-feedback-good' : 'cover-feedback-bad'}" role="status">${esc(message.text)}</p>` : ''}
+      ${state.waitlist.length ? `<div class="cover-waitlist-summary"><h3>On the waitlist (${state.waitlist.length})</h3>
+        ${state.waitlist.map((entry, i) => `<p><strong>#${i + 1}</strong> ${esc(entry.plan)} — ${esc(entry.name)} (${esc(entry.email)}) <button type="button" class="cover-btn cover-btn-small" data-waitlist-remove="${i}">Remove</button></p>`).join('')}
+        <p class="cover-waitlist-note">Waitlist entries are stored only in this browser, alongside your Math Helper progress. Creating or signing in to a desktop account does not change this list.</p></div>`
+        : `<p class="cover-waitlist-note">Nobody is on the waitlist yet on this device.</p>`}`);
+  }
+
+  async function joinWaitlist() {
+    const nameEl = workspace.querySelector('#waitlist-name');
+    const emailEl = workspace.querySelector('#waitlist-email');
+    const planEl = workspace.querySelector('#waitlist-plan');
+    const passwordEl = workspace.querySelector('#waitlist-password');
+    const name = nameEl ? nameEl.value.trim() : '';
+    const email = emailEl ? emailEl.value.trim().toLowerCase() : '';
+    const plan = planEl && ['Family', 'Classroom'].includes(planEl.value) ? planEl.value : 'Family';
+    const password = passwordEl ? passwordEl.value : '';
+    const values = { name, email };
+    if (!name || !email) {
+      showWaitlist(plan, { ok: false, text: 'Add your name and email to join the waitlist.' }, values);
+      return;
+    }
+    if (!password) {
+      showWaitlist(plan, { ok: false, text: 'Enter the site password to join the waitlist. An account alone is not enough.' }, values);
+      return;
+    }
+    /* The gate: the same site password as data/password.txt, checked by the
+     * verifier boot.js publishes. Without it, nothing is added. */
+    let ok = false;
+    try {
+      ok = typeof window.verifySitePassword === 'function' &&
+        await window.verifySitePassword(password);
+    } catch (err) {
+      ok = false;
+    }
+    if (!ok) {
+      showWaitlist(plan, { ok: false, text: 'That password isn\'t right, so you have not been added to the waitlist.' }, values);
+      return;
+    }
+    const existing = state.waitlist.findIndex((entry) => entry.email === email);
+    if (existing >= 0) {
+      state.waitlist[existing] = { ...state.waitlist[existing], name, plan, joinedAt: state.waitlist[existing].joinedAt || new Date().toISOString() };
+      saveState();
+      showWaitlist(plan, { ok: true, text: `You're on the waitlist, ${name} — position #${existing + 1} for the ${plan} plan.` }, values);
+      return;
+    }
+    state.waitlist.push({ name, email, plan, joinedAt: new Date().toISOString() });
+    saveState();
+    showWaitlist(plan, { ok: true, text: `You're on the waitlist, ${name} — position #${state.waitlist.length} for the ${plan} plan.` }, values);
+  }
+
+  function removeWaitlist(index) {
+    if (!Number.isInteger(index) || index < 0 || index >= state.waitlist.length) return;
+    state.waitlist.splice(index, 1);
+    saveState();
+    showWaitlist('Family', { ok: true, text: 'Removed from the waitlist.' });
   }
 
   function showInfo(kind) {
@@ -567,7 +655,7 @@
     const pages = {
       about: { eyebrow: 'About', title: 'About Math Helper', body: 'Math Helper is a local maths-practice library for Pre-K to Year 12. It generates questions, marks them instantly, remembers progress on this device and turns diagnostic answers into a personal action plan.' },
       help: { eyebrow: 'Help centre', title: 'How Math Helper works', body: 'Search for a skill, browse by grade, or take the diagnostic. Choose an answer to get instant feedback and an explanation. Recommendations update from your mastery, accuracy and diagnostic plan. Use Analytics to see growth by topic and Awards to track milestones.' },
-      privacy: { eyebrow: 'Privacy', title: 'Your learning stays on this device', body: 'Practice progress, diagnostic plans and membership selection are stored only in this browser under the proton2.math-helper.v1 key. Nothing is sent to a server. Clearing browser storage removes the learning record.' },
+      privacy: { eyebrow: 'Privacy', title: 'Your learning stays on this device', body: 'Practice progress, diagnostic plans, membership selection and waitlist entries are stored only in this browser under the proton2.math-helper.v1 key. Nothing is sent to a server. Clearing browser storage removes the learning record and the waitlist.' },
     };
     const page = pages[kind] || pages.about;
     setWorkspace(`<div class="cover-workspace-head"><div><p class="cover-eyebrow">${esc(page.eyebrow)}</p><h2>${esc(page.title)}</h2><p>${esc(page.body)}</p></div></div>
@@ -598,6 +686,7 @@
       case 'awards': showAwards(); break;
       case 'analytics': showAnalytics(); break;
       case 'membership': showMembership(); break;
+      case 'waitlist': showWaitlist(); break;
       case 'about': case 'help': case 'privacy': showInfo(action); break;
       case 'next-question': nextPracticeQuestion(); break;
       case 'finish-practice': practice = null; showLearning(); break;
@@ -612,6 +701,10 @@
       else answerPractice(answer.dataset.answer);
       return;
     }
+    const waitlistPlan = event.target.closest('[data-waitlist-plan]');
+    if (waitlistPlan && workspace.contains(waitlistPlan)) { showWaitlist(waitlistPlan.dataset.waitlistPlan); return; }
+    const waitlistRemove = event.target.closest('[data-waitlist-remove]');
+    if (waitlistRemove && workspace.contains(waitlistRemove)) { removeWaitlist(Number(waitlistRemove.dataset.waitlistRemove)); return; }
     const plan = event.target.closest('[data-plan]');
     if (plan && workspace.contains(plan)) { choosePlan(plan.dataset.plan); return; }
     const skill = event.target.closest('[data-cover-skill]');
@@ -637,6 +730,12 @@
     });
   }
 
+  workspace.addEventListener('submit', (event) => {
+    if (event.target.id !== 'waitlist-form') return;
+    event.preventDefault();
+    joinWaitlist();
+  });
+
   updateStaticProgress();
 
   /* Small public handle for tests and debugging; the UI works without it. */
@@ -647,5 +746,8 @@
     showSearch,
     startPractice,
     startDiagnostic,
+    showMembership,
+    showWaitlist,
+    joinWaitlist,
   };
 })();

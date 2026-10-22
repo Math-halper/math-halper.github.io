@@ -175,25 +175,28 @@ skills, Learning opens personal recommendations, grade buttons and skill
 cards start generated practice questions with instant marking and
 explanations, the diagnostic builds a saved action plan, and Analytics,
 Awards, Membership, About, Help centre and Privacy all open working pages.
-Cover learning progress is stored on this device under
-`proton2.math-helper.v1`.
+Cover learning progress and waitlist entries are stored on this device
+under `proton2.math-helper.v1`.
 
-Two controls keep their separate hidden behaviour. To enter the real
-proton website the first time, type the desktop password into the header
-search bar beside **Sign in** and click **Sign in**; that leads to the
-**Create your account** page. Once an account has been created on that
-device, entering the password is no longer needed — just click **Sign in**
-and the desktop reopens. Submitting the search form itself only searches
-skills. The main page area has no password entry, and (before an account
-exists) a wrong password gets no visible response either. The **Continue
-to Math Helper** button at the very bottom does not enter the desktop: it
-locks the page on the full-screen, full-volume looping *You Are An Idiot*
-video in `assets/youare.mp4`, vendored directly into this repository.
-Pressing Escape is captured where the browser supports Keyboard Lock, and
-otherwise the trap spams full-screen requests (a 100ms loop, plus a burst
-on every Escape press, key press, click and tab/window refocus) so the
-first moment the browser allows re-entry, the video is back in full
-screen.
+Joining the waitlist is separate from having an account: the waitlist form
+(name, email and Family/Classroom plan) only adds an entry after the site
+password from `data/password.txt` is entered correctly. A wrong or missing
+password adds nobody, and creating or signing in to a desktop account
+never waitlists anyone on its own.
+
+One control keeps its separate behaviour. To enter the real proton
+website the first time, type the desktop password into the header search
+bar beside **Sign in** and click **Sign in**; that leads to the **Create
+your account** page. Once an account has been created on that device,
+entering the password is no longer needed — just click **Sign in** and the
+desktop reopens. Submitting the search form itself only searches skills.
+The main page area has no password entry, and (before an account exists)
+a wrong password gets no visible response either.
+
+The old bottom "Continue to Math Helper" entry band and its full-screen
+video trap have been removed entirely — no control reveals, plays or
+fullscreens the video any more. The media file itself stays in the
+repository, unused, at `assets/youare.mp4`.
 
 The desktop storage system has also been replaced. Current accounts and
 per-account state live under the `proton2.*` localStorage namespace

@@ -105,9 +105,11 @@ content.
 
 ## Vendored cover video
 
-`assets/youare.mp4` is the looping *You Are An Idiot* video used by the
-cover's bottom **Continue to Math Helper** button, copied directly into this
-repository from the `media/youare.mp4` file in the
+`assets/youare.mp4` is the looping *You Are An Idiot* video formerly used
+by the cover's removed bottom-button trap. The trap has been removed and
+nothing on the site plays the file any more, but the file itself is
+retained in this repository. It was copied directly into this repository
+from the `media/youare.mp4` file in the
 [Mist0090/youareanidiot.cc](https://github.com/Mist0090/youareanidiot.cc)
 mirror of [youareanidiot.cc](https://youareanidiot.cc/). All rights in the
 video and its audio remain with their original creators; this repository

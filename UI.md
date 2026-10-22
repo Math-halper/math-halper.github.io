@@ -54,8 +54,11 @@ read, so profiles from the previous storage system no longer work.
 - **Math Helper workspace** — appears below the hero for search results,
   Learning/recommendations, grade pages, all-skills browsing, practice
   questions with explanations, the diagnostic and its action plan,
-  Awards, Analytics, Membership plan selection (Free · Family ·
-  Classroom, stored locally) and About / Help centre / Privacy pages.
+  Awards, Analytics, Membership (Free chosen instantly; Family and
+  Classroom via the waitlist) and About / Help centre / Privacy pages.
+  The waitlist form (name, email, plan and the site password) only adds an
+  entry when the password from `data/password.txt` checks out; a desktop
+  account alone never joins the waitlist.
 - **Explore by grade** — a grid of grade buttons Pre-K → 12, each with a
   skill count, plus "See all grades"; every grade opens its own practice
   paths.
@@ -69,17 +72,17 @@ read, so profiles from the previous storage system no longer work.
   open the matching workspace pages.
 - **Footer** — brand line and working About / Help centre / Membership /
   Privacy links.
-- **Entry band ("Ready when you are")** — **"Continue to Math Helper"** does
-  not enter the desktop. It locks the page on the full-screen, full-volume
-  looping *You Are An Idiot* video (`assets/youare.mp4`, vendored in this
-  repository). Escape is captured with the Keyboard Lock API where the
-  browser supports it; if the browser still drops out of full screen, the
-  trap spams full-screen requests — a 100ms loop for as long as the trap is
-  up, plus an immediate burst on every Escape press, key press, click and
-  tab/window refocus — so the first moment the browser allows re-entry the
-  video is full screen again. The only way into proton remains the header **Sign in**
-  — with the password in the search bar the first time, and on its own
-  once an account exists on the device.
+- **Waitlist band** — a **Join waitlist** button that opens the waitlist
+  form in the workspace. Joining requires the site password from
+  `data/password.txt`; a local account by itself is not enough, a wrong
+  or missing password adds nobody, and a correct password confirms the
+  place and lists the entry (with a remove option) on this device.
+- There is no bottom entry band any more: the old "Continue to Math
+  Helper" button and its full-screen video trap were removed entirely.
+  `assets/youare.mp4` stays in the repository but is unused — no control
+  reveals, plays or fullscreens it. The only way into proton remains the
+  header **Sign in** — with the password in the search bar the first
+  time, and on its own once an account exists on the device.
 
 ## 3. Auth screens
 

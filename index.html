@@ -29,9 +29,10 @@
 <!-- Math Helper cover page. This is the public, IXL-style learning site
      shown before the proton website. Its ordinary controls are a working
      maths-practice app (assets/math-helper.js): search, grade browsing,
-     adaptive practice, a diagnostic, recommendations, awards, analytics
-     and membership all run locally. The header Sign in control remains the
-     separate desktop gate checked by assets/boot.js. -->
+     adaptive practice, a diagnostic, recommendations, awards, analytics,
+     membership and a password-checked waitlist all run locally. The header
+     Sign in control remains the separate desktop gate checked by
+     assets/boot.js. -->
 <main id="cover" class="cover" aria-label="Math Helper cover page">
   <header class="cover-header">
     <button type="button" class="cover-logo" data-cover-action="home" aria-label="Math Helper home">Math <span>Helper</span></button>
@@ -115,6 +116,11 @@
     <button type="button" class="cover-btn cover-btn-light" data-cover-action="start-diagnostic">Start diagnostic</button>
   </section>
 
+  <section class="cover-band cover-waitlist-band" aria-labelledby="cover-waitlist-title">
+    <div><p class="cover-eyebrow">Waitlist</p><h2 id="cover-waitlist-title">Join the Math Helper waitlist</h2><p>Joining the waitlist takes the site password — having a local account by itself is not enough.</p></div>
+    <button type="button" class="cover-btn cover-btn-light" data-cover-action="waitlist">Join waitlist</button>
+  </section>
+
   <section class="cover-section" aria-labelledby="cover-more-title">
     <div class="cover-section-head"><h2 id="cover-more-title">Made for families and classrooms</h2></div>
     <div class="cover-feature-grid">
@@ -129,18 +135,7 @@
     <div class="cover-footer-links"><button type="button" data-cover-action="about">About</button><button type="button" data-cover-action="help">Help centre</button><button type="button" data-cover-action="membership">Membership</button><button type="button" data-cover-action="privacy">Privacy</button></div>
   </footer>
 
-  <section class="cover-entry" aria-labelledby="cover-entry-title">
-    <p class="cover-eyebrow">Math Helper workspace</p>
-    <h2 id="cover-entry-title">Ready when you are</h2>
-    <p>Continue to Math Helper and pick up right where you left off.</p>
-    <button type="button" id="cover-enter" class="cover-enter">Continue to Math Helper</button>
-  </section>
 </main>
-
-<!-- Full-screen looping video trap, opened by the bottom Continue button. -->
-<div id="idiot-lock" class="idiot-lock" hidden aria-hidden="true">
-  <video id="idiot-video" src="assets/youare.mp4" loop playsinline preload="auto"></video>
-</div>
 
 <!-- Auth (first-launch setup / login / lock) is rendered here -->
 <main id="auth" class="auth-wrap" hidden></main>

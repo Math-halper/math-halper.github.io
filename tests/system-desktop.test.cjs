@@ -480,7 +480,7 @@ test('the cover search bar and Sign in button gate the desktop with data/passwor
     'data-cover-action="start-diagnostic"', 'data-cover-action="resume"', 'data-cover-action="all-grades"',
     'data-cover-action="all-skills"', 'data-cover-action="recommendations"', 'data-cover-action="awards"',
     'data-cover-action="analytics"', 'data-cover-action="about"', 'data-cover-action="help"',
-    'data-cover-action="privacy"', 'id="math-helper-workspace"', 'data-grade="5"',
+    'data-cover-action="privacy"', 'data-cover-action="waitlist"', 'id="math-helper-workspace"', 'data-grade="5"',
     'data-cover-skill="add-subtract-fractions"']) {
     assert.ok(index.includes(hook), `the working cover should include ${hook}`);
   }
@@ -488,7 +488,8 @@ test('the cover search bar and Sign in button gate the desktop with data/passwor
     'the cover should load the Math Helper learning app');
   const mathHelper = source('assets/math-helper.js');
   for (const feature of ['showSearch', 'startPractice', 'startDiagnostic', 'showAnalytics',
-    'showAwards', 'showMembership', 'MH.MATH_HELPER_KEY']) {
+    'showAwards', 'showMembership', 'showWaitlist', 'joinWaitlist', 'waitlist',
+    'window.verifySitePassword', 'MH.MATH_HELPER_KEY']) {
     assert.ok(mathHelper.includes(feature), `Math Helper should implement ${feature}`);
   }
   const store = source('assets/store.js');
@@ -504,11 +505,10 @@ test('the cover search bar and Sign in button gate the desktop with data/passwor
     'Skill service offline', 'Recommendations could not be refreshed', '>Unavailable<', 'width:0%']) {
     assert.ok(!index.includes(sign), `the cover should not show "${sign}"`);
   }
-  assert.match(index, /<button type="button" id="cover-enter" class="cover-enter">Continue to Math Helper<\/button>/,
-    'the bottom button should be Continue to Math Helper');
-  assert.match(index, /<video id="idiot-video" src="assets\/youare\.mp4" loop/,
-    'the Continue trap should use the video file vendored in this repository');
-  assert.ok(fs.existsSync(path.join(ROOT, 'assets/youare.mp4')), 'assets/youare.mp4 should be in the repository');
+  assert.ok(!index.includes('id="cover-enter"') && !index.includes('Continue to Math Helper') &&
+    !index.includes('cover-entry') && !index.includes('idiot-lock') && !index.includes('idiot-video'),
+    'the bottom Continue entry band and the video trap markup should be gone');
+  assert.ok(fs.existsSync(path.join(ROOT, 'assets/youare.mp4')), 'assets/youare.mp4 should stay in the repository');
   assert.ok(fs.statSync(path.join(ROOT, 'assets/youare.mp4')).size > 1_000_000,
     'assets/youare.mp4 should contain the real video, not a placeholder');
   const boot = source('assets/boot.js');
@@ -518,12 +518,11 @@ test('the cover search bar and Sign in button gate the desktop with data/passwor
   assert.ok(!boot.includes('isPageReload'), 'a refresh must not skip the password gate');
   assert.ok(!boot.includes('coverUnavailable') && !boot.includes('cover-status'),
     'clicking a cover control should not report that anything is unavailable');
-  assert.ok(boot.includes('lockIdiotVideo') && boot.includes('requestFullscreen'),
-    'Continue should lock the looping video in full screen');
-  assert.ok(boot.includes("navigator.keyboard.lock(['Escape'])") && boot.includes('trapIdiotEscape'),
-    'pressing Escape should be trapped and sent back into full screen');
-  assert.ok(boot.includes('startIdiotFullscreenSpam') && boot.includes('setInterval'),
-    'the trap should keep spamming full-screen requests while it is up');
+  assert.ok(boot.includes('window.verifySitePassword') && boot.includes('verifySitePassword'),
+    'boot should publish the site-password verifier the waitlist uses');
+  assert.ok(!boot.includes('lockIdiotVideo') && !boot.includes('idiot') && !boot.includes('requestFullscreen') &&
+    !boot.includes('youare.mp4'),
+    'no cover control should reveal, play or fullscreen the retained video file');
 
   const virtualConsole = new VirtualConsole(), errors = [];
   virtualConsole.on('jsdomError', (err) => errors.push(err.message));
@@ -551,14 +550,10 @@ test('the cover search bar and Sign in button gate the desktop with data/passwor
       reader.readAsArrayBuffer(this);
     });
   };
-  /* jsdom cannot play media or enter full screen; record both instead. */
+  /* jsdom cannot play media; record playback attempts instead. Nothing on
+   * the cover should ever trigger one now that the trap is gone. */
   w.HTMLMediaElement.prototype.play = function () { this.dataset.played = 'true'; return Promise.resolve(); };
   w.HTMLMediaElement.prototype.pause = function () {};
-  w.document.querySelector('#idiot-lock').requestFullscreen = function () {
-    this.dataset.fullscreen = 'requested';
-    this.dataset.fullscreenRequests = String(Number(this.dataset.fullscreenRequests || 0) + 1);
-    return Promise.resolve();
-  };
   const run = (text) => {
     const script = w.document.createElement('script');
     script.textContent = text; w.document.body.appendChild(script); script.remove();
@@ -654,11 +649,44 @@ test('the cover search bar and Sign in button gate the desktop with data/passwor
     assert.match(workspace.textContent, /Progress reports/);
     assert.match(workspace.textContent, /Growth by topic/);
 
+    /* Membership: Free is chosen instantly, but Family/Classroom are
+     * waitlist-only. Joining needs the site password — not an account. */
     w.document.querySelector('[data-cover-nav="membership"]').click();
-    workspace.querySelector('[data-plan="Family"]').click();
-    assert.equal(helperState().membershipPlan, 'Family',
-      'choosing a membership plan should save it locally');
-    assert.match(workspace.textContent, /Current plan/);
+    assert.match(workspace.textContent, /Family/);
+    assert.match(workspace.textContent, /Classroom/);
+    workspace.querySelector('[data-plan="Free"]').click();
+    assert.equal(helperState().membershipPlan, 'Free',
+      'choosing the Free membership plan should save it locally');
+    workspace.querySelector('[data-waitlist-plan="Family"]').click();
+    assert.match(workspace.textContent, /Join the Math Helper waitlist/);
+    assert.ok(workspace.querySelector('#waitlist-form'), 'the waitlist should show its form');
+
+    /* A wrong password adds nobody, even with name/email/plan filled in. */
+    workspace.querySelector('#waitlist-name').value = 'Ada';
+    workspace.querySelector('#waitlist-email').value = 'ada@example.com';
+    workspace.querySelector('#waitlist-password').value = 'not the password';
+    workspace.querySelector('#waitlist-form').dispatchEvent(new w.Event('submit', { bubbles: true, cancelable: true }));
+    await until(() => /That password isn't right/.test(workspace.textContent),
+      'the wrong-password waitlist message');
+    assert.equal(helperState().waitlist.length, 0,
+      'a wrong password must not add anyone to the waitlist');
+    assert.deepEqual(Object.keys(w.eval('MH.accounts()')), [],
+      'the waitlist attempt should not create a desktop account');
+
+    /* The correct site password adds the entry and confirms the place. */
+    workspace.querySelector('#waitlist-password').value = password;
+    workspace.querySelector('#waitlist-form').dispatchEvent(new w.Event('submit', { bubbles: true, cancelable: true }));
+    await until(() => /You're on the waitlist/.test(workspace.textContent),
+      'the waitlist confirmation');
+    assert.equal(helperState().waitlist.length, 1,
+      'the correct password should add one waitlist entry');
+    assert.equal(helperState().waitlist[0].email, 'ada@example.com');
+    assert.equal(helperState().waitlist[0].plan, 'Family');
+    assert.equal(helperState().membershipPlan, 'Free',
+      'joining the waitlist should not silently change the active plan');
+    assert.deepEqual(Object.keys(w.eval('MH.accounts()')), [],
+      'joining the waitlist should not create a desktop account');
+    assert.match(workspace.textContent, /On the waitlist \(1\)/);
 
     w.document.querySelector('.cover-grades [data-grade="5"]').click();
     assert.match(workspace.textContent, /Grade 5 maths/);
@@ -769,42 +797,21 @@ test('the cover search bar and Sign in button gate the desktop with data/passwor
     assert.equal(cover.hidden, false, 'signing out should show the cover gate again');
     assert.equal(input.value, '', 'signing out should clear the password field');
 
-    /* The bottom Continue to Math Helper button does not enter the desktop:
-     * it locks the page on the full-screen, full-volume looping video. */
-    const idiotLock = w.document.querySelector('#idiot-lock');
-    const idiotVideo = w.document.querySelector('#idiot-video');
-    assert.equal(idiotLock.hidden, true);
-    w.document.querySelector('#cover-enter').click();
-    assert.equal(desktop.hidden, true, 'Continue must not bypass the password gate');
-    assert.equal(idiotLock.hidden, false, 'Continue should reveal the video lock');
-    assert.equal(idiotVideo.loop, true, 'the video should loop indefinitely');
-    assert.equal(idiotVideo.muted, false, 'the video should not be muted');
-    assert.equal(idiotVideo.volume, 1, 'the video should be at full volume');
-    assert.equal(idiotVideo.dataset.played, 'true', 'Continue should start the video');
-    assert.equal(idiotLock.dataset.fullscreen, 'requested',
-      'Continue should request full screen for the video lock');
-
-    /* Pressing Escape goes straight back into full screen: the key press
-     * itself re-requests it, and a browser-driven exit retries too. */
-    const beforeEscape = Number(idiotLock.dataset.fullscreenRequests || 0);
-    w.document.dispatchEvent(new w.KeyboardEvent('keydown', {
-      key: 'Escape', bubbles: true, cancelable: true,
-    }));
-    assert.ok(Number(idiotLock.dataset.fullscreenRequests || 0) > beforeEscape,
-      'Escape should re-request full screen');
-    const beforeExit = Number(idiotLock.dataset.fullscreenRequests || 0);
-    w.document.dispatchEvent(new w.Event('fullscreenchange'));
-    await wait(325);
-    assert.ok(Number(idiotLock.dataset.fullscreenRequests || 0) > beforeExit,
-      'leaving full screen should trigger another full-screen request');
-
-    /* And it never gives up: with no further input at all, the trap keeps
-     * spamming full-screen requests (100ms loop) for as long as it is up
-     * and not in full screen. */
-    const beforeSpam = Number(idiotLock.dataset.fullscreenRequests || 0);
-    await wait(450);
-    assert.ok(Number(idiotLock.dataset.fullscreenRequests || 0) >= beforeSpam + 2,
-      'the trap should keep spamming full-screen requests without any input');
+    /* The bottom Continue band and the video trap are gone entirely: no
+     * entry button, no lock overlay, no video element, and nothing left
+     * that could play or fullscreen the retained media file. */
+    assert.equal(w.document.querySelector('#cover-enter'), null,
+      'the bottom Continue to Math Helper button should be removed');
+    assert.equal(w.document.querySelector('.cover-entry'), null,
+      'the bottom entry band should be removed');
+    assert.equal(w.document.querySelector('#idiot-lock'), null,
+      'the fullscreen video lock should be removed');
+    assert.equal(w.document.querySelector('#idiot-video'), null,
+      'the trap video element should be removed');
+    assert.equal(w.document.querySelector('video'), null,
+      'the cover should not contain any video element');
+    assert.equal(desktop.hidden, true, 'the desktop should stay hidden on the cover');
+    assert.equal(cover.hidden, false, 'the cover should still be showing');
   } finally {
     w.close();
   }
