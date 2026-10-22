@@ -802,6 +802,30 @@ desc=Play Backrooms - wander the endless yellow rooms
 w=980
 h=640
 
+[application]
+id=kart-bros
+name=Kart Bros
+path=apps/games/kart-bros/app.html
+icon=data/icons/kart-bros.png
+svg-icon=false
+cat=Games
+preinstalled=true
+desc=Play Kart Bros - kart racing against the bros
+w=980
+h=640
+
+[application]
+id=geometry-dash-lite
+name=Geometry Dash Lite
+path=apps/games/geometry-dash-lite/app.html
+icon=data/icons/geometry-dash-lite.png
+svg-icon=false
+cat=Games
+preinstalled=true
+desc=Play Geometry Dash Lite - jump and fly to the rhythm
+w=980
+h=640
+
 /* Embedded-page apps are not shipped: every app is a local app
    (copy apps/_template/) whose files live in this repository. */
 
