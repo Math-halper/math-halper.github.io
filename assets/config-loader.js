@@ -99,6 +99,13 @@
       item.cat = item.cat || 'Other';
       item.w = parseInt(item.w, 10) || 880;
       item.h = parseInt(item.h, 10) || 600;
+      /* preinstalled= says whether the app ships with proton. Exposed as a
+       * boolean; absent or unreadable values count as preinstalled. */
+      const pre = String(item.preinstalled || '').toLowerCase();
+      if (pre && pre !== 'true' && pre !== 'false') {
+        warnings.push(`Application ${item.id} has invalid preinstalled value "${item.preinstalled}"; counting it as preinstalled.`);
+      }
+      item.preinstalled = pre !== 'false';
       return item;
     });
 

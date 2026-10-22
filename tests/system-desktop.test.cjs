@@ -225,6 +225,12 @@ test('the catalog is the desktop apps, the file system suite, a calculator, web 
   for (const [id, icon] of Object.entries(RASTER_ICON_APPS)) {
     assert.equal(iconById[id], icon, `${id} should default to its own cropped art`);
   }
+  /* Every catalog block says whether the app is preinstalled. Everything in
+   * this catalog ships with proton, and the parser exposes it as a boolean. */
+  assert.ok(apps.every((a) => a.preinstalled === true),
+    'every catalogued app should be marked as preinstalled');
+  assert.equal((source('data/applications.js').match(/^preinstalled=true$/gm) || []).length,
+    apps.length + 1, 'every [application] block (and the template) should state preinstalled=');
   assert.deepEqual(Array.from(sites, (s) => s.id), ['test-page']);
   const page = { ...sites[0] };
   assert.equal(page.name, 'Test Page');
