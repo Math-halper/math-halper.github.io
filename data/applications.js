@@ -826,6 +826,18 @@ desc=Play Geometry Dash Lite - jump and fly to the rhythm
 w=980
 h=640
 
+[application]
+id=five-nights-at-freddys-sl
+name=Five Nights at Freddy's: Sister Location
+path=apps/games/five-nights-at-freddys-sl/app.html
+icon=data/icons/five-nights-at-freddys-sl.png
+svg-icon=false
+cat=Games
+preinstalled=true
+desc=Play Five Nights at Freddy's: Sister Location - a darker shift underground
+w=980
+h=640
+
 /* Embedded-page apps are not shipped: every app is a local app
    (copy apps/_template/) whose files live in this repository. */
 
