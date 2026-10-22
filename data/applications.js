@@ -730,6 +730,42 @@ desc=Play Drift Boss - one-button drifting on a floating track
 w=980
 h=640
 
+[application]
+id=football-bros
+name=Football Bros
+path=apps/games/football-bros/app.html
+icon=data/icons/football-bros.png
+svg-icon=false
+cat=Games
+preinstalled=true
+desc=Play Football Bros - chaotic physics football
+w=980
+h=640
+
+[application]
+id=five-nights-at-freddys-1
+name=Five Nights at Freddy's
+path=apps/games/five-nights-at-freddys-1/app.html
+icon=data/icons/five-nights-at-freddys-1.png
+svg-icon=false
+cat=Games
+preinstalled=true
+desc=Play Five Nights at Freddy's - survive the night shift at Freddy Fazbear’s
+w=980
+h=640
+
+[application]
+id=five-nights-at-freddys-4
+name=Five Nights at Freddy's 4
+path=apps/games/five-nights-at-freddys-4/app.html
+icon=data/icons/five-nights-at-freddys-4.png
+svg-icon=false
+cat=Games
+preinstalled=true
+desc=Play Five Nights at Freddy's 4 - the nightmare comes home
+w=980
+h=640
+
 /* Embedded-page apps are not shipped: every app is a local app
    (copy apps/_template/) whose files live in this repository. */
 
