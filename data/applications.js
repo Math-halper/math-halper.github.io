@@ -33,7 +33,7 @@ proton ships the five desktop System apps (App Center, Customize, Settings,
 About, Browser), the file system suite from main (Files, Text Editor, Image
 Viewer, Media, PDF Viewer — their ids are exactly the ones FS.appFor()
 returns, so double-clicking a file opens it in the right one), a Calculator,
-Web Retro and Ruffle Flash Player (the Tools — Web Retro carries the offline catalog’s classic ROMs and still loads your own), the
+Web Retro and Ruffle Flash Player (the Tools — Web Retro carries the offline catalog’s classic ROMs and still loads your own) plus You Are An Idiot, the one app that is not preinstalled (preinstalled=false: it waits in App Center until someone installs it, then unleashes the classic bouncing-window menace inside the desktop), the
 three Celeste Classics apps (Celeste Classic, Celeste Classic 2, Celeste
 Community — game files copied byte-for-byte from github.com/Math-halper/Celeste),
 the two Mario games (Mari0 and Super Mario 64 — game builds copied
@@ -224,6 +224,17 @@ preinstalled=true
 desc=Play retro classics or your own ROMs - N64, SNES, NES, Game Boy
 w=980
 h=640
+[application]
+id=you-are-an-idiot
+name=You Are An Idiot
+path=apps/tools/you-are-an-idiot/app.html
+icon=smile
+svg-icon=true
+cat=Tools
+preinstalled=false
+desc=The classic you-are-an-idiot desktop menace, quarantined inside proton: bouncing windows, flashing faces and that song. Not preinstalled - add it from App Center if you dare
+w=760
+h=560
 [application]
 id=game-2048
 name=2048

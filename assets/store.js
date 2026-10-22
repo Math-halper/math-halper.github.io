@@ -149,10 +149,14 @@ const MH = {
        * customApps: [{id,name,icon,desc,url}] — each becomes a real proton app.
        * websites:   [{id,name,icon,url}]   — saved sites, opened in Browser.
        * hiddenApps: [appId]                — built-ins the user "removed"
-       *                                      (hidden from menu, restorable). */
+       *                                      (hidden from menu, restorable).
+       * installedApps: [appId]             — catalog apps marked
+       *                                      preinstalled=false that the user
+       *                                      has added from App Center. */
       customApps: [],
       websites: [],
       hiddenApps: [],
+      installedApps: [],
 
     };
   },

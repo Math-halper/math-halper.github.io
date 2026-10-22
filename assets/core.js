@@ -50,6 +50,19 @@ function normalizeUserData() {
   const LEGACY_APP_IDS = { math: 'calculator', 'pdf-viewer': 'pdf' };
   userData.settings.pinned = userData.settings.pinned.map((id) => LEGACY_APP_IDS[id] || id);
   userData.hiddenApps = userData.hiddenApps.map((id) => LEGACY_APP_IDS[id] || id);
+  /* Apps the catalog marks preinstalled=false are not on the desktop until
+   * the user adds them in App Center. Until then they sit in hiddenApps;
+   * installing remembers the choice in installedApps so this does not
+   * hide them again on the next load. */
+  userData.installedApps ||= [];
+  for (const app of Object.values(APPS)) {
+    if (!app || app.preinstalled !== false || dynamicAppIds.has(app.id)) continue;
+    if (userData.installedApps.includes(app.id)) {
+      userData.hiddenApps = userData.hiddenApps.filter((x) => x !== app.id);
+    } else if (!userData.hiddenApps.includes(app.id)) {
+      userData.hiddenApps.push(app.id);
+    }
+  }
   /* Missing means an older account: give it the same initial shortcuts as a
    * new account. An empty array is deliberate (the user cleared the desktop).
    * Older versions also saved desktopApps as app ids; preserve that choice. */

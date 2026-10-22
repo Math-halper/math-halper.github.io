@@ -43,7 +43,7 @@ registerApp({
           const pinned = (userData.settings.pinned || []).includes(a.id);
           const removed = (userData.hiddenApps || []).includes(a.id);
           let buttons;
-          if (removed) buttons = `<button class="btn sm primary" data-restore="${a.id}">${iconSvg('plus')} Add back</button>`;
+          if (removed) buttons = `<button class="btn sm primary" data-restore="${a.id}">${iconSvg('plus')} ${a.preinstalled === false ? 'Install' : 'Add back'}</button>`;
           else {
             buttons = `<button class="btn sm primary" data-open="${MH.esc(a.id)}">Open</button><button class="btn sm" data-pin="${MH.esc(a.id)}">${pinned ? 'Unpin' : iconSvg('pin') + ' Pin'}</button><button class="btn sm" data-desktop="${MH.esc(a.id)}">${userData.desktopIcons.some((x) => x.kind === 'app' && x.target === a.id) ? 'Remove desktop icon' : iconSvg('plus') + ' Desktop icon'}</button>`;
             buttons += PROTECTED.includes(a.id)
@@ -70,11 +70,18 @@ registerApp({
         if (!a || !confirmBox(`Remove “${a.name}” from the proton menu? You can add it back here any time.`)) return;
         if (!closeWin(a.id)) return;
         userData.hiddenApps.push(a.id);
+        userData.installedApps = (userData.installedApps || []).filter((x) => x !== a.id);
         userData.settings.pinned = (userData.settings.pinned || []).filter((x) => x !== a.id);
         saveData(); refreshChrome(); draw(); MH.toast(`“${a.name}” removed — find it here to add it back.`);
       });
       body.querySelectorAll('[data-restore]').forEach((b) => b.onclick = () => {
+        const a = APPS[b.dataset.restore];
         userData.hiddenApps = userData.hiddenApps.filter((x) => x !== b.dataset.restore);
+        if (a && a.preinstalled === false) {
+          userData.installedApps = [...new Set([...(userData.installedApps || []), a.id])];
+          saveData(); refreshChrome(); draw(); MH.toast(`“${a.name}” installed — find it in the proton menu.`);
+          return;
+        }
         saveData(); refreshChrome(); draw(); MH.toast('App added back to the proton menu.');
       });
     }

@@ -23,7 +23,7 @@ const source = (p) => fs.readFileSync(path.join(ROOT, p), 'utf8');
 const FS_APPS = ['files', 'text-editor', 'image-viewer', 'media', 'pdf'];
 const SYSTEM_APPS = ['appcenter', 'customize', 'settings', 'about', 'browser',
   'calculator', 'files', 'text-editor', 'pdf', 'image-viewer', 'media',
-  'ruffle-flash-player', 'web-retro',
+  'ruffle-flash-player', 'web-retro', 'you-are-an-idiot',
   'game-2048',
   'bloons-tower-defense-1',
   'bloons-tower-defense-2',
@@ -103,6 +103,7 @@ const SYSTEM_CATS = {
   'the-impossible-quiz': 'Games',
   'tunnel-rush': 'Games',
   'web-retro': 'Tools',
+  'you-are-an-idiot': 'Tools',
 };
 /* Each game app frames the game page that ships in its own folder. */
 const GAME_PAGES = {
@@ -225,11 +226,14 @@ test('the catalog is the desktop apps, the file system suite, a calculator, web 
   for (const [id, icon] of Object.entries(RASTER_ICON_APPS)) {
     assert.equal(iconById[id], icon, `${id} should default to its own cropped art`);
   }
-  /* Every catalog block says whether the app is preinstalled. Everything in
-   * this catalog ships with proton, and the parser exposes it as a boolean. */
-  assert.ok(apps.every((a) => a.preinstalled === true),
-    'every catalogued app should be marked as preinstalled');
-  assert.equal((source('data/applications.js').match(/^preinstalled=true$/gm) || []).length,
+  /* Every catalog block says whether the app is preinstalled, and the
+   * parser exposes it as a boolean. Everything ships with proton except
+   * the one app marked preinstalled=false (You Are An Idiot). */
+  assert.ok(apps.filter((a) => a.id !== 'you-are-an-idiot').every((a) => a.preinstalled === true),
+    'catalogued apps should be marked as preinstalled unless they opt out');
+  assert.equal(apps.find((a) => a.id === 'you-are-an-idiot')?.preinstalled, false,
+    'the idiot app should be the one app that is not preinstalled');
+  assert.equal((source('data/applications.js').match(/^preinstalled=(true|false)$/gm) || []).length,
     apps.length + 1, 'every [application] block (and the template) should state preinstalled=');
   assert.deepEqual(Array.from(sites, (s) => s.id), ['test-page']);
   const page = { ...sites[0] };
@@ -876,7 +880,23 @@ test('the desktop boots, lists and opens all catalogued apps', async () => {
     const menu = w.document.querySelector('#startmenu');
     assert.deepEqual([...menu.querySelectorAll('.sm-cat')].map((e) => e.textContent),
       ['System', 'Productivity', 'Media', 'Tools', 'Games']);
-    assert.deepEqual([...menu.querySelectorAll('.sm-item')].map((e) => e.dataset.app), SYSTEM_APPS);
+    /* The one not-preinstalled app (You Are An Idiot) stays out of the menu
+     * until it is installed from App Center. */
+    assert.deepEqual([...menu.querySelectorAll('.sm-item')].map((e) => e.dataset.app),
+      SYSTEM_APPS.filter((id) => id !== 'you-are-an-idiot'));
+    w.openApp('appcenter');
+    const idiotCard = [...wins.get('appcenter').body.querySelectorAll('#ac-grid .card')]
+      .find((card) => card.querySelector('h3')?.textContent === 'You Are An Idiot');
+    assert.ok(idiotCard, 'App Center should list the not-preinstalled app');
+    const installBtn = idiotCard.querySelector('[data-restore="you-are-an-idiot"]');
+    assert.ok(installBtn, 'the not-preinstalled app should offer Install in App Center');
+    assert.match(installBtn.textContent, /Install/);
+    installBtn.click();
+    assert.ok([...menu.querySelectorAll('.sm-item')].map((e) => e.dataset.app).includes('you-are-an-idiot'),
+      'installing should put the app in the proton menu');
+    assert.ok(Array.from(w.eval('userData.installedApps')).includes('you-are-an-idiot'),
+      'installing should be remembered on the account');
+    w.closeWin('appcenter', true);
 
     // The panel only pins apps that exist, and each app really renders.
     assert.deepEqual([...w.document.querySelectorAll('#panelapps .pitem')].map((e) => e.dataset.app),
@@ -1124,7 +1144,7 @@ test('Customize saves, displays and resets uploaded app icon images', async () =
     const browserWindow = w.eval('wins').get('browser');
     assert.equal(body.querySelector('#cust-files-shortcut'), null, 'Customize still offers a Files shortcut');
     assert.deepEqual([...body.querySelectorAll('#cust-modlist .card b')].map((b) => b.textContent).slice(0, SYSTEM_APPS.length),
-            ['App Center', 'Customize', 'Settings', 'About', 'Browser', 'Calculator', 'Files', 'Text Editor', 'PDF Viewer', 'Image Viewer', 'Media', 'Ruffle Flash Player', 'Web Retro', '2048', 'Bloons Tower Defense 1', 'Bloons Tower Defense 2', 'Bloons Tower Defense 5', 'Bloxorz', 'Breaking The Bank', 'Celeste Classic', 'Celeste Classic 2', 'Celeste Community', 'Celeste Classic Practice Mod', 'Celeste Classic 2 Practice Mod 1.0', 'Celeste Classic 2 Practice Mod 1.1', 'Celeste Webek', 'Celeste Classic Downloads', 'Cookie Clicker', 'Drive Mad', 'Escaping The Prison', 'Fleeing The Complex', 'Grey Box Testing', 'Infiltrating The Airship', 'Mari0', 'Offline Paradise', 'Pacman', 'Slope', 'Spacebar Clicker', 'Stack', 'Stealing The Diamond', 'Stickman Hook', 'Subway Surfers', 'Super Mario 64', 'Super Mario RPG', 'Tetris', 'The Impossible Quiz', 'Tunnel Rush']);
+            ['App Center', 'Customize', 'Settings', 'About', 'Browser', 'Calculator', 'Files', 'Text Editor', 'PDF Viewer', 'Image Viewer', 'Media', 'Ruffle Flash Player', 'Web Retro', 'You Are An Idiot', '2048', 'Bloons Tower Defense 1', 'Bloons Tower Defense 2', 'Bloons Tower Defense 5', 'Bloxorz', 'Breaking The Bank', 'Celeste Classic', 'Celeste Classic 2', 'Celeste Community', 'Celeste Classic Practice Mod', 'Celeste Classic 2 Practice Mod 1.0', 'Celeste Classic 2 Practice Mod 1.1', 'Celeste Webek', 'Celeste Classic Downloads', 'Cookie Clicker', 'Drive Mad', 'Escaping The Prison', 'Fleeing The Complex', 'Grey Box Testing', 'Infiltrating The Airship', 'Mari0', 'Offline Paradise', 'Pacman', 'Slope', 'Spacebar Clicker', 'Stack', 'Stealing The Diamond', 'Stickman Hook', 'Subway Surfers', 'Super Mario 64', 'Super Mario RPG', 'Tetris', 'The Impossible Quiz', 'Tunnel Rush']);
 
     const uploadBrowserIcon = async () => {
       const input = body.querySelector('[data-micon-file="browser"]');
