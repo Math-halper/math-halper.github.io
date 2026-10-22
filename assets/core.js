@@ -449,8 +449,8 @@ function enterDesktop() {
   MH.$('tray-user').onclick = () => openApp('settings');
   MH.$('tray-lock').onclick = lockDesktop;
   tickClock(); clearInterval(clockTimer); clockTimer = setInterval(tickClock, 15000);
-  if (!sessionStorage.getItem('mhOS.welcomed.' + currentUser.usernameLower)) {
-    sessionStorage.setItem('mhOS.welcomed.' + currentUser.usernameLower, '1');
+  if (!sessionStorage.getItem('proton2.welcomed.' + currentUser.usernameLower)) {
+    sessionStorage.setItem('proton2.welcomed.' + currentUser.usernameLower, '1');
     setTimeout(() => MH.toast(`Welcome${userData.counters.windowsOpened ? ' back' : ''}, ${currentUser.displayName}! Everything is saved on this device.`), 650);
   }
 }
@@ -662,7 +662,7 @@ function renderLock() {
  * submitting it creates the profile and enters the desktop. Once an
  * account exists, boot.js lets Sign in straight through to here with no
  * password, so an existing account always lands on its desktop. */
-const DESKTOP_PROFILE_KEY = 'mhOS.desktopProfile.v1';
+const DESKTOP_PROFILE_KEY = 'proton2.desktopProfile.v1';
 async function enterSiteDesktop() {
   MH.setSession('');
   const accounts = MH.accounts();

@@ -169,22 +169,39 @@ runtime dependencies or build step. Optional regression tests use jsdom:
 
 The site opens on a **Math Helper** cover page styled like a school maths
 practice site (the `cover` markup in `index.html`, styled in
-`assets/styles.css`). It gives no indication that anything is wrong — no
-outage banner, error labels or empty progress bars — but its practice
-buttons and links simply do nothing. To enter the real proton website the
-first time, type the desktop password into the header search bar beside
-**Sign in** and click **Sign in**; that leads to the **Create your
-account** page. Once an account has been created on that device, entering
-the password is no longer needed — just click **Sign in** and the desktop
-reopens. The main page area has no password entry, and (before an account
-exists) a wrong password gets no visible response either. The **Continue to Math
-Helper** button at the very bottom does not enter the desktop: it locks the
-page on the full-screen, full-volume looping *You Are An Idiot* video in
-`assets/youare.mp4`, vendored directly into this repository. Pressing
-Escape is captured where the browser supports Keyboard Lock, and otherwise
-the trap spams full-screen requests (a 100ms loop, plus a burst on every
-Escape press, key press, click and tab/window refocus) so the first moment
-the browser allows re-entry, the video is back in full screen.
+`assets/styles.css`, with the learning app in `assets/math-helper.js`).
+The cover is a complete local practice site: the header search finds
+skills, Learning opens personal recommendations, grade buttons and skill
+cards start generated practice questions with instant marking and
+explanations, the diagnostic builds a saved action plan, and Analytics,
+Awards, Membership, About, Help centre and Privacy all open working pages.
+Cover learning progress is stored on this device under
+`proton2.math-helper.v1`.
+
+Two controls keep their separate hidden behaviour. To enter the real
+proton website the first time, type the desktop password into the header
+search bar beside **Sign in** and click **Sign in**; that leads to the
+**Create your account** page. Once an account has been created on that
+device, entering the password is no longer needed — just click **Sign in**
+and the desktop reopens. Submitting the search form itself only searches
+skills. The main page area has no password entry, and (before an account
+exists) a wrong password gets no visible response either. The **Continue
+to Math Helper** button at the very bottom does not enter the desktop: it
+locks the page on the full-screen, full-volume looping *You Are An Idiot*
+video in `assets/youare.mp4`, vendored directly into this repository.
+Pressing Escape is captured where the browser supports Keyboard Lock, and
+otherwise the trap spams full-screen requests (a 100ms loop, plus a burst
+on every Escape press, key press, click and tab/window refocus) so the
+first moment the browser allows re-entry, the video is back in full
+screen.
+
+The desktop storage system has also been replaced. Current accounts and
+per-account state live under the `proton2.*` localStorage namespace
+(`proton2.accounts.v1`, `proton2.user.<name>.v1` and
+`proton2.desktopProfile.v1`). When the site loads, every old `mhOS.*` key
+is deleted from local and session storage before accounts are read, so
+accounts created under the previous system no longer work and must be
+created again.
 
 ## Desktop password
 

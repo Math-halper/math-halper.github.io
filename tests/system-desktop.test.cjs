@@ -474,6 +474,30 @@ test('the cover search bar and Sign in button gate the desktop with data/passwor
   assert.ok(!index.includes('placeholder="Enter password"'),
     'the main cover area should not show an Enter password field');
   assert.ok(!index.includes('cover-signin cover-decoy'), 'Sign in must not be a dead cover control');
+  assert.ok(!index.includes('cover-decoy'), 'ordinary cover controls must be wired, not decoys');
+  for (const hook of ['data-cover-nav="learning"', 'data-cover-nav="diagnostic"',
+    'data-cover-nav="analytics"', 'data-cover-nav="membership"', 'data-cover-action="start-practice"',
+    'data-cover-action="start-diagnostic"', 'data-cover-action="resume"', 'data-cover-action="all-grades"',
+    'data-cover-action="all-skills"', 'data-cover-action="recommendations"', 'data-cover-action="awards"',
+    'data-cover-action="analytics"', 'data-cover-action="about"', 'data-cover-action="help"',
+    'data-cover-action="privacy"', 'id="math-helper-workspace"', 'data-grade="5"',
+    'data-cover-skill="add-subtract-fractions"']) {
+    assert.ok(index.includes(hook), `the working cover should include ${hook}`);
+  }
+  assert.ok(index.includes('<script src="assets/math-helper.js"></script>'),
+    'the cover should load the Math Helper learning app');
+  const mathHelper = source('assets/math-helper.js');
+  for (const feature of ['showSearch', 'startPractice', 'startDiagnostic', 'showAnalytics',
+    'showAwards', 'showMembership', 'MH.MATH_HELPER_KEY']) {
+    assert.ok(mathHelper.includes(feature), `Math Helper should implement ${feature}`);
+  }
+  const store = source('assets/store.js');
+  assert.ok(store.includes('purgeLegacyStorage') && store.includes("LEGACY_STORAGE_PREFIX = 'mhOS.'"),
+    'loading storage should delete the old mhOS storage system');
+  assert.ok(store.includes("ACCOUNTS_KEY: 'proton2.accounts.v1'") &&
+    store.includes("userKey: (u) => `proton2.user.${u}.v1`") &&
+    store.includes("MATH_HELPER_KEY: 'proton2.math-helper.v1'"),
+  'accounts and cover learning should use the new proton2 storage namespace');
   /* The cover must not give any indication that it is broken: no outage
    * banner, no error chip, no unavailable labels, no zeroed progress. */
   for (const sign of ['cover-status', 'Practice is temporarily unavailable', 'MH-503',
@@ -508,6 +532,12 @@ test('the cover search bar and Sign in button gate the desktop with data/passwor
     pretendToBeVisual: true, virtualConsole,
   });
   const { window: w } = dom;
+  /* Seed the retired storage system: loading assets/store.js must delete
+   * every one of these before any account is read. */
+  w.localStorage.setItem('mhOS.accounts.v1', JSON.stringify({ old: { username: 'old', usernameLower: 'old' } }));
+  w.localStorage.setItem('mhOS.user.old.v1', '{}');
+  w.localStorage.setItem('mhOS.desktopProfile.v1', 'old');
+  w.sessionStorage.setItem('mhOS.welcomed.old', '1');
   w.URL.createObjectURL = () => 'blob:mock';
   w.URL.revokeObjectURL = () => {};
   w.Element.prototype.scrollIntoView = function () {};
@@ -566,12 +596,94 @@ test('the cover search bar and Sign in button gate the desktop with data/passwor
     assert.equal(desktop.hidden, true, 'the desktop should start hidden behind the gate');
     assert.equal(w.document.querySelector('#cover-status'), null,
       'the cover should have no status banner');
-    const coverText = cover.textContent;
+    /* The retired mhOS storage system is deleted on load, so the seeded
+     * old account cannot be read by the new proton2 system. */
+    assert.equal(w.localStorage.getItem('mhOS.accounts.v1'), null,
+      'old mhOS accounts should be deleted on load');
+    assert.equal(w.localStorage.getItem('mhOS.user.old.v1'), null,
+      'old mhOS account data should be deleted on load');
+    assert.equal(w.localStorage.getItem('mhOS.desktopProfile.v1'), null,
+      'the old mhOS desktop profile should be deleted on load');
+    assert.equal(w.sessionStorage.getItem('mhOS.welcomed.old'), null,
+      'old mhOS session data should be deleted on load');
+    assert.deepEqual(Object.keys(w.eval('MH.accounts()')), [],
+      'accounts from the old storage system should no longer work');
 
-    /* A decorative cover control does nothing and says nothing. */
-    w.document.querySelector('.cover-decoy').click();
-    assert.equal(desktop.hidden, true);
-    assert.equal(cover.textContent, coverText, 'a dead cover control should not change the page');
+    /* Ordinary Math Helper controls now work. Learning opens saved
+     * recommendations, search finds skills, practice marks answers, the
+     * diagnostic saves an action plan, and analytics/membership persist. */
+    const workspace = w.document.querySelector('#math-helper-workspace');
+    const helperState = () => JSON.parse(w.localStorage.getItem('proton2.math-helper.v1'));
+    assert.equal(workspace.hidden, true, 'the Math Helper workspace should start closed');
+    w.document.querySelector('[data-cover-nav="learning"]').click();
+    assert.equal(workspace.hidden, false, 'Learning should open the Math Helper workspace');
+    assert.match(workspace.textContent, /Your next steps/);
+    assert.match(workspace.textContent, /Recommended for you/);
+
+    input.value = 'fractions';
+    w.document.querySelector('#cover-search').dispatchEvent(new w.Event('submit', { bubbles: true, cancelable: true }));
+    assert.equal(desktop.hidden, true, 'submitting the skill search should not open the desktop');
+    assert.match(workspace.textContent, /Results for “fractions”/);
+    assert.match(workspace.textContent, /Add and subtract fractions/);
+    assert.match(workspace.textContent, /Multiply fractions/);
+
+    workspace.querySelector('[data-cover-skill="add-subtract-fractions"]').click();
+    assert.match(workspace.textContent, /Question 1/);
+    assert.equal(workspace.querySelectorAll('[data-answer]').length, 4,
+      'practice should offer four answer choices');
+    workspace.querySelector('[data-answer]').click();
+    assert.match(workspace.textContent, /Correct — great work!|Not quite\./);
+    assert.equal(helperState().answered, 1, 'practice answers should be saved in the new cover storage');
+    workspace.querySelector('[data-cover-action="next-question"]').click();
+    assert.match(workspace.textContent, /Question 2/);
+
+    w.document.querySelector('[data-cover-nav="diagnostic"]').click();
+    for (let i = 0; i < 6; i++) {
+      const answer = workspace.querySelector('[data-answer]');
+      assert.ok(answer, `diagnostic question ${i + 1} should offer an answer`);
+      answer.click();
+    }
+    assert.match(workspace.textContent, /Diagnostic complete/);
+    assert.match(workspace.textContent, /Your action plan/);
+    assert.equal(helperState().diagnostic.completed, 1,
+      'the diagnostic result should be saved in the new cover storage');
+    assert.ok(helperState().diagnostic.recommendedIds.length > 0,
+      'the diagnostic should save recommended skills');
+
+    w.document.querySelector('[data-cover-nav="analytics"]').click();
+    assert.match(workspace.textContent, /Progress reports/);
+    assert.match(workspace.textContent, /Growth by topic/);
+
+    w.document.querySelector('[data-cover-nav="membership"]').click();
+    workspace.querySelector('[data-plan="Family"]').click();
+    assert.equal(helperState().membershipPlan, 'Family',
+      'choosing a membership plan should save it locally');
+    assert.match(workspace.textContent, /Current plan/);
+
+    w.document.querySelector('.cover-grades [data-grade="5"]').click();
+    assert.match(workspace.textContent, /Grade 5 maths/);
+    assert.match(workspace.textContent, /Multiply fractions/);
+    w.document.querySelector('.cover-section [data-cover-action="all-skills"]').click();
+    assert.match(workspace.textContent, /All skills/);
+    assert.match(workspace.textContent, /Probability and statistics/);
+    w.document.querySelector('[data-cover-action="awards"]').click();
+    assert.match(workspace.textContent, /Awards and certificates/);
+    w.document.querySelector('[data-cover-action="about"]').click();
+    assert.match(workspace.textContent, /About Math Helper/);
+    w.document.querySelector('[data-cover-action="help"]').click();
+    assert.match(workspace.textContent, /How Math Helper works/);
+    w.document.querySelector('[data-cover-action="privacy"]').click();
+    assert.match(workspace.textContent, /Your learning stays on this device/);
+
+    /* Even the correct password only searches when the form is submitted;
+     * the desktop gate remains the separate Sign in click. */
+    input.value = password;
+    w.document.querySelector('#cover-search').dispatchEvent(new w.Event('submit', { bubbles: true, cancelable: true }));
+    assert.equal(desktop.hidden, true, 'submitting the search form should never open the desktop');
+    assert.equal(cover.hidden, false);
+    w.document.querySelector('[data-cover-action="home"]').click();
+    assert.equal(workspace.hidden, true, 'the Math Helper logo should close the workspace');
+    const coverText = cover.textContent;
 
     /* A wrong password typed in the search bar and Sign in keeps the
      * desktop hidden, with no visible response either. */
@@ -605,7 +717,7 @@ test('the cover search bar and Sign in button gate the desktop with data/passwor
       'the account creation page should be visible on first sign-in');
     assert.match(w.document.querySelector('#auth').textContent, /Create your account/,
       'the first sign-in should show the Create your account page');
-    assert.ok(!w.localStorage.getItem('mhOS.accounts.v1')?.includes('student'),
+    assert.ok(!w.localStorage.getItem('proton2.accounts.v1')?.includes('student'),
       'the first sign-in should not silently create a Student profile');
 
     /* Creating the account enters the desktop as that account. */
@@ -618,7 +730,7 @@ test('the cover search bar and Sign in button gate the desktop with data/passwor
     assert.equal(w.document.querySelector('#auth').hidden, true,
       'the account creation page should hide once the account is created');
     assert.equal(w.eval('currentUser.username'), 'ada');
-    assert.ok(w.localStorage.getItem('mhOS.accounts.v1').includes('ada'),
+    assert.ok(w.localStorage.getItem('proton2.accounts.v1').includes('ada'),
       'creating the account should store the local desktop profile');
 
     /* Locking asks for that same file password, not anything else. */
@@ -1009,7 +1121,7 @@ test('Customize saves, displays and resets uploaded app icon images', async () =
     };
     await uploadBrowserIcon();
     assert.equal(w.eval('APPS.browser.iconImage'), storedImage);
-    assert.equal(JSON.parse(w.localStorage.getItem('mhOS.user.ada.v1')).moduleOverrides.browser.iconImage, storedImage,
+    assert.equal(JSON.parse(w.localStorage.getItem('proton2.user.ada.v1')).moduleOverrides.browser.iconImage, storedImage,
       'the resized image is saved in this account data');
     assert.ok(w.document.querySelector('#startmenu .sm-item[data-app="browser"] img.app-icon-image'));
     assert.ok(w.document.querySelector('#panelapps .pitem[data-app="browser"] img.app-icon-image'));
@@ -1037,7 +1149,7 @@ test('Customize saves, displays and resets uploaded app icon images', async () =
     Object.defineProperty(customInput, 'files', { configurable: true, value: [{ type: 'image/png', size: 1024 }] });
     await customInput.onchange();
     assert.equal(w.eval("APPS['legacy-image-app'].iconImage"), storedImage);
-    assert.equal(JSON.parse(w.localStorage.getItem('mhOS.user.ada.v1')).customApps[0].iconImage, storedImage);
+    assert.equal(JSON.parse(w.localStorage.getItem('proton2.user.ada.v1')).customApps[0].iconImage, storedImage);
     w.openApp('appcenter');
     const customCard = [...w.eval('wins').get('appcenter').body.querySelectorAll('#ac-custom .card')]
       .find((card) => card.querySelector('h3')?.textContent === 'Saved App');
@@ -1227,7 +1339,7 @@ async function bootDesktop(username = 'ada') {
     userData = MH.defaultData('Ada',${JSON.stringify(username)});
     enterDesktop();`);
   const settle = () => new Promise((resolve) => setTimeout(resolve, 25));
-  const saved = () => JSON.parse(w.localStorage.getItem(`mhOS.user.${username}.v1`));
+  const saved = () => JSON.parse(w.localStorage.getItem(`proton2.user.${username}.v1`));
   return { w, errors, blobs, settle, saved, wins: w.eval('wins'), APPS: w.eval('APPS'), close: () => w.close() };
 }
 

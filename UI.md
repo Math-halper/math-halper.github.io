@@ -18,40 +18,57 @@ load to the internals of each app.
 
 ## 2. The Math Helper cover page (every visit)
 
-The first thing every visit sees is *Math Helper* — a full IXL-style decoy
-maths-practice site. It shows no indication that anything is broken: there
-is no outage banner, error label or empty progress bar anywhere, and its
-practice controls are simply dead — clicking one changes nothing and says
-nothing. The way in the first time is the **header search bar**: type the
-desktop password (stored in `data/password.txt`) into it and click the
-**Sign in** button immediately beside it, which leads to **Create your
-account**. Once an account exists on this device, the password is not
-asked for again — clicking **Sign in** alone reopens the desktop, whatever
-is (or isn't) in the search bar. A page refresh or signing out returns to
-the cover either way; before an account exists, a wrong password gets no
-visible response.
+The first thing every visit sees is *Math Helper* — a full IXL-style
+maths-practice site whose ordinary controls all work locally. Search,
+grade browsing, generated practice with instant marking, a six-question
+diagnostic, recommendations, awards, analytics, membership and the
+information pages run in `assets/math-helper.js`; learning progress is
+saved in `proton2.math-helper.v1`. It shows no indication that anything
+is broken: there is no outage banner, error label or empty progress bar
+anywhere. The way in to proton the first time is still the **header
+search bar**: type the desktop password (stored in `data/password.txt`)
+into it and click the **Sign in** button immediately beside it, which
+leads to **Create your account**. Submitting that search form itself only
+searches skills — it never opens the desktop. Once an account exists on
+this device, the password is not asked for again — clicking **Sign in**
+alone reopens the desktop, whatever is (or isn't) in the search bar. A
+page refresh or signing out returns to the cover either way; before an
+account exists, a wrong password gets no visible response.
 
-- **Header** — "Math Helper" logo button, nav (Learning · Diagnostic ·
-  Analytics · Membership; all decoys), the compact search bar (a password
-  field labelled "Search skills, topics or grades"), and the working
-  **Sign in** button right next to it.
+Desktop accounts now live in the `proton2.*` storage namespace. On load,
+all old `mhOS.*` local/session keys are deleted before any account is
+read, so profiles from the previous storage system no longer work.
+
+- **Header** — "Math Helper" logo button (returns to the top and closes
+  the workspace), working nav (Learning · Diagnostic · Analytics ·
+  Membership), the compact skill search bar, and the **Sign in** button
+  right next to it. Only **Sign in** is the desktop gate.
 - **Hero** — eyebrow "Mathematics · Pre-K to Year 12", headline and
-  description, and two decoy buttons: *Start practicing*, *Take a
-  diagnostic*. There is no password entry in this main area.
-- **"Today for you" side panel** — two recommendation rows (Multiply
-  fractions 72%, Solve two-step equations 45%) with matching progress bars,
-  a *Recommended* badge, a *Resume practice* button, and "Recommendations
-  update as you practice."
+  description, plus working *Start practicing* and *Take a diagnostic*
+  buttons. There is no password entry in this main area.
+- **"Today for you" side panel** — two clickable recommendation rows
+  (Multiply fractions 72%, Solve two-step equations 45%) with matching
+  progress bars, a *Recommended* badge, a working *Resume practice*
+  button, and "Recommendations update as you practice." Progress bars
+  across the cover update as questions are answered.
+- **Math Helper workspace** — appears below the hero for search results,
+  Learning/recommendations, grade pages, all-skills browsing, practice
+  questions with explanations, the diagnostic and its action plan,
+  Awards, Analytics, Membership plan selection (Free · Family ·
+  Classroom, stored locally) and About / Help centre / Privacy pages.
 - **Explore by grade** — a grid of grade buttons Pre-K → 12, each with a
-  skill count, plus "See all grades".
+  skill count, plus "See all grades"; every grade opens its own practice
+  paths.
 - **Popular maths skills** — six skill cards (Fractions, Multiplication,
   Algebra, Geometry, Decimals, Statistics), each with tag, title, blurb, a
-  part-filled progress bar and *Start skill*; the section header has a
+  live progress bar and *Start skill*; the section header has a
   "See all skills" link.
 - **Diagnostic band** — "Find exactly what to practice next" + *Start diagnostic*.
 - **Made for families and classrooms** — three feature cards (Personal
-  recommendations, Awards and certificates, Progress reports) with text links.
-- **Footer** — brand line and About / Help centre / Membership / Privacy links.
+  recommendations, Awards and certificates, Progress reports) whose links
+  open the matching workspace pages.
+- **Footer** — brand line and working About / Help centre / Membership /
+  Privacy links.
 - **Entry band ("Ready when you are")** — **"Continue to Math Helper"** does
   not enter the desktop. It locks the page on the full-screen, full-volume
   looping *You Are An Idiot* video (`assets/youare.mp4`, vendored in this

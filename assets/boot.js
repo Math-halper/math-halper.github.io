@@ -1,15 +1,18 @@
 /* proton boot — loaded last. Fetches the HTML app/website modules
  * (assets/html-loader.js), then waits behind the Math Helper cover page.
  *
- * The cover gives no indication that anything is unavailable: its practice
- * controls simply do nothing. The first time, the desktop opens only after
- * the password from data/password.txt is typed into the cover search bar
- * and Sign in is clicked, which leads to the Create your account page.
- * Once an account exists on this device, no password is needed any more:
- * just clicking Sign in reopens that account's desktop. Refreshing or
- * signing out returns to the cover either way.
- * The separate Continue to Math Helper button at the very bottom instead
- * locks the page on the full-screen looping video in assets/youare.mp4. */
+ * The cover itself is a working maths-practice app (assets/math-helper.js):
+ * search, grades, practice, diagnostics, recommendations, awards,
+ * analytics and membership all function locally. Two controls remain
+ * separate from that app. The header Sign in button is the desktop gate:
+ * the first time, the desktop opens only after the password from
+ * data/password.txt is typed into the cover search bar and Sign in is
+ * clicked, which leads to the Create your account page. Once an account
+ * exists on this device, no password is needed any more: just clicking
+ * Sign in reopens that account's desktop. Refreshing or signing out
+ * returns to the cover either way. The separate Continue to Math Helper
+ * button at the very bottom instead locks the page on the full-screen
+ * looping video in assets/youare.mp4. */
 'use strict';
 
 let protonModulesReady = false;
@@ -97,8 +100,8 @@ async function attemptCoverSignIn() {
     if (input) input.focus();
     return;
   }
-  /* A wrong password — like every other cover control — gets no visible
-   * response at all. Only the correct password does anything. */
+  /* A wrong password gets no visible response at all. Only Sign in with
+   * the correct password opens the desktop gate. */
   if (!(await verifySitePassword(candidate))) return;
   passCoverGate();
 }
@@ -207,10 +210,9 @@ function lockIdiotVideo() {
 function initCover() {
   const cover = MH.$('cover');
   if (!cover) return;
-  /* The .cover-decoy controls intentionally get no handler: they look like
-   * ordinary Math Helper controls, but clicking them does nothing. */
-  const search = MH.$('cover-search');
-  if (search) search.addEventListener('submit', (e) => { e.preventDefault(); attemptCoverSignIn(); });
+  /* Ordinary Math Helper controls are wired by assets/math-helper.js,
+   * including the search form. This file only owns the two hidden paths:
+   * Sign in (the desktop gate below) and Continue (the video trap). */
   const signin = MH.$('cover-signin');
   if (signin) signin.addEventListener('click', attemptCoverSignIn);
   const enter = MH.$('cover-enter');
