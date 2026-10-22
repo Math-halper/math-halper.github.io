@@ -620,8 +620,7 @@ var saveAs=saveAs||function(e){"use strict";if(!(void 0===e||"undefined"!=typeof
 <body style="overflow:hidden;">
 	<noscript>Enable JavaScript bro!</noscript>
 	<!-- Google Tag Manager (noscript) -->
-	<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-TJ7G82BL"
-	height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+	
 	<!-- End Google Tag Manager (noscript) -->	
 	<script>   
 
@@ -906,22 +905,8 @@ var saveAs=saveAs||function(e){"use strict";if(!(void 0===e||"undefined"!=typeof
 		//setInterval(ClearAds, 2000);		
 
 		function EmailSignup() {
-			if(document.getElementById("signup") || document.getElementById("deleteme")) return;
-			const iframe = document.createElement("iframe");
-			iframe.src = "https://bluewizard.com/subscribe-to-bbros/";
-
-//			iframe.style.display = "block";
-			iframe.style.width = "550px";
-			iframe.style.height = ""+window.innerHeight-100+"px";
-			iframe.style.position = "absolute";
-			iframe.style.top = "50px";
-			iframe.style.left = "50%";
-			iframe.style["margin-left"] = "-225px";
-			//iframe.style["margin-right"] = "-275px";
-			iframe.style["max-width"] = "100%";
-			iframe.setAttribute("id", "signup");
-
-			document.body.appendChild(iframe);
+			/* proton: the email-signup overlay framed a remote page; removed so the game never leaves this repository. */
+			return;
 		}
 
 		function GamePlayStart() {

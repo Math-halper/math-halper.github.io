@@ -320,8 +320,9 @@ Bookmarks and history are per-account data (`userData.bookmarks`,
 - **Menu sections** — the start menu groups the apps by `cat=`: **System**
   (App Center, Customize, Settings, About, Browser), **Productivity**
   (Calculator, Files, Text Editor, PDF Viewer), **Media** (Image Viewer,
-  Media), **Tools** (Ruffle Flash Player, Web Retro) and **Games** (28 games: 2048, the Bloons TD series, the Henry Stickmin
-  series, Pacman, Tetris, Slope, Tunnel Rush and more), with **My Apps** for
+  Media), **Tools** (Ruffle Flash Player, Web Retro, plus the not-preinstalled
+  You Are An Idiot once installed) and **Games** (49 games: 2048, the Bloons TD series, the Henry Stickmin
+  series, Pacman, Tetris, Slope, Tunnel Rush, the Exst Arcade batch below and more), with **My Apps** for
   anything an account adds. The order is `CATS` in `assets/core.js`.
 - **Search** — the Browser's bar searches *this repository* with proton's own
   engine (`assets/search.js` over the generated `data/search-index.js`): tabs,
