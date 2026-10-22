@@ -658,6 +658,78 @@ h=640
 
 
 
+[application]
+id=google-dino
+name=Google Dino
+path=apps/games/google-dino/app.html
+icon=data/icons/google-dino.png
+svg-icon=false
+cat=Games
+preinstalled=true
+desc=Play Google Dino - the offline dinosaur runner
+w=980
+h=640
+
+[application]
+id=baldis-basics
+name=Baldi's Basics
+path=apps/games/baldis-basics/app.html
+icon=data/icons/baldis-basics.png
+svg-icon=false
+cat=Games
+preinstalled=true
+desc=Play Baldi's Basics - the surreal schoolhouse escape
+w=980
+h=640
+
+[application]
+id=minesweeper
+name=Minesweeper
+path=apps/games/minesweeper/app.html
+icon=data/icons/minesweeper.png
+svg-icon=false
+cat=Games
+preinstalled=true
+desc=Play Minesweeper - the classic mine-hunting puzzler
+w=980
+h=640
+
+[application]
+id=flappy-bird
+name=Flappy Bird
+path=apps/games/flappy-bird/app.html
+icon=data/icons/flappy-bird.png
+svg-icon=false
+cat=Games
+preinstalled=true
+desc=Play Flappy Bird - tap to flap through the pipes
+w=980
+h=640
+
+[application]
+id=retro-bowl
+name=Retro Bowl
+path=apps/games/retro-bowl/app.html
+icon=data/icons/retro-bowl.png
+svg-icon=false
+cat=Games
+preinstalled=true
+desc=Play Retro Bowl - retro American football management
+w=980
+h=640
+
+[application]
+id=drift-boss
+name=Drift Boss
+path=apps/games/drift-boss/app.html
+icon=data/icons/drift-boss.png
+svg-icon=false
+cat=Games
+preinstalled=true
+desc=Play Drift Boss - one-button drifting on a floating track
+w=980
+h=640
+
 /* Embedded-page apps are not shipped: every app is a local app
    (copy apps/_template/) whose files live in this repository. */
 
