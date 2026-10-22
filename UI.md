@@ -227,13 +227,13 @@ not be saved.", etc.).
 
 ## 9. System apps
 
-- **App Center** — search field ("Search apps & websites") in the app bar; an
-  info card ("Everything here is part of the static proton website"); sections
-  **Your apps** and **Your websites** (the account's saved web-apps/sites, with
-  counts) and **All apps**, where every app gets a card (icon, name,
+- **App Center** — search field ("Search apps") in the app bar; an
+  info card ("Everything here is part of the static proton website"); and an
+  **All apps** section, where every built-in app gets a card (icon, name,
   description, meta) with **Open**, **Pin/Unpin**, **Remove** (non-protected
-  apps; removed apps show dimmed with **Add back**), and **Reset** when the app
-  has customisations.
+  apps; removed apps show dimmed with **Add back**), and **Reset** when the
+  app has customisations. Saved web-apps and saved websites are not listed
+  here any more.
 - **Customize — everything is a module** — the personalisation hub:
   - shortcut button to **Manage apps in App Center**;
   - **App modules**: a search field and one card per app with **Open**,
@@ -263,8 +263,8 @@ not be saved.", etc.).
 - **Browser** — app bar with **Home** and a "Built-in websites…" dropdown; a
   second dark bar with a lock glyph, the **URL field** (starts at
   `proton://home`) and **Go**. The home page is "Welcome to the (tiny) proton
-  web": cards for each built-in website (icon, name, description, *Visit*) and
-  **Your websites** (saved sites with Open/Remove). Pages load in a sandboxed
+  web": cards for each built-in website (icon, name, description, *Visit*).
+  Saved websites are not listed on the start page any more. Pages load in a sandboxed
   iframe (`allow-scripts allow-same-origin allow-forms allow-popups`).
 - **About proton** — logo + "A complete desktop computer in your browser — no
   server edition"; sections **Your account**, **What's inside** and

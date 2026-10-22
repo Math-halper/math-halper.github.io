@@ -1158,9 +1158,13 @@ test('Customize saves, displays and resets uploaded app icon images', async () =
     assert.equal(w.eval("APPS['legacy-image-app'].iconImage"), storedImage);
     assert.equal(JSON.parse(w.localStorage.getItem('proton2.user.ada.v1')).customApps[0].iconImage, storedImage);
     w.openApp('appcenter');
-    const customCard = [...w.eval('wins').get('appcenter').body.querySelectorAll('#ac-custom .card')]
-      .find((card) => card.querySelector('h3')?.textContent === 'Saved App');
-    assert.ok(customCard?.querySelector('.card-ic img.app-icon-image'), 'saved custom app listings use the uploaded image');
+    const centerBody = w.eval('wins').get('appcenter').body;
+    assert.equal(centerBody.querySelector('#ac-custom'), null,
+      'App Center should not list saved apps in a Your apps section');
+    assert.equal(centerBody.querySelector('#ac-sites'), null,
+      'App Center should not list saved websites in a Your websites section');
+    assert.ok(!centerBody.textContent.includes('Your apps') && !centerBody.textContent.includes('Your websites'),
+      'App Center should not show Your apps or Your websites headings');
     w.closeWin('appcenter', true);
     body.querySelector('[data-cicon-clear="legacy-image-app"]').click();
     assert.equal(w.eval("APPS['legacy-image-app'].iconImage"), '');
@@ -2003,6 +2007,10 @@ test('the Browser keeps tabs, bookmarks and history like a browser', async () =>
 
     assert.equal(tabs().length, 1, 'it starts with one tab');
     assert.equal(bar.value, '', 'the home page leaves the bar empty');
+    assert.equal(body.querySelector('#b-sites'), null,
+      'the Browser start page should not list saved websites');
+    assert.ok(!page().textContent.includes('Your websites'),
+      'the Browser start page should not show a Your websites section');
 
     /* A built-in website is a navigation: bar, history and Back all know. */
     const menu = body.querySelector('#b-sites-menu');

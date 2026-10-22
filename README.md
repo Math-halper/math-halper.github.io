@@ -344,9 +344,11 @@ Bookmarks and history are per-account data (`userData.bookmarks`,
 - **Everything is the static website — no adding websites.** Apps are built
   into this static site; there is no way to add a website or create an app
   from a web address in the UI. The Browser can still visit an address typed
-  into its bar without saving it, and anything already saved on an account
-  (custom apps, websites) stays openable and removable in App Center and the
-  Browser. Mail, Team Chat, Meetings, G-Talk and Admin Vault were removed
+  into its bar without saving it. The Browser start page and App Center no
+  longer list an account's saved apps or saved websites ("Your apps" /
+  "Your websites" sections are gone); saved data stays untouched in the
+  account, and saved web-apps remain launchable from the menu as before.
+  Mail, Team Chat, Meetings, G-Talk and Admin Vault were removed
   earlier; the rest of the old bundles were removed with them, apart from the
   file system suite (Files, Text Editor, Image Viewer, Media, PDF Viewer),
   which is copied back from `main`. All saved per account.
