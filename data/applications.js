@@ -766,6 +766,42 @@ desc=Play Five Nights at Freddy's 4 - the nightmare comes home
 w=980
 h=640
 
+[application]
+id=five-nights-at-freddys-2
+name=Five Nights at Freddy's 2
+path=apps/games/five-nights-at-freddys-2/app.html
+icon=data/icons/five-nights-at-freddys-2.png
+svg-icon=false
+cat=Games
+preinstalled=true
+desc=Play Five Nights at Freddy's 2 - new animatronics, no doors
+w=980
+h=640
+
+[application]
+id=five-nights-at-freddys-3
+name=Five Nights at Freddy's 3
+path=apps/games/five-nights-at-freddys-3/app.html
+icon=data/icons/five-nights-at-freddys-3.png
+svg-icon=false
+cat=Games
+preinstalled=true
+desc=Play Five Nights at Freddy's 3 - one animatronic, thirty years later
+w=980
+h=640
+
+[application]
+id=backrooms
+name=Backrooms
+path=apps/games/backrooms/app.html
+icon=data/icons/backrooms.png
+svg-icon=false
+cat=Games
+preinstalled=true
+desc=Play Backrooms - wander the endless yellow rooms
+w=980
+h=640
+
 /* Embedded-page apps are not shipped: every app is a local app
    (copy apps/_template/) whose files live in this repository. */
 
