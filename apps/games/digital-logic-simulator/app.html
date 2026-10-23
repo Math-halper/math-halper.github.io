@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Digital Logic Simulator - proton app</title>
+</head>
+<body>
+<p>This file is a proton app. It is not meant to be opened on its own:
+open <a href="../../../index.html">proton</a> and launch <b>Digital Logic Simulator</b> from the
+proton menu. The script below is fetched and run by proton's HTML loader
+(assets/html-loader.js) at boot.</p>
+<!-- VENDORED GAME - proton's wrapper plus the game's own files.
+
+     Every file in this folder except this wrapper is copied byte-for-byte
+     from incrediblerevived11/incrediblerevived11.github.io (logicsim), the incrediblewebsite-revived
+     repository. Nothing was edited.
+
+     The wrapper frames this folder's own game page - a local page, so the
+     frame is NOT sandboxed and may use keyboard, mouse, audio and fullscreen
+     like any desktop app. Click the game once to give it keyboard focus. -->
+<script data-proton-app>
+(() => {
+/* proton app module: vendored game wrapper - edit this file to change this app.
+ * Loaded by index.html; calls registerApp() (see apps/README.md).
+ * Metadata (name, icon, cat, desc, w, h) lives in data/applications.js. */
+'use strict';
+
+/* =====================================================================
+   The game page that ships in this folder.
+   ===================================================================== */
+const GAME_PAGE = 'apps/games/digital-logic-simulator/index.html';
+/* --------------------------------------------------------------------- */
+
+registerApp({
+  render(body) {
+    body.innerHTML = `${bar("Digital Logic Simulator", `<span class="muted embed-src" title="${MH.esc(GAME_PAGE)}">${MH.esc(GAME_PAGE)}</span>
+      <button class="btn sm" data-e="reload">${iconSvg('refresh')} Reload</button>
+      <button class="btn sm primary" data-e="ext">${iconSvg('external')} Open in new tab</button>`)}
+      <div class="app-main local-page"><iframe class="site-frame" title="Digital Logic Simulator" src="${MH.esc(GAME_PAGE)}"
+        allow="autoplay; fullscreen; pointer-lock; gamepad" allowfullscreen></iframe></div>
+      <p class="muted" style="flex:none;margin:0;padding:7px 14px;border-top:1px solid var(--line)">The game page ships with this app - copied verbatim from
+        <a href="https://github.com/incrediblerevived11/incrediblerevived11.github.io" target="_blank" rel="noopener">incrediblerevived11/incrediblerevived11.github.io</a>.</p>`;
+    const frame = body.querySelector('iframe');
+    body.querySelector('[data-e="reload"]').onclick = () => { frame.src = GAME_PAGE; };
+    body.querySelector('[data-e="ext"]').onclick = () => window.open(GAME_PAGE, '_blank', 'noopener');
+  },
+});
+})();
+</script>
+<style>
+/* The toolbar path, truncated like the Browser's. */
+.embed-src{max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}
+</style>
+</body>
+</html>

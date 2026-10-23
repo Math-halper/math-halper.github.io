@@ -45,7 +45,7 @@ and single-file HTML5 games). Each game
 app folder is the game's own files plus a thin proton iframe wrapper (see CREDITS.md for provenance), and
 apps/games/index.html is the picker their "all games" links expect.
 
-The start menu groups them by cat=: System (the desktop’s own five), Productivity (Calculator, Files, Text Editor, PDF Viewer), Media (Image Viewer, Media), Tools (Ruffle Flash Player, Web Retro — the players behind the Flash and cartridge games) and Games (67 games: 2048, Bloons Tower Defense 1, Bloons Tower Defense 2, Bloons Tower Defense 5, Bloxorz, Breaking The Bank, Celeste Classic, Celeste Classic 2, Celeste Community, Celeste Classic Practice Mod, Celeste Classic 2 Practice Mod 1.0, Celeste Classic 2 Practice Mod 1.1, Celeste Webek, Celeste Classic Downloads, Cookie Clicker, Drive Mad, Escaping The Prison, Fleeing The Complex, Grey Box Testing, Infiltrating The Airship, Mari0, Offline Paradise, Pacman, Slope, Spacebar Clicker, Stack, Stealing The Diamond, Stickman Hook, Subway Surfers, Super Mario 64, Tetris, The Impossible Quiz, Tunnel Rush, Baldi's Basics, Minesweeper, Flappy Bird, Retro Bowl, Drift Boss, Football Bros, Five Nights at Freddy's, Five Nights at Freddy's 4, Five Nights at Freddy's 2, Five Nights at Freddy's 3, Backrooms, Kart Bros, Geometry Dash Lite, Five Nights at Freddy's: Sister Location). Block order below is menu order within each section.
+The start menu groups them by cat=: System (the desktop’s own five), Productivity (Calculator, Files, Text Editor, PDF Viewer), Media (Image Viewer, Media), Tools (Ruffle Flash Player, Web Retro — the players behind the Flash and cartridge games) and Games (78 games: 2048, Bloons Tower Defense 1, Bloons Tower Defense 2, Bloons Tower Defense 5, Bloxorz, Breaking The Bank, Celeste Classic, Celeste Classic 2, Celeste Community, Celeste Classic Practice Mod, Celeste Classic 2 Practice Mod 1.0, Celeste Classic 2 Practice Mod 1.1, Celeste Webek, Celeste Classic Downloads, Cookie Clicker, Drive Mad, Escaping The Prison, Fleeing The Complex, Grey Box Testing, Infiltrating The Airship, Mari0, Offline Paradise, Pacman, Slope, Spacebar Clicker, Stack, Stealing The Diamond, Stickman Hook, Subway Surfers, Super Mario 64, Tetris, The Impossible Quiz, Tunnel Rush, Baldi's Basics, Minesweeper, Flappy Bird, Retro Bowl, Drift Boss, Football Bros, Five Nights at Freddy's, Five Nights at Freddy's 4, Five Nights at Freddy's 2, Five Nights at Freddy's 3, Backrooms, Kart Bros, Geometry Dash Lite, Five Nights at Freddy's: Sister Location). Block order below is menu order within each section.
 
 IMPORTANT: an id must not be a bare number — JavaScript object key ordering
   hoists integer-like keys to the front of every APPS iteration (this is why
@@ -1051,6 +1051,138 @@ svg-icon=true
 cat=Games
 preinstalled=true
 desc=Play Go (Tenuki) - the ancient board game of territory
+w=980
+h=640
+
+[application]
+id=hextris
+name=Hextris
+path=apps/games/hextris/app.html
+icon=layers
+svg-icon=true
+cat=Games
+preinstalled=true
+desc=Play Hextris - the fast-paced hexagonal puzzle game
+w=980
+h=640
+
+[application]
+id=bitcoin-mining-simulator
+name=Bitcoin Mining Simulator
+path=apps/games/bitcoin-mining-simulator/app.html
+icon=chart
+svg-icon=true
+cat=Games
+preinstalled=true
+desc=Play Bitcoin Mining Simulator - mine your way to crypto riches
+w=980
+h=640
+
+[application]
+id=space-company
+name=Space Company
+path=apps/games/space-company/app.html
+icon=globe
+svg-icon=true
+cat=Games
+preinstalled=true
+desc=Play Space Company - build an interplanetary resource empire
+w=980
+h=640
+
+[application]
+id=candy-box
+name=Candy Box
+path=apps/games/candy-box/app.html
+icon=smile
+svg-icon=true
+cat=Games
+preinstalled=true
+desc=Play Candy Box - the ASCII candy adventure
+w=980
+h=640
+
+[application]
+id=candy-box-2
+name=Candy Box 2
+path=apps/games/candy-box-2/app.html
+icon=smile
+svg-icon=true
+cat=Games
+preinstalled=true
+desc=Play Candy Box 2 - the ASCII candy adventure continues
+w=980
+h=640
+
+[application]
+id=trimps
+name=Trimps
+path=apps/games/trimps/app.html
+icon=users
+svg-icon=true
+cat=Games
+preinstalled=true
+desc=Play Trimps - breed your Trimps and explore the world
+w=980
+h=640
+
+[application]
+id=digital-logic-simulator
+name=Digital Logic Simulator
+path=apps/games/digital-logic-simulator/app.html
+icon=sliders
+svg-icon=true
+cat=Games
+preinstalled=true
+desc=Play Digital Logic Simulator - build circuits from logic gates
+w=980
+h=640
+
+[application]
+id=tunnel-rush-bad
+name=Tunnel Rush (Bad)
+path=apps/games/tunnel-rush-bad/app.html
+icon=shuffle
+svg-icon=true
+cat=Games
+preinstalled=true
+desc=Play Tunnel Rush (Bad) - the other tunnel, allegedly worse
+w=980
+h=640
+
+[application]
+id=celeste-speedrun-training
+name=Celeste Speedrun Training
+path=apps/games/celeste-speedrun-training/app.html
+icon=trophy
+svg-icon=true
+cat=Games
+preinstalled=true
+desc=Play Celeste Speedrun Training - practise Celeste Classic speedruns
+w=980
+h=640
+
+[application]
+id=big-ice-tower-tiny-square
+name=Big Ice Tower Tiny Square
+path=apps/games/big-ice-tower-tiny-square/app.html
+icon=square
+svg-icon=true
+cat=Games
+preinstalled=true
+desc=Play Big Ice Tower Tiny Square - climb the icy tower
+w=980
+h=640
+
+[application]
+id=a-dark-room
+name=A Dark Room
+path=apps/games/a-dark-room/app.html
+icon=moon
+svg-icon=true
+cat=Games
+preinstalled=true
+desc=Play A Dark Room - a minimalist survival adventure
 w=980
 h=640
 
