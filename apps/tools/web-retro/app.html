@@ -44,34 +44,33 @@ registerApp({
     ];
     const romAccept = '.nes,.fds,.smc,.sfc,.gb,.gbc,.gba,.n64,.z64,.v64,.bin,.zip';
     const romExts = romAccept.split(',');
-    /* The maintainer's own ROM library, bundled in webretro/roms/ (the
-     * .zip files as supplied; box art from data/icons/). Each entry is
-     * [zip file, core, title, system, icon] — webretro unzips and checks
-     * the ROM against the core, exactly as it does for a picked file. */
+    /* The maintainer's own ROM library, bundled in webretro/roms/ (supplied
+     * as .zip files, stored here extracted; box art from data/icons/).
+     * Each entry is [ROM file, core, title, system, icon]. */
     const BUNDLED = [
-      ['MarioKart64.zip', 'mupen64plus_next', 'Mario Kart 64', 'Nintendo 64', 'mario-kart-64'],
-      ['MarioParty.zip', 'mupen64plus_next', 'Mario Party', 'Nintendo 64', 'mario-party'],
-      ['PaperMario.zip', 'mupen64plus_next', 'Paper Mario', 'Nintendo 64', 'paper-mario'],
-      ['Doom64.zip', 'mupen64plus_next', 'Doom 64', 'Nintendo 64', 'doom-64'],
-      ["Yoshi'sStory.zip", 'mupen64plus_next', "Yoshi's Story", 'Nintendo 64', 'yoshis-story'],
-      ['Excitebike.zip', 'nestopia', 'Excitebike', 'NES', 'excitebike'],
-      ['SuperMarioBros._DuckHunt.zip', 'nestopia', 'Super Mario Bros. + Duck Hunt', 'NES', 'super-mario-bros-duck-hunt'],
-      ['SuperMarioBros.2.zip', 'nestopia', 'Super Mario Bros. 2', 'NES', 'super-mario-bros-2'],
-      ['SuperMarioBros.3.zip', 'nestopia', 'Super Mario Bros. 3', 'NES', 'super-mario-bros-3'],
-      ['Tetris.zip', 'nestopia', 'Tetris', 'NES', 'tetris-nes'],
-      ['Doom.zip', 'mgba', 'Doom', 'Game Boy Advance', 'doom-gba'],
-      ['GrandTheftAutoAdvance.zip', 'mgba', 'Grand Theft Auto Advance', 'Game Boy Advance', 'grand-theft-auto-advance'],
-      ['LEGOStarWars_TheVideoGame.zip', 'mgba', 'LEGO Star Wars: The Video Game', 'Game Boy Advance', 'lego-star-wars-the-video-game'],
-      ['Pokemon-EmeraldVersion(USA,Europe).zip', 'mgba', 'Pokémon Emerald', 'Game Boy Advance', 'pokemon-emerald'],
-      ["Sims,The_Bustin'Out.zip", 'mgba', "The Sims Bustin' Out", 'Game Boy Advance', 'the-sims-bustin-out'],
-      ['SuperMarioAdvance.zip', 'mgba', 'Super Mario Advance', 'Game Boy Advance', 'super-mario-advance'],
-      ['GrandTheftAuto.zip', 'mgba', 'Grand Theft Auto', 'Game Boy Color', 'grand-theft-auto'],
-      ['GrandTheftAuto2.zip', 'mgba', 'Grand Theft Auto 2', 'Game Boy Color', 'grand-theft-auto-2'],
-      ['Pokemon_RedVersion.zip', 'mgba', 'Pokémon Red', 'Game Boy', 'pokemon-red'],
-      ['Pokemon_YellowVersion-SpecialPikachuEdition.zip', 'mgba', 'Pokémon Yellow', 'Game Boy', 'pokemon-yellow'],
-      ['Pokemon_CrystalVersion.zip', 'mgba', 'Pokémon Crystal', 'Game Boy Color', 'pokemon-crystal'],
-      ['SpaceInvaders.zip', 'mgba', 'Space Invaders', 'Game Boy', 'space-invaders'],
-      ['SuperMarioBros.Deluxe.zip', 'mgba', 'Super Mario Bros. Deluxe', 'Game Boy Color', 'super-mario-bros-deluxe'],
+      ['Mario Kart 64 (USA).z64', 'mupen64plus_next', 'Mario Kart 64', 'Nintendo 64', 'mario-kart-64'],
+      ['Mario Party (USA).z64', 'mupen64plus_next', 'Mario Party', 'Nintendo 64', 'mario-party'],
+      ['Paper Mario (USA).z64', 'mupen64plus_next', 'Paper Mario', 'Nintendo 64', 'paper-mario'],
+      ['Doom 64 (USA) (Rev 1).z64', 'mupen64plus_next', 'Doom 64', 'Nintendo 64', 'doom-64'],
+      ['Yoshi\'s Story (USA) (En,Ja).z64', 'mupen64plus_next', "Yoshi's Story", 'Nintendo 64', 'yoshis-story'],
+      ['Excitebike (Japan, USA).nes', 'nestopia', 'Excitebike', 'NES', 'excitebike'],
+      ['Super Mario Bros. + Duck Hunt (USA).nes', 'nestopia', 'Super Mario Bros. + Duck Hunt', 'NES', 'super-mario-bros-duck-hunt'],
+      ['Super Mario Bros. 2 (USA) (Rev 1).nes', 'nestopia', 'Super Mario Bros. 2', 'NES', 'super-mario-bros-2'],
+      ['Super Mario Bros. 3 (USA) (Rev 1).nes', 'nestopia', 'Super Mario Bros. 3', 'NES', 'super-mario-bros-3'],
+      ['Tetris (USA) (Tengen) (Unl).nes', 'nestopia', 'Tetris', 'NES', 'tetris-nes'],
+      ['Doom (USA, Europe).gba', 'mgba', 'Doom', 'Game Boy Advance', 'doom-gba'],
+      ['Grand Theft Auto Advance (USA).gba', 'mgba', 'Grand Theft Auto Advance', 'Game Boy Advance', 'grand-theft-auto-advance'],
+      ['LEGO Star Wars - The Video Game (USA, Europe) (En,Fr,De,Es,It,Nl,Da).gba', 'mgba', 'LEGO Star Wars: The Video Game', 'Game Boy Advance', 'lego-star-wars-the-video-game'],
+      ['Pokemon - Emerald Version (USA, Europe).gba', 'mgba', 'Pokémon Emerald', 'Game Boy Advance', 'pokemon-emerald'],
+      ['Sims, The - Bustin\' Out (USA) (En,Fr,De,Es,It,Nl) (Rev 1).gba', 'mgba', "The Sims Bustin' Out", 'Game Boy Advance', 'the-sims-bustin-out'],
+      ['Super Mario Advance (USA, Europe).gba', 'mgba', 'Super Mario Advance', 'Game Boy Advance', 'super-mario-advance'],
+      ['Grand Theft Auto (USA) (GB Compatible).gbc', 'mgba', 'Grand Theft Auto', 'Game Boy Color', 'grand-theft-auto'],
+      ['Grand Theft Auto 2 (USA).gbc', 'mgba', 'Grand Theft Auto 2', 'Game Boy Color', 'grand-theft-auto-2'],
+      ['Pokemon - Red Version (USA, Europe) (SGB Enhanced).gb', 'mgba', 'Pokémon Red', 'Game Boy', 'pokemon-red'],
+      ['Pokemon - Yellow Version - Special Pikachu Edition (USA, Europe) (GBC,SGB Enhanced).gb', 'mgba', 'Pokémon Yellow', 'Game Boy', 'pokemon-yellow'],
+      ['Pokemon - Crystal Version (USA, Europe) (Rev 1).gbc', 'mgba', 'Pokémon Crystal', 'Game Boy Color', 'pokemon-crystal'],
+      ['Space Invaders (USA) (SGB Enhanced).gb', 'mgba', 'Space Invaders', 'Game Boy', 'space-invaders'],
+      ['Super Mario Bros. Deluxe (USA, Europe) (Rev 1).gbc', 'mgba', 'Super Mario Bros. Deluxe', 'Game Boy Color', 'super-mario-bros-deluxe'],
     ];
     let bc = null;
     let romSource = 'device';   // 'device' = real file picker, 'vfs' = proton Files
@@ -244,14 +243,14 @@ registerApp({
       });
     }
 
-    /* A bundled game: fetch its .zip from webretro/roms/ and hand it to
-     * the emulator exactly like a file picked from this computer. */
+    /* A bundled game: fetch its ROM file from webretro/roms/ and hand it
+     * to the emulator exactly like a file picked from this computer. */
     async function playBundled([file, core, title]) {
       try {
         const res = await fetch(`apps/tools/web-retro/webretro/roms/${encodeURIComponent(file)}`);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const blob = await res.blob();
-        play(core, new File([blob], `${title}.zip`));
+        play(core, new File([blob], file));
       } catch (err) {
         MH.toast(`Could not load ${title}.`);
       }

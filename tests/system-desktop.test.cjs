@@ -1396,18 +1396,20 @@ test('the idiot app breeds real windows and only Make it stop ends it', async ()
 });
 
 /* Web Retro's bundled library is the maintainer's own ROM files: every
- * game listed in the launcher really is on disk (its .zip in webretro/roms/
- * and its box art in data/icons/), so a clicked card always plays. */
+ * game listed in the launcher really is on disk (its extracted ROM in
+ * webretro/roms/ and its box art in data/icons/), so a clicked card
+ * always plays. */
 test('the Web Retro bundled ROM library is on disk', () => {
   const src = fs.readFileSync(path.join(ROOT, 'apps/tools/web-retro/app.html'), 'utf8');
   const bundled = src.match(/const BUNDLED = \[([\s\S]*?)\n\s*\];/);
   assert.ok(bundled, 'the launcher defines its bundled game list');
-  const entries = [...bundled[1].matchAll(/\['([^']+)', '(\w+)',/g)];
+  const entries = [...bundled[1].matchAll(/\['((?:[^'\\]|\\.)*)', '(\w+)',/g)]
+    .map((m) => [m[1].replace(/\\(.)/g, '$1'), m[2]]);
   assert.ok(entries.length >= 20, `the bundled library lists ${entries.length} games`);
-  for (const [, zip, core] of entries) {
-    const zipPath = path.join(ROOT, 'apps/tools/web-retro/webretro/roms', zip);
-    assert.ok(fs.existsSync(zipPath), `bundled ROM missing: webretro/roms/${zip}`);
-    assert.ok(['mupen64plus_next', 'nestopia', 'mgba', 'snes9x'].includes(core), `unknown core ${core} for ${zip}`);
+  const extFor = { mupen64plus_next: ['.z64', '.n64', '.v64'], nestopia: ['.nes'], mgba: ['.gb', '.gbc', '.gba'], snes9x: ['.smc', '.sfc'] };
+  for (const [rom, core] of entries) {
+    assert.ok(fs.existsSync(path.join(ROOT, 'apps/tools/web-retro/webretro/roms', rom)), `bundled ROM missing: webretro/roms/${rom}`);
+    assert.ok(extFor[core] && extFor[core].some((ext) => rom.toLowerCase().endsWith(ext)), `${rom} is not a ROM the ${core} core plays`);
   }
   for (const m of bundled[1].matchAll(/, '([a-z0-9-]+)'\]/g)) {
     assert.ok(fs.existsSync(path.join(ROOT, 'data/icons', `${m[1]}.jpeg`)), `box art missing: data/icons/${m[1]}.jpeg`);

@@ -415,7 +415,8 @@ RetroArch compiled for the web by
 
 **The bundled ROMs are the maintainer's own files.** At the maintainer's
 request, `apps/tools/web-retro/webretro/roms/` carries their own ROM
-library as supplied (`.zip` files): Mario Kart 64, Mario Party, Paper
+library — supplied as `.zip` files, stored here extracted (the archives
+were dropped once the ROMs were unzipped): Mario Kart 64, Mario Party, Paper
 Mario, Doom 64 and Yoshi's Story (N64); Excitebike, Super Mario Bros. +
 Duck Hunt, Super Mario Bros. 2, Super Mario Bros. 3 and Tetris (NES);
 Doom, Grand Theft Auto Advance, LEGO Star Wars: The Video Game, Pokémon
