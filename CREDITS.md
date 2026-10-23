@@ -267,9 +267,9 @@ endless-runner by [Rohan Chacko](https://github.com/RohanChacko/Subway-Surfers)
 
 ## Vendored Exst Arcade games (proton-arcade batch)
 
-Fifteen games were copied from
+Fourteen games were copied from
 [proton-arcade/proton-arcade.github.io](https://github.com/proton-arcade/proton-arcade.github.io)
-(the "Exst Arcade" site), each into `apps/games/<id>/`: Google Dino, Baldi's
+(the "Exst Arcade" site), each into `apps/games/<id>/`: Baldi's
 Basics, Minesweeper, Flappy Bird, Retro Bowl, Drift Boss, Football Bros,
 Five Nights at Freddy's 1–4 and Sister Location, Backrooms, Kart Bros and
 Geometry Dash Lite. For every one of them:
@@ -286,7 +286,7 @@ Geometry Dash Lite. For every one of them:
   `football-bros/index.html` also framed remote pages twice (a Google
   Tag Manager tracking iframe and an email-signup overlay the game
   injects); both snippets were removed so no shipped game page frames
-  a remote page. Those are the only edits made to any of the fifteen
+  a remote page. Those are the only edits made to any of the fourteen
   game pages.
 - The remaining game on that site, Ampler Launcher (an Eaglercraft
   launcher bundling eight separate Minecraft client pages, ~116 MB), was

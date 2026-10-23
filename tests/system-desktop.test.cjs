@@ -58,7 +58,6 @@ const SYSTEM_APPS = ['appcenter', 'customize', 'settings', 'about', 'browser',
   'tetris',
   'the-impossible-quiz',
   'tunnel-rush',
-  'google-dino',
   'baldis-basics',
   'minesweeper',
   'flappy-bird',
@@ -120,7 +119,6 @@ const SYSTEM_CATS = {
   'tunnel-rush': 'Games',
   'web-retro': 'Tools',
   'you-are-an-idiot': 'Tools',
-  'google-dino': 'Games',
   'baldis-basics': 'Games',
   'minesweeper': 'Games',
   'flappy-bird': 'Games',
@@ -172,7 +170,6 @@ const GAME_PAGES = {
   'tetris': 'apps/games/tetris/tetris.html',
   'the-impossible-quiz': 'apps/games/the-impossible-quiz/theimpossiblequiz.html',
   'tunnel-rush': 'apps/games/tunnel-rush/tunnelrush.html',
-  'google-dino': 'apps/games/google-dino/index.html',
   'baldis-basics': 'apps/games/baldis-basics/index.html',
   'minesweeper': 'apps/games/minesweeper/index.html',
   'flappy-bird': 'apps/games/flappy-bird/index.html',
@@ -266,7 +263,7 @@ test('the catalog is the desktop apps, the file system suite, a calculator, web 
     'tetris': 'data/icons/tetris.png',
     'the-impossible-quiz': 'data/icons/the-impossible-quiz.png',
     'tunnel-rush': 'data/icons/tunnel-rush.png',
-    'web-retro': 'data/icons/webretro.png', 'google-dino': 'data/icons/google-dino.png', 'baldis-basics': 'data/icons/baldis-basics.png', 'minesweeper': 'data/icons/minesweeper.png', 'flappy-bird': 'data/icons/flappy-bird.png', 'retro-bowl': 'data/icons/retro-bowl.png', 'drift-boss': 'data/icons/drift-boss.png', 'football-bros': 'data/icons/football-bros.png', 'five-nights-at-freddys-1': 'data/icons/five-nights-at-freddys-1.png', 'five-nights-at-freddys-4': 'data/icons/five-nights-at-freddys-4.png', 'five-nights-at-freddys-2': 'data/icons/five-nights-at-freddys-2.png', 'five-nights-at-freddys-3': 'data/icons/five-nights-at-freddys-3.png', 'backrooms': 'data/icons/backrooms.png', 'kart-bros': 'data/icons/kart-bros.png', 'geometry-dash-lite': 'data/icons/geometry-dash-lite.png', 'five-nights-at-freddys-sl': 'data/icons/five-nights-at-freddys-sl.png' };
+    'web-retro': 'data/icons/webretro.png', 'baldis-basics': 'data/icons/baldis-basics.png', 'minesweeper': 'data/icons/minesweeper.png', 'flappy-bird': 'data/icons/flappy-bird.png', 'retro-bowl': 'data/icons/retro-bowl.png', 'drift-boss': 'data/icons/drift-boss.png', 'football-bros': 'data/icons/football-bros.png', 'five-nights-at-freddys-1': 'data/icons/five-nights-at-freddys-1.png', 'five-nights-at-freddys-4': 'data/icons/five-nights-at-freddys-4.png', 'five-nights-at-freddys-2': 'data/icons/five-nights-at-freddys-2.png', 'five-nights-at-freddys-3': 'data/icons/five-nights-at-freddys-3.png', 'backrooms': 'data/icons/backrooms.png', 'kart-bros': 'data/icons/kart-bros.png', 'geometry-dash-lite': 'data/icons/geometry-dash-lite.png', 'five-nights-at-freddys-sl': 'data/icons/five-nights-at-freddys-sl.png' };
   assert.deepEqual(Array.from(apps, (a) => a.svgIcon), SYSTEM_APPS.map((id) => !RASTER_ICON_APPS[id]));
   const iconById = Object.fromEntries(Array.from(apps, (a) => [a.id, a.icon]));
   for (const [id, icon] of Object.entries(RASTER_ICON_APPS)) {
@@ -1190,7 +1187,7 @@ test('Customize saves, displays and resets uploaded app icon images', async () =
     const browserWindow = w.eval('wins').get('browser');
     assert.equal(body.querySelector('#cust-files-shortcut'), null, 'Customize still offers a Files shortcut');
     assert.deepEqual([...body.querySelectorAll('#cust-modlist .card b')].map((b) => b.textContent).slice(0, SYSTEM_APPS.length),
-            ['App Center', 'Customize', 'Settings', 'About', 'Browser', 'Calculator', 'Files', 'Text Editor', 'PDF Viewer', 'Image Viewer', 'Media', 'Ruffle Flash Player', 'Web Retro', 'You Are An Idiot', '2048', 'Bloons Tower Defense 1', 'Bloons Tower Defense 2', 'Bloons Tower Defense 5', 'Bloxorz', 'Breaking The Bank', 'Celeste Classic', 'Celeste Classic 2', 'Celeste Community', 'Celeste Classic Practice Mod', 'Celeste Classic 2 Practice Mod 1.0', 'Celeste Classic 2 Practice Mod 1.1', 'Celeste Webek', 'Celeste Classic Downloads', 'Cookie Clicker', 'Drive Mad', 'Escaping The Prison', 'Fleeing The Complex', 'Grey Box Testing', 'Infiltrating The Airship', 'Mari0', 'Offline Paradise', 'Pacman', 'Slope', 'Spacebar Clicker', 'Stack', 'Stealing The Diamond', 'Stickman Hook', 'Subway Surfers', 'Super Mario 64', 'Super Mario RPG', 'Tetris', 'The Impossible Quiz', 'Tunnel Rush', 'Google Dino', "Baldi's Basics", 'Minesweeper', 'Flappy Bird', 'Retro Bowl', 'Drift Boss', "Football Bros", "Five Nights at Freddy's", "Five Nights at Freddy's 4", "Five Nights at Freddy's 2", "Five Nights at Freddy's 3", "Backrooms", "Kart Bros", "Geometry Dash Lite", "Five Nights at Freddy's: Sister Location"]);
+            ['App Center', 'Customize', 'Settings', 'About', 'Browser', 'Calculator', 'Files', 'Text Editor', 'PDF Viewer', 'Image Viewer', 'Media', 'Ruffle Flash Player', 'Web Retro', 'You Are An Idiot', '2048', 'Bloons Tower Defense 1', 'Bloons Tower Defense 2', 'Bloons Tower Defense 5', 'Bloxorz', 'Breaking The Bank', 'Celeste Classic', 'Celeste Classic 2', 'Celeste Community', 'Celeste Classic Practice Mod', 'Celeste Classic 2 Practice Mod 1.0', 'Celeste Classic 2 Practice Mod 1.1', 'Celeste Webek', 'Celeste Classic Downloads', 'Cookie Clicker', 'Drive Mad', 'Escaping The Prison', 'Fleeing The Complex', 'Grey Box Testing', 'Infiltrating The Airship', 'Mari0', 'Offline Paradise', 'Pacman', 'Slope', 'Spacebar Clicker', 'Stack', 'Stealing The Diamond', 'Stickman Hook', 'Subway Surfers', 'Super Mario 64', 'Super Mario RPG', 'Tetris', 'The Impossible Quiz', 'Tunnel Rush', "Baldi's Basics", 'Minesweeper', 'Flappy Bird', 'Retro Bowl', 'Drift Boss', "Football Bros", "Five Nights at Freddy's", "Five Nights at Freddy's 4", "Five Nights at Freddy's 2", "Five Nights at Freddy's 3", "Backrooms", "Kart Bros", "Geometry Dash Lite", "Five Nights at Freddy's: Sister Location"]);
 
     const uploadBrowserIcon = async () => {
       const input = body.querySelector('[data-micon-file="browser"]');
