@@ -110,7 +110,9 @@ by the cover's removed bottom-button trap. The cover trap stays removed;
 the file is retained in this repository and is now played only inside
 the fake desktop by the not-preinstalled **You Are An Idiot** app
 (`apps/tools/you-are-an-idiot/`), which reproduces the old menace —
-bouncing, breeding windows and the song — entirely within proton. It was copied directly into this repository
+real bouncing, breeding windows that no × can close, and the song on
+autoplay — entirely within proton; its Make it stop button is the only
+way out. It was copied directly into this repository
 from the `media/youare.mp4` file in the
 [Mist0090/youareanidiot.cc](https://github.com/Mist0090/youareanidiot.cc)
 mirror of [youareanidiot.cc](https://youareanidiot.cc/). All rights in the
@@ -349,6 +351,40 @@ Kittens Game. For every one of them:
   Classics).
 - All rights in these games remain with their original creators; this
   repository grants no rights in that content.
+
+### Embedded-link cleanup (all vendored batches)
+
+Nothing shipped in this repository loads anything from the network:
+no page may embed a remote script, stylesheet, font, tracker or SDK
+(the test suite asserts this over every game page and stylesheet).
+A few vendored pages arrived with such embedded links; the remote
+load — never the game — was removed, each time noted in the game's
+wrapper as well:
+
+- **Cookie Clicker** — the cdnjs cookie-consent script, the Google
+  Fonts stylesheet, the Facebook Pixel snippet and the three AdSense
+  loaders (`googlesyndication`) are gone; the ad slots remain but
+  load nothing.
+- **Drift Boss** — its Google Analytics block is switched off and its
+  Yandex Games SDK URL blanked, so its SDK/analytics loaders stay
+  dormant.
+- **A Dark Room**, **Bitburner**, **Hextris**, **Kittens Game**,
+  **Space Company**, **Trimps** — Google Analytics snippets removed
+  (their `ga()` calls are guarded or gone), as are Space Company's
+  Kongregate API script and Google Fonts links/`@import`s and
+  Kittens Game's (commented-out and hostname-gated) Kongregate API
+  loading.
+- **Bitcoin Mining Simulator** — jQuery no longer comes from a CDN;
+  the page loads a local `jquery.min.js` (v1.10.1, copied from A Dark
+  Room's vendored `lib/`).
+- **Calamity**, **Connect 3**, **Hextris**, **Minecraft Clone**,
+  **Tunnel Rush (Bad)** — Google Fonts stylesheet links removed; the
+  games fall back to system fonts.
+- **Universal Paperclips** — the Google Analytics (gtag.js) loader
+  removed.
+
+Ordinary `<a href>` links to authors' own sites inside games are
+untouched: a reader may follow them, but nothing loads until they do.
 
 ## Vendored emulator (Web Retro)
 

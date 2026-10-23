@@ -18,133 +18,149 @@ proton menu (after installing it in App Center). The script below is fetched and
  * preinstalled (preinstalled=false in data/applications.js): it only
  * reaches the proton menu once a user installs it in App Center.
  *
- * On launch it plays the looping video vendored at assets/youare.mp4,
- * shakes the desktop, and breeds little bouncing fake windows across it.
- * Closing a fake window spawns two more (up to a cap), and the real
- * window refuses to close twice before giving in. Everything lives on
- * the fake desktop: closing the real window (or the Make it stop button)
- * destroys every clone, timer and effect. Nothing touches the cover
- * page, nothing goes fullscreen, and nothing leaves the desktop. */
+ * On launch it plays the looping video vendored at assets/youare.mp4
+ * (autoplay, with the first click in the window as the fallback for
+ * browsers that still gate the sound), shakes the desktop, and breeds
+ * REAL proton windows — extra windows of this same app, opened through
+ * openApp's winKey support — that bounce around the desktop on their
+ * own. They are ordinary windows (drag them, minimise them), except
+ * for one thing: no idiot window ever closes. Pressing the × on any of
+ * them breeds two more instead, and the only way out is a Make it stop
+ * button (every idiot window carries one), which force-closes the lot
+ * and removes every trace. Nothing touches the cover page, nothing
+ * goes fullscreen, and nothing leaves the fake desktop. */
 'use strict';
+
+/* One session is shared by the main window and every clone window of
+ * this app: how many idiot windows exist, and whether it is over. */
+const IDIOT_MAX_WINDOWS = 10;
+let idiotSession = null;
+
+function idiotSpawn() {
+  if (!idiotSession || idiotSession.stopped) return;
+  if (idiotSession.keys.size >= IDIOT_MAX_WINDOWS) return;
+  const seq = ++idiotSession.seq;
+  openApp('you-are-an-idiot', { winKey: `you-are-an-idiot#${seq}`, clone: true, w: 252, h: 196 });
+}
+function idiotStop() {
+  if (!idiotSession) return;
+  const keys = [...idiotSession.keys];
+  idiotSession.stopped = true;
+  idiotSession.timers.forEach((t) => clearInterval(t));
+  MH.$('desktop')?.classList.remove('idiot-shake');
+  idiotSession = null;
+  keys.forEach((key) => closeWin(key, true));
+}
+function idiotRefuse() {
+  /* The × never works — it breeds. */
+  idiotSpawn(); idiotSpawn();
+  MH.toast(idiotSession && idiotSession.keys.size >= IDIOT_MAX_WINDOWS
+    ? 'It does not want to close. Make it stop is the only way out.'
+    : 'Nice try. It does not want to close — that just made more of them.');
+  return false;
+}
 
 registerApp({
   render(body, ctx) {
-    const MAX_CLONES = 12;
-    const layer = MH.$('windows') || document.body;
-    const desktop = MH.$('desktop');
-    const clones = new Set();
-    const timers = [];
-    let stopped = false;
-    let closeAttempts = 0;
-
-    body.innerHTML = `${bar('You Are An Idiot', `<button class="btn sm" id="idiot-stop">${iconSvg('x')} Make it stop</button>`)}
-    <style>
-      .idiot-main{background:#000;color:#fff;min-height:340px;display:flex;flex-direction:column;align-items:center;padding:18px;overflow:hidden}
-      .idiot-flash{font-size:42px;font-weight:900;letter-spacing:.02em;animation:idiot-flash .36s steps(2) infinite;margin:8px 0 2px;text-align:center}
-      .idiot-faces{font-size:30px;animation:idiot-flash .5s steps(2) infinite}
-      @keyframes idiot-flash{0%{color:#fff}50%{color:#ffe600}}
-      .idiot-main video{width:min(560px,92%);border:3px solid #fff;border-radius:8px;background:#000;margin-top:12px}
-      .idiot-clone{position:fixed;width:230px;background:#111;border:2px solid #fff;border-radius:10px;color:#fff;z-index:999;box-shadow:0 14px 40px rgba(0,0,0,.6);overflow:hidden;user-select:none}
-      .idiot-clone header{display:flex;align-items:center;gap:6px;background:#fff;color:#000;font-weight:800;font-size:12.5px;padding:5px 8px}
-      .idiot-clone header button{margin-left:auto;border:1px solid #000;background:#fff;border-radius:5px;width:22px;height:22px;line-height:1;cursor:pointer;font-weight:900}
-      .idiot-clone .idiot-clone-faces{font-size:34px;text-align:center;padding:14px 6px 4px;animation:idiot-flash .4s steps(2) infinite}
-      .idiot-clone p{margin:0;padding:0 10px 12px;text-align:center;font-weight:800;font-size:13px}
-      .idiot-shake{animation:idiot-shake .18s linear infinite}
-      @keyframes idiot-shake{0%{transform:translate(0,0)}25%{transform:translate(2px,-1px)}50%{transform:translate(-2px,1px)}75%{transform:translate(1px,2px)}100%{transform:translate(0,0)}}
-    </style>
-    <div class="app-main idiot-main">
-      <div class="idiot-flash">you are an idiot!</div>
-      <div class="idiot-faces">&#9786; &#9786; &#9786;</div>
-      <video id="idiot-app-video" src="assets/youare.mp4" loop playsinline></video>
-      <p style="max-width:520px;text-align:center;opacity:.85">The bouncing windows breed when you close them, and this window does not want to close either. It is all happening on the fake desktop - close this window (keep trying) or press Make it stop and every trace of it is gone.</p>
-    </div>`;
-
-    const video = body.querySelector('#idiot-app-video');
-    let videoStarted = false;
-    function startVideo() {
-      if (!video || videoStarted) return;
-      videoStarted = true;
-      video.loop = true;
-      video.volume = 1;
-      try {
-        const playing = video.play();
-        if (playing && playing.catch) playing.catch(() => {});
-      } catch (err) { /* browsers gate sound behind a gesture; the click that got us here is one */ }
+    if (!idiotSession) {
+      idiotSession = { keys: new Set(), timers: [], stopped: false, seq: 0 };
+      MH.$('desktop')?.classList.add('idiot-shake');
+      idiotSession.timers.push(setInterval(() => {
+        if (idiotSession && idiotSession.keys.size < 5) idiotSpawn();
+      }, 3200));
     }
-    if (video) {
-      /* Sound starts with the first poke at the window - browsers will not
-       * let it blast unmuted before that anyway. */
-      body.addEventListener('pointerdown', startVideo);
-      video.addEventListener('click', startVideo);
-    }
+    const session = idiotSession;
+    const key = ctx.winKey || 'you-are-an-idiot';
+    session.keys.add(key);
+    const later = (fn, ms) => { const t = setTimeout(fn, ms); session.timers.push(t); return t; };
+    let mover = null;
 
-    function spawnClone() {
-      if (stopped || clones.size >= MAX_CLONES) return;
-      const el = document.createElement('div');
-      el.className = 'idiot-clone';
-      const maxX = Math.max(20, innerWidth - 250);
-      const maxY = Math.max(60, innerHeight - 190);
-      let x = 20 + Math.random() * maxX;
-      let y = 50 + Math.random() * maxY;
-      let vx = (Math.random() < 0.5 ? -1 : 1) * (1.2 + Math.random() * 2.2);
-      let vy = (Math.random() < 0.5 ? -1 : 1) * (1.2 + Math.random() * 2.2);
-      el.style.left = x + 'px';
-      el.style.top = y + 'px';
-      el.innerHTML = `<header><span>you are an idiot!</span><button type="button" title="Close">&times;</button></header>
-        <div class="idiot-clone-faces">&#9786;&#9786;&#9786;</div><p>ha ha ha ha ha!</p>`;
-      el.querySelector('button').onclick = (e) => {
-        e.stopPropagation();
-        destroyClone(el);
-        spawnClone(); spawnClone();
-      };
-      el.addEventListener('pointerdown', () => {
-        el.style.borderColor = '#ffe600';
-        setTimeout(() => { el.style.borderColor = '#fff'; }, 350);
-      });
-      layer.appendChild(el);
-      clones.add(el);
-      el._idiotMove = () => {
-        x += vx; y += vy;
-        if (x <= 4 || x >= innerWidth - 240) vx = -vx;
-        if (y <= 44 || y >= innerHeight - 170) vy = -vy;
-        x = Math.min(Math.max(4, x), Math.max(8, innerWidth - 240));
-        y = Math.min(Math.max(44, y), Math.max(48, innerHeight - 170));
+    const stopBtn = `<button class="btn sm" data-stop>${iconSvg('x')} Make it stop</button>`;
+    if (ctx.clone) {
+      body.innerHTML = `${bar('idiot!', stopBtn)}
+      <style>
+        .idiot-mini{background:#000;color:#fff;min-height:0;display:flex;flex-direction:column;align-items:center;padding:12px;overflow:hidden}
+        .idiot-mini .idiot-flash{font-size:24px;font-weight:900;animation:idiot-flash .36s steps(2) infinite;text-align:center}
+        .idiot-mini .idiot-faces{font-size:38px;animation:idiot-flash .5s steps(2) infinite;line-height:1.15}
+        @keyframes idiot-flash{0%{color:#fff}50%{color:#ffe600}}
+        .idiot-mini p{margin:6px 0 0;font-weight:800;font-size:12.5px}
+      </style>
+      <div class="app-main idiot-mini">
+        <div class="idiot-faces">&#9786;&#9786;&#9786;</div>
+        <div class="idiot-flash">you are an idiot!</div>
+        <p>ha ha ha ha ha!</p>
+      </div>`;
+    } else {
+      body.innerHTML = `${bar('You Are An Idiot', stopBtn)}
+      <style>
+        .idiot-main{background:#000;color:#fff;min-height:340px;display:flex;flex-direction:column;align-items:center;padding:18px;overflow:hidden}
+        .idiot-flash{font-size:42px;font-weight:900;letter-spacing:.02em;animation:idiot-flash .36s steps(2) infinite;margin:8px 0 2px;text-align:center}
+        .idiot-faces{font-size:30px;animation:idiot-flash .5s steps(2) infinite}
+        @keyframes idiot-flash{0%{color:#fff}50%{color:#ffe600}}
+        .idiot-main video{width:min(560px,92%);border:3px solid #fff;border-radius:8px;background:#000;margin-top:12px}
+        .idiot-shake{animation:idiot-shake .18s linear infinite}
+        @keyframes idiot-shake{0%{transform:translate(0,0)}25%{transform:translate(2px,-1px)}50%{transform:translate(-2px,1px)}75%{transform:translate(1px,2px)}100%{transform:translate(0,0)}}
+      </style>
+      <div class="app-main idiot-main">
+        <div class="idiot-flash">you are an idiot!</div>
+        <div class="idiot-faces">&#9786; &#9786; &#9786;</div>
+        <video id="idiot-app-video" src="assets/youare.mp4" autoplay loop playsinline></video>
+        <p style="max-width:520px;text-align:center;opacity:.85">Real windows, bouncing around your desktop, and not one of them will close - every × just breeds two more. The only way out is Make it stop, and then every trace of it is gone.</p>
+      </div>`;
+
+      const video = body.querySelector('#idiot-app-video');
+      let videoStarted = false;
+      function startVideo() {
+        if (!video || videoStarted) return;
+        videoStarted = true;
+        video.loop = true;
+        video.volume = 1;
+        try {
+          const playing = video.play();
+          if (playing && playing.catch) playing.catch(() => {});
+        } catch (err) { /* browsers gate sound behind a gesture; the click that got us here is one */ }
+      }
+      if (video) {
+        /* The music starts on its own: opening the app is the user's
+         * click, so the browser lets it play. (Under the jsdom test
+         * harness play() only ever logs "not implemented", so the
+         * automatic attempt is skipped there — the click fallback
+         * below covers browsers that still block it.) */
+        if (!/jsdom/i.test(navigator.userAgent)) startVideo();
+        body.addEventListener('pointerdown', startVideo);
+        video.addEventListener('click', startVideo);
+      }
+      later(() => { idiotSpawn(); idiotSpawn(); idiotSpawn(); }, 350);
+    }
+    body.querySelector('[data-stop]').onclick = () => idiotStop();
+
+    if (ctx.clone) {
+      /* This window bounces around the desktop on its own. */
+      const el = ctx.winEl;
+      let x = el.offsetLeft || 60, y = el.offsetTop || 60;
+      let vx = (Math.random() < 0.5 ? -1 : 1) * (60 + Math.random() * 90);
+      let vy = (Math.random() < 0.5 ? -1 : 1) * (60 + Math.random() * 90);
+      mover = setInterval(() => {
+        if (session.stopped || el.classList.contains('min') || el.classList.contains('max')) return;
+        x += vx / 20; y += vy / 20;
+        const maxX = Math.max(8, innerWidth - el.offsetWidth - 6);
+        const maxY = Math.max(44, innerHeight - el.offsetHeight - 50);
+        if (x <= 4 || x >= maxX) vx = -vx;
+        if (y <= 42 || y >= maxY) vy = -vy;
+        x = Math.min(Math.max(4, x), maxX);
+        y = Math.min(Math.max(42, y), maxY);
         el.style.left = x + 'px';
         el.style.top = y + 'px';
-      };
+      }, 50);
+      session.timers.push(mover);
     }
 
-    function destroyClone(el) {
-      clones.delete(el);
-      el.remove();
-    }
-
-    function cleanup() {
-      if (stopped) return;
-      stopped = true;
-      timers.forEach((t) => clearInterval(t));
-      [...clones].forEach(destroyClone);
-      if (desktop) desktop.classList.remove('idiot-shake');
-      if (video && videoStarted) { try { video.pause(); } catch (err) {} }
-    }
-
-    timers.push(setInterval(() => { clones.forEach((el) => el._idiotMove && el._idiotMove()); }, 50));
-    timers.push(setInterval(() => { if (clones.size < 5) spawnClone(); }, 3200));
-    if (desktop) desktop.classList.add('idiot-shake');
-    spawnClone(); spawnClone(); spawnClone();
-
-    body.querySelector('#idiot-stop').onclick = () => { cleanup(); closeWin('you-are-an-idiot', true); };
-    body.beforeClose = () => {
-      closeAttempts += 1;
-      if (closeAttempts <= 2) {
-        spawnClone(); spawnClone(); spawnClone();
-        MH.toast('Nice try. It does not want to close.');
-        return false;
-      }
-      cleanup();
-      return true;
+    body.beforeClose = idiotRefuse;
+    body.onDestroy = () => {
+      if (mover) clearInterval(mover);
+      session.keys.delete(key);
+      if (!session.stopped && session.keys.size === 0) idiotStop();
     };
-    body.onDestroy = cleanup;
   },
 });
 </script>

@@ -14,7 +14,10 @@ proton menu. The script below is fetched and run by proton's HTML loader
 
      Every file in this folder except this wrapper is copied byte-for-byte
      from proton-arcade/proton-arcade.github.io (website/games/Drift-boss),
-     the Exst Arcade repository. Nothing was edited.
+     the Exst Arcade repository. Nothing was edited, except the
+     embedded-link cleanup in CREDITS.md: its Google Analytics block is
+     switched off (enabled: !1) and its Yandex Games SDK URL is blanked,
+     so the game loads nothing from the network.
 
      The wrapper frames this folder's own game page - a local page, so the
      frame is NOT sandboxed and may use keyboard, mouse, audio and fullscreen

@@ -1,4 +1,4 @@
-@import url(https://fonts.googleapis.com/css?family=Roboto);
+
 
 /**
  *			Sleek 0.1 Beta Theme © Kida
@@ -96,7 +96,6 @@
 .scheme_sleek,
 .scheme_sleek .help {
     background-color: #1C1917;
-    /*background-image: url(https://googledrive.com/host/0B0udZcj7g1TzX0lpV2J1OU1jMnM);*/
     /*background-image: url(grass.jpg);*/
     background-size: cover;
     background-position: 75% 50%;

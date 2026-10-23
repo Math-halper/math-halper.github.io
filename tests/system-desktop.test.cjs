@@ -1305,6 +1305,138 @@ test('embedded-page templates and remote-embedded games are not shipped', () => 
     assert.ok(!/<iframe\b[^>]*\bsrc\s*=\s*["']https?:\/\//i.test(html), `${page} frames a remote page`);
     assert.ok(!/\.src\s*=\s*['"]https?:\/\//.test(html), `${page} points a frame at a remote page`);
   }
+  /* Nothing shipped loads a remote subresource at all: no embedded links
+   * in any game page (scripts, stylesheets, images, media — <a> links a
+   * reader may choose to follow are fine), no remote tracker/SDK hooks
+   * hiding in inline code, and no remote @imports in game stylesheets. */
+  const REMOTE_SUBRESOURCE = /<(?:script|link|img|iframe|source|video|audio|embed|object|track)\b[^>]*(?:src|href)\s*=\s*["'](?:https?:)?\/\//i;
+  const REMOTE_HOOKS = /googletagmanager\.com|google-analytics\.com|googlesyndication\.com|connect\.facebook\.net|yandex\.ru\/games\/sdk|kongregate_api\.js|fonts\.googleapis\.com|code\.jquery\.com|ajax\.googleapis\.com|cdnjs\.cloudflare\.com/i;
+  const htmlFiles = [];
+  const walkHtml = (dir) => {
+    for (const e of fs.readdirSync(path.join(ROOT, dir), { withFileTypes: true })) {
+      const rel = `${dir}/${e.name}`;
+      if (e.isDirectory()) walkHtml(rel);
+      else if (e.name.endsWith('.html')) htmlFiles.push(rel);
+    }
+  };
+  walkHtml('apps/games');
+  for (const rel of htmlFiles) {
+    const html = source(rel);
+    assert.ok(!REMOTE_SUBRESOURCE.test(html), `${rel} loads a remote subresource`);
+    assert.ok(!REMOTE_HOOKS.test(html), `${rel} still hooks a remote tracker, SDK or CDN`);
+  }
+  const cssFiles = [];
+  const walkCss = (dir) => {
+    for (const e of fs.readdirSync(path.join(ROOT, dir), { withFileTypes: true })) {
+      const rel = `${dir}/${e.name}`;
+      if (e.isDirectory()) walkCss(rel);
+      else if (e.name.endsWith('.css')) cssFiles.push(rel);
+    }
+  };
+  walkCss('apps/games');
+  for (const rel of cssFiles) {
+    assert.ok(!/@import\s+(?:url\(\s*)?["']?(?:https?:)?\/\//i.test(source(rel)), `${rel} imports a remote stylesheet`);
+    assert.ok(!/url\(\s*["']?(?:https?:)?\/\//i.test(source(rel)), `${rel} paints a remote asset`);
+  }
+});
+
+/* The not-preinstalled prank is quarantined on the fake desktop, but its
+ * windows are real proton windows: they bounce on their own, no × on any
+ * of them ever closes one (it breeds two more), the song autoplays, and
+ * Make it stop is the only way out. */
+test('the idiot app breeds real windows and only Make it stop ends it', async () => {
+  const { w, errors, settle, wins, close } = await bootDesktop();
+  const idiotWins = () => [...w.document.querySelectorAll('#windows .win[data-app="you-are-an-idiot"]')];
+  try {
+    w.openApp('you-are-an-idiot');
+    await settle();
+    const mainBody = wins.get('you-are-an-idiot').body;
+    const video = mainBody.querySelector('#idiot-app-video');
+    assert.ok(video, 'the main window carries the video');
+    assert.ok(video.hasAttribute('autoplay'), 'the music is set to play on its own');
+    assert.equal(video.getAttribute('src'), 'assets/youare.mp4');
+    await new Promise((r) => setTimeout(r, 600));
+    assert.ok(idiotWins().length >= 3, `expected a main window and real clone windows, got ${idiotWins().length}`);
+    assert.ok(w.document.querySelector('#desktop').classList.contains('idiot-shake'), 'the desktop shakes');
+
+    /* A clone really moves. */
+    const clone = idiotWins().find((el) => el.dataset.win !== 'you-are-an-idiot');
+    const leftBefore = clone.style.left;
+    await new Promise((r) => setTimeout(r, 220));
+    assert.notEqual(clone.style.left, leftBefore, 'clone windows move around the desktop on their own');
+
+    /* No × ever works: closing a clone breeds more, closing the main
+     * window does nothing either. */
+    const before = idiotWins().length;
+    clone.querySelector('[data-act="close"]').click();
+    await settle();
+    assert.ok(idiotWins().length >= before, 'closing a clone breeds more windows instead of removing it');
+    assert.ok(wins.has(clone.dataset.win), 'the clone is still there after its × was pressed');
+    wins.get('you-are-an-idiot').el.querySelector('[data-act="close"]').click();
+    await settle();
+    assert.ok(wins.has('you-are-an-idiot'), 'the main window also refuses to close');
+
+    /* Make it stop is the only way out — and it removes every trace. */
+    mainBody.querySelector('[data-stop]').click();
+    await settle();
+    assert.equal(idiotWins().length, 0, 'Make it stop removes every idiot window');
+    assert.ok(!w.document.querySelector('#desktop').classList.contains('idiot-shake'), 'the shaking stops');
+    await new Promise((r) => setTimeout(r, 400));
+    assert.equal(idiotWins().length, 0, 'nothing respawns after Make it stop');
+    assert.deepEqual(errors, []);
+  } finally { close(); }
+});
+
+/* Every text box and text input in proton's own apps shows a caret because
+ * it really is editable: typing is never swallowed or reverted. (Games in
+ * iframes are upstream pages; this guards the desktop's own fields —
+ * number and colour inputs legitimately reject letters, so they are not
+ * typed into here.) */
+test('every text input in proton’s own apps accepts typed text', async () => {
+  const { w, errors, settle, wins, close } = await bootDesktop();
+  try {
+    const OWN_APPS = ['appcenter', 'customize', 'settings', 'about', 'browser', 'calculator',
+      'files', 'text-editor', 'pdf', 'image-viewer', 'media', 'ruffle-flash-player', 'web-retro'];
+    for (const id of OWN_APPS) {
+      w.openApp(id);
+      await settle();
+      const body = wins.get(id)?.body;
+      assert.ok(body, `${id} opened`);
+      /* Typing in an app's own search box re-renders the app, which
+       * detaches the fields collected a moment ago — so fields are
+       * re-queried live, one at a time, until none are left untested. */
+      const tested = new Set();
+      const signature = (el) => `${el.tagName}|${el.id}|${el.getAttribute('data-mname') || el.getAttribute('data-mcat') || el.getAttribute('data-thname') || el.getAttribute('data-wname') || el.placeholder || ''}`;
+      const collect = () => [...body.querySelectorAll('input, textarea')].filter((el) =>
+        !['hidden', 'file', 'checkbox', 'radio', 'color', 'number', 'range', 'button', 'submit'].includes(el.type || 'text')
+        && !tested.has(signature(el)));
+      /* Fields on a tab the user has not opened yet are display:none and
+       * cannot take focus anywhere; the apps' own tab clicks reveal them. */
+      const tabHidden = (el) => {
+        for (let n = el; n && n !== body; n = n.parentElement) {
+          if (n.hidden || w.getComputedStyle(n).display === 'none') return true;
+        }
+        return false;
+      };
+      for (let el = collect().find((f) => !tabHidden(f)); el; el = collect().find((f) => !tabHidden(f))) {
+        tested.add(signature(el));
+        const label = `${id} <${el.tagName.toLowerCase()}${el.id ? '#' + el.id : ''} type=${el.type || 'text'}>`;
+        assert.ok(!el.disabled && !el.readOnly, `${label} looks editable but is ${el.disabled ? 'disabled' : 'read-only'}`);
+        el.focus();
+        assert.equal(w.document.activeElement, el, `${label} does not take focus`);
+        const kd = new w.KeyboardEvent('keydown', { key: 'x', bubbles: true, cancelable: true });
+        el.dispatchEvent(kd);
+        assert.equal(kd.defaultPrevented, false, `${label} has its typing prevented`);
+        const proto = el instanceof w.HTMLTextAreaElement ? w.HTMLTextAreaElement.prototype : w.HTMLInputElement.prototype;
+        Object.getOwnPropertyDescriptor(proto, 'value').set.call(el, `${el.value || ''}x`);
+        el.dispatchEvent(new w.InputEvent('input', { bubbles: true }));
+        await settle();
+        assert.ok(String(el.value).includes('x'), `${label} did not keep typed text (now ${JSON.stringify(el.value)})`);
+      }
+      w.closeWin(id, true);
+    }
+    assert.deepEqual(errors, []);
+  } finally { close(); }
 });
 
 /* The built-in test site is the smoke test for the Browser, so it has to

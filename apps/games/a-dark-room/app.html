@@ -14,7 +14,10 @@ proton menu. The script below is fetched and run by proton's HTML loader
 
      Every file in this folder except this wrapper is copied byte-for-byte
      from incrediblerevived11/incrediblerevived11.github.io (adarkroom), the incrediblewebsite-revived
-     repository. Nothing was edited.
+     repository. Nothing was edited, except the embedded-link cleanup
+     in CREDITS.md: the Google-hosted jQuery script tag was removed —
+     the page already loads its own lib/jquery.min.js right after it, and
+     its Google Analytics snippet was removed (its ga() calls are guarded).
      Non-entry HTML pages in the source folder (help, translation,
      demo or duplicate pages) are not carried over: under this
      repository's rule every game page here is its own game.
