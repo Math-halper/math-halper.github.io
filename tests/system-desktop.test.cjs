@@ -1021,15 +1021,38 @@ test('the desktop boots, lists and opens all catalogued apps', async () => {
     assert.equal(shown(), '0', 'Escape clears');
     w.closeWin('calculator', true);
 
-    // Web Retro's launcher picks a core and offers both ROM sources.
+    // Web Retro's front page is two panels: the first half is four console
+    // rows (NES, SNES, N64, GB) over the bundled library; picking one fills
+    // the Emulators panel's grid with that console's games, and the panel's
+    // four emulator rows open a "where from?" screen (top bar, back arrow).
     w.openApp('web-retro');
     const retro = wins.get('web-retro').body;
+    const panels = [...retro.querySelectorAll('.wr-panel')];
+    assert.equal(panels.length, 2, 'the front page should be two panels');
+    assert.match(panels[0].querySelector('h3').textContent, /ROMs/, 'the first panel is the ROMs');
+    assert.match(panels[1].querySelector('h3').textContent, /Emulators/, 'the second panel is the Emulators');
+    assert.deepEqual([...panels[0].querySelectorAll('[data-console]')].map((b) => b.dataset.console),
+      ['NES', 'SNES', 'N64', 'GB'], 'the first half is four console rows, NES down to GB');
+    const gridCount = () => retro.querySelectorAll('#wr-grid [data-bundled]').length;
+    assert.equal(gridCount(), 5, 'the NES row starts picked, with its games in the grid');
+    retro.querySelector('[data-console="GB"]').click();
+    assert.equal(gridCount(), 13, 'the GB row shows the GB/GBC/GBA games');
+    retro.querySelector('[data-console="SNES"]').click();
+    assert.equal(gridCount(), 0, 'no SNES games are bundled');
+    retro.querySelector('[data-console="NES"]').click();
+    assert.equal(gridCount(), 5, 'picking NES again refills the grid');
+    assert.ok(panels[1].querySelector('[data-core]'), 'the cores live in the Emulators panel');
     assert.deepEqual([...retro.querySelectorAll('[data-core]')].map((b) => b.dataset.core),
-      ['mupen64plus_next', 'snes9x', 'nestopia', 'mgba']);
-    assert.equal(retro.querySelector('#wr-upload').hidden, true, 'no ROM panel before a core is picked');
+      ['nestopia', 'snes9x', 'mupen64plus_next', 'mgba']);
+    assert.equal(retro.querySelector('#wr-upload').hidden, true, 'no source screen before an emulator is picked');
     retro.querySelector('[data-core="snes9x"]').click();
     assert.equal(retro.querySelector('#wr-upload').hidden, false);
     assert.equal(retro.querySelector('#wr-corename').textContent, 'SNES');
+    assert.ok(retro.querySelector('#wr-back'), 'the source screen has a back arrow');
+    retro.querySelector('#wr-back').click();
+    assert.equal(retro.querySelector('#wr-upload').hidden, true, 'the back arrow returns to the emulator rows');
+    retro.querySelector('[data-core="snes9x"]').click();
+    assert.equal(retro.querySelector('#wr-upload').hidden, false);
     assert.ok(retro.querySelector('[data-src="device"]'), 'no "this computer" ROM source');
     assert.ok(retro.querySelector('[data-src="vfs"]'), 'no "proton Files" ROM source');
     retro.querySelector('#wr-play').click();
@@ -1385,6 +1408,52 @@ test('the idiot app breeds real windows and only Make it stop ends it', async ()
     assert.equal(idiotWins().length, 0, 'nothing respawns after Make it stop');
     assert.deepEqual(errors, []);
   } finally { close(); }
+});
+
+/* Web Retro's bundled library is the maintainer's own ROM files: every
+ * game listed in the launcher really is on disk (its extracted ROM in
+ * webretro/roms/ and its box art in data/icons/), so a clicked card
+ * always plays. */
+test('the Web Retro bundled ROM library is on disk', () => {
+  const src = fs.readFileSync(path.join(ROOT, 'apps/tools/web-retro/app.html'), 'utf8');
+  const bundled = src.match(/const BUNDLED = \[([\s\S]*?)\n\s*\];/);
+  assert.ok(bundled, 'the launcher defines its bundled game list');
+  const entries = [...bundled[1].matchAll(/\['((?:[^'\\]|\\.)*)', '(\w+)',/g)]
+    .map((m) => [m[1].replace(/\\(.)/g, '$1'), m[2]]);
+  assert.ok(entries.length >= 20, `the bundled library lists ${entries.length} games`);
+  const extFor = { mupen64plus_next: ['.z64', '.n64', '.v64'], nestopia: ['.nes'], mgba: ['.gb', '.gbc', '.gba'], snes9x: ['.smc', '.sfc'] };
+  for (const [rom, core] of entries) {
+    assert.ok(fs.existsSync(path.join(ROOT, 'apps/tools/web-retro/webretro/roms', rom)), `bundled ROM missing: webretro/roms/${rom}`);
+    assert.ok(extFor[core] && extFor[core].some((ext) => rom.toLowerCase().endsWith(ext)), `${rom} is not a ROM the ${core} core plays`);
+  }
+  for (const m of bundled[1].matchAll(/, '([a-z0-9-]+)'\]/g)) {
+    assert.ok(fs.existsSync(path.join(ROOT, 'data/icons', `${m[1]}.jpeg`)), `box art missing: data/icons/${m[1]}.jpeg`);
+  }
+});
+
+/* proton's own UI draws artwork with its SVG icon set and raster images,
+ * never with emoji glyphs. Vendored games and third-party runtime builds
+ * are upstream content, so they are outside this scan; values saved by old
+ * accounts are still translated through assets/icons.js at render time. */
+test("proton's own UI uses image artwork instead of emoji glyphs", () => {
+  const emojiGlyph = new RegExp('[\\u{1F000}-\\u{1FAFF}\\u{2600}-\\u{27BF}\\u{2B00}-\\u{2BFF}\\uFE0F]', 'u');
+  const offenders = [];
+  const visit = (rel) => {
+    const normalized = rel.split(path.sep).join('/');
+    if (normalized === 'apps/games' || normalized.startsWith('apps/games/')
+      || normalized === 'apps/tools/web-retro/webretro' || normalized.startsWith('apps/tools/web-retro/webretro/')) return;
+    if (normalized.startsWith('apps/tools/ruffle-flash-player/') && !normalized.endsWith('/app.html')) return;
+    const abs = path.join(ROOT, rel);
+    if (fs.statSync(abs).isDirectory()) {
+      for (const entry of fs.readdirSync(abs).sort()) visit(path.join(rel, entry));
+      return;
+    }
+    if (!/\.(?:html|js|css)$/.test(normalized)) return;
+    const match = fs.readFileSync(abs, 'utf8').match(emojiGlyph);
+    if (match) offenders.push(`${normalized}: ${match[0]}`);
+  };
+  for (const root of ['index.html', 'assets', 'apps', 'data/applications.js', 'data/websites.js', 'websites']) visit(root);
+  assert.deepEqual(offenders, []);
 });
 
 /* Every text box and text input in proton's own apps shows a caret because
@@ -2038,9 +2107,10 @@ test('proton’s search engine answers from the repository itself', async () => 
       'a document that really is about a word still answers it, however long it is');
     assert.equal(results('zip').answer, true, 'the code that builds ZIPs answers "zip"');
     assert.equal(results('zip').results[0].answer, true);
-    /* "zip" is also the name of vendored build files, so its default window
-     * is answers; widen it to see that mentions sit in their own lesser list. */
-    const wide = results('zip', 20);
+    /* "zip" is also the name of vendored build files (and of Web Retro's
+     * whole bundled ROM library), so its default window is answers; widen
+     * it to see that mentions sit in their own lesser list. */
+    const wide = results('zip', 60);
     assert.equal(wide.mentions > 0 && wide.answers > 0, true,
       'and the two are kept apart rather than ranked as one list');
     for (const query of ['files', 'celeste', 'test page', 'search index', 'wallpaper', 'licence']) {

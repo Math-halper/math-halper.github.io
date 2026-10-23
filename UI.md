@@ -316,14 +316,20 @@ not be saved.", etc.).
 
 ## 12. Tools
 
-- **Web Retro** — the vendored webretro emulator launcher:
-  - intro paragraph (in-window N64 / SNES / NES / Game Boy play; ROMs never
-    leave the browser; no ROMs are bundled);
-  - **Bring your own — core**: core buttons (mupen64plus_next / snes9x /
-    nestopia / mgba) and then a **ROM** field with source buttons
-    **From this computer** (device file picker) or **From proton Files**
-    (a mini file browser over the account's home: crumbs, folder rows, ROM
-    rows, one level at a time);
+- **Web Retro** — the vendored webretro emulator launcher. Its front page is
+  two panels side by side (stacked in narrow windows), with a saves/CREDITS
+  footnote underneath:
+  - **ROMs**: the first half is four console rows running top to bottom —
+    **NES**, **SNES**, **N64**, **GB (GB · GBC · GBA)** — each with its
+    bundled-game count over the maintainer's library;
+  - **Emulators**: the picked console's bundled games in a box-art + title
+    grid (click one to play it on its matching core; SNES has none bundled
+    yet), then **Play your own ROM** as four emulator rows, one per console
+    (nestopia / snes9x / mupen64plus_next / mgba). Picking a row swaps the
+    panel to a "where from?" screen — a top bar with a **←** back arrow,
+    then **From proton OS Files** (a mini file browser over the account's
+    home: crumbs, folder rows, ROM rows, one level at a time) or
+    **From your Files** (the device file picker), and **Play ROM**;
   - launching swaps the window to the emulator; **Change game** in the app bar
     returns to the chooser.
 - **Ruffle Flash Player** — the shared Flash runtime for all 12 Flash games

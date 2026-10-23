@@ -64,14 +64,20 @@ def collect():
     return entries
 
 
+def js_string(text):
+    """Path as a single-quoted JS string (file names can carry apostrophes —
+    e.g. webretro/roms/Sims,The_Bustin'Out.zip)."""
+    return "'" + text.replace('\\', '\\\\').replace("'", "\\'") + "'"
+
+
 def main():
     entries = collect()
     lines = []
     for rel, size in entries:
         if rel == SELF:
-            lines.append("  { p: '%s', s: 000000 },\n" % rel)
+            lines.append("  { p: %s, s: 000000 },\n" % js_string(rel))
         else:
-            lines.append("  { p: '%s', s: %d },\n" % (rel, size))
+            lines.append("  { p: %s, s: %d },\n" % (js_string(rel), size))
     body = ''.join(lines)
     out = HEADER + body + '];\n'
     # Second pass: fill in this manifest's own size (fixed-width placeholder,

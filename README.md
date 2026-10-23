@@ -32,7 +32,7 @@ single-file HTML5 games. A small
 too, and **Web Retro** vendors the
 [webretro](https://github.com/BinBashBanana/webretro) emulator build from
 [Gams-Offline/Gams](https://github.com/Gams-Offline/Gams) so you can play your
-own ROM files too — and it now carries the offline games catalog’s classic ROMs (details in [`CREDITS.md`](CREDITS.md)). The other bundled apps,
+own ROM files too — and it carries the maintainer's own bundled ROM library (details in [`CREDITS.md`](CREDITS.md)). The other bundled apps,
 game bundles and earlier built-in sites remain removed (except Test Page).
 
 | App (id) | What it does |
@@ -49,7 +49,7 @@ game bundles and earlier built-in sites remain removed (except Test Page).
 | **Image Viewer** (`image-viewer`) | View PNG, JPG, GIF, WebP, AVIF, BMP, ICO and SVG files with zoom and a folder playlist |
 | **Media** (`media`) | Play audio and video files stored in your home folder, with your browser's own codecs |
 | **Ruffle Flash Player** (`ruffle-flash-player`) | Load and play your own Flash .swf files |
-| **Web Retro** (`web-retro`) | Play your own ROMs — N64, SNES, NES and Game Boy (webretro; no ROMs are bundled) |
+| **Web Retro** (`web-retro`) | Play the bundled classics — or your own ROMs — N64, SNES, NES and Game Boy (webretro) |
 | **2048** (`game-2048`) | Play 2048 - join the tiles |
 | **Bloons Tower Defense 1** (`bloons-tower-defense-1`) | Play Bloons Tower Defense 1 - the original balloon-popping tower defense |
 | **Bloons Tower Defense 2** (`bloons-tower-defense-2`) | Play Bloons Tower Defense 2 - more balloons, more towers |
@@ -80,7 +80,6 @@ game bundles and earlier built-in sites remain removed (except Test Page).
 | **Stickman Hook** (`stickman-hook`) | Play Stickman Hook - swing through the levels |
 | **Subway Surfers** (`subway-surfers`) | Play Subway Surfers - dodge the trains and outrun the guard (WebGL, vendored from RohanChacko/Subway-Surfers) |
 | **Super Mario 64** (`sm64`) | Play the Super Mario 64 WebAssembly browser build (unofficial fan port, vendored from Math-halper/Mario) |
-| **Super Mario RPG** (`super-mario-rpg`) | Play Super Mario RPG in Web Retro - the catalog’s classic ROM included |
 | **Tetris** (`tetris`) | Play Tetris - the falling-blocks classic |
 | **The Impossible Quiz** (`the-impossible-quiz`) | Play The Impossible Quiz - the wildly unfair quiz |
 | **Tunnel Rush** (`tunnel-rush`) | Play Tunnel Rush - dodge through the spinning tunnel |
@@ -395,8 +394,8 @@ the game is © Orteil / DashNet, and the mirror grants no redistribution
 rights (details in [`CREDITS.md`](CREDITS.md)). The 23-game Gams batch is
 copied the same way from [Gams-Offline/Gams](https://github.com/Gams-Offline/Gams) —
 each game is © its respective authors and the mirrors grant no
-redistribution rights; Super Mario RPG’s ROM comes straight from that catalog (details in [`CREDITS.md`](CREDITS.md)). Web Retro ships
+redistribution rights (details in [`CREDITS.md`](CREDITS.md)). Web Retro ships
 its emulator files (webretro, vendored from Gams-Offline/Gams under
-GPL-3.0 — see [`CREDITS.md`](CREDITS.md)) together with the catalog’s classic
-ROMs — mirrored as-is, each © its respective rights holders — and it still
-plays ROMs you bring yourself.
+GPL-3.0 — see [`CREDITS.md`](CREDITS.md)) together with the maintainer's own
+bundled ROM library — mirrored as-is, each © its respective rights holders —
+and it still plays ROMs you bring yourself.
