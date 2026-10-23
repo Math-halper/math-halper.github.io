@@ -71,6 +71,26 @@ const SYSTEM_APPS = ['appcenter', 'customize', 'settings', 'about', 'browser',
   'kart-bros',
   'geometry-dash-lite',
   'five-nights-at-freddys-sl',
+  "tenuki",
+  "chess",
+  "universal-paperclips",
+  "breaklock",
+  "asteroids",
+  "breakout",
+  "calamity",
+  "asciispace",
+  "roadblocks",
+  "konnekt",
+  "xx142-b2exe",
+  "connect-3",
+  "packabunchas",
+  "edge-not-found",
+  "maze-of-space-goblins",
+  "black-hole-square",
+  "minecraft-clone",
+  "evil-glitch",
+  "space-huggers",
+  "q1k3",
 ];
 
 /* Menu sections for each app (data/applications.js cat=), in catalog order.
@@ -130,6 +150,26 @@ const SYSTEM_CATS = {
   'backrooms': 'Games',
   'kart-bros': 'Games',
   'geometry-dash-lite': 'Games',
+  "tenuki": 'Games',
+  "chess": 'Games',
+  "universal-paperclips": 'Games',
+  "breaklock": 'Games',
+  "asteroids": 'Games',
+  "breakout": 'Games',
+  "calamity": 'Games',
+  "asciispace": 'Games',
+  "roadblocks": 'Games',
+  "konnekt": 'Games',
+  "xx142-b2exe": 'Games',
+  "connect-3": 'Games',
+  "packabunchas": 'Games',
+  "edge-not-found": 'Games',
+  "maze-of-space-goblins": 'Games',
+  "black-hole-square": 'Games',
+  "minecraft-clone": 'Games',
+  "evil-glitch": 'Games',
+  "space-huggers": 'Games',
+  "q1k3": 'Games',
   'five-nights-at-freddys-sl': 'Games',
 };
 /* Each game app frames the game page that ships in its own folder. */
@@ -181,6 +221,26 @@ const GAME_PAGES = {
   'kart-bros': 'apps/games/kart-bros/index.html',
   'geometry-dash-lite': 'apps/games/geometry-dash-lite/index.html',
   'five-nights-at-freddys-sl': 'apps/games/five-nights-at-freddys-sl/index.html',
+  "tenuki": 'apps/games/tenuki/examples/example_with_simple_controls_and_gutter.html',
+  "chess": 'apps/games/chess/index.html',
+  "universal-paperclips": 'apps/games/universal-paperclips/index.html',
+  "breaklock": 'apps/games/breaklock/index.html',
+  "asteroids": 'apps/games/asteroids/index.html',
+  "breakout": 'apps/games/breakout/index.html',
+  "calamity": 'apps/games/calamity/index.html',
+  "asciispace": 'apps/games/asciispace/index.html',
+  "roadblocks": 'apps/games/roadblocks/index.html',
+  "konnekt": 'apps/games/konnekt/index.html',
+  "xx142-b2exe": 'apps/games/xx142-b2exe/index.html',
+  "connect-3": 'apps/games/connect-3/index.html',
+  "packabunchas": 'apps/games/packabunchas/index.html',
+  "edge-not-found": 'apps/games/edge-not-found/index.html',
+  "maze-of-space-goblins": 'apps/games/maze-of-space-goblins/index.html',
+  "black-hole-square": 'apps/games/black-hole-square/index.html',
+  "minecraft-clone": 'apps/games/minecraft-clone/index.html',
+  "evil-glitch": 'apps/games/evil-glitch/index.html',
+  "space-huggers": 'apps/games/space-huggers/index.html',
+  "q1k3": 'apps/games/q1k3/index.html',
 };
 /* Games whose pages carry the source sites' href="../" all-games link. */
 const PICKER_LINKED = ['celeste-classic', 'celeste-two', 'celeste-community', 'cookie-clicker', 'sm64'];
@@ -1183,7 +1243,7 @@ test('Customize saves, displays and resets uploaded app icon images', async () =
     const browserWindow = w.eval('wins').get('browser');
     assert.equal(body.querySelector('#cust-files-shortcut'), null, 'Customize still offers a Files shortcut');
     assert.deepEqual([...body.querySelectorAll('#cust-modlist .card b')].map((b) => b.textContent).slice(0, SYSTEM_APPS.length),
-            ['App Center', 'Customize', 'Settings', 'About', 'Browser', 'Calculator', 'Files', 'Text Editor', 'PDF Viewer', 'Image Viewer', 'Media', 'Ruffle Flash Player', 'Web Retro', 'You Are An Idiot', '2048', 'Bloons Tower Defense 1', 'Bloons Tower Defense 2', 'Bloons Tower Defense 5', 'Bloxorz', 'Breaking The Bank', 'Celeste Classic', 'Celeste Classic 2', 'Celeste Community', 'Celeste Classic Practice Mod', 'Celeste Classic 2 Practice Mod 1.0', 'Celeste Classic 2 Practice Mod 1.1', 'Celeste Webek', 'Celeste Classic Downloads', 'Cookie Clicker', 'Drive Mad', 'Escaping The Prison', 'Fleeing The Complex', 'Grey Box Testing', 'Infiltrating The Airship', 'Mari0', 'Offline Paradise', 'Pacman', 'Slope', 'Spacebar Clicker', 'Stack', 'Stealing The Diamond', 'Stickman Hook', 'Subway Surfers', 'Super Mario 64', 'Tetris', 'The Impossible Quiz', 'Tunnel Rush', "Baldi's Basics", 'Minesweeper', 'Flappy Bird', 'Retro Bowl', 'Drift Boss', "Football Bros", "Five Nights at Freddy's", "Five Nights at Freddy's 4", "Five Nights at Freddy's 2", "Five Nights at Freddy's 3", "Backrooms", "Kart Bros", "Geometry Dash Lite", "Five Nights at Freddy's: Sister Location"]);
+            ['App Center', 'Customize', 'Settings', 'About', 'Browser', 'Calculator', 'Files', 'Text Editor', 'PDF Viewer', 'Image Viewer', 'Media', 'Ruffle Flash Player', 'Web Retro', 'You Are An Idiot', '2048', 'Bloons Tower Defense 1', 'Bloons Tower Defense 2', 'Bloons Tower Defense 5', 'Bloxorz', 'Breaking The Bank', 'Celeste Classic', 'Celeste Classic 2', 'Celeste Community', 'Celeste Classic Practice Mod', 'Celeste Classic 2 Practice Mod 1.0', 'Celeste Classic 2 Practice Mod 1.1', 'Celeste Webek', 'Celeste Classic Downloads', 'Cookie Clicker', 'Drive Mad', 'Escaping The Prison', 'Fleeing The Complex', 'Grey Box Testing', 'Infiltrating The Airship', 'Mari0', 'Offline Paradise', 'Pacman', 'Slope', 'Spacebar Clicker', 'Stack', 'Stealing The Diamond', 'Stickman Hook', 'Subway Surfers', 'Super Mario 64', 'Tetris', 'The Impossible Quiz', 'Tunnel Rush', "Baldi's Basics", 'Minesweeper', 'Flappy Bird', 'Retro Bowl', 'Drift Boss', "Football Bros", "Five Nights at Freddy's", "Five Nights at Freddy's 4", "Five Nights at Freddy's 2", "Five Nights at Freddy's 3", "Backrooms", "Kart Bros", "Geometry Dash Lite", "Five Nights at Freddy's: Sister Location", "Q1K3"]);
 
     const uploadBrowserIcon = async () => {
       const input = body.querySelector('[data-micon-file="browser"]');
