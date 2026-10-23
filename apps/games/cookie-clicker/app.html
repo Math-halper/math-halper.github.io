@@ -14,7 +14,11 @@ proton menu. The script below is fetched and run by proton's HTML loader
 
      Every file in this folder except this wrapper is copied byte-for-byte
      from Gams-Offline/Gams (its g/g/cookie/ folder) — an offline mirror of
-     Orteil's Cookie Clicker. Nothing in the game files was edited; only
+     Orteil's Cookie Clicker. Embedded-link cleanup (see CREDITS.md): the page's remote loads were
+     removed — the cdnjs cookie-consent script and its options, the
+     Google Fonts stylesheet, the Facebook Pixel snippet and the three
+     AdSense loaders. The ad slots and push() calls stay but load
+     nothing; ordinary <a> links to the author's sites remain. Nothing in the game files was edited; only
      img/Thumbs.db, a Windows Explorer thumbnail cache, was left out.
 
      The wrapper frames this folder's own index.html — a local page, so the

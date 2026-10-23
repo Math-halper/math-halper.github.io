@@ -21,58 +21,7 @@ const ROOT = path.resolve(__dirname, '..');
 const source = (p) => fs.readFileSync(path.join(ROOT, p), 'utf8');
 /* The file system suite FS.appFor() resolves files to. */
 const FS_APPS = ['files', 'text-editor', 'image-viewer', 'media', 'pdf'];
-const SYSTEM_APPS = ['appcenter', 'customize', 'settings', 'about', 'browser',
-  'calculator', 'files', 'text-editor', 'pdf', 'image-viewer', 'media',
-  'ruffle-flash-player', 'web-retro', 'you-are-an-idiot',
-  'game-2048',
-  'bloons-tower-defense-1',
-  'bloons-tower-defense-2',
-  'bloons-tower-defense-5',
-  'bloxorz',
-  'breaking-the-bank',
-  'celeste-classic',
-  'celeste-two',
-  'celeste-community',
-  'celeste-practice-mod',
-  'celeste-two-practice-mod-1-0',
-  'celeste-two-practice-mod-1-1',
-  'celeste-webek',
-  'celeste-downloads',
-  'cookie-clicker',
-  'drive-mad',
-  'escaping-the-prison',
-  'fleeing-the-complex',
-  'grey-box-testing',
-  'infiltrating-the-airship',
-  'mari0',
-  'offline-paradise',
-  'pacman',
-  'slope',
-  'spacebar-clicker',
-  'stack',
-  'stealing-the-diamond',
-  'stickman-hook',
-  'subway-surfers',
-  'sm64',
-  'super-mario-rpg',
-  'tetris',
-  'the-impossible-quiz',
-  'tunnel-rush',
-  'baldis-basics',
-  'minesweeper',
-  'flappy-bird',
-  'retro-bowl',
-  'drift-boss',
-  'football-bros',
-  'five-nights-at-freddys-1',
-  'five-nights-at-freddys-4',
-  'five-nights-at-freddys-2',
-  'five-nights-at-freddys-3',
-  'backrooms',
-  'kart-bros',
-  'geometry-dash-lite',
-  'five-nights-at-freddys-sl',
-];
+const SYSTEM_APPS = ['appcenter', 'customize', 'settings', 'about', 'browser', 'calculator', 'files', 'text-editor', 'pdf', 'image-viewer', 'media', 'ruffle-flash-player', 'web-retro', 'you-are-an-idiot', 'game-2048', 'bloons-tower-defense-1', 'bloons-tower-defense-2', 'bloons-tower-defense-5', 'bloxorz', 'breaking-the-bank', 'celeste-classic', 'celeste-two', 'celeste-community', 'celeste-practice-mod', 'celeste-two-practice-mod-1-0', 'celeste-two-practice-mod-1-1', 'celeste-webek', 'celeste-downloads', 'cookie-clicker', 'drive-mad', 'escaping-the-prison', 'fleeing-the-complex', 'grey-box-testing', 'infiltrating-the-airship', 'mari0', 'offline-paradise', 'pacman', 'slope', 'spacebar-clicker', 'stack', 'stealing-the-diamond', 'stickman-hook', 'subway-surfers', 'sm64', 'tetris', 'the-impossible-quiz', 'tunnel-rush', 'baldis-basics', 'minesweeper', 'flappy-bird', 'retro-bowl', 'drift-boss', 'football-bros', 'five-nights-at-freddys-1', 'five-nights-at-freddys-4', 'five-nights-at-freddys-2', 'five-nights-at-freddys-3', 'backrooms', 'kart-bros', 'geometry-dash-lite', 'five-nights-at-freddys-sl', 'q1k3', 'space-huggers', 'evil-glitch', 'minecraft-clone', 'black-hole-square', 'maze-of-space-goblins', 'edge-not-found', 'packabunchas', 'connect-3', 'xx142-b2exe', 'konnekt', 'roadblocks', 'asciispace', 'calamity', 'breakout', 'asteroids', 'breaklock', 'universal-paperclips', 'chess', 'tenuki', 'hextris', 'bitcoin-mining-simulator', 'space-company', 'candy-box', 'candy-box-2', 'trimps', 'digital-logic-simulator', 'tunnel-rush-bad', 'celeste-speedrun-training', 'big-ice-tower-tiny-square', 'a-dark-room', 'doom', 'geometry-dash', 'run-3', 'a-dance-of-fire-and-ice', 'onions-revenge', 'orbital-daggers', 'icedodo', 'neogolf', 'larrys-parkour', 'mindustry', 'tunnel-glider', 'bitburner', 'kittens-game'];
 
 /* Menu sections for each app (data/applications.js cat=), in catalog order.
  * Every new app is filed here with its respective section — the catalog test
@@ -113,7 +62,6 @@ const SYSTEM_CATS = {
   'stickman-hook': 'Games',
   'subway-surfers': 'Games',
   'sm64': 'Games',
-  'super-mario-rpg': 'Games',
   'tetris': 'Games',
   'the-impossible-quiz': 'Games',
   'tunnel-rush': 'Games',
@@ -132,6 +80,50 @@ const SYSTEM_CATS = {
   'backrooms': 'Games',
   'kart-bros': 'Games',
   'geometry-dash-lite': 'Games',
+  "kittens-game": 'Games',
+  "bitburner": 'Games',
+  "tunnel-glider": 'Games',
+  "mindustry": 'Games',
+  "larrys-parkour": 'Games',
+  "neogolf": 'Games',
+  "icedodo": 'Games',
+  "orbital-daggers": 'Games',
+  "onions-revenge": 'Games',
+  "a-dance-of-fire-and-ice": 'Games',
+  "run-3": 'Games',
+  "geometry-dash": 'Games',
+  "doom": 'Games',
+  "a-dark-room": 'Games',
+  "big-ice-tower-tiny-square": 'Games',
+  "celeste-speedrun-training": 'Games',
+  "tunnel-rush-bad": 'Games',
+  "digital-logic-simulator": 'Games',
+  "trimps": 'Games',
+  "candy-box-2": 'Games',
+  "candy-box": 'Games',
+  "space-company": 'Games',
+  "bitcoin-mining-simulator": 'Games',
+  "hextris": 'Games',
+  "tenuki": 'Games',
+  "chess": 'Games',
+  "universal-paperclips": 'Games',
+  "breaklock": 'Games',
+  "asteroids": 'Games',
+  "breakout": 'Games',
+  "calamity": 'Games',
+  "asciispace": 'Games',
+  "roadblocks": 'Games',
+  "konnekt": 'Games',
+  "xx142-b2exe": 'Games',
+  "connect-3": 'Games',
+  "packabunchas": 'Games',
+  "edge-not-found": 'Games',
+  "maze-of-space-goblins": 'Games',
+  "black-hole-square": 'Games',
+  "minecraft-clone": 'Games',
+  "evil-glitch": 'Games',
+  "space-huggers": 'Games',
+  "q1k3": 'Games',
   'five-nights-at-freddys-sl': 'Games',
 };
 /* Each game app frames the game page that ships in its own folder. */
@@ -166,7 +158,6 @@ const GAME_PAGES = {
   'stickman-hook': 'apps/games/stickman-hook/stickmanhook.html',
   'subway-surfers': 'apps/games/subway-surfers/game.html',
   'sm64': 'apps/games/sm64/index.html',
-  'super-mario-rpg': 'apps/games/super-mario-rpg/supermariorpg.html',
   'tetris': 'apps/games/tetris/tetris.html',
   'the-impossible-quiz': 'apps/games/the-impossible-quiz/theimpossiblequiz.html',
   'tunnel-rush': 'apps/games/tunnel-rush/tunnelrush.html',
@@ -184,6 +175,50 @@ const GAME_PAGES = {
   'kart-bros': 'apps/games/kart-bros/index.html',
   'geometry-dash-lite': 'apps/games/geometry-dash-lite/index.html',
   'five-nights-at-freddys-sl': 'apps/games/five-nights-at-freddys-sl/index.html',
+  "kittens-game": 'apps/games/kittens-game/index.html',
+  "bitburner": 'apps/games/bitburner/index.html',
+  "tunnel-glider": 'apps/games/tunnel-glider/index.html',
+  "mindustry": 'apps/games/mindustry/index.html',
+  "larrys-parkour": 'apps/games/larrys-parkour/fps-parkour.html',
+  "neogolf": 'apps/games/neogolf/index.html',
+  "icedodo": 'apps/games/icedodo/index.html',
+  "orbital-daggers": 'apps/games/orbital-daggers/index.html',
+  "onions-revenge": 'apps/games/onions-revenge/index.html',
+  "a-dance-of-fire-and-ice": 'apps/games/a-dance-of-fire-and-ice/index.html',
+  "run-3": 'apps/games/run-3/index.html',
+  "geometry-dash": 'apps/games/geometry-dash/index.html',
+  "doom": 'apps/games/doom/index.html',
+  "a-dark-room": 'apps/games/a-dark-room/index.html',
+  "big-ice-tower-tiny-square": 'apps/games/big-ice-tower-tiny-square/index.html',
+  "celeste-speedrun-training": 'apps/games/celeste-speedrun-training/index.html',
+  "tunnel-rush-bad": 'apps/games/tunnel-rush-bad/index.html',
+  "digital-logic-simulator": 'apps/games/digital-logic-simulator/index.html',
+  "trimps": 'apps/games/trimps/index.html',
+  "candy-box-2": 'apps/games/candy-box-2/index.html',
+  "candy-box": 'apps/games/candy-box/index.html',
+  "space-company": 'apps/games/space-company/index.html',
+  "bitcoin-mining-simulator": 'apps/games/bitcoin-mining-simulator/index.html',
+  "hextris": 'apps/games/hextris/index.html',
+  "tenuki": 'apps/games/tenuki/examples/example_with_simple_controls_and_gutter.html',
+  "chess": 'apps/games/chess/index.html',
+  "universal-paperclips": 'apps/games/universal-paperclips/index.html',
+  "breaklock": 'apps/games/breaklock/index.html',
+  "asteroids": 'apps/games/asteroids/index.html',
+  "breakout": 'apps/games/breakout/index.html',
+  "calamity": 'apps/games/calamity/index.html',
+  "asciispace": 'apps/games/asciispace/index.html',
+  "roadblocks": 'apps/games/roadblocks/index.html',
+  "konnekt": 'apps/games/konnekt/index.html',
+  "xx142-b2exe": 'apps/games/xx142-b2exe/index.html',
+  "connect-3": 'apps/games/connect-3/index.html',
+  "packabunchas": 'apps/games/packabunchas/index.html',
+  "edge-not-found": 'apps/games/edge-not-found/index.html',
+  "maze-of-space-goblins": 'apps/games/maze-of-space-goblins/index.html',
+  "black-hole-square": 'apps/games/black-hole-square/index.html',
+  "minecraft-clone": 'apps/games/minecraft-clone/index.html',
+  "evil-glitch": 'apps/games/evil-glitch/index.html',
+  "space-huggers": 'apps/games/space-huggers/index.html',
+  "q1k3": 'apps/games/q1k3/index.html',
 };
 /* Games whose pages carry the source sites' href="../" all-games link. */
 const PICKER_LINKED = ['celeste-classic', 'celeste-two', 'celeste-community', 'cookie-clicker', 'sm64'];
@@ -259,7 +294,6 @@ test('the catalog is the desktop apps, the file system suite, a calculator, web 
     'stickman-hook': 'data/icons/stickman-hook.png',
     'subway-surfers': 'data/icons/subway-surfers.png',
     'sm64': 'data/icons/sm64.png',
-    'super-mario-rpg': 'data/icons/super-mario-rpg.png',
     'tetris': 'data/icons/tetris.png',
     'the-impossible-quiz': 'data/icons/the-impossible-quiz.png',
     'tunnel-rush': 'data/icons/tunnel-rush.png',
@@ -1187,7 +1221,7 @@ test('Customize saves, displays and resets uploaded app icon images', async () =
     const browserWindow = w.eval('wins').get('browser');
     assert.equal(body.querySelector('#cust-files-shortcut'), null, 'Customize still offers a Files shortcut');
     assert.deepEqual([...body.querySelectorAll('#cust-modlist .card b')].map((b) => b.textContent).slice(0, SYSTEM_APPS.length),
-            ['App Center', 'Customize', 'Settings', 'About', 'Browser', 'Calculator', 'Files', 'Text Editor', 'PDF Viewer', 'Image Viewer', 'Media', 'Ruffle Flash Player', 'Web Retro', 'You Are An Idiot', '2048', 'Bloons Tower Defense 1', 'Bloons Tower Defense 2', 'Bloons Tower Defense 5', 'Bloxorz', 'Breaking The Bank', 'Celeste Classic', 'Celeste Classic 2', 'Celeste Community', 'Celeste Classic Practice Mod', 'Celeste Classic 2 Practice Mod 1.0', 'Celeste Classic 2 Practice Mod 1.1', 'Celeste Webek', 'Celeste Classic Downloads', 'Cookie Clicker', 'Drive Mad', 'Escaping The Prison', 'Fleeing The Complex', 'Grey Box Testing', 'Infiltrating The Airship', 'Mari0', 'Offline Paradise', 'Pacman', 'Slope', 'Spacebar Clicker', 'Stack', 'Stealing The Diamond', 'Stickman Hook', 'Subway Surfers', 'Super Mario 64', 'Super Mario RPG', 'Tetris', 'The Impossible Quiz', 'Tunnel Rush', "Baldi's Basics", 'Minesweeper', 'Flappy Bird', 'Retro Bowl', 'Drift Boss', "Football Bros", "Five Nights at Freddy's", "Five Nights at Freddy's 4", "Five Nights at Freddy's 2", "Five Nights at Freddy's 3", "Backrooms", "Kart Bros", "Geometry Dash Lite", "Five Nights at Freddy's: Sister Location"]);
+            ["App Center", "Customize", "Settings", "About", "Browser", "Calculator", "Files", "Text Editor", "PDF Viewer", "Image Viewer", "Media", "Ruffle Flash Player", "Web Retro", "You Are An Idiot", "2048", "Bloons Tower Defense 1", "Bloons Tower Defense 2", "Bloons Tower Defense 5", "Bloxorz", "Breaking The Bank", "Celeste Classic", "Celeste Classic 2", "Celeste Community", "Celeste Classic Practice Mod", "Celeste Classic 2 Practice Mod 1.0", "Celeste Classic 2 Practice Mod 1.1", "Celeste Webek", "Celeste Classic Downloads", "Cookie Clicker", "Drive Mad", "Escaping The Prison", "Fleeing The Complex", "Grey Box Testing", "Infiltrating The Airship", "Mari0", "Offline Paradise", "Pacman", "Slope", "Spacebar Clicker", "Stack", "Stealing The Diamond", "Stickman Hook", "Subway Surfers", "Super Mario 64", "Tetris", "The Impossible Quiz", "Tunnel Rush", "Baldi's Basics", "Minesweeper", "Flappy Bird", "Retro Bowl", "Drift Boss", "Football Bros", "Five Nights at Freddy's", "Five Nights at Freddy's 4", "Five Nights at Freddy's 2", "Five Nights at Freddy's 3", "Backrooms", "Kart Bros", "Geometry Dash Lite", "Five Nights at Freddy's: Sister Location", "Q1K3", "Space Huggers", "Evil Glitch", "Minecraft Clone", "Black Hole Square", "The Maze of Space Goblins", "Edge Not Found", "Packabunchas", "Connect 3", "xx142-b2exe", "Konnekt", "Roadblocks", "Asciispace", "Calamity", "Breakout", "Asteroids", "Breaklock", "Universal Paperclips", "Chess", "Go (Tenuki)", "Hextris", "Bitcoin Mining Simulator", "Space Company", "Candy Box", "Candy Box 2", "Trimps", "Digital Logic Simulator", "Tunnel Rush (Bad)", "Celeste Speedrun Training", "Big Ice Tower Tiny Square", "A Dark Room", "Doom", "Geometry Dash", "Run 3", "A Dance of Fire and Ice", "Onion's Revenge", "Orbital Daggers", "Icedodo", "Neogolf", "Larry's Parkour", "Mindustry Classic", "Tunnel Glider", "Bitburner", "Kittens Game"]);
 
     const uploadBrowserIcon = async () => {
       const input = body.querySelector('[data-micon-file="browser"]');
@@ -1255,11 +1289,11 @@ test('Customize saves, displays and resets uploaded app icon images', async () =
 test('embedded-page templates and remote-embedded games are not shipped', () => {
   const { apps, sites } = catalog();
   for (const gone of ['apps/_embed', 'websites/_embed',
-    'apps/games/drift-hunters', 'apps/games/drift-hunters-game', 'apps/games/run-3',
+    'apps/games/drift-hunters', 'apps/games/drift-hunters-game',
     'apps/games/basketball-stars', 'apps/games/wordle']) {
     assert.equal(fs.existsSync(path.join(ROOT, gone)), false, `${gone} should be gone`);
   }
-  for (const id of ['my-embed', 'drift-hunters', 'drift-hunters-game', 'run-3', 'basketball-stars', 'wordle']) {
+  for (const id of ['my-embed', 'drift-hunters', 'drift-hunters-game', 'basketball-stars', 'wordle']) {
     assert.ok(!apps.some((a) => a.id === id), `${id} should not be catalogued`);
   }
   assert.ok(!sites.some((s) => s.id === 'my-embed'), 'my-embed should not be a site');
@@ -1271,6 +1305,138 @@ test('embedded-page templates and remote-embedded games are not shipped', () => 
     assert.ok(!/<iframe\b[^>]*\bsrc\s*=\s*["']https?:\/\//i.test(html), `${page} frames a remote page`);
     assert.ok(!/\.src\s*=\s*['"]https?:\/\//.test(html), `${page} points a frame at a remote page`);
   }
+  /* Nothing shipped loads a remote subresource at all: no embedded links
+   * in any game page (scripts, stylesheets, images, media — <a> links a
+   * reader may choose to follow are fine), no remote tracker/SDK hooks
+   * hiding in inline code, and no remote @imports in game stylesheets. */
+  const REMOTE_SUBRESOURCE = /<(?:script|link|img|iframe|source|video|audio|embed|object|track)\b[^>]*(?:src|href)\s*=\s*["'](?:https?:)?\/\//i;
+  const REMOTE_HOOKS = /googletagmanager\.com|google-analytics\.com|googlesyndication\.com|connect\.facebook\.net|yandex\.ru\/games\/sdk|kongregate_api\.js|fonts\.googleapis\.com|code\.jquery\.com|ajax\.googleapis\.com|cdnjs\.cloudflare\.com/i;
+  const htmlFiles = [];
+  const walkHtml = (dir) => {
+    for (const e of fs.readdirSync(path.join(ROOT, dir), { withFileTypes: true })) {
+      const rel = `${dir}/${e.name}`;
+      if (e.isDirectory()) walkHtml(rel);
+      else if (e.name.endsWith('.html')) htmlFiles.push(rel);
+    }
+  };
+  walkHtml('apps/games');
+  for (const rel of htmlFiles) {
+    const html = source(rel);
+    assert.ok(!REMOTE_SUBRESOURCE.test(html), `${rel} loads a remote subresource`);
+    assert.ok(!REMOTE_HOOKS.test(html), `${rel} still hooks a remote tracker, SDK or CDN`);
+  }
+  const cssFiles = [];
+  const walkCss = (dir) => {
+    for (const e of fs.readdirSync(path.join(ROOT, dir), { withFileTypes: true })) {
+      const rel = `${dir}/${e.name}`;
+      if (e.isDirectory()) walkCss(rel);
+      else if (e.name.endsWith('.css')) cssFiles.push(rel);
+    }
+  };
+  walkCss('apps/games');
+  for (const rel of cssFiles) {
+    assert.ok(!/@import\s+(?:url\(\s*)?["']?(?:https?:)?\/\//i.test(source(rel)), `${rel} imports a remote stylesheet`);
+    assert.ok(!/url\(\s*["']?(?:https?:)?\/\//i.test(source(rel)), `${rel} paints a remote asset`);
+  }
+});
+
+/* The not-preinstalled prank is quarantined on the fake desktop, but its
+ * windows are real proton windows: they bounce on their own, no × on any
+ * of them ever closes one (it breeds two more), the song autoplays, and
+ * Make it stop is the only way out. */
+test('the idiot app breeds real windows and only Make it stop ends it', async () => {
+  const { w, errors, settle, wins, close } = await bootDesktop();
+  const idiotWins = () => [...w.document.querySelectorAll('#windows .win[data-app="you-are-an-idiot"]')];
+  try {
+    w.openApp('you-are-an-idiot');
+    await settle();
+    const mainBody = wins.get('you-are-an-idiot').body;
+    const video = mainBody.querySelector('#idiot-app-video');
+    assert.ok(video, 'the main window carries the video');
+    assert.ok(video.hasAttribute('autoplay'), 'the music is set to play on its own');
+    assert.equal(video.getAttribute('src'), 'assets/youare.mp4');
+    await new Promise((r) => setTimeout(r, 600));
+    assert.ok(idiotWins().length >= 3, `expected a main window and real clone windows, got ${idiotWins().length}`);
+    assert.ok(w.document.querySelector('#desktop').classList.contains('idiot-shake'), 'the desktop shakes');
+
+    /* A clone really moves. */
+    const clone = idiotWins().find((el) => el.dataset.win !== 'you-are-an-idiot');
+    const leftBefore = clone.style.left;
+    await new Promise((r) => setTimeout(r, 220));
+    assert.notEqual(clone.style.left, leftBefore, 'clone windows move around the desktop on their own');
+
+    /* No × ever works: closing a clone breeds more, closing the main
+     * window does nothing either. */
+    const before = idiotWins().length;
+    clone.querySelector('[data-act="close"]').click();
+    await settle();
+    assert.ok(idiotWins().length >= before, 'closing a clone breeds more windows instead of removing it');
+    assert.ok(wins.has(clone.dataset.win), 'the clone is still there after its × was pressed');
+    wins.get('you-are-an-idiot').el.querySelector('[data-act="close"]').click();
+    await settle();
+    assert.ok(wins.has('you-are-an-idiot'), 'the main window also refuses to close');
+
+    /* Make it stop is the only way out — and it removes every trace. */
+    mainBody.querySelector('[data-stop]').click();
+    await settle();
+    assert.equal(idiotWins().length, 0, 'Make it stop removes every idiot window');
+    assert.ok(!w.document.querySelector('#desktop').classList.contains('idiot-shake'), 'the shaking stops');
+    await new Promise((r) => setTimeout(r, 400));
+    assert.equal(idiotWins().length, 0, 'nothing respawns after Make it stop');
+    assert.deepEqual(errors, []);
+  } finally { close(); }
+});
+
+/* Every text box and text input in proton's own apps shows a caret because
+ * it really is editable: typing is never swallowed or reverted. (Games in
+ * iframes are upstream pages; this guards the desktop's own fields —
+ * number and colour inputs legitimately reject letters, so they are not
+ * typed into here.) */
+test('every text input in proton’s own apps accepts typed text', async () => {
+  const { w, errors, settle, wins, close } = await bootDesktop();
+  try {
+    const OWN_APPS = ['appcenter', 'customize', 'settings', 'about', 'browser', 'calculator',
+      'files', 'text-editor', 'pdf', 'image-viewer', 'media', 'ruffle-flash-player', 'web-retro'];
+    for (const id of OWN_APPS) {
+      w.openApp(id);
+      await settle();
+      const body = wins.get(id)?.body;
+      assert.ok(body, `${id} opened`);
+      /* Typing in an app's own search box re-renders the app, which
+       * detaches the fields collected a moment ago — so fields are
+       * re-queried live, one at a time, until none are left untested. */
+      const tested = new Set();
+      const signature = (el) => `${el.tagName}|${el.id}|${el.getAttribute('data-mname') || el.getAttribute('data-mcat') || el.getAttribute('data-thname') || el.getAttribute('data-wname') || el.placeholder || ''}`;
+      const collect = () => [...body.querySelectorAll('input, textarea')].filter((el) =>
+        !['hidden', 'file', 'checkbox', 'radio', 'color', 'number', 'range', 'button', 'submit'].includes(el.type || 'text')
+        && !tested.has(signature(el)));
+      /* Fields on a tab the user has not opened yet are display:none and
+       * cannot take focus anywhere; the apps' own tab clicks reveal them. */
+      const tabHidden = (el) => {
+        for (let n = el; n && n !== body; n = n.parentElement) {
+          if (n.hidden || w.getComputedStyle(n).display === 'none') return true;
+        }
+        return false;
+      };
+      for (let el = collect().find((f) => !tabHidden(f)); el; el = collect().find((f) => !tabHidden(f))) {
+        tested.add(signature(el));
+        const label = `${id} <${el.tagName.toLowerCase()}${el.id ? '#' + el.id : ''} type=${el.type || 'text'}>`;
+        assert.ok(!el.disabled && !el.readOnly, `${label} looks editable but is ${el.disabled ? 'disabled' : 'read-only'}`);
+        el.focus();
+        assert.equal(w.document.activeElement, el, `${label} does not take focus`);
+        const kd = new w.KeyboardEvent('keydown', { key: 'x', bubbles: true, cancelable: true });
+        el.dispatchEvent(kd);
+        assert.equal(kd.defaultPrevented, false, `${label} has its typing prevented`);
+        const proto = el instanceof w.HTMLTextAreaElement ? w.HTMLTextAreaElement.prototype : w.HTMLInputElement.prototype;
+        Object.getOwnPropertyDescriptor(proto, 'value').set.call(el, `${el.value || ''}x`);
+        el.dispatchEvent(new w.InputEvent('input', { bubbles: true }));
+        await settle();
+        assert.ok(String(el.value).includes('x'), `${label} did not keep typed text (now ${JSON.stringify(el.value)})`);
+      }
+      w.closeWin(id, true);
+    }
+    assert.deepEqual(errors, []);
+  } finally { close(); }
 });
 
 /* The built-in test site is the smoke test for the Browser, so it has to

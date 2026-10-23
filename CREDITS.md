@@ -110,7 +110,9 @@ by the cover's removed bottom-button trap. The cover trap stays removed;
 the file is retained in this repository and is now played only inside
 the fake desktop by the not-preinstalled **You Are An Idiot** app
 (`apps/tools/you-are-an-idiot/`), which reproduces the old menace —
-bouncing, breeding windows and the song — entirely within proton. It was copied directly into this repository
+real bouncing, breeding windows that no × can close, and the song on
+autoplay — entirely within proton; its Make it stop button is the only
+way out. It was copied directly into this repository
 from the `media/youare.mp4` file in the
 [Mist0090/youareanidiot.cc](https://github.com/Mist0090/youareanidiot.cc)
 mirror of [youareanidiot.cc](https://youareanidiot.cc/). All rights in the
@@ -239,9 +241,7 @@ Twenty-three more games ship under `apps/games/`, each copied from
   Flash runtime from `g/g/Ruffle/` (without the `swfs/` library — every Flash
   game app carries its own build). Ruffle itself is open source, MIT or
   Apache-2.0 ([ruffle-rs/ruffle](https://github.com/ruffle-rs/ruffle)).
-- **Super Mario RPG** (`apps/games/super-mario-rpg/`) — a launcher shim into
-  this repository's own Web Retro (core `snes9x`, `rom=smrpg.smc`), which
-  loads the catalog's bundled ROM (see the Web Retro section).
+
 
 Each game is © its respective authors — for example the Henry Stickmin series
 by PuffballsUnited (Innersloth), the Bloons series by Ninja Kiwi, Pac-Man ©
@@ -297,6 +297,95 @@ Geometry Dash Lite. For every one of them:
 - All rights in these games remain with their original creators; this
   repository grants no rights in that content.
 
+## Vendored games from incrediblerevived11.github.io
+
+Forty-four games were copied from
+[incrediblerevived11/incrediblerevived11.github.io](https://github.com/incrediblerevived11/incrediblerevived11.github.io)
+(the "incrediblewebsite revived" site), each into `apps/games/<id>/`:
+Q1K3, Space Huggers, Evil Glitch, Minecraft Clone, Black Hole Square, The
+Maze of Space Goblins, Edge Not Found, Packabunchas, Connect 3,
+xx142-b2exe, Konnekt, Roadblocks, Asciispace, Calamity, Breakout,
+Asteroids, Breaklock, Universal Paperclips, Chess, Go (Tenuki — its entry
+page is the `examples/example_with_simple_controls_and_gutter.html`
+board), Hextris, Bitcoin Mining Simulator, Space Company, Candy Box,
+Candy Box 2, Trimps, Digital Logic Simulator, Tunnel Rush (Bad), Celeste
+Speedrun Training, Big Ice Tower Tiny Square, A Dark Room, Doom,
+Geometry Dash, Run 3, A Dance of Fire and Ice, Onion's Revenge, Orbital
+Daggers, Icedodo, Neogolf, Larry's Parkour (the Unity build at
+`fps-parkour/fps-parkour/fps-parkour.html`; the folder's outer index is
+just a listing card), Mindustry Classic, Tunnel Glider, Bitburner and
+Kittens Game. For every one of them:
+
+- The game files are copied byte-for-byte from that repository; the only
+  additions are proton's `app.html` wrappers, which frame each game's
+  own page unsandboxed like every other vendored game. New games use
+  named inline SVG icons rather than raster icon files.
+- Non-entry HTML pages in the source folders (translations, help, demo
+  and duplicate pages — e.g. Candy Box's per-language pages or Celeste
+  Speedrun Training's copies of pages the Celeste Community app already
+  carries) are not carried over: this repository's rule is that every
+  game page under `apps/games/` is its own catalogued game.
+- A few pages needed disclosed touch-ups, listed in their wrappers:
+  Asciispace, Packabunchas and Konnekt ship upstream as bare fragments
+  with no `<html>`/`<head>`/`<body>` prolog, so a minimal prolog was
+  added around the otherwise untouched page; Hextris lost one dead
+  ad-stub script tag that pointed outside the repository; Onion's
+  Revenge and Orbital Daggers gained a local `favicon.png` copied from
+  each game's own icon artwork (their `../favicon.png` link was made
+  local), and Onion's Revenge the missing `assets/svgs/dagger.svg` from
+  Orbital Daggers; Doom gained an empty `css/fonts.css`, Icedodo a drawn
+  `assets/icons/close.png`, and Tunnel Glider an empty `css/temp.css` —
+  files their pages reference but the source folders never ship.
+- **Space Company** is the exception: the incrediblerevived11 copy omits
+  the `lib/`, `data/` and `ui/` folders its page loads and cannot run,
+  so the complete game is vendored byte-for-byte from its own upstream
+  ([sparticle999/SpaceCompany](https://github.com/sparticle999/SpaceCompany))
+  instead, plus an empty supplied `SpaceCompany.min.js` stand-in (the
+  Grunt bundle upstream references but never commits; the page already
+  loads every file it would contain individually).
+- Not added from that site: its "Red vs Blue" page (it frames a remote
+  demo on warmerise.com — remote-embedded games are not shipped), its
+  EmulatorJS demo page and Linux VM link (not games), and the games that
+  were already in the catalog (Retro Bowl, Slope, Tunnel Rush, 2048,
+  Super Mario 64, Tetris, Flappy Bird, Cookie Clicker and the Celeste
+  Classics).
+- All rights in these games remain with their original creators; this
+  repository grants no rights in that content.
+
+### Embedded-link cleanup (all vendored batches)
+
+Nothing shipped in this repository loads anything from the network:
+no page may embed a remote script, stylesheet, font, tracker or SDK
+(the test suite asserts this over every game page and stylesheet).
+A few vendored pages arrived with such embedded links; the remote
+load — never the game — was removed, each time noted in the game's
+wrapper as well:
+
+- **Cookie Clicker** — the cdnjs cookie-consent script, the Google
+  Fonts stylesheet, the Facebook Pixel snippet and the three AdSense
+  loaders (`googlesyndication`) are gone; the ad slots remain but
+  load nothing.
+- **Drift Boss** — its Google Analytics block is switched off and its
+  Yandex Games SDK URL blanked, so its SDK/analytics loaders stay
+  dormant.
+- **A Dark Room**, **Bitburner**, **Hextris**, **Kittens Game**,
+  **Space Company**, **Trimps** — Google Analytics snippets removed
+  (their `ga()` calls are guarded or gone), as are Space Company's
+  Kongregate API script and Google Fonts links/`@import`s and
+  Kittens Game's (commented-out and hostname-gated) Kongregate API
+  loading.
+- **Bitcoin Mining Simulator** — jQuery no longer comes from a CDN;
+  the page loads a local `jquery.min.js` (v1.10.1, copied from A Dark
+  Room's vendored `lib/`).
+- **Calamity**, **Connect 3**, **Hextris**, **Minecraft Clone**,
+  **Tunnel Rush (Bad)** — Google Fonts stylesheet links removed; the
+  games fall back to system fonts.
+- **Universal Paperclips** — the Google Analytics (gtag.js) loader
+  removed.
+
+Ordinary `<a href>` links to authors' own sites inside games are
+untouched: a reader may follow them, but nothing loads until they do.
+
 ## Vendored emulator (Web Retro)
 
 The Web Retro app (`apps/tools/web-retro/`) vendors the **webretro** emulator —
@@ -308,12 +397,11 @@ RetroArch compiled for the web by
 - `apps/tools/web-retro/webretro/` is that build: `launch.html`, `main.js`, the
   `cores/` bundles for mupen64plus_next (N64), snes9x (SNES), nestopia (NES)
   and mgba (GB/GBC/GBA) — the libretro cores are GPL-licensed parts of
-  libretro/RetroArch — and the `assets/` they load. The catalog's original `roms/`
-  library from Gams' `g/g/webretro/` now lives in
-  `apps/tools/web-retro/webretro/roms/` — the seven packed ROMs behind the
-  classic cartridge games (see Rights below). The GIMP source
+  libretro/RetroArch — and the `assets/` they load. No ROMs are bundled: the
+  `roms/` library an earlier build carried has been removed from this
+  repository. The GIMP source
   `controller_layout.xcf` is not a runtime asset and is omitted; everything
-  else is byte-for-byte as upstream. The core/wasm and ROM data-URL wrappers
+  else is byte-for-byte as upstream. The core/wasm wrappers
   are Gams' `file://`-friendly packaging of those files.
 - `apps/tools/web-retro/app.html` is proton's launcher, adapted from Gams'
   `g/webretro.html`: the same core list and BroadcastChannel ROM hand-off to
@@ -325,19 +413,11 @@ RetroArch compiled for the web by
   `data/icons/webretro.png` and set as the catalog default
   (`icon=data/icons/webretro.png`, `svg-icon=false`).
 
-**The classic ROMs come from the offline games catalog.** At the maintainer's
-request, `apps/tools/web-retro/webretro/roms/` carries the original `roms/`
-library from Gams' `g/g/webretro/` — the packed ROMs behind the catalog's
-classics (Super Mario World, Super Mario RPG, The Legend of Zelda: A Link to
-the Past, EarthBound, Super Mario Bros., Pokémon Sapphire and Paper Mario 64),
-so they run out of the box. Those are commercial games © Nintendo, Square,
-Creatures, HAL Laboratory, Game Freak and their respective rights holders:
-the Gams mirror grants no redistribution rights and this repository grants
-none either — the files are mirrored here as-is. Web Retro still runs any ROM
-file you choose — from your own device or from proton's virtual file system —
-handed to the emulator in-page over a BroadcastChannel; those never leave the
-browser. If you hold rights in a bundled ROM and want it removed, open an
-issue or pull request and it will be taken down.
+**No ROMs are bundled.** Web Retro only runs ROM files you choose — from
+your own device or from proton's virtual file system — handed to the
+emulator in-page over a BroadcastChannel; those never leave the browser.
+The Super Mario RPG game app, which launched one of the formerly bundled
+ROMs, was removed along with them.
 
 The webretro files stay under their upstream licence (GPL-3.0, © the webretro
 and libretro authors) and are distributed here as a separate part of this

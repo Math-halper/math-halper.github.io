@@ -45,7 +45,7 @@ and single-file HTML5 games). Each game
 app folder is the game's own files plus a thin proton iframe wrapper (see CREDITS.md for provenance), and
 apps/games/index.html is the picker their "all games" links expect.
 
-The start menu groups them by cat=: System (the desktop’s own five), Productivity (Calculator, Files, Text Editor, PDF Viewer), Media (Image Viewer, Media), Tools (Ruffle Flash Player, Web Retro — the players behind the Flash and cartridge games) and Games (48 games: 2048, Bloons Tower Defense 1, Bloons Tower Defense 2, Bloons Tower Defense 5, Bloxorz, Breaking The Bank, Celeste Classic, Celeste Classic 2, Celeste Community, Celeste Classic Practice Mod, Celeste Classic 2 Practice Mod 1.0, Celeste Classic 2 Practice Mod 1.1, Celeste Webek, Celeste Classic Downloads, Cookie Clicker, Drive Mad, Escaping The Prison, Fleeing The Complex, Grey Box Testing, Infiltrating The Airship, Mari0, Offline Paradise, Pacman, Slope, Spacebar Clicker, Stack, Stealing The Diamond, Stickman Hook, Subway Surfers, Super Mario 64, Super Mario RPG, Tetris, The Impossible Quiz, Tunnel Rush, Baldi's Basics, Minesweeper, Flappy Bird, Retro Bowl, Drift Boss, Football Bros, Five Nights at Freddy's, Five Nights at Freddy's 4, Five Nights at Freddy's 2, Five Nights at Freddy's 3, Backrooms, Kart Bros, Geometry Dash Lite, Five Nights at Freddy's: Sister Location). Block order below is menu order within each section.
+The start menu groups them by cat=: System (the desktop’s own five), Productivity (Calculator, Files, Text Editor, PDF Viewer), Media (Image Viewer, Media), Tools (Ruffle Flash Player, Web Retro — the players behind the Flash and cartridge games) and Games (91 games: 2048, Bloons Tower Defense 1, Bloons Tower Defense 2, Bloons Tower Defense 5, Bloxorz, Breaking The Bank, Celeste Classic, Celeste Classic 2, Celeste Community, Celeste Classic Practice Mod, Celeste Classic 2 Practice Mod 1.0, Celeste Classic 2 Practice Mod 1.1, Celeste Webek, Celeste Classic Downloads, Cookie Clicker, Drive Mad, Escaping The Prison, Fleeing The Complex, Grey Box Testing, Infiltrating The Airship, Mari0, Offline Paradise, Pacman, Slope, Spacebar Clicker, Stack, Stealing The Diamond, Stickman Hook, Subway Surfers, Super Mario 64, Tetris, The Impossible Quiz, Tunnel Rush, Baldi's Basics, Minesweeper, Flappy Bird, Retro Bowl, Drift Boss, Football Bros, Five Nights at Freddy's, Five Nights at Freddy's 4, Five Nights at Freddy's 2, Five Nights at Freddy's 3, Backrooms, Kart Bros, Geometry Dash Lite, Five Nights at Freddy's: Sister Location, Q1K3, Space Huggers, Evil Glitch, Minecraft Clone, Black Hole Square, The Maze of Space Goblins, Edge Not Found, Packabunchas, Connect 3, xx142-b2exe, Konnekt, Roadblocks, Asciispace, Calamity, Breakout, Asteroids, Breaklock, Universal Paperclips, Chess, Go (Tenuki), Hextris, Bitcoin Mining Simulator, Space Company, Candy Box, Candy Box 2, Trimps, Digital Logic Simulator, Tunnel Rush (Bad), Celeste Speedrun Training, Big Ice Tower Tiny Square, A Dark Room, Doom, Geometry Dash, Run 3, A Dance of Fire and Ice, Onion's Revenge, Orbital Daggers, Icedodo, Neogolf, Larry's Parkour, Mindustry Classic, Tunnel Glider, Bitburner, Kittens Game). Block order below is menu order within each section.
 
 IMPORTANT: an id must not be a bare number — JavaScript object key ordering
   hoists integer-like keys to the front of every APPS iteration (this is why
@@ -596,18 +596,6 @@ w=980
 h=640
 
 [application]
-id=super-mario-rpg
-name=Super Mario RPG
-path=apps/games/super-mario-rpg/app.html
-icon=data/icons/super-mario-rpg.png
-svg-icon=false
-cat=Games
-preinstalled=true
-desc=Play Super Mario RPG in Web Retro - the catalog’s classic ROM included
-w=980
-h=640
-
-[application]
 id=tetris
 name=Tetris
 path=apps/games/tetris/app.html
@@ -826,6 +814,534 @@ preinstalled=true
 desc=Play Five Nights at Freddy's: Sister Location - a darker shift underground
 w=980
 h=640
+[application]
+id=q1k3
+name=Q1K3
+path=apps/games/q1k3/app.html
+icon=zap
+svg-icon=true
+cat=Games
+preinstalled=true
+desc=Play Q1K3 - a first-person shooter in a few kilobytes
+w=980
+h=640
+
+[application]
+id=space-huggers
+name=Space Huggers
+path=apps/games/space-huggers/app.html
+icon=star
+svg-icon=true
+cat=Games
+preinstalled=true
+desc=Play Space Huggers - the tiny platform shooter
+w=980
+h=640
+
+[application]
+id=evil-glitch
+name=Evil Glitch
+path=apps/games/evil-glitch/app.html
+icon=grid
+svg-icon=true
+cat=Games
+preinstalled=true
+desc=Play Evil Glitch - the glitchy space shooter
+w=980
+h=640
+
+[application]
+id=minecraft-clone
+name=Minecraft Clone
+path=apps/games/minecraft-clone/app.html
+icon=layers
+svg-icon=true
+cat=Games
+preinstalled=true
+desc=Play Minecraft Clone - a tiny voxel sandbox
+w=980
+h=640
+
+[application]
+id=black-hole-square
+name=Black Hole Square
+path=apps/games/black-hole-square/app.html
+icon=square
+svg-icon=true
+cat=Games
+preinstalled=true
+desc=Play Black Hole Square - feed the black hole
+w=980
+h=640
+
+[application]
+id=maze-of-space-goblins
+name=The Maze of Space Goblins
+path=apps/games/maze-of-space-goblins/app.html
+icon=compass
+svg-icon=true
+cat=Games
+preinstalled=true
+desc=Play The Maze of Space Goblins - a tiny dungeon crawler
+w=980
+h=640
+
+[application]
+id=edge-not-found
+name=Edge Not Found
+path=apps/games/edge-not-found/app.html
+icon=shuffle
+svg-icon=true
+cat=Games
+preinstalled=true
+desc=Play Edge Not Found - a puzzle about the edge of the world
+w=980
+h=640
+
+[application]
+id=packabunchas
+name=Packabunchas
+path=apps/games/packabunchas/app.html
+icon=grid3
+svg-icon=true
+cat=Games
+preinstalled=true
+desc=Play Packabunchas - pack the shapes into the box
+w=980
+h=640
+
+[application]
+id=connect-3
+name=Connect 3
+path=apps/games/connect-3/app.html
+icon=grid
+svg-icon=true
+cat=Games
+preinstalled=true
+desc=Play Connect 3 - the match-3 digging game
+w=980
+h=640
+
+[application]
+id=xx142-b2exe
+name=xx142-b2exe
+path=apps/games/xx142-b2exe/app.html
+icon=zap
+svg-icon=true
+cat=Games
+preinstalled=true
+desc=Play xx142-b2exe - a tiny sci-fi adventure
+w=980
+h=640
+
+[application]
+id=konnekt
+name=Konnekt
+path=apps/games/konnekt/app.html
+icon=globe
+svg-icon=true
+cat=Games
+preinstalled=true
+desc=Play Konnekt - connect the network nodes
+w=980
+h=640
+
+[application]
+id=roadblocks
+name=Roadblocks
+path=apps/games/roadblocks/app.html
+icon=square
+svg-icon=true
+cat=Games
+preinstalled=true
+desc=Play Roadblocks - a one-button road dodger
+w=980
+h=640
+
+[application]
+id=asciispace
+name=Asciispace
+path=apps/games/asciispace/app.html
+icon=terminal
+svg-icon=true
+cat=Games
+preinstalled=true
+desc=Play Asciispace - a text-mode space adventure
+w=980
+h=640
+
+[application]
+id=calamity
+name=Calamity
+path=apps/games/calamity/app.html
+icon=book
+svg-icon=true
+cat=Games
+preinstalled=true
+desc=Play Calamity - a text adventure of magic and choices
+w=980
+h=640
+
+[application]
+id=breakout
+name=Breakout
+path=apps/games/breakout/app.html
+icon=grid
+svg-icon=true
+cat=Games
+preinstalled=true
+desc=Play Breakout - smash the bricks with the ball
+w=980
+h=640
+
+[application]
+id=asteroids
+name=Asteroids
+path=apps/games/asteroids/app.html
+icon=star
+svg-icon=true
+cat=Games
+preinstalled=true
+desc=Play Asteroids - blast the space rocks
+w=980
+h=640
+
+[application]
+id=breaklock
+name=Breaklock
+path=apps/games/breaklock/app.html
+icon=lock
+svg-icon=true
+cat=Games
+preinstalled=true
+desc=Play Breaklock - a hybrid of Breakout and a pattern lock
+w=980
+h=640
+
+[application]
+id=universal-paperclips
+name=Universal Paperclips
+path=apps/games/universal-paperclips/app.html
+icon=copy
+svg-icon=true
+cat=Games
+preinstalled=true
+desc=Play Universal Paperclips - the paperclip maximiser clicker
+w=980
+h=640
+
+[application]
+id=chess
+name=Chess
+path=apps/games/chess/app.html
+icon=knight
+svg-icon=true
+cat=Games
+preinstalled=true
+desc=Play Chess - the classic board game in 3D
+w=980
+h=640
+
+[application]
+id=tenuki
+name=Go (Tenuki)
+path=apps/games/tenuki/app.html
+icon=disc
+svg-icon=true
+cat=Games
+preinstalled=true
+desc=Play Go (Tenuki) - the ancient board game of territory
+w=980
+h=640
+
+[application]
+id=hextris
+name=Hextris
+path=apps/games/hextris/app.html
+icon=layers
+svg-icon=true
+cat=Games
+preinstalled=true
+desc=Play Hextris - the fast-paced hexagonal puzzle game
+w=980
+h=640
+
+[application]
+id=bitcoin-mining-simulator
+name=Bitcoin Mining Simulator
+path=apps/games/bitcoin-mining-simulator/app.html
+icon=chart
+svg-icon=true
+cat=Games
+preinstalled=true
+desc=Play Bitcoin Mining Simulator - mine your way to crypto riches
+w=980
+h=640
+
+[application]
+id=space-company
+name=Space Company
+path=apps/games/space-company/app.html
+icon=globe
+svg-icon=true
+cat=Games
+preinstalled=true
+desc=Play Space Company - build an interplanetary resource empire
+w=980
+h=640
+
+[application]
+id=candy-box
+name=Candy Box
+path=apps/games/candy-box/app.html
+icon=smile
+svg-icon=true
+cat=Games
+preinstalled=true
+desc=Play Candy Box - the ASCII candy adventure
+w=980
+h=640
+
+[application]
+id=candy-box-2
+name=Candy Box 2
+path=apps/games/candy-box-2/app.html
+icon=smile
+svg-icon=true
+cat=Games
+preinstalled=true
+desc=Play Candy Box 2 - the ASCII candy adventure continues
+w=980
+h=640
+
+[application]
+id=trimps
+name=Trimps
+path=apps/games/trimps/app.html
+icon=users
+svg-icon=true
+cat=Games
+preinstalled=true
+desc=Play Trimps - breed your Trimps and explore the world
+w=980
+h=640
+
+[application]
+id=digital-logic-simulator
+name=Digital Logic Simulator
+path=apps/games/digital-logic-simulator/app.html
+icon=sliders
+svg-icon=true
+cat=Games
+preinstalled=true
+desc=Play Digital Logic Simulator - build circuits from logic gates
+w=980
+h=640
+
+[application]
+id=tunnel-rush-bad
+name=Tunnel Rush (Bad)
+path=apps/games/tunnel-rush-bad/app.html
+icon=shuffle
+svg-icon=true
+cat=Games
+preinstalled=true
+desc=Play Tunnel Rush (Bad) - the other tunnel, allegedly worse
+w=980
+h=640
+
+[application]
+id=celeste-speedrun-training
+name=Celeste Speedrun Training
+path=apps/games/celeste-speedrun-training/app.html
+icon=trophy
+svg-icon=true
+cat=Games
+preinstalled=true
+desc=Play Celeste Speedrun Training - practise Celeste Classic speedruns
+w=980
+h=640
+
+[application]
+id=big-ice-tower-tiny-square
+name=Big Ice Tower Tiny Square
+path=apps/games/big-ice-tower-tiny-square/app.html
+icon=square
+svg-icon=true
+cat=Games
+preinstalled=true
+desc=Play Big Ice Tower Tiny Square - climb the icy tower
+w=980
+h=640
+
+[application]
+id=a-dark-room
+name=A Dark Room
+path=apps/games/a-dark-room/app.html
+icon=moon
+svg-icon=true
+cat=Games
+preinstalled=true
+desc=Play A Dark Room - a minimalist survival adventure
+w=980
+h=640
+
+[application]
+id=doom
+name=Doom
+path=apps/games/doom/app.html
+icon=zap
+svg-icon=true
+cat=Games
+preinstalled=true
+desc=Play Doom - the legendary first-person shooter, in WebAssembly
+w=980
+h=640
+
+[application]
+id=geometry-dash
+name=Geometry Dash
+path=apps/games/geometry-dash/app.html
+icon=square
+svg-icon=true
+cat=Games
+preinstalled=true
+desc=Play Geometry Dash - jump and fly through danger
+w=980
+h=640
+
+[application]
+id=run-3
+name=Run 3
+path=apps/games/run-3/app.html
+icon=play
+svg-icon=true
+cat=Games
+preinstalled=true
+desc=Play Run 3 - run and jump through space tunnels
+w=980
+h=640
+
+[application]
+id=a-dance-of-fire-and-ice
+name=A Dance of Fire and Ice
+path=apps/games/a-dance-of-fire-and-ice/app.html
+icon=music
+svg-icon=true
+cat=Games
+preinstalled=true
+desc=Play A Dance of Fire and Ice - keep the rhythm on the winding path
+w=980
+h=640
+
+[application]
+id=onions-revenge
+name=Onion's Revenge
+path=apps/games/onions-revenge/app.html
+icon=smile
+svg-icon=true
+cat=Games
+preinstalled=true
+desc=Play Onion's Revenge - the tower-defense battle of the garden
+w=980
+h=640
+
+[application]
+id=orbital-daggers
+name=Orbital Daggers
+path=apps/games/orbital-daggers/app.html
+icon=star
+svg-icon=true
+cat=Games
+preinstalled=true
+desc=Play Orbital Daggers - juggle orbiting knives in space
+w=980
+h=640
+
+[application]
+id=icedodo
+name=Icedodo
+path=apps/games/icedodo/app.html
+icon=disc
+svg-icon=true
+cat=Games
+preinstalled=true
+desc=Play Icedodo - slide the ice dodo through each course
+w=980
+h=640
+
+[application]
+id=neogolf
+name=Neogolf
+path=apps/games/neogolf/app.html
+icon=pin
+svg-icon=true
+cat=Games
+preinstalled=true
+desc=Play Neogolf - multiplayer minigolf in neon space
+w=980
+h=640
+
+[application]
+id=larrys-parkour
+name=Larry's Parkour
+path=apps/games/larrys-parkour/app.html
+icon=play
+svg-icon=true
+cat=Games
+preinstalled=true
+desc=Play Larry's Parkour - sprint and leap across the rooftops
+w=980
+h=640
+
+[application]
+id=mindustry
+name=Mindustry Classic
+path=apps/games/mindustry/app.html
+icon=grid
+svg-icon=true
+cat=Games
+preinstalled=true
+desc=Play Mindustry Classic - build supply chains and defend your core
+w=980
+h=640
+
+[application]
+id=tunnel-glider
+name=Tunnel Glider
+path=apps/games/tunnel-glider/app.html
+icon=send
+svg-icon=true
+cat=Games
+preinstalled=true
+desc=Play Tunnel Glider - speed through the endless tunnel
+w=980
+h=640
+
+[application]
+id=bitburner
+name=Bitburner
+path=apps/games/bitburner/app.html
+icon=terminal
+svg-icon=true
+cat=Games
+preinstalled=true
+desc=Play Bitburner - the hacking programming RPG
+w=980
+h=640
+
+[application]
+id=kittens-game
+name=Kittens Game
+path=apps/games/kittens-game/app.html
+icon=smile
+svg-icon=true
+cat=Games
+preinstalled=true
+desc=Play Kittens Game - build a village of kittens, then reach the stars
+w=980
+h=640
+
 
 /* Embedded-page apps are not shipped: every app is a local app
    (copy apps/_template/) whose files live in this repository. */

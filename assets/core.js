@@ -304,22 +304,25 @@ function toggleMin(id) {
 /* options.path hands a virtual file/folder to an app, options.url an address
  * and options.query something to search for (the Browser takes all three). A
  * running app receives them via body.openPath, so opening a second file
- * reuses the same window. */
+ * reuses the same window. options.winKey opens an extra real window of the
+ * same app under its own key (the panel still shows the app once); the key
+ * doubles as the id focusWin/closeWin/toggleMin take for that window. */
 function openApp(id, options = {}) {
   const app = APPS[id]; if (!app) return;
   MH.$('startmenu')?.setAttribute('hidden', '');
   document.querySelector('.menu-btn')?.classList.remove('open');
-  if (wins.has(id)) {
-    focusWin(id);
-    if (options.path || options.url || options.query) wins.get(id).body.openPath?.(options);
+  const key = options.winKey || id;
+  if (wins.has(key)) {
+    focusWin(key);
+    if (options.path || options.url || options.query) wins.get(key).body.openPath?.(options);
     return;
   }
-  userData.counters.windowsOpened = (userData.counters.windowsOpened || 0) + 1; saveData();
+  if (key === id) { userData.counters.windowsOpened = (userData.counters.windowsOpened || 0) + 1; saveData(); }
 
   const el = document.createElement('section');
-  el.className = 'win'; el.dataset.app = id;
+  el.className = 'win'; el.dataset.app = id; el.dataset.win = key;
   const mobile = innerWidth < 760;
-  const wpx = Math.min(app.w || 860, innerWidth - 16), hpx = Math.min(app.h || 560, innerHeight - 70);
+  const wpx = Math.min(options.w || app.w || 860, innerWidth - 16), hpx = Math.min(options.h || app.h || 560, innerHeight - 70);
   const off = (wins.size % 6) * 26;
   el.style.cssText = `width:${wpx}px;height:${hpx}px;left:${Math.max(4, (innerWidth - wpx) / 2 + off - 40)}px;top:${Math.max(4, (innerHeight - 44 - hpx) / 2 + off - 20)}px;z-index:${++zTop}`;
   if (mobile) el.classList.add('max');
@@ -333,14 +336,14 @@ function openApp(id, options = {}) {
     <div class="win-body"></div><div class="win-resize"></div>`;
   MH.$('windows').appendChild(el);
   const body = el.querySelector('.win-body');
-  wins.set(id, { el, body });
-  activeApp = id;
+  wins.set(key, { el, body, appId: id });
+  activeApp = key;
   document.querySelectorAll('.win').forEach((e) => e.classList.toggle('active', e === el));
 
-  el.addEventListener('pointerdown', () => focusWin(id));
-  el.querySelector('[data-act="close"]').onclick = (e) => { e.stopPropagation(); closeWin(id); };
-  el.querySelector('[data-act="min"]').onclick = (e) => { e.stopPropagation(); toggleMin(id); };
-  el.querySelector('[data-act="max"]').onclick = (e) => { e.stopPropagation(); el.classList.toggle('max'); focusWin(id); };
+  el.addEventListener('pointerdown', () => focusWin(key));
+  el.querySelector('[data-act="close"]').onclick = (e) => { e.stopPropagation(); closeWin(key); };
+  el.querySelector('[data-act="min"]').onclick = (e) => { e.stopPropagation(); toggleMin(key); };
+  el.querySelector('[data-act="max"]').onclick = (e) => { e.stopPropagation(); el.classList.toggle('max'); focusWin(key); };
 
   // drag by title bar
   const head = el.querySelector('.win-head');
@@ -368,7 +371,7 @@ function openApp(id, options = {}) {
     addEventListener('pointermove', move); addEventListener('pointerup', up);
   });
 
-  try { app.render(body, { openApp, close: () => closeWin(id), winEl: el, ...options }); }
+  try { app.render(body, { openApp, close: () => closeWin(key), winEl: el, winKey: key, appId: id, ...options }); }
   catch (err) { body.innerHTML = `<div class="pad"><h3>${iconSvg('alert')} ${MH.esc(app.name)} hit a snag</h3><p class="muted">${MH.esc(err.message)}</p></div>`; console.error(err); }
   renderPanelApps();
 }
@@ -478,7 +481,10 @@ function renderPanelApps() {
   const pinned = userData.settings.pinned || [];
   const ids = [...new Set([...pinned, ...wins.keys()])].filter((id) => !(userData.hiddenApps || []).includes(id));
   box.innerHTML = ids.filter((id) => APPS[id]).map((id) => {
-    const a = APPS[id], run = wins.has(id), act = activeApp === id;
+    /* Extra windows of an app (options.winKey) still count as that app. */
+    const a = APPS[id];
+    const run = wins.has(id) || [...wins.values()].some((w) => w.appId === id);
+    const act = (wins.get(activeApp)?.appId || activeApp) === id;
     return `<button class="pitem ${run ? 'running' : ''} ${act ? 'active' : ''}" data-app="${id}" title="${MH.esc(a.name)}${run ? ' (open)' : ''}"><span>${appIcon(a)}</span>${(userData.settings.components || {}).panelLabels ? `<span class="pl">${MH.esc(a.name)}</span>` : ''}</button>`;
   }).join('');
   box.querySelectorAll('.pitem').forEach((b) => b.onclick = () => {
