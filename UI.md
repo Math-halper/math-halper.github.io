@@ -317,19 +317,20 @@ not be saved.", etc.).
 ## 12. Tools
 
 - **Web Retro** — the vendored webretro emulator launcher. Its front page is
-  two panels side by side (stacked in narrow windows), with a saves/CREDITS
-  footnote underneath:
-  - **ROMs**: the first half is four console rows running top to bottom —
-    **NES**, **SNES**, **N64**, **GB (GB · GBC · GBA)** — each with its
-    bundled-game count over the maintainer's library;
-  - **Emulators**: the picked console's bundled games in a box-art + title
-    grid (click one to play it on its matching core; SNES has none bundled
-    yet), then **Play your own ROM** as four emulator rows, one per console
-    (nestopia / snes9x / mupen64plus_next / mgba). Picking a row swaps the
-    panel to a "where from?" screen — a top bar with a **←** back arrow,
-    then **From proton OS Files** (a mini file browser over the account's
-    home: crumbs, folder rows, ROM rows, one level at a time) or
-    **From your Files** (the device file picker), and **Play ROM**;
+  a black-bordered split view (stacked in narrow windows): a **Roms** column
+  on the left, about 40% wide, beside an **emus** pane:
+  - **Roms**: a header over four big console rows running top to bottom —
+    **NES**, **SNES**, **N64**, **GB** — split by thick black lines, the
+    picked row filled black;
+  - **emus**: a header over the picked console's bundled games in a
+    box-art + title grid (click one to play it on its matching core; SNES
+    has none bundled yet), then **Play your own ROM** as four emulator
+    rows, one per console (nestopia / snes9x / mupen64plus_next / mgba).
+    Picking a row swaps the pane to a "where from?" screen — a top bar
+    with a **←** back arrow, then **From proton OS Files** (a mini file
+    browser over the account's home: crumbs, folder rows, ROM rows, one
+    level at a time) or **From your Files** (the device file picker), and
+    **Play ROM**; a saves/CREDITS note sits under the grid;
   - launching swaps the window to the emulator; **Change game** in the app bar
     returns to the chooser.
 - **Ruffle Flash Player** — the shared Flash runtime for all 12 Flash games

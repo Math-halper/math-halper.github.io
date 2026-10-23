@@ -1021,16 +1021,19 @@ test('the desktop boots, lists and opens all catalogued apps', async () => {
     assert.equal(shown(), '0', 'Escape clears');
     w.closeWin('calculator', true);
 
-    // Web Retro's front page is two panels: the first half is four console
-    // rows (NES, SNES, N64, GB) over the bundled library; picking one fills
-    // the Emulators panel's grid with that console's games, and the panel's
-    // four emulator rows open a "where from?" screen (top bar, back arrow).
+    // Web Retro's front page is the sketched split view: a "Roms" column
+    // of four console rows (NES, SNES, N64, GB) beside an "emus" pane.
+    // Picking a row fills the pane's grid with that console's games, and
+    // the pane's four emulator rows open a "where from?" screen (top bar,
+    // back arrow).
     w.openApp('web-retro');
     const retro = wins.get('web-retro').body;
     const panels = [...retro.querySelectorAll('.wr-panel')];
     assert.equal(panels.length, 2, 'the front page should be two panels');
-    assert.match(panels[0].querySelector('h3').textContent, /ROMs/, 'the first panel is the ROMs');
-    assert.match(panels[1].querySelector('h3').textContent, /Emulators/, 'the second panel is the Emulators');
+    assert.match(panels[0].querySelector('h3').textContent, /Roms/, 'the first panel is the Roms');
+    assert.match(panels[1].querySelector('h3').textContent, /emus/, 'the second panel is the emus');
+    assert.deepEqual([...panels[0].querySelectorAll('[data-console]')].map((b) => b.textContent.trim()),
+      ['NES', 'SNES', 'N64', 'GB'], 'the console rows are labelled like the sketch');
     assert.deepEqual([...panels[0].querySelectorAll('[data-console]')].map((b) => b.dataset.console),
       ['NES', 'SNES', 'N64', 'GB'], 'the first half is four console rows, NES down to GB');
     const gridCount = () => retro.querySelectorAll('#wr-grid [data-bundled]').length;
