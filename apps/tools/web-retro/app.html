@@ -36,11 +36,14 @@ registerApp({
   /* Metadata (name, icon, cat, desc, w, h) lives in the app catalog:
    * data/applications.js — edit it there, not here. */
   render(body) {
-    const CORES = [
-      ['mupen64plus_next', 'Nintendo 64'],
-      ['snes9x', 'SNES'],
-      ['nestopia', 'NES'],
-      ['mgba', 'Game Boy (GB/GBC/GBA)'],
+    /* The four consoles, in the order their rows run down the front
+     * page. Each maps to the webretro core that plays it; the GB row
+     * covers GB, GBC and GBA, which all run on the one mgba core. */
+    const CONSOLES = [
+      ['NES', 'nestopia', 'NES'],
+      ['SNES', 'snes9x', 'SNES'],
+      ['N64', 'mupen64plus_next', 'N64'],
+      ['GB', 'mgba', 'GB (GB · GBC · GBA)'],
     ];
     const romAccept = '.nes,.fds,.smc,.sfc,.gb,.gbc,.gba,.n64,.z64,.v64,.bin,.zip';
     const romExts = romAccept.split(',');
@@ -76,6 +79,7 @@ registerApp({
     let romSource = 'device';   // 'device' = real file picker, 'vfs' = proton Files
     let vfsPath = FS.home();    // folder shown in the proton Files browser
     let vfsPick = null;         // selected VFS path
+    let selConsole = 'NES';     // console picked in the ROMs panel rows
 
     body.innerHTML = `${bar('Web Retro', '<button type="button" class="btn sm" id="wr-again" hidden>Change game</button>')}<div class="app-main pad" id="wr-main"></div>`;
     const main = body.querySelector('#wr-main');
@@ -128,84 +132,134 @@ registerApp({
       if (src === 'vfs') renderVfs();
     }
 
+    /* Which console row a core (and so every bundled game on it)
+     * belongs to. */
+    function catOf(core) {
+      const hit = CONSOLES.find(([, c]) => c === core);
+      return hit ? hit[0] : null;
+    }
+
+    /* The Emulators panel's grid: the picked console's bundled games. */
+    function renderGrid() {
+      const grid = main.querySelector('#wr-grid');
+      const title = main.querySelector('#wr-gridtitle');
+      if (!grid || !title) return;
+      const label = CONSOLES.find(([cat]) => cat === selConsole)[2];
+      const items = BUNDLED.map((g, i) => [g, i]).filter(([g]) => catOf(g[1]) === selConsole);
+      title.textContent = `${label} games`;
+      grid.innerHTML = items.length
+        ? items.map(([g, i]) => `<button type="button" class="btn wr-game" data-bundled="${i}"><img src="data/icons/${g[4]}.jpeg" alt=""><span>${MH.esc(g[2])}</span></button>`).join('')
+        : `<p class="muted" style="margin:0">No ${MH.esc(label)} games are bundled yet — play your own with the emulator rows below.</p>`;
+    }
+
+    /* The Emulators panel swaps between its home view (the games grid
+     * plus the four emulator rows) and the "where from?" screen. */
+    function showHome() {
+      main.querySelector('#wr-home').hidden = false;
+      main.querySelector('#wr-upload').hidden = true;
+    }
+
+    function showUpload(core) {
+      main.querySelector('#wr-corename').textContent =
+        CONSOLES.find(([, c]) => c === core)[2];
+      main.querySelector('#wr-upload').dataset.core = core;
+      main.querySelector('#wr-home').hidden = true;
+      main.querySelector('#wr-upload').hidden = false;
+      showSource(romSource);
+    }
+
     function picker() {
       if (bc) { bc.close(); bc = null; }
       again.hidden = true;
       vfsPick = null;
       romSource = 'device';
       main.className = 'app-main pad';
-      /* The ROMs panel, grouped by system, in library order. */
-      const groups = [];
-      for (let i = 0; i < BUNDLED.length; i++) {
-        let g = groups.find((x) => x.sys === BUNDLED[i][3]);
-        if (!g) { g = { sys: BUNDLED[i][3], items: [] }; groups.push(g); }
-        g.items.push(i);
-      }
-      const romsHtml = groups.map((g) => `
-        <h4 class="wr-sys">${MH.esc(g.sys)}</h4>
-        <div class="wr-grid">${g.items.map((i) => `<button type="button" class="btn wr-game" data-bundled="${i}"><img src="data/icons/${BUNDLED[i][4]}.jpeg" alt=""><span>${MH.esc(BUNDLED[i][2])}</span></button>`).join('')}</div>`).join('');
+      /* The ROMs panel: four console rows, top to bottom NES, SNES,
+       * N64, GB (GB/GBC/GBA), each with its bundled-game count. */
+      const countFor = (cat) => BUNDLED.filter((g) => catOf(g[1]) === cat).length;
+      const consolesHtml = CONSOLES.map(([cat, , label]) => `
+        <button type="button" class="btn wr-con${cat === selConsole ? ' primary' : ''}" data-console="${cat}"><span>${MH.esc(label)}</span><span class="wr-count">${countFor(cat)} game${countFor(cat) === 1 ? '' : 's'} ›</span></button>`).join('');
       main.innerHTML = `<style>
-        .wr-cols{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(0,1fr);gap:12px;align-items:start}
+        .wr-cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.45fr);gap:12px;align-items:start}
         @media (max-width:820px){.wr-cols{grid-template-columns:1fr}}
         .wr-panel h3{margin-top:0}
-        .wr-sys{margin:14px 0 6px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;opacity:.75}
-        .wr-sys:first-of-type{margin-top:4px}
+        .wr-con{display:flex;width:100%;justify-content:space-between;align-items:center;gap:8px;height:auto;padding:12px;margin:0 0 8px;text-align:left;font-weight:600}
+        .wr-con .wr-count{font-size:11.5px;font-weight:400;opacity:.75;white-space:nowrap}
+        .wr-sys{margin:2px 0 6px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;opacity:.75}
         .wr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px}
         .wr-game{display:flex;flex-direction:column;align-items:center;gap:5px;padding:8px 6px;height:auto}
         .wr-game img{width:72px;height:72px;object-fit:cover;border-radius:6px;background:#000}
         .wr-game span{font-size:11.5px;line-height:1.25;text-align:center}
+        .wr-cores{display:flex;flex-direction:column;gap:8px}
+        .wr-corerow{display:flex;width:100%;justify-content:space-between;align-items:center;gap:8px;height:auto;padding:10px 12px;text-align:left}
+        .wr-topbar{display:flex;align-items:center;gap:10px;margin:0 0 12px}
+        .wr-topbar .wr-back{font-size:15px;line-height:1;padding:6px 11px}
         .wr-foot{margin:10px 2px 0}
       </style>
       <div class="wr-cols">
         <section class="card wr-panel">
           <h3>🎮 ROMs</h3>
-          <p class="muted">Your bundled library — ${BUNDLED.length} games. Click one
-          and it starts right away on its matching emulator.</p>
-          ${romsHtml}
+          <p class="muted">Your bundled library — ${BUNDLED.length} games.
+          Pick a console and its games show in the Emulators panel.</p>
+          ${consolesHtml}
         </section>
         <section class="card wr-panel">
           <h3>🕹️ Emulators</h3>
-          <p class="muted">Bring your own ROMs. Pick an emulator, then choose a
-          ROM file — from this computer or from your proton Files. It goes
-          straight into the emulator and never leaves your browser.</p>
-          <div class="field"><label>Emulator</label>
-            <div style="display:flex;flex-wrap:wrap;gap:8px">
-              ${CORES.map(([id, label]) => `<button type="button" class="btn" data-core="${id}">${label}</button>`).join('')}
+          <div id="wr-home">
+            <h4 class="wr-sys" id="wr-gridtitle"></h4>
+            <div class="wr-grid" id="wr-grid"></div>
+            <div class="field" style="margin-top:16px"><label>Play your own ROM — pick an emulator</label>
+              <div class="wr-cores">
+                ${CONSOLES.map(([, core, label]) => `<button type="button" class="btn wr-corerow" data-core="${core}"><span>${MH.esc(label)}</span><span aria-hidden="true">›</span></button>`).join('')}
+              </div>
+              <p class="muted" style="margin:8px 0 0">Plays .z64 / .n64, .smc / .sfc,
+              .nes and .gb / .gbc / .gba files (zips too). Your ROM goes
+              straight into the emulator and never leaves your browser.</p>
             </div>
-            <p class="muted" style="margin:8px 0 0">Plays .z64 / .n64, .smc / .sfc,
-            .nes and .gb / .gbc / .gba files (zips too).</p>
           </div>
-          <div class="field" id="wr-upload" hidden>
-            <label for="wr-rom">ROM — <span id="wr-corename"></span></label>
-            <div style="display:flex;gap:8px;margin:0 0 10px">
-              <button type="button" class="btn sm primary" data-src="device">From this computer</button>
-              <button type="button" class="btn sm" data-src="vfs">From proton Files</button>
+          <div id="wr-upload" hidden>
+            <div class="wr-topbar">
+              <button type="button" class="btn sm wr-back" id="wr-back" aria-label="Back to the emulators">←</button>
+              <strong>Play your own ROM — <span id="wr-corename"></span></strong>
             </div>
-            <div id="wr-device">
-              <input type="file" id="wr-rom" accept="${romAccept}">
+            <div class="field">
+              <label>Where is the ROM?</label>
+              <div style="display:flex;gap:8px;margin:0 0 10px">
+                <button type="button" class="btn sm" data-src="vfs">From proton OS Files</button>
+                <button type="button" class="btn sm primary" data-src="device">From your Files</button>
+              </div>
+              <div id="wr-device">
+                <input type="file" id="wr-rom" accept="${romAccept}">
+              </div>
+              <div id="wr-vfs" hidden>
+                <p class="muted" style="margin:0 0 6px">ROM files in your proton OS home folder
+                (import more with the <b>Files</b> app) — <span id="wr-vfs-path"></span></p>
+                <div id="wr-vfs-list" style="max-height:190px;overflow:auto;display:flex;flex-direction:column;gap:4px"></div>
+              </div>
+              <button type="button" class="btn primary" id="wr-play" style="margin-top:10px">Play ROM</button>
             </div>
-            <div id="wr-vfs" hidden>
-              <p class="muted" style="margin:0 0 6px">ROM files in your proton home folder
-              (import more with the <b>Files</b> app) — <span id="wr-vfs-path"></span></p>
-              <div id="wr-vfs-list" style="max-height:190px;overflow:auto;display:flex;flex-direction:column;gap:4px"></div>
-            </div>
-            <button type="button" class="btn primary" id="wr-play" style="margin-top:10px">Play ROM</button>
           </div>
         </section>
       </div>
       <p class="muted wr-foot">Saves and save states live in your browser's own
       storage (webretro keeps them in IndexedDB). The bundled games are the
       maintainer's own ROM files (see <b>CREDITS.md</b>).</p>`;
-      main.querySelectorAll('[data-bundled]').forEach((b) => b.addEventListener('click', () => {
-        playBundled(BUNDLED[Number(b.dataset.bundled)]);
+      renderGrid();
+      main.querySelectorAll('[data-console]').forEach((b) => b.addEventListener('click', () => {
+        selConsole = b.dataset.console;
+        main.querySelectorAll('[data-console]').forEach((x) => x.classList.toggle('primary', x === b));
+        renderGrid();
+        showHome();
       }));
+      main.querySelector('#wr-grid').addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-bundled]');
+        if (btn) playBundled(BUNDLED[Number(btn.dataset.bundled)]);
+      });
       main.querySelectorAll('[data-core]').forEach((b) => b.addEventListener('click', () => {
         main.querySelectorAll('[data-core]').forEach((x) => x.classList.toggle('primary', x === b));
-        main.querySelector('#wr-corename').textContent = b.textContent;
-        main.querySelector('#wr-upload').dataset.core = b.dataset.core;
-        main.querySelector('#wr-upload').hidden = false;
-        showSource(romSource);
+        showUpload(b.dataset.core);
       }));
+      main.querySelector('#wr-back').addEventListener('click', showHome);
       main.querySelectorAll('[data-src]').forEach((b) => b.addEventListener('click', () => showSource(b.dataset.src)));
       main.querySelector('#wr-vfs-list').addEventListener('click', (e) => {
         const btn = e.target.closest('button');

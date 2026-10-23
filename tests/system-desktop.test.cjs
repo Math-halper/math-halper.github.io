@@ -1021,23 +1021,38 @@ test('the desktop boots, lists and opens all catalogued apps', async () => {
     assert.equal(shown(), '0', 'Escape clears');
     w.closeWin('calculator', true);
 
-    // Web Retro's front page is two panels: ROMs (the bundled library) and
-    // Emulators (pick a core, then feed it your own ROM from either source).
+    // Web Retro's front page is two panels: the first half is four console
+    // rows (NES, SNES, N64, GB) over the bundled library; picking one fills
+    // the Emulators panel's grid with that console's games, and the panel's
+    // four emulator rows open a "where from?" screen (top bar, back arrow).
     w.openApp('web-retro');
     const retro = wins.get('web-retro').body;
     const panels = [...retro.querySelectorAll('.wr-panel')];
     assert.equal(panels.length, 2, 'the front page should be two panels');
     assert.match(panels[0].querySelector('h3').textContent, /ROMs/, 'the first panel is the ROMs');
     assert.match(panels[1].querySelector('h3').textContent, /Emulators/, 'the second panel is the Emulators');
-    assert.ok(retro.querySelectorAll('[data-bundled]').length >= 20, 'the ROMs panel lists the bundled games');
-    assert.ok(panels[0].querySelectorAll('.wr-sys').length >= 4, 'the bundled games are grouped by system');
+    assert.deepEqual([...panels[0].querySelectorAll('[data-console]')].map((b) => b.dataset.console),
+      ['NES', 'SNES', 'N64', 'GB'], 'the first half is four console rows, NES down to GB');
+    const gridCount = () => retro.querySelectorAll('#wr-grid [data-bundled]').length;
+    assert.equal(gridCount(), 5, 'the NES row starts picked, with its games in the grid');
+    retro.querySelector('[data-console="GB"]').click();
+    assert.equal(gridCount(), 13, 'the GB row shows the GB/GBC/GBA games');
+    retro.querySelector('[data-console="SNES"]').click();
+    assert.equal(gridCount(), 0, 'no SNES games are bundled');
+    retro.querySelector('[data-console="NES"]').click();
+    assert.equal(gridCount(), 5, 'picking NES again refills the grid');
     assert.ok(panels[1].querySelector('[data-core]'), 'the cores live in the Emulators panel');
     assert.deepEqual([...retro.querySelectorAll('[data-core]')].map((b) => b.dataset.core),
-      ['mupen64plus_next', 'snes9x', 'nestopia', 'mgba']);
-    assert.equal(retro.querySelector('#wr-upload').hidden, true, 'no ROM panel before a core is picked');
+      ['nestopia', 'snes9x', 'mupen64plus_next', 'mgba']);
+    assert.equal(retro.querySelector('#wr-upload').hidden, true, 'no source screen before an emulator is picked');
     retro.querySelector('[data-core="snes9x"]').click();
     assert.equal(retro.querySelector('#wr-upload').hidden, false);
     assert.equal(retro.querySelector('#wr-corename').textContent, 'SNES');
+    assert.ok(retro.querySelector('#wr-back'), 'the source screen has a back arrow');
+    retro.querySelector('#wr-back').click();
+    assert.equal(retro.querySelector('#wr-upload').hidden, true, 'the back arrow returns to the emulator rows');
+    retro.querySelector('[data-core="snes9x"]').click();
+    assert.equal(retro.querySelector('#wr-upload').hidden, false);
     assert.ok(retro.querySelector('[data-src="device"]'), 'no "this computer" ROM source');
     assert.ok(retro.querySelector('[data-src="vfs"]'), 'no "proton Files" ROM source');
     retro.querySelector('#wr-play').click();
