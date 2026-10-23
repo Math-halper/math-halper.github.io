@@ -318,8 +318,11 @@ not be saved.", etc.).
 
 - **Web Retro** — the vendored webretro emulator launcher:
   - intro paragraph (in-window N64 / SNES / NES / Game Boy play; ROMs never
-    leave the browser; no ROMs are bundled);
-  - **Bring your own — core**: core buttons (mupen64plus_next / snes9x /
+    leave the browser);
+  - **Bundled games — your ROM library**: a grid of the maintainer's bundled
+    ROMs (box art + title + system); click one to play it on its matching
+    core;
+  - **Or bring your own — core**: core buttons (mupen64plus_next / snes9x /
     nestopia / mgba) and then a **ROM** field with source buttons
     **From this computer** (device file picker) or **From proton Files**
     (a mini file browser over the account's home: crumbs, folder rows, ROM

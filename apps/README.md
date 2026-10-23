@@ -21,7 +21,7 @@ suite copied from `main` (Files, Text Editor, Image Viewer, Media, PDF
 Viewer), a small Calculator (new code in `apps/productivity/calculator/`) and Web Retro
 (`apps/tools/web-retro/`, a vendored webretro emulator build in
 `apps/tools/web-retro/webretro/` — see `CREDITS.md`; it also carries the
-offline games catalog’s classic ROMs).
+maintainer's own bundled ROM library).
 The three Celeste Classics apps (`celeste-classic/`, `celeste-two/`,
 `celeste-community/`) carry the actual game files, copied byte-for-byte from
 [Math-halper/Celeste](https://github.com/Math-halper/Celeste) — each app
@@ -116,7 +116,7 @@ matching the menu sections (`cat=`, ordered by `CATS` in `assets/core.js`).
 | `media/` | Image Viewer (`image-viewer`) — PNG, JPG, GIF, WebP, AVIF, BMP, ICO and SVG with zoom and playlists |
 | `media/` | Media (`media`) — play audio and video files from your home folder |
 | `tools/` | Ruffle Flash Player (`ruffle-flash-player`) — the vendored Ruffle Flash player (from Gams-Offline/Gams `g/g/Ruffle/`, without the swfs library) plus its wrapper |
-| `tools/` | Web Retro (`web-retro`) — the vendored webretro emulator (your own ROMs — from this computer or proton Files; none bundled) |
+| `tools/` | Web Retro (`web-retro`) — the vendored webretro emulator (the maintainer's bundled ROM library, or your own ROMs — from this computer or proton Files) |
 | `games/` | 2048 (`game-2048`) — the vendored single-file game (from Gams-Offline/Gams `g/`) plus its wrapper |
 | `games/` | Bloons Tower Defense 1 (`bloons-tower-defense-1`) — the vendored Flash build and loader shim (from Gams-Offline/Gams `g/g/Ruffle/swfs/`; runs on the shared Ruffle player) plus its wrapper |
 | `games/` | Bloons Tower Defense 2 (`bloons-tower-defense-2`) — the vendored Flash build and loader shim (from Gams-Offline/Gams `g/g/Ruffle/swfs/`; runs on the shared Ruffle player) plus its wrapper |
@@ -146,7 +146,6 @@ matching the menu sections (`cat=`, ordered by `CATS` in `assets/core.js`).
 | `games/` | Stealing The Diamond (`stealing-the-diamond`) — the vendored Flash build and loader shim (from Gams-Offline/Gams `g/g/Ruffle/swfs/`; runs on the shared Ruffle player) plus its wrapper |
 | `games/` | Stickman Hook (`stickman-hook`) — the vendored single-file game (from Gams-Offline/Gams `g/`) plus its wrapper |
 | `games/` | Super Mario 64 (`sm64`) — the vendored WebAssembly browser build (from Math-halper/Mario `sm64/`) plus its wrapper |
-| `games/` | Super Mario RPG (`super-mario-rpg`) — the vendored launcher into Web Retro (from Gams-Offline/Gams `g/`; the catalog’s ROM is bundled with Web Retro) plus its wrapper |
 | `games/` | Tetris (`tetris`) — the vendored Flash build and loader shim (from Gams-Offline/Gams `g/g/Ruffle/swfs/`; runs on the shared Ruffle player) plus its wrapper |
 | `games/` | The Impossible Quiz (`the-impossible-quiz`) — the vendored Flash build and loader shim (from Gams-Offline/Gams `g/g/Ruffle/swfs/`; runs on the shared Ruffle player) plus its wrapper |
 | `games/` | Tunnel Rush (`tunnel-rush`) — the vendored WebGL build (from Gams-Offline/Gams `g/g/`) plus its wrapper |

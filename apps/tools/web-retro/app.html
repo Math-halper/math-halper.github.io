@@ -23,7 +23,10 @@ proton menu. The script below is fetched and run by proton's HTML loader
  * own file picker, "From proton Files" browses the account's virtual home
  * folder (whatever was imported with the Files app) and reads it with
  * FS.readBlob(). webretro itself is by BinBashBanana (GPL-3.0, via the
- * Gams-Offline/Gams copy). No ROMs are bundled: bring your own. */
+ * Gams-Offline/Gams copy). The bundled library in webretro/roms/ is the
+ * maintainer's own ROM files (see CREDITS.md for the rights notes): each
+ * one loads into the emulator through the same BroadcastChannel hand-off
+ * as a file you pick yourself. */
 'use strict';
 
 /* ============================ WEB RETRO ============================ */
@@ -39,6 +42,35 @@ registerApp({
     ];
     const romAccept = '.nes,.fds,.smc,.sfc,.gb,.gbc,.gba,.n64,.z64,.v64,.bin,.zip';
     const romExts = romAccept.split(',');
+    /* The maintainer's own ROM library, bundled in webretro/roms/ (the
+     * .zip files as supplied; box art from data/icons/). Each entry is
+     * [zip file, core, title, system, icon] — webretro unzips and checks
+     * the ROM against the core, exactly as it does for a picked file. */
+    const BUNDLED = [
+      ['MarioKart64.zip', 'mupen64plus_next', 'Mario Kart 64', 'Nintendo 64', 'mario-kart-64'],
+      ['MarioParty.zip', 'mupen64plus_next', 'Mario Party', 'Nintendo 64', 'mario-party'],
+      ['PaperMario.zip', 'mupen64plus_next', 'Paper Mario', 'Nintendo 64', 'paper-mario'],
+      ['Doom64.zip', 'mupen64plus_next', 'Doom 64', 'Nintendo 64', 'doom-64'],
+      ["Yoshi'sStory.zip", 'mupen64plus_next', "Yoshi's Story", 'Nintendo 64', 'yoshis-story'],
+      ['Excitebike.zip', 'nestopia', 'Excitebike', 'NES', 'excitebike'],
+      ['SuperMarioBros._DuckHunt.zip', 'nestopia', 'Super Mario Bros. + Duck Hunt', 'NES', 'super-mario-bros-duck-hunt'],
+      ['SuperMarioBros.2.zip', 'nestopia', 'Super Mario Bros. 2', 'NES', 'super-mario-bros-2'],
+      ['SuperMarioBros.3.zip', 'nestopia', 'Super Mario Bros. 3', 'NES', 'super-mario-bros-3'],
+      ['Tetris.zip', 'nestopia', 'Tetris', 'NES', 'tetris-nes'],
+      ['Doom.zip', 'mgba', 'Doom', 'Game Boy Advance', 'doom-gba'],
+      ['GrandTheftAutoAdvance.zip', 'mgba', 'Grand Theft Auto Advance', 'Game Boy Advance', 'grand-theft-auto-advance'],
+      ['LEGOStarWars_TheVideoGame.zip', 'mgba', 'LEGO Star Wars: The Video Game', 'Game Boy Advance', 'lego-star-wars-the-video-game'],
+      ['Pokemon-EmeraldVersion(USA,Europe).zip', 'mgba', 'Pokémon Emerald', 'Game Boy Advance', 'pokemon-emerald'],
+      ["Sims,The_Bustin'Out.zip", 'mgba', "The Sims Bustin' Out", 'Game Boy Advance', 'the-sims-bustin-out'],
+      ['SuperMarioAdvance.zip', 'mgba', 'Super Mario Advance', 'Game Boy Advance', 'super-mario-advance'],
+      ['GrandTheftAuto.zip', 'mgba', 'Grand Theft Auto', 'Game Boy Color', 'grand-theft-auto'],
+      ['GrandTheftAuto2.zip', 'mgba', 'Grand Theft Auto 2', 'Game Boy Color', 'grand-theft-auto-2'],
+      ['Pokemon_RedVersion.zip', 'mgba', 'Pokémon Red', 'Game Boy', 'pokemon-red'],
+      ['Pokemon_YellowVersion-SpecialPikachuEdition.zip', 'mgba', 'Pokémon Yellow', 'Game Boy', 'pokemon-yellow'],
+      ['Pokemon_CrystalVersion.zip', 'mgba', 'Pokémon Crystal', 'Game Boy Color', 'pokemon-crystal'],
+      ['SpaceInvaders.zip', 'mgba', 'Space Invaders', 'Game Boy', 'space-invaders'],
+      ['SuperMarioBros.Deluxe.zip', 'mgba', 'Super Mario Bros. Deluxe', 'Game Boy Color', 'super-mario-bros-deluxe'],
+    ];
     let bc = null;
     let romSource = 'device';   // 'device' = real file picker, 'vfs' = proton Files
     let vfsPath = FS.home();    // folder shown in the proton Files browser
@@ -101,13 +133,25 @@ registerApp({
       vfsPick = null;
       romSource = 'device';
       main.className = 'app-main pad';
-      main.innerHTML = `<div class="card" style="max-width:540px;margin:0 auto">
-        <h3 style="margin-top:0">Play your own retro games</h3>
+      main.innerHTML = `<style>
+        .wr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px}
+        .wr-game{display:flex;flex-direction:column;align-items:center;gap:5px;padding:8px 6px;height:auto}
+        .wr-game img{width:72px;height:72px;object-fit:cover;border-radius:6px;background:#000}
+        .wr-game span{font-size:11.5px;line-height:1.25;text-align:center}
+        .wr-game small{opacity:.65;font-size:10px}
+      </style><div class="card" style="max-width:760px;margin:0 auto">
+        <h3 style="margin-top:0">Play retro games</h3>
         <p class="muted">webretro runs Nintendo 64, SNES, NES and Game Boy games
-        in this window. No ROMs are bundled — choose a core and pick
-        your own ROM file — from this computer or from your proton Files — it
-        goes straight into the emulator and never leaves your browser.</p>
-        <div class="field"><label>Bring your own — core</label>
+        in this window. Play one of the bundled games below — the maintainer's
+        own ROM library — or choose a core and pick your own ROM file, from
+        this computer or from your proton Files. Either way it goes straight
+        into the emulator and never leaves your browser.</p>
+        <div class="field"><label>Bundled games — your ROM library</label>
+          <div class="wr-grid">
+            ${BUNDLED.map(([file, core, title, sys, iconArt], i) => `<button type="button" class="btn wr-game" data-bundled="${i}"><img src="data/icons/${iconArt}.jpeg" alt=""><span>${MH.esc(title)}<br><small>${sys}</small></span></button>`).join('')}
+          </div>
+        </div>
+        <div class="field"><label>Or bring your own — core</label>
           <div style="display:flex;flex-wrap:wrap;gap:8px">
             ${CORES.map(([id, label]) => `<button type="button" class="btn" data-core="${id}">${label}</button>`).join('')}
           </div>
@@ -129,8 +173,13 @@ registerApp({
           <button type="button" class="btn primary" id="wr-play" style="margin-top:10px">Play ROM</button>
         </div>
         <p class="muted" style="margin-bottom:0">Saves and save states live in
-        your browser's own storage (webretro keeps them in IndexedDB).</p>
+        your browser's own storage (webretro keeps them in IndexedDB). The
+        bundled games are the maintainer's own ROM files (see
+        <b>CREDITS.md</b>).</p>
       </div>`;
+      main.querySelectorAll('[data-bundled]').forEach((b) => b.addEventListener('click', () => {
+        playBundled(BUNDLED[Number(b.dataset.bundled)]);
+      }));
       main.querySelectorAll('[data-core]').forEach((b) => b.addEventListener('click', () => {
         main.querySelector('#wr-corename').textContent = b.textContent;
         main.querySelector('#wr-upload').dataset.core = b.dataset.core;
@@ -172,6 +221,19 @@ registerApp({
           MH.toast(err.message || 'Could not read that ROM.');
         }
       });
+    }
+
+    /* A bundled game: fetch its .zip from webretro/roms/ and hand it to
+     * the emulator exactly like a file picked from this computer. */
+    async function playBundled([file, core, title]) {
+      try {
+        const res = await fetch(`apps/tools/web-retro/webretro/roms/${encodeURIComponent(file)}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const blob = await res.blob();
+        play(core, new File([blob], `${title}.zip`));
+      } catch (err) {
+        MH.toast(`Could not load ${title}.`);
+      }
     }
 
     function play(core, file) {

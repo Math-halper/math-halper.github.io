@@ -1387,6 +1387,25 @@ test('the idiot app breeds real windows and only Make it stop ends it', async ()
   } finally { close(); }
 });
 
+/* Web Retro's bundled library is the maintainer's own ROM files: every
+ * game listed in the launcher really is on disk (its .zip in webretro/roms/
+ * and its box art in data/icons/), so a clicked card always plays. */
+test('the Web Retro bundled ROM library is on disk', () => {
+  const src = fs.readFileSync(path.join(ROOT, 'apps/tools/web-retro/app.html'), 'utf8');
+  const bundled = src.match(/const BUNDLED = \[([\s\S]*?)\n\s*\];/);
+  assert.ok(bundled, 'the launcher defines its bundled game list');
+  const entries = [...bundled[1].matchAll(/\['([^']+)', '(\w+)',/g)];
+  assert.ok(entries.length >= 20, `the bundled library lists ${entries.length} games`);
+  for (const [, zip, core] of entries) {
+    const zipPath = path.join(ROOT, 'apps/tools/web-retro/webretro/roms', zip);
+    assert.ok(fs.existsSync(zipPath), `bundled ROM missing: webretro/roms/${zip}`);
+    assert.ok(['mupen64plus_next', 'nestopia', 'mgba', 'snes9x'].includes(core), `unknown core ${core} for ${zip}`);
+  }
+  for (const m of bundled[1].matchAll(/, '([a-z0-9-]+)'\]/g)) {
+    assert.ok(fs.existsSync(path.join(ROOT, 'data/icons', `${m[1]}.jpeg`)), `box art missing: data/icons/${m[1]}.jpeg`);
+  }
+});
+
 /* Every text box and text input in proton's own apps shows a caret because
  * it really is editable: typing is never swallowed or reverted. (Games in
  * iframes are upstream pages; this guards the desktop's own fields —
@@ -2038,9 +2057,10 @@ test('proton’s search engine answers from the repository itself', async () => 
       'a document that really is about a word still answers it, however long it is');
     assert.equal(results('zip').answer, true, 'the code that builds ZIPs answers "zip"');
     assert.equal(results('zip').results[0].answer, true);
-    /* "zip" is also the name of vendored build files, so its default window
-     * is answers; widen it to see that mentions sit in their own lesser list. */
-    const wide = results('zip', 20);
+    /* "zip" is also the name of vendored build files (and of Web Retro's
+     * whole bundled ROM library), so its default window is answers; widen
+     * it to see that mentions sit in their own lesser list. */
+    const wide = results('zip', 60);
     assert.equal(wide.mentions > 0 && wide.answers > 0, true,
       'and the two are kept apart rather than ranked as one list');
     for (const query of ['files', 'celeste', 'test page', 'search index', 'wallpaper', 'licence']) {
