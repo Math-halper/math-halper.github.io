@@ -23,10 +23,12 @@ proton menu. The script below is fetched and run by proton's HTML loader
  * own file picker, "From proton Files" browses the account's virtual home
  * folder (whatever was imported with the Files app) and reads it with
  * FS.readBlob(). webretro itself is by BinBashBanana (GPL-3.0, via the
- * Gams-Offline/Gams copy). The bundled library in webretro/roms/ is the
- * maintainer's own ROM files (see CREDITS.md for the rights notes): each
- * one loads into the emulator through the same BroadcastChannel hand-off
- * as a file you pick yourself. */
+ * Gams-Offline/Gams copy). The front page is two panels: ROMs (the
+ * bundled library in webretro/roms/ — the maintainer's own ROM files,
+ * see CREDITS.md for the rights notes — grouped by system) and Emulators
+ * (pick a core, then feed it a ROM of your own). Each bundled game loads
+ * into the emulator through the same BroadcastChannel hand-off as a file
+ * you pick yourself. */
 'use strict';
 
 /* ============================ WEB RETRO ============================ */
@@ -133,54 +135,73 @@ registerApp({
       vfsPick = null;
       romSource = 'device';
       main.className = 'app-main pad';
+      /* The ROMs panel, grouped by system, in library order. */
+      const groups = [];
+      for (let i = 0; i < BUNDLED.length; i++) {
+        let g = groups.find((x) => x.sys === BUNDLED[i][3]);
+        if (!g) { g = { sys: BUNDLED[i][3], items: [] }; groups.push(g); }
+        g.items.push(i);
+      }
+      const romsHtml = groups.map((g) => `
+        <h4 class="wr-sys">${MH.esc(g.sys)}</h4>
+        <div class="wr-grid">${g.items.map((i) => `<button type="button" class="btn wr-game" data-bundled="${i}"><img src="data/icons/${BUNDLED[i][4]}.jpeg" alt=""><span>${MH.esc(BUNDLED[i][2])}</span></button>`).join('')}</div>`).join('');
       main.innerHTML = `<style>
-        .wr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px}
+        .wr-cols{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(0,1fr);gap:12px;align-items:start}
+        @media (max-width:820px){.wr-cols{grid-template-columns:1fr}}
+        .wr-panel h3{margin-top:0}
+        .wr-sys{margin:14px 0 6px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;opacity:.75}
+        .wr-sys:first-of-type{margin-top:4px}
+        .wr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px}
         .wr-game{display:flex;flex-direction:column;align-items:center;gap:5px;padding:8px 6px;height:auto}
         .wr-game img{width:72px;height:72px;object-fit:cover;border-radius:6px;background:#000}
         .wr-game span{font-size:11.5px;line-height:1.25;text-align:center}
-        .wr-game small{opacity:.65;font-size:10px}
-      </style><div class="card" style="max-width:760px;margin:0 auto">
-        <h3 style="margin-top:0">Play retro games</h3>
-        <p class="muted">webretro runs Nintendo 64, SNES, NES and Game Boy games
-        in this window. Play one of the bundled games below — the maintainer's
-        own ROM library — or choose a core and pick your own ROM file, from
-        this computer or from your proton Files. Either way it goes straight
-        into the emulator and never leaves your browser.</p>
-        <div class="field"><label>Bundled games — your ROM library</label>
-          <div class="wr-grid">
-            ${BUNDLED.map(([file, core, title, sys, iconArt], i) => `<button type="button" class="btn wr-game" data-bundled="${i}"><img src="data/icons/${iconArt}.jpeg" alt=""><span>${MH.esc(title)}<br><small>${sys}</small></span></button>`).join('')}
+        .wr-foot{margin:10px 2px 0}
+      </style>
+      <div class="wr-cols">
+        <section class="card wr-panel">
+          <h3>🎮 ROMs</h3>
+          <p class="muted">Your bundled library — ${BUNDLED.length} games. Click one
+          and it starts right away on its matching emulator.</p>
+          ${romsHtml}
+        </section>
+        <section class="card wr-panel">
+          <h3>🕹️ Emulators</h3>
+          <p class="muted">Bring your own ROMs. Pick an emulator, then choose a
+          ROM file — from this computer or from your proton Files. It goes
+          straight into the emulator and never leaves your browser.</p>
+          <div class="field"><label>Emulator</label>
+            <div style="display:flex;flex-wrap:wrap;gap:8px">
+              ${CORES.map(([id, label]) => `<button type="button" class="btn" data-core="${id}">${label}</button>`).join('')}
+            </div>
+            <p class="muted" style="margin:8px 0 0">Plays .z64 / .n64, .smc / .sfc,
+            .nes and .gb / .gbc / .gba files (zips too).</p>
           </div>
-        </div>
-        <div class="field"><label>Or bring your own — core</label>
-          <div style="display:flex;flex-wrap:wrap;gap:8px">
-            ${CORES.map(([id, label]) => `<button type="button" class="btn" data-core="${id}">${label}</button>`).join('')}
+          <div class="field" id="wr-upload" hidden>
+            <label for="wr-rom">ROM — <span id="wr-corename"></span></label>
+            <div style="display:flex;gap:8px;margin:0 0 10px">
+              <button type="button" class="btn sm primary" data-src="device">From this computer</button>
+              <button type="button" class="btn sm" data-src="vfs">From proton Files</button>
+            </div>
+            <div id="wr-device">
+              <input type="file" id="wr-rom" accept="${romAccept}">
+            </div>
+            <div id="wr-vfs" hidden>
+              <p class="muted" style="margin:0 0 6px">ROM files in your proton home folder
+              (import more with the <b>Files</b> app) — <span id="wr-vfs-path"></span></p>
+              <div id="wr-vfs-list" style="max-height:190px;overflow:auto;display:flex;flex-direction:column;gap:4px"></div>
+            </div>
+            <button type="button" class="btn primary" id="wr-play" style="margin-top:10px">Play ROM</button>
           </div>
-        </div>
-        <div class="field" id="wr-upload" hidden>
-          <label for="wr-rom">ROM — <span id="wr-corename"></span></label>
-          <div style="display:flex;gap:8px;margin:0 0 10px">
-            <button type="button" class="btn sm primary" data-src="device">From this computer</button>
-            <button type="button" class="btn sm" data-src="vfs">From proton Files</button>
-          </div>
-          <div id="wr-device">
-            <input type="file" id="wr-rom" accept="${romAccept}">
-          </div>
-          <div id="wr-vfs" hidden>
-            <p class="muted" style="margin:0 0 6px">ROM files in your proton home folder
-            (import more with the <b>Files</b> app) — <span id="wr-vfs-path"></span></p>
-            <div id="wr-vfs-list" style="max-height:190px;overflow:auto;display:flex;flex-direction:column;gap:4px"></div>
-          </div>
-          <button type="button" class="btn primary" id="wr-play" style="margin-top:10px">Play ROM</button>
-        </div>
-        <p class="muted" style="margin-bottom:0">Saves and save states live in
-        your browser's own storage (webretro keeps them in IndexedDB). The
-        bundled games are the maintainer's own ROM files (see
-        <b>CREDITS.md</b>).</p>
-      </div>`;
+        </section>
+      </div>
+      <p class="muted wr-foot">Saves and save states live in your browser's own
+      storage (webretro keeps them in IndexedDB). The bundled games are the
+      maintainer's own ROM files (see <b>CREDITS.md</b>).</p>`;
       main.querySelectorAll('[data-bundled]').forEach((b) => b.addEventListener('click', () => {
         playBundled(BUNDLED[Number(b.dataset.bundled)]);
       }));
       main.querySelectorAll('[data-core]').forEach((b) => b.addEventListener('click', () => {
+        main.querySelectorAll('[data-core]').forEach((x) => x.classList.toggle('primary', x === b));
         main.querySelector('#wr-corename').textContent = b.textContent;
         main.querySelector('#wr-upload').dataset.core = b.dataset.core;
         main.querySelector('#wr-upload').hidden = false;

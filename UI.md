@@ -316,14 +316,16 @@ not be saved.", etc.).
 
 ## 12. Tools
 
-- **Web Retro** — the vendored webretro emulator launcher:
-  - intro paragraph (in-window N64 / SNES / NES / Game Boy play; ROMs never
-    leave the browser);
-  - **Bundled games — your ROM library**: a grid of the maintainer's bundled
-    ROMs (box art + title + system); click one to play it on its matching
+- **Web Retro** — the vendored webretro emulator launcher. Its front page is
+  two panels side by side (stacked in narrow windows), with a saves/CREDITS
+  footnote underneath:
+  - **ROMs**: the maintainer's bundled library, grouped by system with
+    sub-headings (Nintendo 64 / NES / Game Boy Advance / Game Boy…), each
+    game a box-art + title button; click one to play it on its matching
     core;
-  - **Or bring your own — core**: core buttons (mupen64plus_next / snes9x /
-    nestopia / mgba) and then a **ROM** field with source buttons
+  - **Emulators**: bring your own ROMs — core buttons (mupen64plus_next /
+    snes9x / nestopia / mgba, the picked one highlighted) and then a
+    **ROM** field with source buttons
     **From this computer** (device file picker) or **From proton Files**
     (a mini file browser over the account's home: crumbs, folder rows, ROM
     rows, one level at a time);

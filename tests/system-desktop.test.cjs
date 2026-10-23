@@ -1021,9 +1021,17 @@ test('the desktop boots, lists and opens all catalogued apps', async () => {
     assert.equal(shown(), '0', 'Escape clears');
     w.closeWin('calculator', true);
 
-    // Web Retro's launcher picks a core and offers both ROM sources.
+    // Web Retro's front page is two panels: ROMs (the bundled library) and
+    // Emulators (pick a core, then feed it your own ROM from either source).
     w.openApp('web-retro');
     const retro = wins.get('web-retro').body;
+    const panels = [...retro.querySelectorAll('.wr-panel')];
+    assert.equal(panels.length, 2, 'the front page should be two panels');
+    assert.match(panels[0].querySelector('h3').textContent, /ROMs/, 'the first panel is the ROMs');
+    assert.match(panels[1].querySelector('h3').textContent, /Emulators/, 'the second panel is the Emulators');
+    assert.ok(retro.querySelectorAll('[data-bundled]').length >= 20, 'the ROMs panel lists the bundled games');
+    assert.ok(panels[0].querySelectorAll('.wr-sys').length >= 4, 'the bundled games are grouped by system');
+    assert.ok(panels[1].querySelector('[data-core]'), 'the cores live in the Emulators panel');
     assert.deepEqual([...retro.querySelectorAll('[data-core]')].map((b) => b.dataset.core),
       ['mupen64plus_next', 'snes9x', 'nestopia', 'mgba']);
     assert.equal(retro.querySelector('#wr-upload').hidden, true, 'no ROM panel before a core is picked');
