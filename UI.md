@@ -332,7 +332,11 @@ not be saved.", etc.).
     level at a time) or **From your Files** (the device file picker), and
     **Play ROM**; a saves/CREDITS note sits under the grid;
   - launching swaps the window to the emulator; **Change game** in the app bar
-    returns to the chooser.
+    returns to the chooser. Control bindings persist between games:
+    keys set in the emulator's **Controls → Keybinds** manager (press
+    **Save**) or in RetroArch's own menu (Settings → Input, then quit
+    RetroArch or save the current configuration) are kept and reapplied
+    on the next launch.
 - **Ruffle Flash Player** — the shared Flash runtime for all 12 Flash games
   and any `.swf` you own: app bar with the player path label, **Reload** and
   **Open in new tab**, the Ruffle player in a fullscreen-capable frame

@@ -400,7 +400,12 @@ RetroArch compiled for the web by
   libretro/RetroArch — and the `assets/` they load, plus the maintainer's
   own ROM library under `roms/` (next point). The GIMP source
   `controller_layout.xcf` is not a runtime asset and is omitted; everything
-  else is byte-for-byte as upstream. The core/wasm wrappers
+  else is byte-for-byte as upstream, except for one proton fix in
+  `main.js`: bindings changed in RetroArch's own menu are harvested from
+  the `retroarch.cfg` it writes back into the keybind manager's
+  localStorage entry (`harvestKeybindsFromConfigText` /
+  `persistKeybindsFromConfig`), so control bindings persist between
+  games instead of resetting on every launch. The core/wasm wrappers
   are Gams' `file://`-friendly packaging of those files.
 - `apps/tools/web-retro/app.html` is proton's launcher, adapted from Gams'
   `g/webretro.html`: the same core list and BroadcastChannel ROM hand-off to

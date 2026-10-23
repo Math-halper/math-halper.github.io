@@ -1434,6 +1434,41 @@ test('the Web Retro bundled ROM library is on disk', () => {
   }
 });
 
+/* Control bindings have to survive closing a game. RetroArch writes
+ * bindings changed in its own menu to retroarch.cfg in the emulator's
+ * in-memory filesystem, and webretro rewrites that file from the keybind
+ * manager's localStorage entry on every launch — so main.js harvests the
+ * bindings back out of the config file whenever RetroArch saves it (and
+ * again on pagehide), or every in-game rebind would be lost. */
+test('Web Retro keeps control bindings between games', () => {
+  const src = fs.readFileSync(path.join(ROOT, 'apps/tools/web-retro/webretro/main.js'), 'utf8');
+  // the harvest helper is pure: pull it out and run it for real
+  const fnMatch = src.match(/function harvestKeybindsFromConfigText\(text, validKeys, current\) \{[\s\S]*?\n\}/);
+  assert.ok(fnMatch, 'main.js defines the keybind harvest helper');
+  const harvest = new Function(`${fnMatch[0]}; return harvestKeybindsFromConfigText;`)();
+  const valid = ['input_player1_a', 'input_player1_b', 'input_menu_toggle'];
+  const current = { input_player1_a: 'h', input_player1_b: 'g', input_menu_toggle: 'f1' };
+  const cfgText = [
+    'video_driver = "gl"',
+    'input_player1_a = "z"',
+    'input_player1_b = "g"',
+    'input_player1_a_btn = "0"',
+    'input_menu_toggle = "f5"',
+    '',
+  ].join('\n');
+  // only manager-known keyboard bindings that actually changed come back
+  assert.deepEqual(harvest(cfgText, valid, current), { input_player1_a: 'z', input_menu_toggle: 'f5' });
+  // an unchanged config (e.g. the one webretro itself wrote at startup) is a no-op
+  assert.equal(harvest('input_player1_a = "h"\ninput_player1_b = "g"\ninput_menu_toggle = "f1"\n', valid, current), null);
+  // the harvest is wired into the emulator's file-write routing and page close
+  assert.ok(/path == fsConfigFile\) \{\s*\n\s*\/\/ RetroArch just saved its config[\s\S]*?persistKeybindsFromConfig\(\);/.test(src),
+    'writeToFileHandler persists bindings when RetroArch saves its config');
+  assert.ok(src.includes('window.addEventListener("pagehide", persistKeybindsFromConfig);'),
+    'bindings are harvested on pagehide too');
+  assert.ok(/function persistKeybindsFromConfig\(\) \{[\s\S]*?localStorage\.setItem\("RetroArch_settings_keybinds", configObjToStr\(savedKeybindsObj\)\)/.test(src),
+    'harvested bindings land in the keybind store the startup config is written from');
+});
+
 /* proton's own UI draws artwork with its SVG icon set and raster images,
  * never with emoji glyphs. Vendored games and third-party runtime builds
  * are upstream content, so they are outside this scan; values saved by old
