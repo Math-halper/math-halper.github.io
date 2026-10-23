@@ -1431,6 +1431,31 @@ test('the Web Retro bundled ROM library is on disk', () => {
   }
 });
 
+/* proton's own UI draws artwork with its SVG icon set and raster images,
+ * never with emoji glyphs. Vendored games and third-party runtime builds
+ * are upstream content, so they are outside this scan; values saved by old
+ * accounts are still translated through assets/icons.js at render time. */
+test("proton's own UI uses image artwork instead of emoji glyphs", () => {
+  const emojiGlyph = new RegExp('[\\u{1F000}-\\u{1FAFF}\\u{2600}-\\u{27BF}\\u{2B00}-\\u{2BFF}\\uFE0F]', 'u');
+  const offenders = [];
+  const visit = (rel) => {
+    const normalized = rel.split(path.sep).join('/');
+    if (normalized === 'apps/games' || normalized.startsWith('apps/games/')
+      || normalized === 'apps/tools/web-retro/webretro' || normalized.startsWith('apps/tools/web-retro/webretro/')) return;
+    if (normalized.startsWith('apps/tools/ruffle-flash-player/') && !normalized.endsWith('/app.html')) return;
+    const abs = path.join(ROOT, rel);
+    if (fs.statSync(abs).isDirectory()) {
+      for (const entry of fs.readdirSync(abs).sort()) visit(path.join(rel, entry));
+      return;
+    }
+    if (!/\.(?:html|js|css)$/.test(normalized)) return;
+    const match = fs.readFileSync(abs, 'utf8').match(emojiGlyph);
+    if (match) offenders.push(`${normalized}: ${match[0]}`);
+  };
+  for (const root of ['index.html', 'assets', 'apps', 'data/applications.js', 'data/websites.js', 'websites']) visit(root);
+  assert.deepEqual(offenders, []);
+});
+
 /* Every text box and text input in proton's own apps shows a caret because
  * it really is editable: typing is never swallowed or reverted. (Games in
  * iframes are upstream pages; this guards the desktop's own fields —

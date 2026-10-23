@@ -519,7 +519,7 @@
       <p>You have earned ${earned} of ${awards.length} awards. Keep practising to unlock the rest.</p></div>
       <button type="button" class="cover-btn cover-btn-primary" data-cover-action="start-practice">Earn more points</button></div>
       <div class="cover-award-grid">${awards.map((award) => `<article class="${award.earned ? 'cover-award-earned' : ''}">
-        <span>${award.earned ? '★ Earned' : '☆ Locked'}</span><h3>${esc(award.name)}</h3><p>${esc(award.detail)}</p></article>`).join('')}</div>`);
+        <span>${iconSvg(award.earned ? 'trophy' : 'lock')} ${award.earned ? 'Earned' : 'Locked'}</span><h3>${esc(award.name)}</h3><p>${esc(award.detail)}</p></article>`).join('')}</div>`);
   }
 
   function showAnalytics() {
