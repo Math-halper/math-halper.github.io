@@ -318,19 +318,14 @@ not be saved.", etc.).
 
 - **Web Retro** — the vendored webretro emulator launcher:
   - intro paragraph (in-window N64 / SNES / NES / Game Boy play; ROMs never
-    leave the browser);
-  - **Classics from the offline games catalog** — one button per bundled ROM
-    (title + system): Super Mario World, Super Mario RPG, A Link to the Past,
-    EarthBound (SNES), Super Mario Bros. (NES), Pokémon Sapphire (GBA), Paper
-    Mario 64 (N64) — each launches with its correct core;
-  - **Or bring your own — core**: core buttons (mupen64plus_next / snes9x /
+    leave the browser; no ROMs are bundled);
+  - **Bring your own — core**: core buttons (mupen64plus_next / snes9x /
     nestopia / mgba) and then a **ROM** field with source buttons
     **From this computer** (device file picker) or **From proton Files**
     (a mini file browser over the account's home: crumbs, folder rows, ROM
     rows, one level at a time);
   - launching swaps the window to the emulator; **Change game** in the app bar
-    returns to the chooser. Super Mario RPG's own launcher skips straight to
-    the bundled ROM.
+    returns to the chooser.
 - **Ruffle Flash Player** — the shared Flash runtime for all 12 Flash games
   and any `.swf` you own: app bar with the player path label, **Reload** and
   **Open in new tab**, the Ruffle player in a fullscreen-capable frame

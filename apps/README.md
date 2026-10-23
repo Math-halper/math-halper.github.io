@@ -116,7 +116,7 @@ matching the menu sections (`cat=`, ordered by `CATS` in `assets/core.js`).
 | `media/` | Image Viewer (`image-viewer`) — PNG, JPG, GIF, WebP, AVIF, BMP, ICO and SVG with zoom and playlists |
 | `media/` | Media (`media`) — play audio and video files from your home folder |
 | `tools/` | Ruffle Flash Player (`ruffle-flash-player`) — the vendored Ruffle Flash player (from Gams-Offline/Gams `g/g/Ruffle/`, without the swfs library) plus its wrapper |
-| `tools/` | Web Retro (`web-retro`) — the vendored webretro emulator (the offline catalog’s classics plus your own ROMs — from this computer or proton Files) |
+| `tools/` | Web Retro (`web-retro`) — the vendored webretro emulator (your own ROMs — from this computer or proton Files; none bundled) |
 | `games/` | 2048 (`game-2048`) — the vendored single-file game (from Gams-Offline/Gams `g/`) plus its wrapper |
 | `games/` | Bloons Tower Defense 1 (`bloons-tower-defense-1`) — the vendored Flash build and loader shim (from Gams-Offline/Gams `g/g/Ruffle/swfs/`; runs on the shared Ruffle player) plus its wrapper |
 | `games/` | Bloons Tower Defense 2 (`bloons-tower-defense-2`) — the vendored Flash build and loader shim (from Gams-Offline/Gams `g/g/Ruffle/swfs/`; runs on the shared Ruffle player) plus its wrapper |

@@ -49,7 +49,7 @@ game bundles and earlier built-in sites remain removed (except Test Page).
 | **Image Viewer** (`image-viewer`) | View PNG, JPG, GIF, WebP, AVIF, BMP, ICO and SVG files with zoom and a folder playlist |
 | **Media** (`media`) | Play audio and video files stored in your home folder, with your browser's own codecs |
 | **Ruffle Flash Player** (`ruffle-flash-player`) | Load and play your own Flash .swf files |
-| **Web Retro** (`web-retro`) | Play retro classics or your own ROMs — N64, SNES, NES and Game Boy (webretro; the catalog’s classics are bundled) |
+| **Web Retro** (`web-retro`) | Play your own ROMs — N64, SNES, NES and Game Boy (webretro; no ROMs are bundled) |
 | **2048** (`game-2048`) | Play 2048 - join the tiles |
 | **Bloons Tower Defense 1** (`bloons-tower-defense-1`) | Play Bloons Tower Defense 1 - the original balloon-popping tower defense |
 | **Bloons Tower Defense 2** (`bloons-tower-defense-2`) | Play Bloons Tower Defense 2 - more balloons, more towers |

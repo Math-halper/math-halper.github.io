@@ -239,9 +239,7 @@ Twenty-three more games ship under `apps/games/`, each copied from
   Flash runtime from `g/g/Ruffle/` (without the `swfs/` library — every Flash
   game app carries its own build). Ruffle itself is open source, MIT or
   Apache-2.0 ([ruffle-rs/ruffle](https://github.com/ruffle-rs/ruffle)).
-- **Super Mario RPG** (`apps/games/super-mario-rpg/`) — a launcher shim into
-  this repository's own Web Retro (core `snes9x`, `rom=smrpg.smc`), which
-  loads the catalog's bundled ROM (see the Web Retro section).
+
 
 Each game is © its respective authors — for example the Henry Stickmin series
 by PuffballsUnited (Innersloth), the Bloons series by Ninja Kiwi, Pac-Man ©
@@ -308,12 +306,11 @@ RetroArch compiled for the web by
 - `apps/tools/web-retro/webretro/` is that build: `launch.html`, `main.js`, the
   `cores/` bundles for mupen64plus_next (N64), snes9x (SNES), nestopia (NES)
   and mgba (GB/GBC/GBA) — the libretro cores are GPL-licensed parts of
-  libretro/RetroArch — and the `assets/` they load. The catalog's original `roms/`
-  library from Gams' `g/g/webretro/` now lives in
-  `apps/tools/web-retro/webretro/roms/` — the seven packed ROMs behind the
-  classic cartridge games (see Rights below). The GIMP source
+  libretro/RetroArch — and the `assets/` they load. No ROMs are bundled: the
+  `roms/` library an earlier build carried has been removed from this
+  repository. The GIMP source
   `controller_layout.xcf` is not a runtime asset and is omitted; everything
-  else is byte-for-byte as upstream. The core/wasm and ROM data-URL wrappers
+  else is byte-for-byte as upstream. The core/wasm wrappers
   are Gams' `file://`-friendly packaging of those files.
 - `apps/tools/web-retro/app.html` is proton's launcher, adapted from Gams'
   `g/webretro.html`: the same core list and BroadcastChannel ROM hand-off to
@@ -325,19 +322,11 @@ RetroArch compiled for the web by
   `data/icons/webretro.png` and set as the catalog default
   (`icon=data/icons/webretro.png`, `svg-icon=false`).
 
-**The classic ROMs come from the offline games catalog.** At the maintainer's
-request, `apps/tools/web-retro/webretro/roms/` carries the original `roms/`
-library from Gams' `g/g/webretro/` — the packed ROMs behind the catalog's
-classics (Super Mario World, Super Mario RPG, The Legend of Zelda: A Link to
-the Past, EarthBound, Super Mario Bros., Pokémon Sapphire and Paper Mario 64),
-so they run out of the box. Those are commercial games © Nintendo, Square,
-Creatures, HAL Laboratory, Game Freak and their respective rights holders:
-the Gams mirror grants no redistribution rights and this repository grants
-none either — the files are mirrored here as-is. Web Retro still runs any ROM
-file you choose — from your own device or from proton's virtual file system —
-handed to the emulator in-page over a BroadcastChannel; those never leave the
-browser. If you hold rights in a bundled ROM and want it removed, open an
-issue or pull request and it will be taken down.
+**No ROMs are bundled.** Web Retro only runs ROM files you choose — from
+your own device or from proton's virtual file system — handed to the
+emulator in-page over a BroadcastChannel; those never leave the browser.
+The Super Mario RPG game app, which launched one of the formerly bundled
+ROMs, was removed along with them.
 
 The webretro files stay under their upstream licence (GPL-3.0, © the webretro
 and libretro authors) and are distributed here as a separate part of this

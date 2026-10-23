@@ -23,8 +23,7 @@ proton menu. The script below is fetched and run by proton's HTML loader
  * own file picker, "From proton Files" browses the account's virtual home
  * folder (whatever was imported with the Files app) and reads it with
  * FS.readBlob(). webretro itself is by BinBashBanana (GPL-3.0, via the
- * Gams-Offline/Gams copy). The bundled classics run from the offline games
- * catalog's own roms/ library (see CREDITS.md for the rights notes). */
+ * Gams-Offline/Gams copy). No ROMs are bundled: bring your own. */
 'use strict';
 
 /* ============================ WEB RETRO ============================ */
@@ -40,17 +39,6 @@ registerApp({
     ];
     const romAccept = '.nes,.fds,.smc,.sfc,.gb,.gbc,.gba,.n64,.z64,.v64,.bin,.zip';
     const romExts = romAccept.split(',');
-    /* Classics bundled from the offline games catalog (Gams-Offline/Gams
-     * g/g/webretro/roms/) — each ships with the core it needs. */
-    const CLASSICS = [
-      ['world.smc', 'snes9x', 'Super Mario World', 'SNES'],
-      ['smrpg.smc', 'snes9x', 'Super Mario RPG', 'SNES'],
-      ['linktothepast.smc', 'snes9x', 'Zelda: A Link to the Past', 'SNES'],
-      ['earthbound.sfc', 'snes9x', 'EarthBound', 'SNES'],
-      ['mario.nes', 'nestopia', 'Super Mario Bros.', 'NES'],
-      ['pokemon-sapphire.gba', 'mgba', 'Pokémon Sapphire', 'GBA'],
-      ['pm64.zip', 'mupen64plus_next', 'Paper Mario', 'N64'],
-    ];
     let bc = null;
     let romSource = 'device';   // 'device' = real file picker, 'vfs' = proton Files
     let vfsPath = FS.home();    // folder shown in the proton Files browser
@@ -116,15 +104,10 @@ registerApp({
       main.innerHTML = `<div class="card" style="max-width:540px;margin:0 auto">
         <h3 style="margin-top:0">Play your own retro games</h3>
         <p class="muted">webretro runs Nintendo 64, SNES, NES and Game Boy games
-        in this window. Play a bundled classic below, or choose a core and pick
+        in this window. No ROMs are bundled — choose a core and pick
         your own ROM file — from this computer or from your proton Files — it
         goes straight into the emulator and never leaves your browser.</p>
-        <div class="field"><label>Classics from the offline games catalog</label>
-          <div style="display:flex;flex-wrap:wrap;gap:8px">
-            ${CLASSICS.map(([rom, core, title, sys]) => `<button type="button" class="btn sm" data-classic="${rom}|${core}|${title}">${title} <span class="muted">${sys}</span></button>`).join('')}
-          </div>
-        </div>
-        <div class="field"><label>Or bring your own — core</label>
+        <div class="field"><label>Bring your own — core</label>
           <div style="display:flex;flex-wrap:wrap;gap:8px">
             ${CORES.map(([id, label]) => `<button type="button" class="btn" data-core="${id}">${label}</button>`).join('')}
           </div>
@@ -146,14 +129,8 @@ registerApp({
           <button type="button" class="btn primary" id="wr-play" style="margin-top:10px">Play ROM</button>
         </div>
         <p class="muted" style="margin-bottom:0">Saves and save states live in
-        your browser's own storage (webretro keeps them in IndexedDB). The
-        bundled classics come from the offline games catalog (see
-        <b>CREDITS.md</b>); you can also bring your own ROMs.</p>
+        your browser's own storage (webretro keeps them in IndexedDB).</p>
       </div>`;
-      main.querySelectorAll('[data-classic]').forEach((b) => b.addEventListener('click', () => {
-        const [rom, core, title] = b.dataset.classic.split('|');
-        playBundled(core, rom, title);
-      }));
       main.querySelectorAll('[data-core]').forEach((b) => b.addEventListener('click', () => {
         main.querySelector('#wr-corename').textContent = b.textContent;
         main.querySelector('#wr-upload').dataset.core = b.dataset.core;
@@ -209,16 +186,6 @@ registerApp({
       };
       main.querySelector('#wr-frame').src =
         `apps/tools/web-retro/webretro/launch.html?core=${encodeURIComponent(core)}&rom=channel&name=${encodeURIComponent(name)}&channel=${encodeURIComponent(channel)}`;
-    }
-
-    /* A bundled classic: launch.html loads roms/<rom>.js itself. */
-    function playBundled(core, rom, title) {
-      if (bc) { bc.close(); bc = null; }
-      again.hidden = false;
-      main.className = 'app-main';
-      main.innerHTML = `<iframe title="Web Retro" id="wr-frame" allow="autoplay; fullscreen; pointer-lock; gamepad" style="width:100%;height:100%;min-height:360px;border:0;display:block"></iframe>`;
-      main.querySelector('#wr-frame').src =
-        `apps/tools/web-retro/webretro/launch.html?core=${encodeURIComponent(core)}&rom=${encodeURIComponent(rom)}&name=${encodeURIComponent(title)}`;
     }
 
     again.addEventListener('click', picker);
