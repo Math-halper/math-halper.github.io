@@ -294,7 +294,9 @@ def clip_title(title):
     if len(title) <= MAX_TITLE_CHARS:
         return title
     cut = title[:MAX_TITLE_CHARS]
-    return (cut[:cut.rfind(' ')] if ' ' in cut else cut).rstrip(' ,;:.') + '\u2026'
+    if ' ' in cut:
+        return cut[:cut.rfind(' ')].rstrip(' ,;:.') + '\u2026'
+    return cut[:MAX_TITLE_CHARS - 1] + '\u2026'
 
 
 def doc_summary_source(kind, prose, text):
@@ -364,6 +366,13 @@ def collect():
         for fn in sorted(filenames):
             rel = os.path.relpath(os.path.join(dirpath, fn), ROOT).replace(os.sep, '/')
             if rel in EXCLUDE_FILES or fn.startswith('_'):
+                continue
+            # Vendored game folders are byte-for-byte copies of other
+            # projects (see CREDITS.md): their trees are files on disk,
+            # not this repository's own prose. Only proton's wrapper
+            # page (and the games picker itself) speaks for them here,
+            # or one bundled game manual would outrank the desktop.
+            if rel.startswith('apps/games/') and fn != 'app.html' and rel != 'apps/games/index.html':
                 continue
             files.append(rel)
     files.sort()

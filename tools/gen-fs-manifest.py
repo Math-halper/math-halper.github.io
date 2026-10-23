@@ -22,7 +22,9 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, 'data', 'fs-manifest.js')
 SELF = 'data/fs-manifest.js'  # included too — the manifest lists itself
 EXCLUDE_DIRS = {'.git', '.arena', 'node_modules', '__pycache__', '.cache', '.pytest_cache',
-                '.venv', 'dist', 'build', 'coverage', '.next', 'tests'}
+                '.venv', 'tests'}
+# Note: 'dist'/'build'-style names are NOT excluded — vendored games ship
+# real deployed assets under them (apps/games/bitburner/dist is the game).
 
 
 def excluded(name):

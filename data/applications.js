@@ -45,7 +45,7 @@ and single-file HTML5 games). Each game
 app folder is the game's own files plus a thin proton iframe wrapper (see CREDITS.md for provenance), and
 apps/games/index.html is the picker their "all games" links expect.
 
-The start menu groups them by cat=: System (the desktop’s own five), Productivity (Calculator, Files, Text Editor, PDF Viewer), Media (Image Viewer, Media), Tools (Ruffle Flash Player, Web Retro — the players behind the Flash and cartridge games) and Games (89 games: 2048, Bloons Tower Defense 1, Bloons Tower Defense 2, Bloons Tower Defense 5, Bloxorz, Breaking The Bank, Celeste Classic, Celeste Classic 2, Celeste Community, Celeste Classic Practice Mod, Celeste Classic 2 Practice Mod 1.0, Celeste Classic 2 Practice Mod 1.1, Celeste Webek, Celeste Classic Downloads, Cookie Clicker, Drive Mad, Escaping The Prison, Fleeing The Complex, Grey Box Testing, Infiltrating The Airship, Mari0, Offline Paradise, Pacman, Slope, Spacebar Clicker, Stack, Stealing The Diamond, Stickman Hook, Subway Surfers, Super Mario 64, Tetris, The Impossible Quiz, Tunnel Rush, Baldi's Basics, Minesweeper, Flappy Bird, Retro Bowl, Drift Boss, Football Bros, Five Nights at Freddy's, Five Nights at Freddy's 4, Five Nights at Freddy's 2, Five Nights at Freddy's 3, Backrooms, Kart Bros, Geometry Dash Lite, Five Nights at Freddy's: Sister Location). Block order below is menu order within each section.
+The start menu groups them by cat=: System (the desktop’s own five), Productivity (Calculator, Files, Text Editor, PDF Viewer), Media (Image Viewer, Media), Tools (Ruffle Flash Player, Web Retro — the players behind the Flash and cartridge games) and Games (91 games: 2048, Bloons Tower Defense 1, Bloons Tower Defense 2, Bloons Tower Defense 5, Bloxorz, Breaking The Bank, Celeste Classic, Celeste Classic 2, Celeste Community, Celeste Classic Practice Mod, Celeste Classic 2 Practice Mod 1.0, Celeste Classic 2 Practice Mod 1.1, Celeste Webek, Celeste Classic Downloads, Cookie Clicker, Drive Mad, Escaping The Prison, Fleeing The Complex, Grey Box Testing, Infiltrating The Airship, Mari0, Offline Paradise, Pacman, Slope, Spacebar Clicker, Stack, Stealing The Diamond, Stickman Hook, Subway Surfers, Super Mario 64, Tetris, The Impossible Quiz, Tunnel Rush, Baldi's Basics, Minesweeper, Flappy Bird, Retro Bowl, Drift Boss, Football Bros, Five Nights at Freddy's, Five Nights at Freddy's 4, Five Nights at Freddy's 2, Five Nights at Freddy's 3, Backrooms, Kart Bros, Geometry Dash Lite, Five Nights at Freddy's: Sister Location, Q1K3, Space Huggers, Evil Glitch, Minecraft Clone, Black Hole Square, The Maze of Space Goblins, Edge Not Found, Packabunchas, Connect 3, xx142-b2exe, Konnekt, Roadblocks, Asciispace, Calamity, Breakout, Asteroids, Breaklock, Universal Paperclips, Chess, Go (Tenuki), Hextris, Bitcoin Mining Simulator, Space Company, Candy Box, Candy Box 2, Trimps, Digital Logic Simulator, Tunnel Rush (Bad), Celeste Speedrun Training, Big Ice Tower Tiny Square, A Dark Room, Doom, Geometry Dash, Run 3, A Dance of Fire and Ice, Onion's Revenge, Orbital Daggers, Icedodo, Neogolf, Larry's Parkour, Mindustry Classic, Tunnel Glider, Bitburner, Kittens Game). Block order below is menu order within each section.
 
 IMPORTANT: an id must not be a bare number — JavaScript object key ordering
   hoists integer-like keys to the front of every APPS iteration (this is why
@@ -1315,6 +1315,30 @@ svg-icon=true
 cat=Games
 preinstalled=true
 desc=Play Tunnel Glider - speed through the endless tunnel
+w=980
+h=640
+
+[application]
+id=bitburner
+name=Bitburner
+path=apps/games/bitburner/app.html
+icon=terminal
+svg-icon=true
+cat=Games
+preinstalled=true
+desc=Play Bitburner - the hacking programming RPG
+w=980
+h=640
+
+[application]
+id=kittens-game
+name=Kittens Game
+path=apps/games/kittens-game/app.html
+icon=smile
+svg-icon=true
+cat=Games
+preinstalled=true
+desc=Play Kittens Game - build a village of kittens, then reach the stars
 w=980
 h=640
 
