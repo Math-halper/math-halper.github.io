@@ -332,7 +332,8 @@ not be saved.", etc.).
     level at a time) or **From your Files** (the device file picker), and
     **Play ROM**; a saves/CREDITS note sits under the grid;
   - launching swaps the window to the emulator; **Change game** in the app bar
-    returns to the chooser. Control bindings persist between games:
+    brings up the chooser (the **Roms** area) again, and so does the
+    emulator's own menu-bar back arrow. Control bindings persist between games:
     keys set in the emulator's **Controls → Keybinds** manager (press
     **Save**) or in RetroArch's own menu (Settings → Input, then quit
     RetroArch or save the current configuration) are kept and reapplied

@@ -86,6 +86,18 @@ registerApp({
     const main = body.querySelector('#wr-main');
     const again = body.querySelector('#wr-again');
 
+    /* The emulator's own back arrow (its menu bar) cannot take the
+     * frame anywhere useful — the page it linked to upstream is not
+     * shipped, so it 404'd — so launch.html posts "webretro-back"
+     * here instead, and we show the game chooser (the Roms area)
+     * again, exactly like Change game. Only trust the message when it
+     * comes from this window's own emulator frame. */
+    window.addEventListener('message', (event) => {
+      if (!event.data || event.data.type !== 'webretro-back') return;
+      const frame = main.querySelector('#wr-frame');
+      if (frame && event.source === frame.contentWindow) picker();
+    });
+
     /* Same 10-letter channel name the Gams launcher generates. */
     function channelName() {
       const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';

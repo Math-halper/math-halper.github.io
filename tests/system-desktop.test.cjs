@@ -1085,6 +1085,37 @@ test('the desktop boots, lists and opens all catalogued apps', async () => {
     w.__wrCh.onmessage({ data: { status: 'ready' } });
     assert.equal(chSent.length, 1, 'the launch page should get the ROM over the channel');
     assert.equal(chSent[0].rom.name, 'nes-rom.nes');
+    // The emulator's own back arrow posts webretro-back from inside the
+    // frame (the page it linked to upstream is not shipped and 404'd):
+    // the launcher answers by showing the Roms area again.
+    const backEvent = new w.MessageEvent('message', { data: { type: 'webretro-back' } });
+    Object.defineProperty(backEvent, 'source', { value: frame.contentWindow });
+    w.dispatchEvent(backEvent);
+    assert.ok(!retro.querySelector('#wr-frame'), 'the emulator back arrow should unframe the emulator');
+    assert.match(retro.querySelector('.wr-panel h3').textContent, /Roms/, 'the emulator back arrow should show the Roms area');
+    assert.equal(retro.querySelector('#wr-again').hidden, true, 'Change game hides again in the chooser');
+    // Play the same ROM once more, then Change game in the app bar
+    // lands in the same Roms area.
+    retro.querySelector('[data-core="nestopia"]').click();
+    retro.querySelector('[data-src="vfs"]').click();
+    // the proton Files browser is still in Downloads from the first run;
+    // from the home folder it is one click further away
+    let rowAgain = [...retro.querySelectorAll('[data-file]')].find((b) => b.dataset.file.endsWith('nes-rom.nes'));
+    if (!rowAgain) {
+      const dlAgain = [...retro.querySelectorAll('[data-dir]')].find((b) => b.dataset.dir.endsWith('/Downloads'));
+      assert.ok(dlAgain, 'proton Files should still show the Downloads folder');
+      dlAgain.click();
+      rowAgain = [...retro.querySelectorAll('[data-file]')].find((b) => b.dataset.file.endsWith('nes-rom.nes'));
+    }
+    assert.ok(rowAgain, 'proton Files should still list the imported ROM');
+    rowAgain.click();
+    retro.querySelector('#wr-play').click();
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    assert.ok(retro.querySelector('#wr-frame'), 'Play should frame the emulator again');
+    assert.equal(retro.querySelector('#wr-again').hidden, false, 'Change game shows while a game runs');
+    retro.querySelector('#wr-again').click();
+    assert.ok(!retro.querySelector('#wr-frame'), 'Change game should unframe the emulator');
+    assert.match(retro.querySelector('.wr-panel h3').textContent, /Roms/, 'Change game should show the Roms area');
     w.closeWin('web-retro', true);
 
     // Every open/save asks which file system to use: "your Files" (this
@@ -1467,6 +1498,23 @@ test('Web Retro keeps control bindings between games', () => {
     'bindings are harvested on pagehide too');
   assert.ok(/function persistKeybindsFromConfig\(\) \{[\s\S]*?localStorage\.setItem\("RetroArch_settings_keybinds", configObjToStr\(savedKeybindsObj\)\)/.test(src),
     'harvested bindings land in the keybind store the startup config is written from');
+});
+
+/* The emulator's menu-bar back arrow must not navigate the frame:
+ * upstream it links to "." (webretro's core-select page), which proton
+ * does not ship, so clicking it showed a 404. Instead launch.html
+ * posts webretro-back and the launcher shows the Roms area, the same
+ * place Change game goes. */
+test('Web Retro back arrow returns to the chooser instead of a 404', () => {
+  const launch = fs.readFileSync(path.join(ROOT, 'apps/tools/web-retro/webretro/launch.html'), 'utf8');
+  assert.ok(!launch.includes('<li class="menuback"><a href="."'), 'the back arrow must not link to the unshipped core-select page');
+  assert.ok(launch.includes('postMessage({type: "webretro-back"}, "*")'),
+    'the back arrow tells the launcher to show the game chooser');
+  const app = fs.readFileSync(path.join(ROOT, 'apps/tools/web-retro/app.html'), 'utf8');
+  assert.ok(app.includes("event.data.type !== 'webretro-back'") && app.includes('event.source === frame.contentWindow'),
+    'the launcher returns to the chooser only for its own emulator frame');
+  assert.ok(app.includes("again.addEventListener('click', picker);"),
+    'Change game brings up the same chooser (the Roms area)');
 });
 
 /* proton's own UI draws artwork with its SVG icon set and raster images,
