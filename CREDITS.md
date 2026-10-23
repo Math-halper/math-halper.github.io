@@ -105,9 +105,13 @@ content.
 
 ## Vendored cover video
 
-`assets/youare.mp4` is the looping *You Are An Idiot* video used by the
-cover's bottom **Continue to Math Helper** button, copied directly into this
-repository from the `media/youare.mp4` file in the
+`assets/youare.mp4` is the looping *You Are An Idiot* video formerly used
+by the cover's removed bottom-button trap. The cover trap stays removed;
+the file is retained in this repository and is now played only inside
+the fake desktop by the not-preinstalled **You Are An Idiot** app
+(`apps/tools/you-are-an-idiot/`), which reproduces the old menace —
+bouncing, breeding windows and the song — entirely within proton. It was copied directly into this repository
+from the `media/youare.mp4` file in the
 [Mist0090/youareanidiot.cc](https://github.com/Mist0090/youareanidiot.cc)
 mirror of [youareanidiot.cc](https://youareanidiot.cc/). All rights in the
 video and its audio remain with their original creators; this repository
@@ -260,6 +264,38 @@ endless-runner by [Rohan Chacko](https://github.com/RohanChacko/Subway-Surfers)
   edited; the game's own page runs as-is inside the wrapper's frame.
 - The app icon is the game's own `player.png` sprite, squared onto a
   transparent 250×250 canvas as `data/icons/subway-surfers.png`.
+
+## Vendored Exst Arcade games (proton-arcade batch)
+
+Fourteen games were copied from
+[proton-arcade/proton-arcade.github.io](https://github.com/proton-arcade/proton-arcade.github.io)
+(the "Exst Arcade" site), each into `apps/games/<id>/`: Baldi's
+Basics, Minesweeper, Flappy Bird, Retro Bowl, Drift Boss, Football Bros,
+Five Nights at Freddy's 1–4 and Sister Location, Backrooms, Kart Bros and
+Geometry Dash Lite. For every one of them:
+
+- The game files (`index.html`, `icon.png`) are copied byte-for-byte from
+  `website/games/<folder>` in that repository; nothing was edited. Their
+  `icon.png` also serves as the catalog icon at `data/icons/<id>.png`.
+- Each app folder adds only proton's `app.html` wrapper, which frames the
+  game's own `index.html` unsandboxed like every other vendored game.
+- Two source folders omit files their pages reference, so those were
+  supplied from the game's own icon to keep nothing missing:
+  `football-bros` gained `favicon.png`, `manifest.json` and
+  `assets/bw_logo.gif`, and `kart-bros` gained `manifest.json`.
+  `football-bros/index.html` also framed remote pages twice (a Google
+  Tag Manager tracking iframe and an email-signup overlay the game
+  injects); both snippets were removed so no shipped game page frames
+  a remote page. Those are the only edits made to any of the fourteen
+  game pages.
+- The remaining game on that site, Ampler Launcher (an Eaglercraft
+  launcher bundling eight separate Minecraft client pages, ~116 MB), was
+  not vendored: this repository's rule is that every game page under
+  `apps/games/` is its own catalogued game. Its `Granny` and `Pong`
+  folders are not listed on the site or in its catalog, so they were not
+  added either.
+- All rights in these games remain with their original creators; this
+  repository grants no rights in that content.
 
 ## Vendored emulator (Web Retro)
 

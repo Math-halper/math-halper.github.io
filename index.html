@@ -26,19 +26,21 @@
   <div class="boot-bar"><i></i></div>
 </div>
 
-<!-- Math Helper cover page. This is the public, IXL-style cover shown
-     before the real proton website. It gives no indication that anything
-     is unavailable: the practice controls simply do nothing. The header
-     Sign in control is checked by assets/boot.js before the desktop is
-     shown. -->
+<!-- Math Helper cover page. This is the public, IXL-style learning site
+     shown before the proton website. Its ordinary controls are a working
+     maths-practice app (assets/math-helper.js): search, grade browsing,
+     adaptive practice, a diagnostic, recommendations, awards, analytics,
+     membership and a password-checked waitlist all run locally. The header
+     Sign in control remains the separate desktop gate checked by
+     assets/boot.js. -->
 <main id="cover" class="cover" aria-label="Math Helper cover page">
   <header class="cover-header">
-    <button type="button" class="cover-logo cover-decoy" aria-label="Math Helper home">Math <span>Helper</span></button>
+    <button type="button" class="cover-logo" data-cover-action="home" aria-label="Math Helper home">Math <span>Helper</span></button>
     <nav class="cover-nav" aria-label="Cover navigation">
-      <button type="button" class="cover-decoy">Learning</button>
-      <button type="button" class="cover-decoy">Diagnostic</button>
-      <button type="button" class="cover-decoy">Analytics</button>
-      <button type="button" class="cover-decoy">Membership</button>
+      <button type="button" data-cover-nav="learning">Learning</button>
+      <button type="button" data-cover-nav="diagnostic">Diagnostic</button>
+      <button type="button" data-cover-nav="analytics">Analytics</button>
+      <button type="button" data-cover-nav="membership">Membership</button>
     </nav>
     <form id="cover-search" class="cover-header-search">
       <label class="cover-sr" for="cover-q">Search skills</label>
@@ -53,88 +55,87 @@
       <h1>Practice that helps every learner grow</h1>
       <p>Explore thousands of maths skills, personalised recommendations and step-by-step explanations — all organised by grade and topic.</p>
       <div class="cover-hero-actions">
-        <button type="button" class="cover-btn cover-btn-primary cover-decoy">Start practicing</button>
-        <button type="button" class="cover-btn cover-btn-quiet cover-decoy">Take a diagnostic</button>
+        <button type="button" class="cover-btn cover-btn-primary" data-cover-action="start-practice">Start practicing</button>
+        <button type="button" class="cover-btn cover-btn-quiet" data-cover-action="start-diagnostic">Take a diagnostic</button>
       </div>
     </div>
     <aside class="cover-panel" aria-label="Today's recommendations">
       <div class="cover-panel-head"><h2>Today for you</h2><span class="cover-badge">Recommended</span></div>
-      <div class="cover-rec">
-        <div><strong>Multiply fractions</strong><small>Grade 5 · Number sense</small></div><span>72%</span>
-      </div>
-      <div class="cover-progress"><i style="width:72%"></i></div>
-      <div class="cover-rec">
-        <div><strong>Solve two-step equations</strong><small>Grade 7 · Algebra</small></div><span>45%</span>
-      </div>
-      <div class="cover-progress"><i style="width:45%"></i></div>
-      <button type="button" class="cover-btn cover-btn-primary cover-decoy">Resume practice</button>
+      <button type="button" class="cover-rec" data-cover-skill="multiply-fractions">
+        <span><strong>Multiply fractions</strong><small>Grade 5 · Fractions</small></span><span data-progress-label-for="multiply-fractions">72%</span>
+      </button>
+      <div class="cover-progress" data-progress-for="multiply-fractions"><i style="width:72%"></i></div>
+      <button type="button" class="cover-rec" data-cover-skill="two-step-equations">
+        <span><strong>Solve two-step equations</strong><small>Grade 7 · Algebra</small></span><span data-progress-label-for="two-step-equations">45%</span>
+      </button>
+      <div class="cover-progress" data-progress-for="two-step-equations"><i style="width:45%"></i></div>
+      <button type="button" class="cover-btn cover-btn-primary" data-cover-action="resume">Resume practice</button>
       <p class="cover-fineprint">Recommendations update as you practice.</p>
     </aside>
   </section>
 
+  <!-- Working Math Helper workspace: search results, grade pages, practice,
+       diagnostics, recommendations, awards, analytics, membership and
+       information pages are rendered here by assets/math-helper.js. -->
+  <section id="math-helper-workspace" class="cover-workspace" hidden aria-live="polite"></section>
+
   <section class="cover-section" aria-labelledby="cover-grades-title">
-    <div class="cover-section-head"><h2 id="cover-grades-title">Explore by grade</h2><button type="button" class="cover-text-btn cover-decoy">See all grades</button></div>
+    <div class="cover-section-head"><h2 id="cover-grades-title">Explore by grade</h2><button type="button" class="cover-text-btn" data-cover-action="all-grades">See all grades</button></div>
     <div class="cover-grades">
-      <button type="button" class="cover-decoy"><strong>Pre-K</strong><small>126 skills</small></button>
-      <button type="button" class="cover-decoy"><strong>K</strong><small>214 skills</small></button>
-      <button type="button" class="cover-decoy"><strong>1</strong><small>268 skills</small></button>
-      <button type="button" class="cover-decoy"><strong>2</strong><small>301 skills</small></button>
-      <button type="button" class="cover-decoy"><strong>3</strong><small>356 skills</small></button>
-      <button type="button" class="cover-decoy"><strong>4</strong><small>389 skills</small></button>
-      <button type="button" class="cover-decoy"><strong>5</strong><small>421 skills</small></button>
-      <button type="button" class="cover-decoy"><strong>6</strong><small>398 skills</small></button>
-      <button type="button" class="cover-decoy"><strong>7</strong><small>365 skills</small></button>
-      <button type="button" class="cover-decoy"><strong>8</strong><small>342 skills</small></button>
-      <button type="button" class="cover-decoy"><strong>9</strong><small>318 skills</small></button>
-      <button type="button" class="cover-decoy"><strong>10</strong><small>296 skills</small></button>
-      <button type="button" class="cover-decoy"><strong>11</strong><small>274 skills</small></button>
-      <button type="button" class="cover-decoy"><strong>12</strong><small>251 skills</small></button>
+      <button type="button" data-grade="Pre-K"><strong>Pre-K</strong><small>126 skills</small></button>
+      <button type="button" data-grade="K"><strong>K</strong><small>214 skills</small></button>
+      <button type="button" data-grade="1"><strong>1</strong><small>268 skills</small></button>
+      <button type="button" data-grade="2"><strong>2</strong><small>301 skills</small></button>
+      <button type="button" data-grade="3"><strong>3</strong><small>356 skills</small></button>
+      <button type="button" data-grade="4"><strong>4</strong><small>389 skills</small></button>
+      <button type="button" data-grade="5"><strong>5</strong><small>421 skills</small></button>
+      <button type="button" data-grade="6"><strong>6</strong><small>398 skills</small></button>
+      <button type="button" data-grade="7"><strong>7</strong><small>365 skills</small></button>
+      <button type="button" data-grade="8"><strong>8</strong><small>342 skills</small></button>
+      <button type="button" data-grade="9"><strong>9</strong><small>318 skills</small></button>
+      <button type="button" data-grade="10"><strong>10</strong><small>296 skills</small></button>
+      <button type="button" data-grade="11"><strong>11</strong><small>274 skills</small></button>
+      <button type="button" data-grade="12"><strong>12</strong><small>251 skills</small></button>
     </div>
   </section>
 
   <section class="cover-section" aria-labelledby="cover-skills-title">
-    <div class="cover-section-head"><h2 id="cover-skills-title">Popular maths skills</h2><button type="button" class="cover-text-btn cover-decoy">See all skills</button></div>
+    <div class="cover-section-head"><h2 id="cover-skills-title">Popular maths skills</h2><button type="button" class="cover-text-btn" data-cover-action="all-skills">See all skills</button></div>
     <div class="cover-skill-grid">
-      <article class="cover-skill"><span class="cover-skill-tag">Fractions</span><h3>Add and subtract fractions</h3><p>Practice with like and unlike denominators.</p><div class="cover-progress"><i style="width:72%"></i></div><button type="button" class="cover-btn cover-decoy">Start skill</button></article>
-      <article class="cover-skill"><span class="cover-skill-tag">Multiplication</span><h3>Times tables up to 12</h3><p>Build speed and accuracy with timed practice.</p><div class="cover-progress"><i style="width:46%"></i></div><button type="button" class="cover-btn cover-decoy">Start skill</button></article>
-      <article class="cover-skill"><span class="cover-skill-tag">Algebra</span><h3>Solve linear equations</h3><p>Balance equations one step at a time.</p><div class="cover-progress"><i style="width:63%"></i></div><button type="button" class="cover-btn cover-decoy">Start skill</button></article>
-      <article class="cover-skill"><span class="cover-skill-tag">Geometry</span><h3>Area and perimeter</h3><p>Work with rectangles, triangles and circles.</p><div class="cover-progress"><i style="width:28%"></i></div><button type="button" class="cover-btn cover-decoy">Start skill</button></article>
-      <article class="cover-skill"><span class="cover-skill-tag">Decimals</span><h3>Place value to thousandths</h3><p>Read, compare and round decimal numbers.</p><div class="cover-progress"><i style="width:84%"></i></div><button type="button" class="cover-btn cover-decoy">Start skill</button></article>
-      <article class="cover-skill"><span class="cover-skill-tag">Statistics</span><h3>Mean, median and mode</h3><p>Summarise data sets and read simple charts.</p><div class="cover-progress"><i style="width:57%"></i></div><button type="button" class="cover-btn cover-decoy">Start skill</button></article>
+      <article class="cover-skill"><span class="cover-skill-tag">Fractions</span><h3>Add and subtract fractions</h3><p>Practice with like and unlike denominators.</p><div class="cover-progress" data-progress-for="add-subtract-fractions"><i style="width:72%"></i></div><button type="button" class="cover-btn" data-cover-skill="add-subtract-fractions">Start skill</button></article>
+      <article class="cover-skill"><span class="cover-skill-tag">Multiplication</span><h3>Times tables up to 12</h3><p>Build speed and accuracy with timed practice.</p><div class="cover-progress" data-progress-for="times-tables"><i style="width:46%"></i></div><button type="button" class="cover-btn" data-cover-skill="times-tables">Start skill</button></article>
+      <article class="cover-skill"><span class="cover-skill-tag">Algebra</span><h3>Solve linear equations</h3><p>Balance equations one step at a time.</p><div class="cover-progress" data-progress-for="linear-equations"><i style="width:63%"></i></div><button type="button" class="cover-btn" data-cover-skill="linear-equations">Start skill</button></article>
+      <article class="cover-skill"><span class="cover-skill-tag">Geometry</span><h3>Area and perimeter</h3><p>Work with rectangles, triangles and circles.</p><div class="cover-progress" data-progress-for="area-perimeter"><i style="width:28%"></i></div><button type="button" class="cover-btn" data-cover-skill="area-perimeter">Start skill</button></article>
+      <article class="cover-skill"><span class="cover-skill-tag">Decimals</span><h3>Place value to thousandths</h3><p>Read, compare and round decimal numbers.</p><div class="cover-progress" data-progress-for="decimal-place-value"><i style="width:84%"></i></div><button type="button" class="cover-btn" data-cover-skill="decimal-place-value">Start skill</button></article>
+      <article class="cover-skill"><span class="cover-skill-tag">Statistics</span><h3>Mean, median and mode</h3><p>Summarise data sets and read simple charts.</p><div class="cover-progress" data-progress-for="data-summaries"><i style="width:57%"></i></div><button type="button" class="cover-btn" data-cover-skill="data-summaries">Start skill</button></article>
     </div>
   </section>
 
   <section class="cover-band" aria-labelledby="cover-diagnostic-title">
     <div><p class="cover-eyebrow">Diagnostic</p><h2 id="cover-diagnostic-title">Find exactly what to practice next</h2><p>Answer a short set of questions and Math Helper will build a personal action plan for each learner.</p></div>
-    <button type="button" class="cover-btn cover-btn-light cover-decoy">Start diagnostic</button>
+    <button type="button" class="cover-btn cover-btn-light" data-cover-action="start-diagnostic">Start diagnostic</button>
+  </section>
+
+  <section class="cover-band cover-waitlist-band" aria-labelledby="cover-waitlist-title">
+    <div><p class="cover-eyebrow">Waitlist</p><h2 id="cover-waitlist-title">Join the Math Helper waitlist</h2><p>Joining the waitlist takes the site password — having a local account by itself is not enough.</p></div>
+    <button type="button" class="cover-btn cover-btn-light" data-cover-action="waitlist">Join waitlist</button>
   </section>
 
   <section class="cover-section" aria-labelledby="cover-more-title">
     <div class="cover-section-head"><h2 id="cover-more-title">Made for families and classrooms</h2></div>
     <div class="cover-feature-grid">
-      <article><h3>Personal recommendations</h3><p>Skills are suggested from each learner's recent work.</p><button type="button" class="cover-text-btn cover-decoy">View recommendations</button></article>
-      <article><h3>Awards and certificates</h3><p>Milestones celebrate effort, streaks and mastery.</p><button type="button" class="cover-text-btn cover-decoy">See awards</button></article>
-      <article><h3>Progress reports</h3><p>Follow time spent, questions answered and growth by topic.</p><button type="button" class="cover-text-btn cover-decoy">Open analytics</button></article>
+      <article><h3>Personal recommendations</h3><p>Skills are suggested from each learner's recent work.</p><button type="button" class="cover-text-btn" data-cover-action="recommendations">View recommendations</button></article>
+      <article><h3>Awards and certificates</h3><p>Milestones celebrate effort, streaks and mastery.</p><button type="button" class="cover-text-btn" data-cover-action="awards">See awards</button></article>
+      <article><h3>Progress reports</h3><p>Follow time spent, questions answered and growth by topic.</p><button type="button" class="cover-text-btn" data-cover-action="analytics">Open analytics</button></article>
     </div>
   </section>
 
   <footer class="cover-footer">
     <div><strong>Math Helper</strong><p>Maths practice for every grade.</p></div>
-    <div class="cover-footer-links"><button type="button" class="cover-decoy">About</button><button type="button" class="cover-decoy">Help centre</button><button type="button" class="cover-decoy">Membership</button><button type="button" class="cover-decoy">Privacy</button></div>
+    <div class="cover-footer-links"><button type="button" data-cover-action="about">About</button><button type="button" data-cover-action="help">Help centre</button><button type="button" data-cover-action="membership">Membership</button><button type="button" data-cover-action="privacy">Privacy</button></div>
   </footer>
 
-  <section class="cover-entry" aria-labelledby="cover-entry-title">
-    <p class="cover-eyebrow">Math Helper workspace</p>
-    <h2 id="cover-entry-title">Ready when you are</h2>
-    <p>Continue to Math Helper and pick up right where you left off.</p>
-    <button type="button" id="cover-enter" class="cover-enter">Continue to Math Helper</button>
-  </section>
 </main>
-
-<!-- Full-screen looping video trap, opened by the bottom Continue button. -->
-<div id="idiot-lock" class="idiot-lock" hidden aria-hidden="true">
-  <video id="idiot-video" src="assets/youare.mp4" loop playsinline preload="auto"></video>
-</div>
 
 <!-- Auth (first-launch setup / login / lock) is rendered here -->
 <main id="auth" class="auth-wrap" hidden></main>
@@ -165,6 +166,7 @@
 <script src="assets/core.js"></script>
 <script src="assets/desktop-icons.js"></script>
 <script src="assets/html-loader.js"></script>
+<script src="assets/math-helper.js"></script>
 <!-- boot: must load last -->
 <script src="assets/boot.js"></script>
 </body>

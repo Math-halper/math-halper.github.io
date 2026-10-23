@@ -49,8 +49,8 @@ proton menu. The script below is fetched and run by proton's HTML loader
  * Built-in websites are standalone pages in websites/<name>/site.html listed
  * in data/websites.js; they run in a frame and reach this window as
  * window.parent.__protonSiteCtx (openApp / loadExternal / showHome / showSite).
- * The user's own saved websites live in userData and are managed by
- * apps/system/app-center and on the home page below.
+ * Saved websites/apps in account data are not listed here or in App
+ * Center any more; the home page below shows only built-in websites.
  */
 'use strict';
 
@@ -65,7 +65,7 @@ registerApp({
 
     /* proton's own pages: what the bar completes and search can return. */
     const PAGES = [
-      { url: HOME, name: 'Home', desc: 'The Browser start page: search, built-in websites and your own saved websites' },
+      { url: HOME, name: 'Home', desc: 'The Browser start page: search and built-in websites' },
       { url: 'proton://search', name: 'Search', desc: 'Search this repository with proton’s own search index' },
       { url: 'proton://bookmarks', name: 'Bookmarks', desc: 'The pages you starred, saved with this account' },
       { url: 'proton://history', name: 'History', desc: 'What this Browser visited recently, saved with this account' },
@@ -442,8 +442,7 @@ registerApp({
         <h3>${iconSvg('book')} Built-in websites</h3>${siteList.length ? `<div class="grid-cards">
         ${siteList.map((s) => `<div class="card"><div class="card-ic" style="font-size:24px">${catalogIconFor(s.icon, s.svgIcon !== false, 'globe')}</div><h3 style="margin:5px 0 3px">${MH.esc(s.name)}</h3><p class="muted">${MH.esc(s.desc || '')}</p><button class="btn primary" data-site="${s.id}">Visit</button></div>`).join('')}
         </div>` : '<p class="muted">No built-in websites are catalogued right now. Add a page under <span class="kbd">websites/&lt;name&gt;/site.html</span> plus one <span class="kbd">[website]</span> block in <span class="kbd">data/websites.js</span> and it appears here.</p>'}
-        <h3 style="margin-top:20px">${iconSvg('globe')} Your websites</h3><div class="grid-cards" id="b-sites"></div>
-        <p class="muted" style="margin-top:14px">Adding websites is disabled. Type any address in the bar above to visit it without saving it, or open an HTML file from the virtual file system with <span class="kbd">file:///path/to/page.html</span>.</p>
+        <p class="muted" style="margin-top:14px">Type any address in the bar above to visit it without saving it, or open an HTML file from the virtual file system with <span class="kbd">file:///path/to/page.html</span>.</p>
       </div>`;
       tab.el.querySelectorAll('[data-site]').forEach((b) => b.onclick = () => navigate(tab, 'proton://' + b.dataset.site));
       tab.el.querySelector('#b-startform').onsubmit = (e) => {
@@ -454,21 +453,6 @@ registerApp({
       tab.el.querySelectorAll('[data-q]').forEach((b) => b.onclick = () => navigate(tab, searchUrl(b.dataset.q)));
       tab.el.querySelectorAll('[data-go]').forEach((b) => b.onclick = () => navigate(tab, b.dataset.go));
       tab.el.querySelectorAll('[data-app]').forEach((b) => b.onclick = () => openApp(b.dataset.app));
-      const sitesBox = tab.el.querySelector('#b-sites');
-      sitesBox.innerHTML = userData.websites.length ? userData.websites.map((s) => `
-        <div class="card"><div class="card-ic" style="font-size:24px">${catalogIconFor(s.icon, s.svgIcon !== false, 'globe')}</div><h3 style="margin:5px 0 3px">${MH.esc(s.name)}</h3>
-        <p class="muted site-url">${MH.esc(s.url)}</p><button class="btn sm primary" data-open="${s.id}">Open</button>
-        <button class="btn sm" data-del="${s.id}">Remove</button></div>`).join('')
-        : '<p class="muted">No websites saved on this account. Adding websites is disabled.</p>';
-      sitesBox.querySelectorAll('[data-open]').forEach((b) => b.onclick = () => {
-        const s = userData.websites.find((x) => x.id === b.dataset.open);
-        if (s) loadExternal(tab, s.url);
-      });
-      sitesBox.querySelectorAll('[data-del]').forEach((b) => b.onclick = () => {
-        userData.websites = userData.websites.filter((x) => x.id !== b.dataset.del);
-        saveData();
-        showHome(tab);
-      });
       later(() => tab.el.querySelector('#b-startq')?.focus(), 0);
     }
 

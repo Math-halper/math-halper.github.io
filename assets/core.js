@@ -50,6 +50,19 @@ function normalizeUserData() {
   const LEGACY_APP_IDS = { math: 'calculator', 'pdf-viewer': 'pdf' };
   userData.settings.pinned = userData.settings.pinned.map((id) => LEGACY_APP_IDS[id] || id);
   userData.hiddenApps = userData.hiddenApps.map((id) => LEGACY_APP_IDS[id] || id);
+  /* Apps the catalog marks preinstalled=false are not on the desktop until
+   * the user adds them in App Center. Until then they sit in hiddenApps;
+   * installing remembers the choice in installedApps so this does not
+   * hide them again on the next load. */
+  userData.installedApps ||= [];
+  for (const app of Object.values(APPS)) {
+    if (!app || app.preinstalled !== false || dynamicAppIds.has(app.id)) continue;
+    if (userData.installedApps.includes(app.id)) {
+      userData.hiddenApps = userData.hiddenApps.filter((x) => x !== app.id);
+    } else if (!userData.hiddenApps.includes(app.id)) {
+      userData.hiddenApps.push(app.id);
+    }
+  }
   /* Missing means an older account: give it the same initial shortcuts as a
    * new account. An empty array is deliberate (the user cleared the desktop).
    * Older versions also saved desktopApps as app ids; preserve that choice. */
@@ -449,8 +462,8 @@ function enterDesktop() {
   MH.$('tray-user').onclick = () => openApp('settings');
   MH.$('tray-lock').onclick = lockDesktop;
   tickClock(); clearInterval(clockTimer); clockTimer = setInterval(tickClock, 15000);
-  if (!sessionStorage.getItem('mhOS.welcomed.' + currentUser.usernameLower)) {
-    sessionStorage.setItem('mhOS.welcomed.' + currentUser.usernameLower, '1');
+  if (!sessionStorage.getItem('proton2.welcomed.' + currentUser.usernameLower)) {
+    sessionStorage.setItem('proton2.welcomed.' + currentUser.usernameLower, '1');
     setTimeout(() => MH.toast(`Welcome${userData.counters.windowsOpened ? ' back' : ''}, ${currentUser.displayName}! Everything is saved on this device.`), 650);
   }
 }
@@ -662,7 +675,7 @@ function renderLock() {
  * submitting it creates the profile and enters the desktop. Once an
  * account exists, boot.js lets Sign in straight through to here with no
  * password, so an existing account always lands on its desktop. */
-const DESKTOP_PROFILE_KEY = 'mhOS.desktopProfile.v1';
+const DESKTOP_PROFILE_KEY = 'proton2.desktopProfile.v1';
 async function enterSiteDesktop() {
   MH.setSession('');
   const accounts = MH.accounts();

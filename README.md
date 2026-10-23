@@ -169,22 +169,42 @@ runtime dependencies or build step. Optional regression tests use jsdom:
 
 The site opens on a **Math Helper** cover page styled like a school maths
 practice site (the `cover` markup in `index.html`, styled in
-`assets/styles.css`). It gives no indication that anything is wrong — no
-outage banner, error labels or empty progress bars — but its practice
-buttons and links simply do nothing. To enter the real proton website the
-first time, type the desktop password into the header search bar beside
-**Sign in** and click **Sign in**; that leads to the **Create your
-account** page. Once an account has been created on that device, entering
-the password is no longer needed — just click **Sign in** and the desktop
-reopens. The main page area has no password entry, and (before an account
-exists) a wrong password gets no visible response either. The **Continue to Math
-Helper** button at the very bottom does not enter the desktop: it locks the
-page on the full-screen, full-volume looping *You Are An Idiot* video in
-`assets/youare.mp4`, vendored directly into this repository. Pressing
-Escape is captured where the browser supports Keyboard Lock, and otherwise
-the trap spams full-screen requests (a 100ms loop, plus a burst on every
-Escape press, key press, click and tab/window refocus) so the first moment
-the browser allows re-entry, the video is back in full screen.
+`assets/styles.css`, with the learning app in `assets/math-helper.js`).
+The cover is a complete local practice site: the header search finds
+skills, Learning opens personal recommendations, grade buttons and skill
+cards start generated practice questions with instant marking and
+explanations, the diagnostic builds a saved action plan, and Analytics,
+Awards, Membership, About, Help centre and Privacy all open working pages.
+Cover learning progress and waitlist entries are stored on this device
+under `proton2.math-helper.v1`.
+
+Joining the waitlist is separate from having an account: the waitlist form
+(name, email and Family/Classroom plan) only adds an entry after the site
+password from `data/password.txt` is entered correctly. A wrong or missing
+password adds nobody, and creating or signing in to a desktop account
+never waitlists anyone on its own.
+
+One control keeps its separate behaviour. To enter the real proton
+website the first time, type the desktop password into the header search
+bar beside **Sign in** and click **Sign in**; that leads to the **Create
+your account** page. Once an account has been created on that device,
+entering the password is no longer needed — just click **Sign in** and the
+desktop reopens. Submitting the search form itself only searches skills.
+The main page area has no password entry, and (before an account exists)
+a wrong password gets no visible response either.
+
+The old bottom "Continue to Math Helper" entry band and its full-screen
+video trap have been removed entirely — no control reveals, plays or
+fullscreens the video any more. The media file itself stays in the
+repository, unused, at `assets/youare.mp4`.
+
+The desktop storage system has also been replaced. Current accounts and
+per-account state live under the `proton2.*` localStorage namespace
+(`proton2.accounts.v1`, `proton2.user.<name>.v1` and
+`proton2.desktopProfile.v1`). When the site loads, every old `mhOS.*` key
+is deleted from local and session storage before accounts are read, so
+accounts created under the previous system no longer work and must be
+created again.
 
 ## Desktop password
 
@@ -300,8 +320,9 @@ Bookmarks and history are per-account data (`userData.bookmarks`,
 - **Menu sections** — the start menu groups the apps by `cat=`: **System**
   (App Center, Customize, Settings, About, Browser), **Productivity**
   (Calculator, Files, Text Editor, PDF Viewer), **Media** (Image Viewer,
-  Media), **Tools** (Ruffle Flash Player, Web Retro) and **Games** (28 games: 2048, the Bloons TD series, the Henry Stickmin
-  series, Pacman, Tetris, Slope, Tunnel Rush and more), with **My Apps** for
+  Media), **Tools** (Ruffle Flash Player, Web Retro, plus the not-preinstalled
+  You Are An Idiot once installed) and **Games** (48 games: 2048, the Bloons TD series, the Henry Stickmin
+  series, Pacman, Tetris, Slope, Tunnel Rush, the Exst Arcade batch below and more), with **My Apps** for
   anything an account adds. The order is `CATS` in `assets/core.js`.
 - **Search** — the Browser's bar searches *this repository* with proton's own
   engine (`assets/search.js` over the generated `data/search-index.js`): tabs,
@@ -324,9 +345,11 @@ Bookmarks and history are per-account data (`userData.bookmarks`,
 - **Everything is the static website — no adding websites.** Apps are built
   into this static site; there is no way to add a website or create an app
   from a web address in the UI. The Browser can still visit an address typed
-  into its bar without saving it, and anything already saved on an account
-  (custom apps, websites) stays openable and removable in App Center and the
-  Browser. Mail, Team Chat, Meetings, G-Talk and Admin Vault were removed
+  into its bar without saving it. The Browser start page and App Center no
+  longer list an account's saved apps or saved websites ("Your apps" /
+  "Your websites" sections are gone); saved data stays untouched in the
+  account, and saved web-apps remain launchable from the menu as before.
+  Mail, Team Chat, Meetings, G-Talk and Admin Vault were removed
   earlier; the rest of the old bundles were removed with them, apart from the
   file system suite (Files, Text Editor, Image Viewer, Media, PDF Viewer),
   which is copied back from `main`. All saved per account.

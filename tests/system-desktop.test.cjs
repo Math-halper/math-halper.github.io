@@ -23,7 +23,7 @@ const source = (p) => fs.readFileSync(path.join(ROOT, p), 'utf8');
 const FS_APPS = ['files', 'text-editor', 'image-viewer', 'media', 'pdf'];
 const SYSTEM_APPS = ['appcenter', 'customize', 'settings', 'about', 'browser',
   'calculator', 'files', 'text-editor', 'pdf', 'image-viewer', 'media',
-  'ruffle-flash-player', 'web-retro',
+  'ruffle-flash-player', 'web-retro', 'you-are-an-idiot',
   'game-2048',
   'bloons-tower-defense-1',
   'bloons-tower-defense-2',
@@ -57,7 +57,22 @@ const SYSTEM_APPS = ['appcenter', 'customize', 'settings', 'about', 'browser',
   'super-mario-rpg',
   'tetris',
   'the-impossible-quiz',
-  'tunnel-rush'];
+  'tunnel-rush',
+  'baldis-basics',
+  'minesweeper',
+  'flappy-bird',
+  'retro-bowl',
+  'drift-boss',
+  'football-bros',
+  'five-nights-at-freddys-1',
+  'five-nights-at-freddys-4',
+  'five-nights-at-freddys-2',
+  'five-nights-at-freddys-3',
+  'backrooms',
+  'kart-bros',
+  'geometry-dash-lite',
+  'five-nights-at-freddys-sl',
+];
 
 /* Menu sections for each app (data/applications.js cat=), in catalog order.
  * Every new app is filed here with its respective section — the catalog test
@@ -103,6 +118,21 @@ const SYSTEM_CATS = {
   'the-impossible-quiz': 'Games',
   'tunnel-rush': 'Games',
   'web-retro': 'Tools',
+  'you-are-an-idiot': 'Tools',
+  'baldis-basics': 'Games',
+  'minesweeper': 'Games',
+  'flappy-bird': 'Games',
+  'retro-bowl': 'Games',
+  'drift-boss': 'Games',
+  'football-bros': 'Games',
+  'five-nights-at-freddys-1': 'Games',
+  'five-nights-at-freddys-4': 'Games',
+  'five-nights-at-freddys-2': 'Games',
+  'five-nights-at-freddys-3': 'Games',
+  'backrooms': 'Games',
+  'kart-bros': 'Games',
+  'geometry-dash-lite': 'Games',
+  'five-nights-at-freddys-sl': 'Games',
 };
 /* Each game app frames the game page that ships in its own folder. */
 const GAME_PAGES = {
@@ -140,6 +170,20 @@ const GAME_PAGES = {
   'tetris': 'apps/games/tetris/tetris.html',
   'the-impossible-quiz': 'apps/games/the-impossible-quiz/theimpossiblequiz.html',
   'tunnel-rush': 'apps/games/tunnel-rush/tunnelrush.html',
+  'baldis-basics': 'apps/games/baldis-basics/index.html',
+  'minesweeper': 'apps/games/minesweeper/index.html',
+  'flappy-bird': 'apps/games/flappy-bird/index.html',
+  'retro-bowl': 'apps/games/retro-bowl/index.html',
+  'drift-boss': 'apps/games/drift-boss/index.html',
+  'football-bros': 'apps/games/football-bros/index.html',
+  'five-nights-at-freddys-1': 'apps/games/five-nights-at-freddys-1/index.html',
+  'five-nights-at-freddys-4': 'apps/games/five-nights-at-freddys-4/index.html',
+  'five-nights-at-freddys-2': 'apps/games/five-nights-at-freddys-2/index.html',
+  'five-nights-at-freddys-3': 'apps/games/five-nights-at-freddys-3/index.html',
+  'backrooms': 'apps/games/backrooms/index.html',
+  'kart-bros': 'apps/games/kart-bros/index.html',
+  'geometry-dash-lite': 'apps/games/geometry-dash-lite/index.html',
+  'five-nights-at-freddys-sl': 'apps/games/five-nights-at-freddys-sl/index.html',
 };
 /* Games whose pages carry the source sites' href="../" all-games link. */
 const PICKER_LINKED = ['celeste-classic', 'celeste-two', 'celeste-community', 'cookie-clicker', 'sm64'];
@@ -219,12 +263,21 @@ test('the catalog is the desktop apps, the file system suite, a calculator, web 
     'tetris': 'data/icons/tetris.png',
     'the-impossible-quiz': 'data/icons/the-impossible-quiz.png',
     'tunnel-rush': 'data/icons/tunnel-rush.png',
-    'web-retro': 'data/icons/webretro.png' };
+    'web-retro': 'data/icons/webretro.png', 'baldis-basics': 'data/icons/baldis-basics.png', 'minesweeper': 'data/icons/minesweeper.png', 'flappy-bird': 'data/icons/flappy-bird.png', 'retro-bowl': 'data/icons/retro-bowl.png', 'drift-boss': 'data/icons/drift-boss.png', 'football-bros': 'data/icons/football-bros.png', 'five-nights-at-freddys-1': 'data/icons/five-nights-at-freddys-1.png', 'five-nights-at-freddys-4': 'data/icons/five-nights-at-freddys-4.png', 'five-nights-at-freddys-2': 'data/icons/five-nights-at-freddys-2.png', 'five-nights-at-freddys-3': 'data/icons/five-nights-at-freddys-3.png', 'backrooms': 'data/icons/backrooms.png', 'kart-bros': 'data/icons/kart-bros.png', 'geometry-dash-lite': 'data/icons/geometry-dash-lite.png', 'five-nights-at-freddys-sl': 'data/icons/five-nights-at-freddys-sl.png' };
   assert.deepEqual(Array.from(apps, (a) => a.svgIcon), SYSTEM_APPS.map((id) => !RASTER_ICON_APPS[id]));
   const iconById = Object.fromEntries(Array.from(apps, (a) => [a.id, a.icon]));
   for (const [id, icon] of Object.entries(RASTER_ICON_APPS)) {
     assert.equal(iconById[id], icon, `${id} should default to its own cropped art`);
   }
+  /* Every catalog block says whether the app is preinstalled, and the
+   * parser exposes it as a boolean. Everything ships with proton except
+   * the one app marked preinstalled=false (You Are An Idiot). */
+  assert.ok(apps.filter((a) => a.id !== 'you-are-an-idiot').every((a) => a.preinstalled === true),
+    'catalogued apps should be marked as preinstalled unless they opt out');
+  assert.equal(apps.find((a) => a.id === 'you-are-an-idiot')?.preinstalled, false,
+    'the idiot app should be the one app that is not preinstalled');
+  assert.equal((source('data/applications.js').match(/^preinstalled=(true|false)$/gm) || []).length,
+    apps.length + 1, 'every [application] block (and the template) should state preinstalled=');
   assert.deepEqual(Array.from(sites, (s) => s.id), ['test-page']);
   const page = { ...sites[0] };
   assert.equal(page.name, 'Test Page');
@@ -474,17 +527,41 @@ test('the cover search bar and Sign in button gate the desktop with data/passwor
   assert.ok(!index.includes('placeholder="Enter password"'),
     'the main cover area should not show an Enter password field');
   assert.ok(!index.includes('cover-signin cover-decoy'), 'Sign in must not be a dead cover control');
+  assert.ok(!index.includes('cover-decoy'), 'ordinary cover controls must be wired, not decoys');
+  for (const hook of ['data-cover-nav="learning"', 'data-cover-nav="diagnostic"',
+    'data-cover-nav="analytics"', 'data-cover-nav="membership"', 'data-cover-action="start-practice"',
+    'data-cover-action="start-diagnostic"', 'data-cover-action="resume"', 'data-cover-action="all-grades"',
+    'data-cover-action="all-skills"', 'data-cover-action="recommendations"', 'data-cover-action="awards"',
+    'data-cover-action="analytics"', 'data-cover-action="about"', 'data-cover-action="help"',
+    'data-cover-action="privacy"', 'data-cover-action="waitlist"', 'id="math-helper-workspace"', 'data-grade="5"',
+    'data-cover-skill="add-subtract-fractions"']) {
+    assert.ok(index.includes(hook), `the working cover should include ${hook}`);
+  }
+  assert.ok(index.includes('<script src="assets/math-helper.js"></script>'),
+    'the cover should load the Math Helper learning app');
+  const mathHelper = source('assets/math-helper.js');
+  for (const feature of ['showSearch', 'startPractice', 'startDiagnostic', 'showAnalytics',
+    'showAwards', 'showMembership', 'showWaitlist', 'joinWaitlist', 'waitlist',
+    'window.verifySitePassword', 'MH.MATH_HELPER_KEY']) {
+    assert.ok(mathHelper.includes(feature), `Math Helper should implement ${feature}`);
+  }
+  const store = source('assets/store.js');
+  assert.ok(store.includes('purgeLegacyStorage') && store.includes("LEGACY_STORAGE_PREFIX = 'mhOS.'"),
+    'loading storage should delete the old mhOS storage system');
+  assert.ok(store.includes("ACCOUNTS_KEY: 'proton2.accounts.v1'") &&
+    store.includes("userKey: (u) => `proton2.user.${u}.v1`") &&
+    store.includes("MATH_HELPER_KEY: 'proton2.math-helper.v1'"),
+  'accounts and cover learning should use the new proton2 storage namespace');
   /* The cover must not give any indication that it is broken: no outage
    * banner, no error chip, no unavailable labels, no zeroed progress. */
   for (const sign of ['cover-status', 'Practice is temporarily unavailable', 'MH-503',
     'Skill service offline', 'Recommendations could not be refreshed', '>Unavailable<', 'width:0%']) {
     assert.ok(!index.includes(sign), `the cover should not show "${sign}"`);
   }
-  assert.match(index, /<button type="button" id="cover-enter" class="cover-enter">Continue to Math Helper<\/button>/,
-    'the bottom button should be Continue to Math Helper');
-  assert.match(index, /<video id="idiot-video" src="assets\/youare\.mp4" loop/,
-    'the Continue trap should use the video file vendored in this repository');
-  assert.ok(fs.existsSync(path.join(ROOT, 'assets/youare.mp4')), 'assets/youare.mp4 should be in the repository');
+  assert.ok(!index.includes('id="cover-enter"') && !index.includes('Continue to Math Helper') &&
+    !index.includes('cover-entry') && !index.includes('idiot-lock') && !index.includes('idiot-video'),
+    'the bottom Continue entry band and the video trap markup should be gone');
+  assert.ok(fs.existsSync(path.join(ROOT, 'assets/youare.mp4')), 'assets/youare.mp4 should stay in the repository');
   assert.ok(fs.statSync(path.join(ROOT, 'assets/youare.mp4')).size > 1_000_000,
     'assets/youare.mp4 should contain the real video, not a placeholder');
   const boot = source('assets/boot.js');
@@ -494,12 +571,11 @@ test('the cover search bar and Sign in button gate the desktop with data/passwor
   assert.ok(!boot.includes('isPageReload'), 'a refresh must not skip the password gate');
   assert.ok(!boot.includes('coverUnavailable') && !boot.includes('cover-status'),
     'clicking a cover control should not report that anything is unavailable');
-  assert.ok(boot.includes('lockIdiotVideo') && boot.includes('requestFullscreen'),
-    'Continue should lock the looping video in full screen');
-  assert.ok(boot.includes("navigator.keyboard.lock(['Escape'])") && boot.includes('trapIdiotEscape'),
-    'pressing Escape should be trapped and sent back into full screen');
-  assert.ok(boot.includes('startIdiotFullscreenSpam') && boot.includes('setInterval'),
-    'the trap should keep spamming full-screen requests while it is up');
+  assert.ok(boot.includes('window.verifySitePassword') && boot.includes('verifySitePassword'),
+    'boot should publish the site-password verifier the waitlist uses');
+  assert.ok(!boot.includes('lockIdiotVideo') && !boot.includes('idiot') && !boot.includes('requestFullscreen') &&
+    !boot.includes('youare.mp4'),
+    'no cover control should reveal, play or fullscreen the retained video file');
 
   const virtualConsole = new VirtualConsole(), errors = [];
   virtualConsole.on('jsdomError', (err) => errors.push(err.message));
@@ -508,6 +584,12 @@ test('the cover search bar and Sign in button gate the desktop with data/passwor
     pretendToBeVisual: true, virtualConsole,
   });
   const { window: w } = dom;
+  /* Seed the retired storage system: loading assets/store.js must delete
+   * every one of these before any account is read. */
+  w.localStorage.setItem('mhOS.accounts.v1', JSON.stringify({ old: { username: 'old', usernameLower: 'old' } }));
+  w.localStorage.setItem('mhOS.user.old.v1', '{}');
+  w.localStorage.setItem('mhOS.desktopProfile.v1', 'old');
+  w.sessionStorage.setItem('mhOS.welcomed.old', '1');
   w.URL.createObjectURL = () => 'blob:mock';
   w.URL.revokeObjectURL = () => {};
   w.Element.prototype.scrollIntoView = function () {};
@@ -521,14 +603,10 @@ test('the cover search bar and Sign in button gate the desktop with data/passwor
       reader.readAsArrayBuffer(this);
     });
   };
-  /* jsdom cannot play media or enter full screen; record both instead. */
+  /* jsdom cannot play media; record playback attempts instead. Nothing on
+   * the cover should ever trigger one now that the trap is gone. */
   w.HTMLMediaElement.prototype.play = function () { this.dataset.played = 'true'; return Promise.resolve(); };
   w.HTMLMediaElement.prototype.pause = function () {};
-  w.document.querySelector('#idiot-lock').requestFullscreen = function () {
-    this.dataset.fullscreen = 'requested';
-    this.dataset.fullscreenRequests = String(Number(this.dataset.fullscreenRequests || 0) + 1);
-    return Promise.resolve();
-  };
   const run = (text) => {
     const script = w.document.createElement('script');
     script.textContent = text; w.document.body.appendChild(script); script.remove();
@@ -566,12 +644,127 @@ test('the cover search bar and Sign in button gate the desktop with data/passwor
     assert.equal(desktop.hidden, true, 'the desktop should start hidden behind the gate');
     assert.equal(w.document.querySelector('#cover-status'), null,
       'the cover should have no status banner');
-    const coverText = cover.textContent;
+    /* The retired mhOS storage system is deleted on load, so the seeded
+     * old account cannot be read by the new proton2 system. */
+    assert.equal(w.localStorage.getItem('mhOS.accounts.v1'), null,
+      'old mhOS accounts should be deleted on load');
+    assert.equal(w.localStorage.getItem('mhOS.user.old.v1'), null,
+      'old mhOS account data should be deleted on load');
+    assert.equal(w.localStorage.getItem('mhOS.desktopProfile.v1'), null,
+      'the old mhOS desktop profile should be deleted on load');
+    assert.equal(w.sessionStorage.getItem('mhOS.welcomed.old'), null,
+      'old mhOS session data should be deleted on load');
+    assert.deepEqual(Object.keys(w.eval('MH.accounts()')), [],
+      'accounts from the old storage system should no longer work');
 
-    /* A decorative cover control does nothing and says nothing. */
-    w.document.querySelector('.cover-decoy').click();
-    assert.equal(desktop.hidden, true);
-    assert.equal(cover.textContent, coverText, 'a dead cover control should not change the page');
+    /* Ordinary Math Helper controls now work. Learning opens saved
+     * recommendations, search finds skills, practice marks answers, the
+     * diagnostic saves an action plan, and analytics/membership persist. */
+    const workspace = w.document.querySelector('#math-helper-workspace');
+    const helperState = () => JSON.parse(w.localStorage.getItem('proton2.math-helper.v1'));
+    assert.equal(workspace.hidden, true, 'the Math Helper workspace should start closed');
+    w.document.querySelector('[data-cover-nav="learning"]').click();
+    assert.equal(workspace.hidden, false, 'Learning should open the Math Helper workspace');
+    assert.match(workspace.textContent, /Your next steps/);
+    assert.match(workspace.textContent, /Recommended for you/);
+
+    input.value = 'fractions';
+    w.document.querySelector('#cover-search').dispatchEvent(new w.Event('submit', { bubbles: true, cancelable: true }));
+    assert.equal(desktop.hidden, true, 'submitting the skill search should not open the desktop');
+    assert.match(workspace.textContent, /Results for “fractions”/);
+    assert.match(workspace.textContent, /Add and subtract fractions/);
+    assert.match(workspace.textContent, /Multiply fractions/);
+
+    workspace.querySelector('[data-cover-skill="add-subtract-fractions"]').click();
+    assert.match(workspace.textContent, /Question 1/);
+    assert.equal(workspace.querySelectorAll('[data-answer]').length, 4,
+      'practice should offer four answer choices');
+    workspace.querySelector('[data-answer]').click();
+    assert.match(workspace.textContent, /Correct — great work!|Not quite\./);
+    assert.equal(helperState().answered, 1, 'practice answers should be saved in the new cover storage');
+    workspace.querySelector('[data-cover-action="next-question"]').click();
+    assert.match(workspace.textContent, /Question 2/);
+
+    w.document.querySelector('[data-cover-nav="diagnostic"]').click();
+    for (let i = 0; i < 6; i++) {
+      const answer = workspace.querySelector('[data-answer]');
+      assert.ok(answer, `diagnostic question ${i + 1} should offer an answer`);
+      answer.click();
+    }
+    assert.match(workspace.textContent, /Diagnostic complete/);
+    assert.match(workspace.textContent, /Your action plan/);
+    assert.equal(helperState().diagnostic.completed, 1,
+      'the diagnostic result should be saved in the new cover storage');
+    assert.ok(helperState().diagnostic.recommendedIds.length > 0,
+      'the diagnostic should save recommended skills');
+
+    w.document.querySelector('[data-cover-nav="analytics"]').click();
+    assert.match(workspace.textContent, /Progress reports/);
+    assert.match(workspace.textContent, /Growth by topic/);
+
+    /* Membership: Free is chosen instantly, but Family/Classroom are
+     * waitlist-only. Joining needs the site password — not an account. */
+    w.document.querySelector('[data-cover-nav="membership"]').click();
+    assert.match(workspace.textContent, /Family/);
+    assert.match(workspace.textContent, /Classroom/);
+    workspace.querySelector('[data-plan="Free"]').click();
+    assert.equal(helperState().membershipPlan, 'Free',
+      'choosing the Free membership plan should save it locally');
+    workspace.querySelector('[data-waitlist-plan="Family"]').click();
+    assert.match(workspace.textContent, /Join the Math Helper waitlist/);
+    assert.ok(workspace.querySelector('#waitlist-form'), 'the waitlist should show its form');
+
+    /* A wrong password adds nobody, even with name/email/plan filled in. */
+    workspace.querySelector('#waitlist-name').value = 'Ada';
+    workspace.querySelector('#waitlist-email').value = 'ada@example.com';
+    workspace.querySelector('#waitlist-password').value = 'not the password';
+    workspace.querySelector('#waitlist-form').dispatchEvent(new w.Event('submit', { bubbles: true, cancelable: true }));
+    await until(() => /That password isn't right/.test(workspace.textContent),
+      'the wrong-password waitlist message');
+    assert.equal(helperState().waitlist.length, 0,
+      'a wrong password must not add anyone to the waitlist');
+    assert.deepEqual(Object.keys(w.eval('MH.accounts()')), [],
+      'the waitlist attempt should not create a desktop account');
+
+    /* The correct site password adds the entry and confirms the place. */
+    workspace.querySelector('#waitlist-password').value = password;
+    workspace.querySelector('#waitlist-form').dispatchEvent(new w.Event('submit', { bubbles: true, cancelable: true }));
+    await until(() => /You're on the waitlist/.test(workspace.textContent),
+      'the waitlist confirmation');
+    assert.equal(helperState().waitlist.length, 1,
+      'the correct password should add one waitlist entry');
+    assert.equal(helperState().waitlist[0].email, 'ada@example.com');
+    assert.equal(helperState().waitlist[0].plan, 'Family');
+    assert.equal(helperState().membershipPlan, 'Free',
+      'joining the waitlist should not silently change the active plan');
+    assert.deepEqual(Object.keys(w.eval('MH.accounts()')), [],
+      'joining the waitlist should not create a desktop account');
+    assert.match(workspace.textContent, /On the waitlist \(1\)/);
+
+    w.document.querySelector('.cover-grades [data-grade="5"]').click();
+    assert.match(workspace.textContent, /Grade 5 maths/);
+    assert.match(workspace.textContent, /Multiply fractions/);
+    w.document.querySelector('.cover-section [data-cover-action="all-skills"]').click();
+    assert.match(workspace.textContent, /All skills/);
+    assert.match(workspace.textContent, /Probability and statistics/);
+    w.document.querySelector('[data-cover-action="awards"]').click();
+    assert.match(workspace.textContent, /Awards and certificates/);
+    w.document.querySelector('[data-cover-action="about"]').click();
+    assert.match(workspace.textContent, /About Math Helper/);
+    w.document.querySelector('[data-cover-action="help"]').click();
+    assert.match(workspace.textContent, /How Math Helper works/);
+    w.document.querySelector('[data-cover-action="privacy"]').click();
+    assert.match(workspace.textContent, /Your learning stays on this device/);
+
+    /* Even the correct password only searches when the form is submitted;
+     * the desktop gate remains the separate Sign in click. */
+    input.value = password;
+    w.document.querySelector('#cover-search').dispatchEvent(new w.Event('submit', { bubbles: true, cancelable: true }));
+    assert.equal(desktop.hidden, true, 'submitting the search form should never open the desktop');
+    assert.equal(cover.hidden, false);
+    w.document.querySelector('[data-cover-action="home"]').click();
+    assert.equal(workspace.hidden, true, 'the Math Helper logo should close the workspace');
+    const coverText = cover.textContent;
 
     /* A wrong password typed in the search bar and Sign in keeps the
      * desktop hidden, with no visible response either. */
@@ -605,7 +798,7 @@ test('the cover search bar and Sign in button gate the desktop with data/passwor
       'the account creation page should be visible on first sign-in');
     assert.match(w.document.querySelector('#auth').textContent, /Create your account/,
       'the first sign-in should show the Create your account page');
-    assert.ok(!w.localStorage.getItem('mhOS.accounts.v1')?.includes('student'),
+    assert.ok(!w.localStorage.getItem('proton2.accounts.v1')?.includes('student'),
       'the first sign-in should not silently create a Student profile');
 
     /* Creating the account enters the desktop as that account. */
@@ -618,7 +811,7 @@ test('the cover search bar and Sign in button gate the desktop with data/passwor
     assert.equal(w.document.querySelector('#auth').hidden, true,
       'the account creation page should hide once the account is created');
     assert.equal(w.eval('currentUser.username'), 'ada');
-    assert.ok(w.localStorage.getItem('mhOS.accounts.v1').includes('ada'),
+    assert.ok(w.localStorage.getItem('proton2.accounts.v1').includes('ada'),
       'creating the account should store the local desktop profile');
 
     /* Locking asks for that same file password, not anything else. */
@@ -657,42 +850,21 @@ test('the cover search bar and Sign in button gate the desktop with data/passwor
     assert.equal(cover.hidden, false, 'signing out should show the cover gate again');
     assert.equal(input.value, '', 'signing out should clear the password field');
 
-    /* The bottom Continue to Math Helper button does not enter the desktop:
-     * it locks the page on the full-screen, full-volume looping video. */
-    const idiotLock = w.document.querySelector('#idiot-lock');
-    const idiotVideo = w.document.querySelector('#idiot-video');
-    assert.equal(idiotLock.hidden, true);
-    w.document.querySelector('#cover-enter').click();
-    assert.equal(desktop.hidden, true, 'Continue must not bypass the password gate');
-    assert.equal(idiotLock.hidden, false, 'Continue should reveal the video lock');
-    assert.equal(idiotVideo.loop, true, 'the video should loop indefinitely');
-    assert.equal(idiotVideo.muted, false, 'the video should not be muted');
-    assert.equal(idiotVideo.volume, 1, 'the video should be at full volume');
-    assert.equal(idiotVideo.dataset.played, 'true', 'Continue should start the video');
-    assert.equal(idiotLock.dataset.fullscreen, 'requested',
-      'Continue should request full screen for the video lock');
-
-    /* Pressing Escape goes straight back into full screen: the key press
-     * itself re-requests it, and a browser-driven exit retries too. */
-    const beforeEscape = Number(idiotLock.dataset.fullscreenRequests || 0);
-    w.document.dispatchEvent(new w.KeyboardEvent('keydown', {
-      key: 'Escape', bubbles: true, cancelable: true,
-    }));
-    assert.ok(Number(idiotLock.dataset.fullscreenRequests || 0) > beforeEscape,
-      'Escape should re-request full screen');
-    const beforeExit = Number(idiotLock.dataset.fullscreenRequests || 0);
-    w.document.dispatchEvent(new w.Event('fullscreenchange'));
-    await wait(325);
-    assert.ok(Number(idiotLock.dataset.fullscreenRequests || 0) > beforeExit,
-      'leaving full screen should trigger another full-screen request');
-
-    /* And it never gives up: with no further input at all, the trap keeps
-     * spamming full-screen requests (100ms loop) for as long as it is up
-     * and not in full screen. */
-    const beforeSpam = Number(idiotLock.dataset.fullscreenRequests || 0);
-    await wait(450);
-    assert.ok(Number(idiotLock.dataset.fullscreenRequests || 0) >= beforeSpam + 2,
-      'the trap should keep spamming full-screen requests without any input');
+    /* The bottom Continue band and the video trap are gone entirely: no
+     * entry button, no lock overlay, no video element, and nothing left
+     * that could play or fullscreen the retained media file. */
+    assert.equal(w.document.querySelector('#cover-enter'), null,
+      'the bottom Continue to Math Helper button should be removed');
+    assert.equal(w.document.querySelector('.cover-entry'), null,
+      'the bottom entry band should be removed');
+    assert.equal(w.document.querySelector('#idiot-lock'), null,
+      'the fullscreen video lock should be removed');
+    assert.equal(w.document.querySelector('#idiot-video'), null,
+      'the trap video element should be removed');
+    assert.equal(w.document.querySelector('video'), null,
+      'the cover should not contain any video element');
+    assert.equal(desktop.hidden, true, 'the desktop should stay hidden on the cover');
+    assert.equal(cover.hidden, false, 'the cover should still be showing');
   } finally {
     w.close();
   }
@@ -751,7 +923,23 @@ test('the desktop boots, lists and opens all catalogued apps', async () => {
     const menu = w.document.querySelector('#startmenu');
     assert.deepEqual([...menu.querySelectorAll('.sm-cat')].map((e) => e.textContent),
       ['System', 'Productivity', 'Media', 'Tools', 'Games']);
-    assert.deepEqual([...menu.querySelectorAll('.sm-item')].map((e) => e.dataset.app), SYSTEM_APPS);
+    /* The one not-preinstalled app (You Are An Idiot) stays out of the menu
+     * until it is installed from App Center. */
+    assert.deepEqual([...menu.querySelectorAll('.sm-item')].map((e) => e.dataset.app),
+      SYSTEM_APPS.filter((id) => id !== 'you-are-an-idiot'));
+    w.openApp('appcenter');
+    const idiotCard = [...wins.get('appcenter').body.querySelectorAll('#ac-grid .card')]
+      .find((card) => card.querySelector('h3')?.textContent === 'You Are An Idiot');
+    assert.ok(idiotCard, 'App Center should list the not-preinstalled app');
+    const installBtn = idiotCard.querySelector('[data-restore="you-are-an-idiot"]');
+    assert.ok(installBtn, 'the not-preinstalled app should offer Install in App Center');
+    assert.match(installBtn.textContent, /Install/);
+    installBtn.click();
+    assert.ok([...menu.querySelectorAll('.sm-item')].map((e) => e.dataset.app).includes('you-are-an-idiot'),
+      'installing should put the app in the proton menu');
+    assert.ok(Array.from(w.eval('userData.installedApps')).includes('you-are-an-idiot'),
+      'installing should be remembered on the account');
+    w.closeWin('appcenter', true);
 
     // The panel only pins apps that exist, and each app really renders.
     assert.deepEqual([...w.document.querySelectorAll('#panelapps .pitem')].map((e) => e.dataset.app),
@@ -999,7 +1187,7 @@ test('Customize saves, displays and resets uploaded app icon images', async () =
     const browserWindow = w.eval('wins').get('browser');
     assert.equal(body.querySelector('#cust-files-shortcut'), null, 'Customize still offers a Files shortcut');
     assert.deepEqual([...body.querySelectorAll('#cust-modlist .card b')].map((b) => b.textContent).slice(0, SYSTEM_APPS.length),
-            ['App Center', 'Customize', 'Settings', 'About', 'Browser', 'Calculator', 'Files', 'Text Editor', 'PDF Viewer', 'Image Viewer', 'Media', 'Ruffle Flash Player', 'Web Retro', '2048', 'Bloons Tower Defense 1', 'Bloons Tower Defense 2', 'Bloons Tower Defense 5', 'Bloxorz', 'Breaking The Bank', 'Celeste Classic', 'Celeste Classic 2', 'Celeste Community', 'Celeste Classic Practice Mod', 'Celeste Classic 2 Practice Mod 1.0', 'Celeste Classic 2 Practice Mod 1.1', 'Celeste Webek', 'Celeste Classic Downloads', 'Cookie Clicker', 'Drive Mad', 'Escaping The Prison', 'Fleeing The Complex', 'Grey Box Testing', 'Infiltrating The Airship', 'Mari0', 'Offline Paradise', 'Pacman', 'Slope', 'Spacebar Clicker', 'Stack', 'Stealing The Diamond', 'Stickman Hook', 'Subway Surfers', 'Super Mario 64', 'Super Mario RPG', 'Tetris', 'The Impossible Quiz', 'Tunnel Rush']);
+            ['App Center', 'Customize', 'Settings', 'About', 'Browser', 'Calculator', 'Files', 'Text Editor', 'PDF Viewer', 'Image Viewer', 'Media', 'Ruffle Flash Player', 'Web Retro', 'You Are An Idiot', '2048', 'Bloons Tower Defense 1', 'Bloons Tower Defense 2', 'Bloons Tower Defense 5', 'Bloxorz', 'Breaking The Bank', 'Celeste Classic', 'Celeste Classic 2', 'Celeste Community', 'Celeste Classic Practice Mod', 'Celeste Classic 2 Practice Mod 1.0', 'Celeste Classic 2 Practice Mod 1.1', 'Celeste Webek', 'Celeste Classic Downloads', 'Cookie Clicker', 'Drive Mad', 'Escaping The Prison', 'Fleeing The Complex', 'Grey Box Testing', 'Infiltrating The Airship', 'Mari0', 'Offline Paradise', 'Pacman', 'Slope', 'Spacebar Clicker', 'Stack', 'Stealing The Diamond', 'Stickman Hook', 'Subway Surfers', 'Super Mario 64', 'Super Mario RPG', 'Tetris', 'The Impossible Quiz', 'Tunnel Rush', "Baldi's Basics", 'Minesweeper', 'Flappy Bird', 'Retro Bowl', 'Drift Boss', "Football Bros", "Five Nights at Freddy's", "Five Nights at Freddy's 4", "Five Nights at Freddy's 2", "Five Nights at Freddy's 3", "Backrooms", "Kart Bros", "Geometry Dash Lite", "Five Nights at Freddy's: Sister Location"]);
 
     const uploadBrowserIcon = async () => {
       const input = body.querySelector('[data-micon-file="browser"]');
@@ -1009,7 +1197,7 @@ test('Customize saves, displays and resets uploaded app icon images', async () =
     };
     await uploadBrowserIcon();
     assert.equal(w.eval('APPS.browser.iconImage'), storedImage);
-    assert.equal(JSON.parse(w.localStorage.getItem('mhOS.user.ada.v1')).moduleOverrides.browser.iconImage, storedImage,
+    assert.equal(JSON.parse(w.localStorage.getItem('proton2.user.ada.v1')).moduleOverrides.browser.iconImage, storedImage,
       'the resized image is saved in this account data');
     assert.ok(w.document.querySelector('#startmenu .sm-item[data-app="browser"] img.app-icon-image'));
     assert.ok(w.document.querySelector('#panelapps .pitem[data-app="browser"] img.app-icon-image'));
@@ -1037,11 +1225,15 @@ test('Customize saves, displays and resets uploaded app icon images', async () =
     Object.defineProperty(customInput, 'files', { configurable: true, value: [{ type: 'image/png', size: 1024 }] });
     await customInput.onchange();
     assert.equal(w.eval("APPS['legacy-image-app'].iconImage"), storedImage);
-    assert.equal(JSON.parse(w.localStorage.getItem('mhOS.user.ada.v1')).customApps[0].iconImage, storedImage);
+    assert.equal(JSON.parse(w.localStorage.getItem('proton2.user.ada.v1')).customApps[0].iconImage, storedImage);
     w.openApp('appcenter');
-    const customCard = [...w.eval('wins').get('appcenter').body.querySelectorAll('#ac-custom .card')]
-      .find((card) => card.querySelector('h3')?.textContent === 'Saved App');
-    assert.ok(customCard?.querySelector('.card-ic img.app-icon-image'), 'saved custom app listings use the uploaded image');
+    const centerBody = w.eval('wins').get('appcenter').body;
+    assert.equal(centerBody.querySelector('#ac-custom'), null,
+      'App Center should not list saved apps in a Your apps section');
+    assert.equal(centerBody.querySelector('#ac-sites'), null,
+      'App Center should not list saved websites in a Your websites section');
+    assert.ok(!centerBody.textContent.includes('Your apps') && !centerBody.textContent.includes('Your websites'),
+      'App Center should not show Your apps or Your websites headings');
     w.closeWin('appcenter', true);
     body.querySelector('[data-cicon-clear="legacy-image-app"]').click();
     assert.equal(w.eval("APPS['legacy-image-app'].iconImage"), '');
@@ -1227,7 +1419,7 @@ async function bootDesktop(username = 'ada') {
     userData = MH.defaultData('Ada',${JSON.stringify(username)});
     enterDesktop();`);
   const settle = () => new Promise((resolve) => setTimeout(resolve, 25));
-  const saved = () => JSON.parse(w.localStorage.getItem(`mhOS.user.${username}.v1`));
+  const saved = () => JSON.parse(w.localStorage.getItem(`proton2.user.${username}.v1`));
   return { w, errors, blobs, settle, saved, wins: w.eval('wins'), APPS: w.eval('APPS'), close: () => w.close() };
 }
 
@@ -1884,6 +2076,10 @@ test('the Browser keeps tabs, bookmarks and history like a browser', async () =>
 
     assert.equal(tabs().length, 1, 'it starts with one tab');
     assert.equal(bar.value, '', 'the home page leaves the bar empty');
+    assert.equal(body.querySelector('#b-sites'), null,
+      'the Browser start page should not list saved websites');
+    assert.ok(!page().textContent.includes('Your websites'),
+      'the Browser start page should not show a Your websites section');
 
     /* A built-in website is a navigation: bar, history and Back all know. */
     const menu = body.querySelector('#b-sites-menu');

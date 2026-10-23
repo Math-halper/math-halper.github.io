@@ -6,18 +6,41 @@
  * here (crypto.subtle, with a salted FNV-1a fallback where subtle crypto is
  * unavailable) is only the local profile record created from it.
  *
- * Data layout:
- *   mhOS.accounts.v1       { [usernameLower]: account }
- *   mhOS.session.v1        legacy key from persistent sign-in; now cleared
- *                          (sign-in lasts only until the page is refreshed)
- *   mhOS.user.<name>.v1    that account's whole desktop state
+ * Data layout (current proton2 storage system):
+ *   proton2.accounts.v1       { [usernameLower]: account }
+ *   proton2.session.v1        legacy key from persistent sign-in; now cleared
+ *                             (sign-in lasts only until the page is refreshed)
+ *   proton2.user.<name>.v1    that account's whole desktop state
+ *   proton2.math-helper.v1    the cover's learning progress, plan and member plan
+ *
+ * Every mhOS.* key from the previous storage system is deleted as soon as
+ * this file loads, before any account is read: accounts created under the
+ * old system can never sign in to this one.
  */
 'use strict';
 
+/* The old mhOS.* storage system is retired. Collect the keys first (removing
+ * while iterating would skip some), then delete them from both stores. */
+const LEGACY_STORAGE_PREFIX = 'mhOS.';
+function purgeLegacyStorage() {
+  for (const store of [window.localStorage, window.sessionStorage]) {
+    try {
+      const keys = [];
+      for (let i = 0; i < store.length; i++) {
+        const key = store.key(i);
+        if (key && key.startsWith(LEGACY_STORAGE_PREFIX)) keys.push(key);
+      }
+      keys.forEach((key) => store.removeItem(key));
+    } catch (err) { /* storage may be unavailable; the new keys simply start empty */ }
+  }
+}
+purgeLegacyStorage();
+
 const MH = {
-  ACCOUNTS_KEY: 'mhOS.accounts.v1',
-  SESSION_KEY: 'mhOS.session.v1',
-  userKey: (u) => `mhOS.user.${u}.v1`,
+  ACCOUNTS_KEY: 'proton2.accounts.v1',
+  SESSION_KEY: 'proton2.session.v1',
+  MATH_HELPER_KEY: 'proton2.math-helper.v1',
+  userKey: (u) => `proton2.user.${u}.v1`,
 
   $: (id) => document.getElementById(id),
   esc: (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])),
@@ -126,10 +149,14 @@ const MH = {
        * customApps: [{id,name,icon,desc,url}] — each becomes a real proton app.
        * websites:   [{id,name,icon,url}]   — saved sites, opened in Browser.
        * hiddenApps: [appId]                — built-ins the user "removed"
-       *                                      (hidden from menu, restorable). */
+       *                                      (hidden from menu, restorable).
+       * installedApps: [appId]             — catalog apps marked
+       *                                      preinstalled=false that the user
+       *                                      has added from App Center. */
       customApps: [],
       websites: [],
       hiddenApps: [],
+      installedApps: [],
 
     };
   },

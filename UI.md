@@ -18,51 +18,71 @@ load to the internals of each app.
 
 ## 2. The Math Helper cover page (every visit)
 
-The first thing every visit sees is *Math Helper* — a full IXL-style decoy
-maths-practice site. It shows no indication that anything is broken: there
-is no outage banner, error label or empty progress bar anywhere, and its
-practice controls are simply dead — clicking one changes nothing and says
-nothing. The way in the first time is the **header search bar**: type the
-desktop password (stored in `data/password.txt`) into it and click the
-**Sign in** button immediately beside it, which leads to **Create your
-account**. Once an account exists on this device, the password is not
-asked for again — clicking **Sign in** alone reopens the desktop, whatever
-is (or isn't) in the search bar. A page refresh or signing out returns to
-the cover either way; before an account exists, a wrong password gets no
-visible response.
+The first thing every visit sees is *Math Helper* — a full IXL-style
+maths-practice site whose ordinary controls all work locally. Search,
+grade browsing, generated practice with instant marking, a six-question
+diagnostic, recommendations, awards, analytics, membership and the
+information pages run in `assets/math-helper.js`; learning progress is
+saved in `proton2.math-helper.v1`. It shows no indication that anything
+is broken: there is no outage banner, error label or empty progress bar
+anywhere. The way in to proton the first time is still the **header
+search bar**: type the desktop password (stored in `data/password.txt`)
+into it and click the **Sign in** button immediately beside it, which
+leads to **Create your account**. Submitting that search form itself only
+searches skills — it never opens the desktop. Once an account exists on
+this device, the password is not asked for again — clicking **Sign in**
+alone reopens the desktop, whatever is (or isn't) in the search bar. A
+page refresh or signing out returns to the cover either way; before an
+account exists, a wrong password gets no visible response.
 
-- **Header** — "Math Helper" logo button, nav (Learning · Diagnostic ·
-  Analytics · Membership; all decoys), the compact search bar (a password
-  field labelled "Search skills, topics or grades"), and the working
-  **Sign in** button right next to it.
+Desktop accounts now live in the `proton2.*` storage namespace. On load,
+all old `mhOS.*` local/session keys are deleted before any account is
+read, so profiles from the previous storage system no longer work.
+
+- **Header** — "Math Helper" logo button (returns to the top and closes
+  the workspace), working nav (Learning · Diagnostic · Analytics ·
+  Membership), the compact skill search bar, and the **Sign in** button
+  right next to it. Only **Sign in** is the desktop gate.
 - **Hero** — eyebrow "Mathematics · Pre-K to Year 12", headline and
-  description, and two decoy buttons: *Start practicing*, *Take a
-  diagnostic*. There is no password entry in this main area.
-- **"Today for you" side panel** — two recommendation rows (Multiply
-  fractions 72%, Solve two-step equations 45%) with matching progress bars,
-  a *Recommended* badge, a *Resume practice* button, and "Recommendations
-  update as you practice."
+  description, plus working *Start practicing* and *Take a diagnostic*
+  buttons. There is no password entry in this main area.
+- **"Today for you" side panel** — two clickable recommendation rows
+  (Multiply fractions 72%, Solve two-step equations 45%) with matching
+  progress bars, a *Recommended* badge, a working *Resume practice*
+  button, and "Recommendations update as you practice." Progress bars
+  across the cover update as questions are answered.
+- **Math Helper workspace** — appears below the hero for search results,
+  Learning/recommendations, grade pages, all-skills browsing, practice
+  questions with explanations, the diagnostic and its action plan,
+  Awards, Analytics, Membership (Free chosen instantly; Family and
+  Classroom via the waitlist) and About / Help centre / Privacy pages.
+  The waitlist form (name, email, plan and the site password) only adds an
+  entry when the password from `data/password.txt` checks out; a desktop
+  account alone never joins the waitlist.
 - **Explore by grade** — a grid of grade buttons Pre-K → 12, each with a
-  skill count, plus "See all grades".
+  skill count, plus "See all grades"; every grade opens its own practice
+  paths.
 - **Popular maths skills** — six skill cards (Fractions, Multiplication,
   Algebra, Geometry, Decimals, Statistics), each with tag, title, blurb, a
-  part-filled progress bar and *Start skill*; the section header has a
+  live progress bar and *Start skill*; the section header has a
   "See all skills" link.
 - **Diagnostic band** — "Find exactly what to practice next" + *Start diagnostic*.
 - **Made for families and classrooms** — three feature cards (Personal
-  recommendations, Awards and certificates, Progress reports) with text links.
-- **Footer** — brand line and About / Help centre / Membership / Privacy links.
-- **Entry band ("Ready when you are")** — **"Continue to Math Helper"** does
-  not enter the desktop. It locks the page on the full-screen, full-volume
-  looping *You Are An Idiot* video (`assets/youare.mp4`, vendored in this
-  repository). Escape is captured with the Keyboard Lock API where the
-  browser supports it; if the browser still drops out of full screen, the
-  trap spams full-screen requests — a 100ms loop for as long as the trap is
-  up, plus an immediate burst on every Escape press, key press, click and
-  tab/window refocus — so the first moment the browser allows re-entry the
-  video is full screen again. The only way into proton remains the header **Sign in**
-  — with the password in the search bar the first time, and on its own
-  once an account exists on the device.
+  recommendations, Awards and certificates, Progress reports) whose links
+  open the matching workspace pages.
+- **Footer** — brand line and working About / Help centre / Membership /
+  Privacy links.
+- **Waitlist band** — a **Join waitlist** button that opens the waitlist
+  form in the workspace. Joining requires the site password from
+  `data/password.txt`; a local account by itself is not enough, a wrong
+  or missing password adds nobody, and a correct password confirms the
+  place and lists the entry (with a remove option) on this device.
+- There is no bottom entry band any more: the old "Continue to Math
+  Helper" button and its full-screen video trap were removed entirely.
+  `assets/youare.mp4` stays in the repository but is unused — no control
+  reveals, plays or fullscreens it. The only way into proton remains the
+  header **Sign in** — with the password in the search bar the first
+  time, and on its own once an account exists on the device.
 
 ## 3. Auth screens
 
@@ -207,13 +227,13 @@ not be saved.", etc.).
 
 ## 9. System apps
 
-- **App Center** — search field ("Search apps & websites") in the app bar; an
-  info card ("Everything here is part of the static proton website"); sections
-  **Your apps** and **Your websites** (the account's saved web-apps/sites, with
-  counts) and **All apps**, where every app gets a card (icon, name,
+- **App Center** — search field ("Search apps") in the app bar; an
+  info card ("Everything here is part of the static proton website"); and an
+  **All apps** section, where every built-in app gets a card (icon, name,
   description, meta) with **Open**, **Pin/Unpin**, **Remove** (non-protected
-  apps; removed apps show dimmed with **Add back**), and **Reset** when the app
-  has customisations.
+  apps; removed apps show dimmed with **Add back**), and **Reset** when the
+  app has customisations. Saved web-apps and saved websites are not listed
+  here any more.
 - **Customize — everything is a module** — the personalisation hub:
   - shortcut button to **Manage apps in App Center**;
   - **App modules**: a search field and one card per app with **Open**,
@@ -243,8 +263,8 @@ not be saved.", etc.).
 - **Browser** — app bar with **Home** and a "Built-in websites…" dropdown; a
   second dark bar with a lock glyph, the **URL field** (starts at
   `proton://home`) and **Go**. The home page is "Welcome to the (tiny) proton
-  web": cards for each built-in website (icon, name, description, *Visit*) and
-  **Your websites** (saved sites with Open/Remove). Pages load in a sandboxed
+  web": cards for each built-in website (icon, name, description, *Visit*).
+  Saved websites are not listed on the start page any more. Pages load in a sandboxed
   iframe (`allow-scripts allow-same-origin allow-forms allow-popups`).
 - **About proton** — logo + "A complete desktop computer in your browser — no
   server edition"; sections **Your account**, **What's inside** and
