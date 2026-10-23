@@ -45,7 +45,7 @@ and single-file HTML5 games). Each game
 app folder is the game's own files plus a thin proton iframe wrapper (see CREDITS.md for provenance), and
 apps/games/index.html is the picker their "all games" links expect.
 
-The start menu groups them by cat=: System (the desktop’s own five), Productivity (Calculator, Files, Text Editor, PDF Viewer), Media (Image Viewer, Media), Tools (Ruffle Flash Player, Web Retro — the players behind the Flash and cartridge games) and Games (78 games: 2048, Bloons Tower Defense 1, Bloons Tower Defense 2, Bloons Tower Defense 5, Bloxorz, Breaking The Bank, Celeste Classic, Celeste Classic 2, Celeste Community, Celeste Classic Practice Mod, Celeste Classic 2 Practice Mod 1.0, Celeste Classic 2 Practice Mod 1.1, Celeste Webek, Celeste Classic Downloads, Cookie Clicker, Drive Mad, Escaping The Prison, Fleeing The Complex, Grey Box Testing, Infiltrating The Airship, Mari0, Offline Paradise, Pacman, Slope, Spacebar Clicker, Stack, Stealing The Diamond, Stickman Hook, Subway Surfers, Super Mario 64, Tetris, The Impossible Quiz, Tunnel Rush, Baldi's Basics, Minesweeper, Flappy Bird, Retro Bowl, Drift Boss, Football Bros, Five Nights at Freddy's, Five Nights at Freddy's 4, Five Nights at Freddy's 2, Five Nights at Freddy's 3, Backrooms, Kart Bros, Geometry Dash Lite, Five Nights at Freddy's: Sister Location). Block order below is menu order within each section.
+The start menu groups them by cat=: System (the desktop’s own five), Productivity (Calculator, Files, Text Editor, PDF Viewer), Media (Image Viewer, Media), Tools (Ruffle Flash Player, Web Retro — the players behind the Flash and cartridge games) and Games (85 games: 2048, Bloons Tower Defense 1, Bloons Tower Defense 2, Bloons Tower Defense 5, Bloxorz, Breaking The Bank, Celeste Classic, Celeste Classic 2, Celeste Community, Celeste Classic Practice Mod, Celeste Classic 2 Practice Mod 1.0, Celeste Classic 2 Practice Mod 1.1, Celeste Webek, Celeste Classic Downloads, Cookie Clicker, Drive Mad, Escaping The Prison, Fleeing The Complex, Grey Box Testing, Infiltrating The Airship, Mari0, Offline Paradise, Pacman, Slope, Spacebar Clicker, Stack, Stealing The Diamond, Stickman Hook, Subway Surfers, Super Mario 64, Tetris, The Impossible Quiz, Tunnel Rush, Baldi's Basics, Minesweeper, Flappy Bird, Retro Bowl, Drift Boss, Football Bros, Five Nights at Freddy's, Five Nights at Freddy's 4, Five Nights at Freddy's 2, Five Nights at Freddy's 3, Backrooms, Kart Bros, Geometry Dash Lite, Five Nights at Freddy's: Sister Location). Block order below is menu order within each section.
 
 IMPORTANT: an id must not be a bare number — JavaScript object key ordering
   hoists integer-like keys to the front of every APPS iteration (this is why
@@ -1183,6 +1183,90 @@ svg-icon=true
 cat=Games
 preinstalled=true
 desc=Play A Dark Room - a minimalist survival adventure
+w=980
+h=640
+
+[application]
+id=doom
+name=Doom
+path=apps/games/doom/app.html
+icon=zap
+svg-icon=true
+cat=Games
+preinstalled=true
+desc=Play Doom - the legendary first-person shooter, in WebAssembly
+w=980
+h=640
+
+[application]
+id=geometry-dash
+name=Geometry Dash
+path=apps/games/geometry-dash/app.html
+icon=square
+svg-icon=true
+cat=Games
+preinstalled=true
+desc=Play Geometry Dash - jump and fly through danger
+w=980
+h=640
+
+[application]
+id=run-3
+name=Run 3
+path=apps/games/run-3/app.html
+icon=play
+svg-icon=true
+cat=Games
+preinstalled=true
+desc=Play Run 3 - run and jump through space tunnels
+w=980
+h=640
+
+[application]
+id=a-dance-of-fire-and-ice
+name=A Dance of Fire and Ice
+path=apps/games/a-dance-of-fire-and-ice/app.html
+icon=music
+svg-icon=true
+cat=Games
+preinstalled=true
+desc=Play A Dance of Fire and Ice - keep the rhythm on the winding path
+w=980
+h=640
+
+[application]
+id=onions-revenge
+name=Onion's Revenge
+path=apps/games/onions-revenge/app.html
+icon=smile
+svg-icon=true
+cat=Games
+preinstalled=true
+desc=Play Onion's Revenge - the tower-defense battle of the garden
+w=980
+h=640
+
+[application]
+id=orbital-daggers
+name=Orbital Daggers
+path=apps/games/orbital-daggers/app.html
+icon=star
+svg-icon=true
+cat=Games
+preinstalled=true
+desc=Play Orbital Daggers - juggle orbiting knives in space
+w=980
+h=640
+
+[application]
+id=icedodo
+name=Icedodo
+path=apps/games/icedodo/app.html
+icon=disc
+svg-icon=true
+cat=Games
+preinstalled=true
+desc=Play Icedodo - slide the ice dodo through each course
 w=980
 h=640
 

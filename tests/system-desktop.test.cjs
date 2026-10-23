@@ -71,6 +71,13 @@ const SYSTEM_APPS = ['appcenter', 'customize', 'settings', 'about', 'browser',
   'kart-bros',
   'geometry-dash-lite',
   'five-nights-at-freddys-sl',
+  "icedodo",
+  "orbital-daggers",
+  "onions-revenge",
+  "a-dance-of-fire-and-ice",
+  "run-3",
+  "geometry-dash",
+  "doom",
   "a-dark-room",
   "big-ice-tower-tiny-square",
   "celeste-speedrun-training",
@@ -161,6 +168,13 @@ const SYSTEM_CATS = {
   'backrooms': 'Games',
   'kart-bros': 'Games',
   'geometry-dash-lite': 'Games',
+  "icedodo": 'Games',
+  "orbital-daggers": 'Games',
+  "onions-revenge": 'Games',
+  "a-dance-of-fire-and-ice": 'Games',
+  "run-3": 'Games',
+  "geometry-dash": 'Games',
+  "doom": 'Games',
   "a-dark-room": 'Games',
   "big-ice-tower-tiny-square": 'Games',
   "celeste-speedrun-training": 'Games',
@@ -243,6 +257,13 @@ const GAME_PAGES = {
   'kart-bros': 'apps/games/kart-bros/index.html',
   'geometry-dash-lite': 'apps/games/geometry-dash-lite/index.html',
   'five-nights-at-freddys-sl': 'apps/games/five-nights-at-freddys-sl/index.html',
+  "icedodo": 'apps/games/icedodo/index.html',
+  "orbital-daggers": 'apps/games/orbital-daggers/index.html',
+  "onions-revenge": 'apps/games/onions-revenge/index.html',
+  "a-dance-of-fire-and-ice": 'apps/games/a-dance-of-fire-and-ice/index.html',
+  "run-3": 'apps/games/run-3/index.html',
+  "geometry-dash": 'apps/games/geometry-dash/index.html',
+  "doom": 'apps/games/doom/index.html',
   "a-dark-room": 'apps/games/a-dark-room/index.html',
   "big-ice-tower-tiny-square": 'apps/games/big-ice-tower-tiny-square/index.html',
   "celeste-speedrun-training": 'apps/games/celeste-speedrun-training/index.html',
@@ -1344,11 +1365,11 @@ test('Customize saves, displays and resets uploaded app icon images', async () =
 test('embedded-page templates and remote-embedded games are not shipped', () => {
   const { apps, sites } = catalog();
   for (const gone of ['apps/_embed', 'websites/_embed',
-    'apps/games/drift-hunters', 'apps/games/drift-hunters-game', 'apps/games/run-3',
+    'apps/games/drift-hunters', 'apps/games/drift-hunters-game',
     'apps/games/basketball-stars', 'apps/games/wordle']) {
     assert.equal(fs.existsSync(path.join(ROOT, gone)), false, `${gone} should be gone`);
   }
-  for (const id of ['my-embed', 'drift-hunters', 'drift-hunters-game', 'run-3', 'basketball-stars', 'wordle']) {
+  for (const id of ['my-embed', 'drift-hunters', 'drift-hunters-game', 'basketball-stars', 'wordle']) {
     assert.ok(!apps.some((a) => a.id === id), `${id} should not be catalogued`);
   }
   assert.ok(!sites.some((s) => s.id === 'my-embed'), 'my-embed should not be a site');
