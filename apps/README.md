@@ -43,7 +43,11 @@ built-in website is **Test Page** (the one entry in `data/websites.js`; see
 In **Customize → App modules**, choose a named vector icon or upload a PNG,
 JPG, WebP, GIF, BMP or AVIF image. Images are resized to at most 128 pixels,
 stored per account, and displayed in the menu, panel, app windows and desktop
-shortcuts. Existing custom web apps can use the same image control.
+shortcuts. Existing custom web apps can use the same image control. Image
+icons (catalog or uploaded) are cropped to fill their icon box everywhere;
+the **App icon images** switch there shows them on their own with no
+background behind them, and each app's **Icon background** choice can
+override that per app.
 
 For a site-wide default icon, put the raster file in `data/icons/` and set
 `icon=data/icons/my-app.png` and `svg-icon=false` in `data/applications.js`.

@@ -1255,6 +1255,42 @@ test('Customize saves, displays and resets uploaded app icon images', async () =
     assert.ok(w.document.querySelector('#panelapps .pitem[data-app="browser"] img.app-icon-image'));
     assert.ok(w.document.querySelector('.desktop-icon[data-shortcut="desktop-browser"] img.app-icon-image'));
     assert.ok(browserWindow.el.querySelector('.wic img.app-icon-image'), 'an already-open window title updates live');
+
+    /* Image icons are cropped to fill their icon box, and can be shown on
+     * their own (no background) — globally, or per app. */
+    assert.match(source('assets/styles.css'), /\.app-icon-image\{object-fit:cover/,
+      'image icons are cropped to fill their icon box');
+    assert.match(source('assets/styles.css'), /:has\(>\.app-icon-only\)/,
+      'image-only icons lose the background behind them');
+    const menuBrowserImg = () => w.document.querySelector('#startmenu .sm-item[data-app="browser"] img.app-icon-image');
+    const desktopBrowserImg = () => w.document.querySelector('.desktop-icon[data-shortcut="desktop-browser"] img.app-icon-image');
+    assert.ok(!menuBrowserImg().classList.contains('app-icon-only'), 'image icons keep their background by default');
+    const iconOnlyBox = body.querySelector('#cust-icon-only');
+    assert.ok(iconOnlyBox && !iconOnlyBox.checked, 'Customize offers the global image-only switch');
+    iconOnlyBox.click();
+    assert.equal(w.eval('userData.settings.iconImageOnly'), true, 'the global switch is saved on the account');
+    assert.ok(menuBrowserImg().classList.contains('app-icon-only'), 'the global switch makes menu icons image-only');
+    assert.ok(desktopBrowserImg().classList.contains('app-icon-only'), 'the global switch makes desktop icons image-only');
+    let bgSelect = body.querySelector('[data-miconbg="browser"]');
+    assert.ok(bgSelect, 'each app offers its own Icon background choice');
+    bgSelect.value = 'show';
+    body.querySelector('[data-msave="browser"]').click();
+    assert.equal(w.eval('APPS.browser.iconBg'), 'show', 'a per-app Show background choice is saved');
+    assert.ok(!menuBrowserImg().classList.contains('app-icon-only'),
+      'a per-app Show background choice beats the global image-only switch');
+    bgSelect = body.querySelector('[data-miconbg="browser"]');
+    bgSelect.value = 'hide';
+    body.querySelector('[data-msave="browser"]').click();
+    assert.equal(w.eval('APPS.browser.iconBg'), 'hide');
+    assert.ok(menuBrowserImg().classList.contains('app-icon-only'), 'a per-app Image only choice is honoured');
+    bgSelect = body.querySelector('[data-miconbg="browser"]');
+    bgSelect.value = '';
+    body.querySelector('[data-msave="browser"]').click();
+    assert.equal(w.eval('APPS.browser.iconBg'), '', 'clearing the per-app choice returns to the global setting');
+    body.querySelector('#cust-icon-only').click();
+    assert.equal(w.eval('userData.settings.iconImageOnly'), false);
+    assert.ok(!menuBrowserImg().classList.contains('app-icon-only'), 'turning the global switch off restores backgrounds');
+
     w.openApp('appcenter');
     const center = w.eval('wins').get('appcenter').body;
     const browserCard = [...center.querySelectorAll('#ac-grid .card')].find((card) => card.querySelector('h3')?.textContent === 'Browser');
@@ -1277,6 +1313,16 @@ test('Customize saves, displays and resets uploaded app icon images', async () =
     Object.defineProperty(customInput, 'files', { configurable: true, value: [{ type: 'image/png', size: 1024 }] });
     await customInput.onchange();
     assert.equal(w.eval("APPS['legacy-image-app'].iconImage"), storedImage);
+    const customBg = body.querySelector('[data-ciconbg="legacy-image-app"]');
+    assert.ok(customBg, 'saved custom apps also offer the Icon background choice');
+    customBg.value = 'hide';
+    customBg.onchange();
+    assert.equal(w.eval("APPS['legacy-image-app'].iconBg"), 'hide', 'a saved app Image only choice is saved');
+    assert.ok(w.document.querySelector('#startmenu .sm-item[data-app="legacy-image-app"] img.app-icon-image.app-icon-only'),
+      'a saved app Image only choice shows in the menu');
+    body.querySelector('[data-ciconbg="legacy-image-app"]').value = '';
+    body.querySelector('[data-ciconbg="legacy-image-app"]').onchange();
+    assert.equal(w.eval("APPS['legacy-image-app'].iconBg"), '', 'a saved app can return to the global setting');
     assert.equal(JSON.parse(w.localStorage.getItem('proton2.user.ada.v1')).customApps[0].iconImage, storedImage);
     w.openApp('appcenter');
     const centerBody = w.eval('wins').get('appcenter').body;

@@ -218,11 +218,27 @@ function iconImageFromFile(file) {
   });
 }
 
+/* Whether this app's image icon is shown on its own — just the picture,
+ * with no background tile or plate behind it. The per-app choice
+ * (iconBg: 'hide' = image only, 'show' = keep the background, saved from
+ * Customize → App modules) wins; otherwise the account-wide setting
+ * (settings.iconImageOnly, the global switch beside it) decides. Only
+ * raster icons have a background to lose, so SVG icons ignore this. */
+function iconImageOnly(app) {
+  if (!app) return false;
+  if (app.iconBg === 'hide') return true;
+  if (app.iconBg === 'show') return false;
+  try { return typeof userData !== 'undefined' && !!userData?.settings?.iconImageOnly; }
+  catch { return false; }
+}
+
+function imageIconHtml(value, only = false) {
+  return `<img class="icn app-icon-image${only ? ' app-icon-only' : ''}" src="${value}" alt="" aria-hidden="true" draggable="false">`;
+}
+
 /* Render an uploaded image or a named/legacy icon. */
-function iconFor(value, fallback = 'grid') {
-  if (isIconImageData(value)) {
-    return `<img class="icn app-icon-image" src="${value}" alt="" aria-hidden="true" draggable="false">`;
-  }
+function iconFor(value, fallback = 'grid', only = false) {
+  if (isIconImageData(value)) return imageIconHtml(value, only);
   return iconSvg(iconNameFrom(value, fallback));
 }
 
@@ -236,11 +252,9 @@ function isIconAssetPath(value) {
 
 /* Catalog icons either name one of proton's inline SVGs or point at a local
  * raster image. svgIcon is true for the former and false for the latter. */
-function catalogIconFor(value, svgIcon = true, fallback = 'grid') {
+function catalogIconFor(value, svgIcon = true, fallback = 'grid', only = false) {
   if (svgIcon === false) {
-    if (isIconAssetPath(value)) {
-      return `<img class="icn app-icon-image" src="${value}" alt="" aria-hidden="true" draggable="false">`;
-    }
+    if (isIconAssetPath(value)) return imageIconHtml(value, only);
     return iconSvg(fallback);
   }
   return iconSvg(iconNameFrom(value, fallback));
@@ -249,8 +263,9 @@ function catalogIconFor(value, svgIcon = true, fallback = 'grid') {
 /* An account-uploaded image overrides the catalog default; clearing it falls
  * back to either the catalog's raster path or its named inline SVG. */
 function appIcon(app, fallback = 'grid') {
-  if (app && isIconImageData(app.iconImage)) return iconFor(app.iconImage, fallback);
-  return catalogIconFor(app?.icon, app?.svgIcon !== false, fallback);
+  const only = iconImageOnly(app);
+  if (app && isIconImageData(app.iconImage)) return iconFor(app.iconImage, fallback, only);
+  return catalogIconFor(app?.icon, app?.svgIcon !== false, fallback, only);
 }
 
 /* <option> list for icon picker <select>s, with `selected` pre-chosen. */

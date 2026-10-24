@@ -35,6 +35,11 @@ registerApp({
 
     <h3 id="cust-apps">${iconSvg('grid')} App modules</h3>
     <div class="field"><label>Search modules</label><input id="cust-q" type="search" placeholder="Search by name, category or id…" style="padding:8px 10px"></div>
+    <div class="card" style="margin:10px 0"><b>App icon images</b>
+      <p class="muted" style="margin:6px 0 8px">Image icons are cropped to fill their icon box everywhere — menu, panel, desktop and window titles — so the picture fills the whole icon instead of sitting inside it. Vector (drawn) icons are unaffected.</p>
+      <label style="display:flex;gap:9px;align-items:center;font-weight:600"><input type="checkbox" id="cust-icon-only" ${userData.settings.iconImageOnly ? 'checked' : ''} style="width:18px;height:18px;accent-color:var(--accent)"> Show image icons on their own — no background behind them</label>
+      <p class="muted" style="margin:6px 0 0">Applies to every app, unless an app's <b>Icon background</b> choice below says otherwise.</p>
+    </div>
     <datalist id="cust-cats">${[...new Set([...CATS, ...Object.values(APPS).map((a) => a.cat)])].map((c) => `<option value="${MH.esc(c)}">`).join('')}</datalist>
     <div id="cust-modlist"></div>
 
@@ -125,12 +130,17 @@ registerApp({
               ${removed ? `<button class="btn sm primary" data-mrestore="${a.id}">${iconSvg('plus')} Add back</button>` : `<button class="btn sm primary" data-mopen="${a.id}">Open</button><button class="btn sm" data-mpin="${a.id}">${userData.settings.pinned.includes(a.id) ? 'Unpin' : iconSvg('pin') + ' Pin'}</button>${PROTECTED.includes(a.id) ? '' : `<button class="btn sm" data-mhide="${a.id}">Remove</button>`}`}
               ${edited ? `<button class="btn sm" data-mreset="${a.id}">Reset</button>` : ''}
             </span></div>
-          <div class="add-form" style="margin-top:9px;grid-template-columns:minmax(170px,1fr) 1.5fr 1.2fr 70px 2fr">
+          <div class="add-form" style="margin-top:9px;grid-template-columns:minmax(170px,1fr) 1.1fr 1.5fr 1.2fr 70px 2fr">
             <div class="field"><label>Icon</label><select data-micon="${a.id}">${iconOptions(a.svgIcon === false ? '__catalog__' : a.icon, BASE_MODULES[a.id]?.svgIcon === false)}</select>
               <button type="button" class="btn sm" data-micon-ask="${a.id}" style="margin-top:5px">${a.iconImage ? 'Replace image…' : 'Set image…'}</button>
               <input data-micon-file="${a.id}" type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/bmp,image/avif" aria-label="Choose image icon for ${MH.esc(a.name)}" hidden>
               ${a.iconImage ? `<button class="btn sm" type="button" data-micon-clear="${a.id}" style="margin-top:5px">${a.svgIcon === false ? 'Use catalog icon' : 'Use vector icon'}</button>` : '<small class="muted">Raster image, up to 8 MB.</small>'}
             </div>
+            <div class="field"><label>Icon background</label><select data-miconbg="${a.id}">
+              <option value="" ${!a.iconBg ? 'selected' : ''}>Use global setting</option>
+              <option value="show" ${a.iconBg === 'show' ? 'selected' : ''}>Show background</option>
+              <option value="hide" ${a.iconBg === 'hide' ? 'selected' : ''}>Image only (no background)</option></select>
+              <small class="muted">Only affects image icons.</small></div>
             <div class="field"><label>Name</label><input data-mname="${a.id}" value="${MH.esc(a.name)}" maxlength="40"></div>
             <div class="field"><label>Category</label><input data-mcat="${a.id}" value="${MH.esc(a.cat)}" list="cust-cats" maxlength="24"></div>
             <div class="field"><label>Order</label><input data-morder="${a.id}" type="number" value="${userData.moduleOverrides[a.id]?.order ?? ''}" placeholder="auto"></div>
@@ -144,6 +154,10 @@ registerApp({
             <button type="button" class="btn sm" data-cicon-ask="${a.id}">${a.iconImage ? 'Replace image…' : 'Set image…'}</button>
             <input data-cicon-file="${a.id}" type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/bmp,image/avif" aria-label="Choose image icon for ${MH.esc(a.name)}" hidden>
             ${a.iconImage ? `<button class="btn sm" type="button" data-cicon-clear="${a.id}">Use named icon</button>` : ''}
+            <label style="display:flex;gap:6px;align-items:center">Icon background <select data-ciconbg="${a.id}">
+              <option value="" ${!a.iconBg ? 'selected' : ''}>Use global setting</option>
+              <option value="show" ${a.iconBg === 'show' ? 'selected' : ''}>Show background</option>
+              <option value="hide" ${a.iconBg === 'hide' ? 'selected' : ''}>Image only (no background)</option></select></label>
             <button class="btn sm primary" data-copen="${a.id}">Open</button><button class="btn sm" data-cmanage="${a.id}">Edit / remove in App Center</button>
           </div></div>`).join('') : '');
       body.querySelectorAll('[data-mopen]').forEach((b) => b.onclick = () => openApp(b.dataset.mopen));
@@ -196,6 +210,17 @@ registerApp({
       body.querySelectorAll('[data-cicon-clear]').forEach((b) => b.onclick = () => {
         if (saveCustomAppIconImage(b.dataset.ciconClear, '')) MH.toast('Using the named icon again.');
       });
+      body.querySelectorAll('[data-ciconbg]').forEach((sel) => sel.onchange = () => {
+        const def = userData.customApps.find((entry) => entry.id === sel.dataset.ciconbg); if (!def) return;
+        const previous = def.iconBg;
+        if (sel.value === 'show' || sel.value === 'hide') def.iconBg = sel.value; else delete def.iconBg;
+        syncCustomApps();
+        if (!saveDataNow()) {
+          if (previous) def.iconBg = previous; else delete def.iconBg;
+          syncCustomApps();
+        }
+        refreshChrome(); drawModules();
+      });
       body.querySelectorAll('[data-mpin]').forEach((b) => b.onclick = () => {
         const id = b.dataset.mpin, p = userData.settings.pinned;
         userData.settings.pinned = p.includes(id) ? p.filter((x) => x !== id) : [...p, id];
@@ -228,6 +253,8 @@ registerApp({
           o.icon = selectedIcon; o.svgIcon = true;
         }
         if (isIconImageData(existing.iconImage) && selectedIcon === currentIconSelection) o.iconImage = existing.iconImage;
+        const iconBg = val('miconbg');
+        if (iconBg === 'show' || iconBg === 'hide') o.iconBg = iconBg;
         if (val('mcat') && val('mcat') !== base.cat) o.cat = val('mcat');
         if (val('mdesc') !== base.desc) o.desc = val('mdesc');
         const ord = body.querySelector(`[data-morder="${id}"]`).value;
@@ -353,6 +380,11 @@ registerApp({
     body.onDestroy = () => window.removeEventListener('proton-desktop-icons-changed', drawShortcuts);
 
     body.querySelector('#cust-q').addEventListener('input', drawModules);
+    body.querySelector('#cust-icon-only').onchange = (e) => {
+      userData.settings.iconImageOnly = e.target.checked;
+      saveData(); refreshChrome(); drawModules();
+      MH.toast(e.target.checked ? 'Image icons now show on their own, with no background.' : 'Image icons now show with their background.');
+    };
     body.querySelector('#cust-goto-appcenter').onclick = () => openApp('appcenter');
     body.querySelectorAll('[data-jump]').forEach((a) => a.onclick = (e) => {
       e.preventDefault();
@@ -383,6 +415,8 @@ registerApp({
       userData.settings.pinned = ['settings', 'appcenter', 'browser'];
       userData.customThemes = []; userData.customWallpapers = [];
       userData.settings.activeThemeId = 'proton-dark';
+      userData.settings.iconImageOnly = false;
+      body.querySelector('#cust-icon-only').checked = false;
       userData.settings.accent = '#ffffff'; userData.settings.wallpaper = 'mint';
       userData.settings.components = { clock: true, desktopHint: true, lockButton: true, userButton: true, startSearch: true, panelLabels: false };
       applyModuleOverrides(); saveData(); applyAccent(); applyWallpaper(); applyComponents(); refreshChrome();
