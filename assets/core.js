@@ -93,9 +93,6 @@ function normalizeUserData() {
   userData.customThemes ||= [];      // {id, name, accent, wallpaper}
   userData.customWallpapers ||= [];  // {id, name, from, to}
   if (!userData.settings.activeThemeId) userData.settings.activeThemeId = 'proton-dark';
-  /* Account-wide icon look: image icons on their own, with no background
-   * tile behind them (a per-app iconBg choice overrides this). */
-  if (userData.settings.iconImageOnly === undefined) userData.settings.iconImageOnly = false;
   userData.settings.components = {
     clock: true, desktopHint: true, lockButton: true, userButton: true,
     startSearch: true, panelLabels: false,
@@ -125,7 +122,7 @@ function syncCustomApps() {
   applyModuleOverrides();
   for (const def of userData.customApps) {
     APPS[def.id] = {
-      id: def.id, name: def.name, icon: def.icon || 'grid', svgIcon: true, iconImage: def.iconImage || '', iconBg: def.iconBg || '', cat: 'My Apps',
+      id: def.id, name: def.name, icon: def.icon || 'grid', svgIcon: true, iconImage: def.iconImage || '', cat: 'My Apps',
       desc: def.desc || def.url, w: 980, h: 620,
       render(body) {
         body.innerHTML = `${bar(def.name, `<span class="muted" style="max-width:340px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${MH.esc(def.url)}</span><button class="btn sm" data-w="reload">${iconSvg('refresh')} Reload</button><button class="btn sm primary" data-w="ext">${iconSvg('external')} Open in new tab</button>`)}
@@ -164,7 +161,7 @@ function applyModuleOverrides() {
   for (const a of Object.values(APPS)) {
     if (dynamicAppIds.has(a.id)) continue;
     const base = BASE_MODULES[a.id]; if (!base) continue;
-    a.name = base.name; a.icon = base.icon; a.svgIcon = base.svgIcon !== false; a.iconImage = base.iconImage || ''; a.iconBg = ''; a.cat = base.cat; a.desc = base.desc;
+    a.name = base.name; a.icon = base.icon; a.svgIcon = base.svgIcon !== false; a.iconImage = base.iconImage || ''; a.cat = base.cat; a.desc = base.desc;
     a.baseIndex = base.index; delete a.sortOrder;
     const o = userData.moduleOverrides[a.id];
     if (o) {
@@ -175,7 +172,6 @@ function applyModuleOverrides() {
       }
       if (o.svgIcon !== undefined) a.svgIcon = o.svgIcon === true || String(o.svgIcon).toLowerCase() === 'true';
       if (isIconImageData(o.iconImage)) a.iconImage = o.iconImage;
-      if (o.iconBg === 'show' || o.iconBg === 'hide') a.iconBg = o.iconBg;
       if (o.cat) a.cat = o.cat;
       if (o.desc !== undefined) a.desc = o.desc;
       if (o.order !== undefined && o.order !== '') a.sortOrder = Number(o.order);

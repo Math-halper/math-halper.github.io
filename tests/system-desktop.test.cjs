@@ -279,7 +279,7 @@ test('catalog icons accept local image paths or named inline SVG defaults', () =
   ]);
   assert.deepEqual(Array.from(ctx.window.PROTON_CATALOG_WARNINGS), []);
   assert.equal(vm.runInContext('appIcon(window.PROTON_APPLICATIONS[0])', ctx),
-    '<img class="icn app-icon-image" src="data/icons/app-logo.png" alt="" aria-hidden="true" draggable="false">');
+    '<img class="icn app-icon-image app-icon-only" src="data/icons/app-logo.png" alt="" aria-hidden="true" draggable="false">');
   assert.match(vm.runInContext('appIcon(window.PROTON_APPLICATIONS[1])', ctx), /^<svg/);
   assert.equal(vm.runInContext('isIconAssetPath("data/icons/app-logo.webp")', ctx), true);
   assert.equal(vm.runInContext('isIconAssetPath("data/icons/../app-logo.png")', ctx), false);
@@ -1256,40 +1256,28 @@ test('Customize saves, displays and resets uploaded app icon images', async () =
     assert.ok(w.document.querySelector('.desktop-icon[data-shortcut="desktop-browser"] img.app-icon-image'));
     assert.ok(browserWindow.el.querySelector('.wic img.app-icon-image'), 'an already-open window title updates live');
 
-    /* Image icons are cropped to fill their icon box, and can be shown on
-     * their own (no background) — globally, or per app. */
+    /* Unless an app has an SVG icon (svgIcon === true), its image icon is
+     * always cropped to fill the icon on its own — no background behind
+     * it, and no choice about it anywhere in Customize. */
     assert.match(source('assets/styles.css'), /\.app-icon-image\{object-fit:cover/,
       'image icons are cropped to fill their icon box');
     assert.match(source('assets/styles.css'), /:has\(>\.app-icon-only\)/,
-      'image-only icons lose the background behind them');
+      'image icons lose the background behind them');
     const menuBrowserImg = () => w.document.querySelector('#startmenu .sm-item[data-app="browser"] img.app-icon-image');
     const desktopBrowserImg = () => w.document.querySelector('.desktop-icon[data-shortcut="desktop-browser"] img.app-icon-image');
-    assert.ok(!menuBrowserImg().classList.contains('app-icon-only'), 'image icons keep their background by default');
-    const iconOnlyBox = body.querySelector('#cust-icon-only');
-    assert.ok(iconOnlyBox && !iconOnlyBox.checked, 'Customize offers the global image-only switch');
-    iconOnlyBox.click();
-    assert.equal(w.eval('userData.settings.iconImageOnly'), true, 'the global switch is saved on the account');
-    assert.ok(menuBrowserImg().classList.contains('app-icon-only'), 'the global switch makes menu icons image-only');
-    assert.ok(desktopBrowserImg().classList.contains('app-icon-only'), 'the global switch makes desktop icons image-only');
-    let bgSelect = body.querySelector('[data-miconbg="browser"]');
-    assert.ok(bgSelect, 'each app offers its own Icon background choice');
-    bgSelect.value = 'show';
-    body.querySelector('[data-msave="browser"]').click();
-    assert.equal(w.eval('APPS.browser.iconBg'), 'show', 'a per-app Show background choice is saved');
-    assert.ok(!menuBrowserImg().classList.contains('app-icon-only'),
-      'a per-app Show background choice beats the global image-only switch');
-    bgSelect = body.querySelector('[data-miconbg="browser"]');
-    bgSelect.value = 'hide';
-    body.querySelector('[data-msave="browser"]').click();
-    assert.equal(w.eval('APPS.browser.iconBg'), 'hide');
-    assert.ok(menuBrowserImg().classList.contains('app-icon-only'), 'a per-app Image only choice is honoured');
-    bgSelect = body.querySelector('[data-miconbg="browser"]');
-    bgSelect.value = '';
-    body.querySelector('[data-msave="browser"]').click();
-    assert.equal(w.eval('APPS.browser.iconBg'), '', 'clearing the per-app choice returns to the global setting');
-    body.querySelector('#cust-icon-only').click();
-    assert.equal(w.eval('userData.settings.iconImageOnly'), false);
-    assert.ok(!menuBrowserImg().classList.contains('app-icon-only'), 'turning the global switch off restores backgrounds');
+    assert.ok(menuBrowserImg().classList.contains('app-icon-only'),
+      'a raster icon always shows as just the image in the menu');
+    assert.ok(desktopBrowserImg().classList.contains('app-icon-only'),
+      'a raster icon always shows as just the image on the desktop');
+    assert.ok(browserWindow.el.querySelector('.wic img.app-icon-image.app-icon-only'),
+      'a raster icon always shows as just the image in window titles');
+    assert.equal(body.querySelector('#cust-icon-only'), null,
+      'Customize has no global image-only switch');
+    assert.equal(body.querySelector('[data-miconbg="browser"]'), null,
+      'Customize has no per-app Icon background choice');
+    const menuSettingsIcon = w.document.querySelector('#startmenu .sm-item[data-app="settings"] .ic');
+    assert.ok(menuSettingsIcon && !menuSettingsIcon.querySelector('img.app-icon-only'),
+      'an SVG-icon app keeps its drawn glyph, not an image');
 
     w.openApp('appcenter');
     const center = w.eval('wins').get('appcenter').body;
@@ -1313,16 +1301,10 @@ test('Customize saves, displays and resets uploaded app icon images', async () =
     Object.defineProperty(customInput, 'files', { configurable: true, value: [{ type: 'image/png', size: 1024 }] });
     await customInput.onchange();
     assert.equal(w.eval("APPS['legacy-image-app'].iconImage"), storedImage);
-    const customBg = body.querySelector('[data-ciconbg="legacy-image-app"]');
-    assert.ok(customBg, 'saved custom apps also offer the Icon background choice');
-    customBg.value = 'hide';
-    customBg.onchange();
-    assert.equal(w.eval("APPS['legacy-image-app'].iconBg"), 'hide', 'a saved app Image only choice is saved');
+    assert.equal(body.querySelector('[data-ciconbg="legacy-image-app"]'), null,
+      'saved custom apps have no Icon background choice either');
     assert.ok(w.document.querySelector('#startmenu .sm-item[data-app="legacy-image-app"] img.app-icon-image.app-icon-only'),
-      'a saved app Image only choice shows in the menu');
-    body.querySelector('[data-ciconbg="legacy-image-app"]').value = '';
-    body.querySelector('[data-ciconbg="legacy-image-app"]').onchange();
-    assert.equal(w.eval("APPS['legacy-image-app'].iconBg"), '', 'a saved app can return to the global setting');
+      'a saved app with an uploaded image always shows as just the image in the menu');
     assert.equal(JSON.parse(w.localStorage.getItem('proton2.user.ada.v1')).customApps[0].iconImage, storedImage);
     w.openApp('appcenter');
     const centerBody = w.eval('wins').get('appcenter').body;

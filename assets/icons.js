@@ -218,20 +218,11 @@ function iconImageFromFile(file) {
   });
 }
 
-/* Whether this app's image icon is shown on its own — just the picture,
- * with no background tile or plate behind it. The per-app choice
- * (iconBg: 'hide' = image only, 'show' = keep the background, saved from
- * Customize → App modules) wins; otherwise the account-wide setting
- * (settings.iconImageOnly, the global switch beside it) decides. Only
- * raster icons have a background to lose, so SVG icons ignore this. */
-function iconImageOnly(app) {
-  if (!app) return false;
-  if (app.iconBg === 'hide') return true;
-  if (app.iconBg === 'show') return false;
-  try { return typeof userData !== 'undefined' && !!userData?.settings?.iconImageOnly; }
-  catch { return false; }
-}
-
+/* An app whose icon is an image (svgIcon is not true — a catalog raster
+ * file or an account-uploaded picture) is always shown as just the
+ * picture, cropped to fill its icon space, with no background tile or
+ * plate behind it. Apps with a named SVG icon (svgIcon === true) keep
+ * the drawn glyph on its tile instead. There is no setting for this. */
 function imageIconHtml(value, only = false) {
   return `<img class="icn app-icon-image${only ? ' app-icon-only' : ''}" src="${value}" alt="" aria-hidden="true" draggable="false">`;
 }
@@ -263,9 +254,8 @@ function catalogIconFor(value, svgIcon = true, fallback = 'grid', only = false) 
 /* An account-uploaded image overrides the catalog default; clearing it falls
  * back to either the catalog's raster path or its named inline SVG. */
 function appIcon(app, fallback = 'grid') {
-  const only = iconImageOnly(app);
-  if (app && isIconImageData(app.iconImage)) return iconFor(app.iconImage, fallback, only);
-  return catalogIconFor(app?.icon, app?.svgIcon !== false, fallback, only);
+  if (app && isIconImageData(app.iconImage)) return iconFor(app.iconImage, fallback, true);
+  return catalogIconFor(app?.icon, app?.svgIcon !== false, fallback, true);
 }
 
 /* <option> list for icon picker <select>s, with `selected` pre-chosen. */
