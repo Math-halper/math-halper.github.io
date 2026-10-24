@@ -22,10 +22,11 @@ Viewer), a small Calculator (new code in `apps/productivity/calculator/`) and We
 (`apps/tools/web-retro/`, a vendored webretro emulator build in
 `apps/tools/web-retro/webretro/` — see `CREDITS.md`; it also carries the
 maintainer's own bundled ROM library).
-The three Celeste Classics apps (`celeste-classic/`, `celeste-two/`,
-`celeste-community/`) carry the actual game files, copied byte-for-byte from
-[Math-halper/Celeste](https://github.com/Math-halper/Celeste) — each app
-folder is the game's own pages plus a thin iframe wrapper. The two Mario
+The Celeste Hub app (`celeste-hub/`, with the game folders `celeste-classic/`,
+`celeste-two/` and `celeste-community/` beside it) carries the actual game
+files, copied byte-for-byte from
+[Math-halper/Celeste](https://github.com/Math-halper/Celeste) — one hub app
+with an in-app chooser frames every Celeste page. The two Mario
 games (`mari0/`, `sm64/`) carry their game builds byte-for-byte from
 [Math-halper/Mario](https://github.com/Math-halper/Mario) — only the games,
 none of that collection's other files. Cookie Clicker (`cookie-clicker/`)
@@ -123,14 +124,7 @@ matching the menu sections (`cat=`, ordered by `CATS` in `assets/core.js`).
 | `games/` | Bloons Tower Defense 5 (`bloons-tower-defense-5`) — the vendored Flash build and loader shim (from Gams-Offline/Gams `g/g/Ruffle/swfs/`; runs on the shared Ruffle player) plus its wrapper |
 | `games/` | Bloxorz (`bloxorz`) — the vendored Flash build and loader shim (from Gams-Offline/Gams `g/g/Ruffle/swfs/`; runs on the shared Ruffle player) plus its wrapper |
 | `games/` | Breaking The Bank (`breaking-the-bank`) — the vendored Flash build and loader shim (from Gams-Offline/Gams `g/g/Ruffle/swfs/`; runs on the shared Ruffle player) plus its wrapper |
-| `games/` | Celeste Classic (`celeste-classic`) — the vendored PICO-8 game (from Math-halper/Celeste `classic/`) plus its wrapper |
-| `games/` | Celeste Classic 2 (`celeste-two`) — the vendored Lani's Trek game (from Math-halper/Celeste `two/`) plus its wrapper |
-| `games/` | Celeste Community (`celeste-community`) — the vendored community hub, practice mods and tools (from Math-halper/Celeste `speed/`) plus its wrapper |
-| `games/` | Celeste Classic Practice Mod (`celeste-practice-mod`) — the Celeste Community practice-mod page (in `celeste-community/`) plus its wrapper |
-| `games/` | Celeste Classic 2 Practice Mod 1.0 (`celeste-two-practice-mod-1-0`) — the Celeste Community page (in `celeste-community/`) plus its wrapper |
-| `games/` | Celeste Classic 2 Practice Mod 1.1 (`celeste-two-practice-mod-1-1`) — the Celeste Community page (in `celeste-community/`) plus its wrapper |
-| `games/` | Celeste Webek (`celeste-webek`) — the Celeste Community page (in `celeste-community/`) plus its wrapper |
-| `games/` | Celeste Classic Downloads (`celeste-downloads`) — the Celeste Community downloads page (in `celeste-community/`) plus its wrapper |
+| `games/` | Celeste Hub (`celeste-hub`) — one app with an in-app chooser for every Celeste game: Celeste Classic (in `celeste-classic/`, from Math-halper/Celeste `classic/`), Celeste Classic 2 (in `celeste-two/`, from `two/`), and the community hub, practice mods, Webek and downloads (in `celeste-community/`, from `speed/`) |
 | `games/` | Cookie Clicker (`cookie-clicker`) — the vendored offline mirror of Orteil's game (from Gams-Offline/Gams `g/g/cookie/`, minus `img/Thumbs.db`) plus its wrapper |
 | `games/` | Drive Mad (`drive-mad`) — the vendored WebGL build (from Gams-Offline/Gams `g/g/`) plus its wrapper |
 | `games/` | Escaping The Prison (`escaping-the-prison`) — the vendored Flash build and loader shim (from Gams-Offline/Gams `g/g/Ruffle/swfs/`; runs on the shared Ruffle player) plus its wrapper |

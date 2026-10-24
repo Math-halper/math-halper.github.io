@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Celeste Hub - proton app</title>
+</head>
+<body>
+<p>This file is a proton app. It is not meant to be opened on its own:
+open <a href="../../../index.html">proton</a> and launch <b>Celeste Hub</b>
+from the proton menu. The script below is fetched and run by proton's HTML
+loader (assets/html-loader.js) at boot.</p>
+<!-- CELESTE HUB — one proton app for every Celeste Classic game.
+
+     The eight Celeste entries that used to sit in the proton menu on their
+     own (Celeste Classic, Celeste Classic 2, Celeste Community and the five
+     community pages) are now chosen inside this one app: pick a game, it
+     loads in the frame below, and "Change game" brings the chooser back.
+
+     No game file moved or changed. The games still live in their own
+     folders, copied byte-for-byte from Math-halper/Celeste (see
+     CREDITS.md):
+
+       apps/games/celeste-classic/   Celeste Classic
+       apps/games/celeste-two/       Celeste Classic 2: Lani's Trek
+       apps/games/celeste-community/ the community hub, its practice mods,
+                                     downloads page and Webek
+
+     The frames are local pages, so they are NOT sandboxed and may use
+     keyboard, audio and fullscreen like any desktop app. Only a game
+     page's own external links (lexaloffle.com etc.) leave the repository,
+     and only when clicked. -->
+<script data-proton-app>
+(() => {
+/* proton app module: Celeste Hub — pick which Celeste game to play.
+ * Loaded by index.html; calls registerApp() (see apps/README.md).
+ * Metadata (name, icon, cat, desc, w, h) lives in data/applications.js. */
+'use strict';
+
+/* Every game the hub can play: [menu name, game page, description].
+ * These are the same pages the eight separate Celeste apps framed
+ * before they were combined into this hub — the tests check that each
+ * one is still here, still on disk and still framed unsandboxed. */
+const CELESTE_GAMES = [
+  ['Celeste Classic', 'apps/games/celeste-classic/index.html',
+   'Play the original Celeste Classic - its actual game files, vendored'],
+  ['Celeste Classic 2', 'apps/games/celeste-two/index.html',
+   "Play Celeste Classic 2: Lani's Trek - its actual game files, vendored"],
+  ['Celeste Community', 'apps/games/celeste-community/index.html',
+   "Celeste Classic's community hub - practice mods, downloads and links"],
+  ['Celeste Classic Practice Mod', 'apps/games/celeste-community/practice_mod_c.html',
+   'Play the Celeste Classic practice mod'],
+  ['Celeste Classic 2 Practice Mod 1.0', 'apps/games/celeste-community/cc2_practice_mod_1.0.html',
+   'Play the Celeste Classic 2 v1.0 practice mod'],
+  ['Celeste Classic 2 Practice Mod 1.1', 'apps/games/celeste-community/cc2_practice_mod_1.1.html',
+   'Play the Celeste Classic 2 v1.1 practice mod'],
+  ['Celeste Webek', 'apps/games/celeste-community/webek.html',
+   'Play Webek - a Celeste Classic PICO-8 game'],
+  ['Celeste Classic Downloads', 'apps/games/celeste-community/downloads.html',
+   'Celeste Classic downloads - standalone builds and links'],
+];
+
+registerApp({
+  render(body) {
+    body.innerHTML = `${bar('Celeste Hub', `<span class="muted embed-src" id="ch-current">Choose a game</span>
+      <button class="btn sm" id="ch-again" hidden>Change game</button>
+      <button class="btn sm" data-e="reload" hidden>${iconSvg('refresh')} Reload</button>
+      <button class="btn sm primary" data-e="ext" hidden>${iconSvg('external')} Open in new tab</button>`)}
+      <div class="app-main pad" id="ch-main"></div>
+      <p class="muted" style="flex:none;margin:0;padding:7px 14px;border-top:1px solid var(--line)">Every Celeste
+        game ships with this app — copied verbatim from <a href="https://github.com/Math-halper/Celeste" target="_blank"
+        rel="noopener">Math-halper/Celeste</a>. <b>Change game</b> brings the list back.</p>`;
+    const main = body.querySelector('#ch-main');
+    const again = body.querySelector('#ch-again');
+    const reload = body.querySelector('[data-e="reload"]');
+    const ext = body.querySelector('[data-e="ext"]');
+    const current = body.querySelector('#ch-current');
+    let frame = null;
+    let page = null;
+
+    /* The chooser: one button per game, Web Retro style. */
+    function picker() {
+      frame = null;
+      page = null;
+      again.hidden = true;
+      reload.hidden = true;
+      ext.hidden = true;
+      current.textContent = 'Choose a game';
+      main.className = 'app-main pad';
+      main.innerHTML = `<style>
+        .ch-intro{margin:0 0 14px}
+        .ch-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
+        .ch-game{display:flex;flex-direction:column;align-items:flex-start;gap:4px;height:auto;
+          padding:12px 14px;text-align:left}
+        .ch-game b{font-size:14px;line-height:1.3}
+        .ch-game span{font-size:12px;line-height:1.4;opacity:.75}
+      </style>
+        <h3 style="margin:0 0 4px">Celeste Hub</h3>
+        <p class="muted ch-intro">Every Celeste Classic game, practice mod and tool in one place.
+          Choose which one to play:</p>
+        <div class="ch-grid">${CELESTE_GAMES.map(([name, , desc], i) => `
+          <button type="button" class="btn ch-game" data-ch-game="${i}"><b>${MH.esc(name)}</b><span>${MH.esc(desc)}</span></button>`).join('')}
+        </div>`;
+      main.querySelectorAll('[data-ch-game]').forEach((b) => b.addEventListener('click', () => {
+        play(Number(b.dataset.chGame));
+      }));
+    }
+
+    /* Load the chosen game page into the frame, like the old wrappers. */
+    function play(i) {
+      const [name, src] = CELESTE_GAMES[i];
+      page = src;
+      again.hidden = false;
+      reload.hidden = false;
+      ext.hidden = false;
+      current.textContent = name;
+      current.title = src;
+      main.className = 'app-main local-page';
+      main.innerHTML = `<iframe class="site-frame" id="ch-frame" title="${MH.esc(name)}" src="${MH.esc(src)}"
+        allow="autoplay; fullscreen; pointer-lock; gamepad" allowfullscreen></iframe>`;
+      frame = main.querySelector('#ch-frame');
+    }
+
+    again.addEventListener('click', picker);
+    reload.onclick = () => { if (frame && page) frame.src = page; };
+    ext.onclick = () => { if (page) window.open(page, '_blank', 'noopener'); };
+    picker();
+  },
+});
+})();
+</script>
+<style>
+/* The toolbar path, truncated like the Browser's. */
+.embed-src{max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}
+</style>
+</body>
+</html>

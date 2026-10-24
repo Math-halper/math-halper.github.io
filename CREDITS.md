@@ -121,39 +121,47 @@ grants no rights in that content.
 
 ## Vendored Celeste Classics
 
-The Celeste apps carry the **actual game files**, copied from
+The **Celeste Hub** app (`apps/games/celeste-hub/`) carries the **actual game
+files**, copied from
 [Math-halper/Celeste](https://github.com/Math-halper/Celeste) (that
-repository's `classic/`, `two/` and `speed/` folders):
+repository's `classic/`, `two/` and `speed/` folders). It is one app with an
+in-app chooser: pick which Celeste game to play, and **Change game** returns
+to the list. The eight choices are the pages that used to be eight separate
+proton apps (`celeste-classic`, `celeste-two`, `celeste-community`,
+`celeste-practice-mod`, `celeste-two-practice-mod-1-0`,
+`celeste-two-practice-mod-1-1`, `celeste-webek` and `celeste-downloads`,
+now combined):
 
 - `apps/games/celeste-classic/` — Celeste Classic (the PICO-8 export of *Celeste
   Classic* by Maddy Thorson & Noel Berry), from `classic/`
 - `apps/games/celeste-two/` — *Celeste Classic 2: Lani's Trek* (community follow-up),
   from `two/`
 - `apps/games/celeste-community/` — the Celeste Classic community hub, its practice
-  mods, downloads and WebEK tool, from `speed/`. Five separate apps
-  (`celeste-practice-mod`, `celeste-two-practice-mod-1-0`,
-  `celeste-two-practice-mod-1-1`, `celeste-webek`, `celeste-downloads`) frame
-  the hub's own pages directly, so every page in the folder is its own game;
-  the pages stay in this shared folder so their relative paths keep working.
+  mods, downloads and WebEK tool, from `speed/`. The hub frames the community
+  hub page, both Classic 2 practice-mod pages, the Classic practice-mod page,
+  Webek and the downloads page directly, so every page in the folder is still
+  its own tested game inside the hub; the pages stay in this shared folder so
+  their relative paths keep working.
 
-Each app folder is the game's own pages plus proton's thin iframe wrappers
-(`app.html`). The only edits to the game files are link fixes in the community
-hub and practice pages: their site-absolute links (`/glossary/` and friends)
-now point at the Celeste Classic community site that hosts those pages, so
-they resolve instead of landing on this site's missing root paths. The pages'
-"all games" links go one level up (`href="../"`), as on the source site —
+The game folders keep the game's own pages; only the hub's `app.html` (in
+`celeste-hub/`) is proton's own code, plus its standalone chooser page
+(`celeste-hub/index.html`, which the "all games" picker links to). The only
+edits to the game files are link fixes in the community hub and practice
+pages: their site-absolute links (`/glossary/` and friends) now point at the
+Celeste Classic community site that hosts those pages, so they resolve
+instead of landing on this site's missing root paths. The pages' "all games"
+links go one level up (`href="../"`), as on the source site —
 `apps/games/index.html` is that picker: proton's own "all games" page listing
 every game in the folder (the source repository's root selector is not used).
 
-The app icons for `celeste-classic` and `celeste-two` are a shared pixel-art
-image uploaded by the repository maintainer; `celeste-community` keeps its
-own icon cropped from the hub's `maddy.png` avatar. Nothing else was redrawn.
+The Celeste Hub icon (`data/icons/celeste-classic.png`) is a shared pixel-art
+image uploaded by the repository maintainer. Nothing else was redrawn.
 
 All rights in the games, builds and assets remain with their authors (the
 Celeste Classic PICO-8 game is © Maddy Thorson, Noel Berry and the PICO-8
 community; the community follow-up, practice mods and tools are © their
 authors). This repository grants no rights in that content — it is here so
-the three apps run from the user's own repository files.
+the hub runs from the user's own repository files.
 
 ## Vendored Mario games
 
@@ -251,19 +259,6 @@ copies the Gams links point at, and no further rights are claimed or implied.
 The app icons are the Gams collection's own icon images for each game, scaled
 into `data/icons/`.
 
-
-## Vendored Subway Surfers
-
-The Subway Surfers app (`apps/games/subway-surfers/`) vendors the WebGL 2.0
-endless-runner by [Rohan Chacko](https://github.com/RohanChacko/Subway-Surfers)
-(MIT — the upstream `LICENSE` ships beside the game):
-
-- Every file in the app folder except proton's `app.html` wrapper is copied
-  byte-for-byte from that repository: `game.html`, `style.css`, the `libs/`,
-  `src/` and `assets/` (textures, sprites and background music). Nothing was
-  edited; the game's own page runs as-is inside the wrapper's frame.
-- The app icon is the game's own `player.png` sprite, squared onto a
-  transparent 250×250 canvas as `data/icons/subway-surfers.png`.
 
 ## Vendored Exst Arcade games (proton-arcade batch)
 
