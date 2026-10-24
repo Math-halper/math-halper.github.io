@@ -297,59 +297,20 @@ Geometry Dash Lite. For every one of them:
 - All rights in these games remain with their original creators; this
   repository grants no rights in that content.
 
-## Vendored games from incrediblerevived11.github.io
+## Vendored game from incrediblerevived11.github.io
 
-Forty-four games were copied from
+One game remains copied from
 [incrediblerevived11/incrediblerevived11.github.io](https://github.com/incrediblerevived11/incrediblerevived11.github.io)
-(the "incrediblewebsite revived" site), each into `apps/games/<id>/`:
-Q1K3, Space Huggers, Evil Glitch, Minecraft Clone, Black Hole Square, The
-Maze of Space Goblins, Edge Not Found, Packabunchas, Connect 3,
-xx142-b2exe, Konnekt, Roadblocks, Asciispace, Calamity, Breakout,
-Asteroids, Breaklock, Universal Paperclips, Chess, Go (Tenuki — its entry
-page is the `examples/example_with_simple_controls_and_gutter.html`
-board), Hextris, Bitcoin Mining Simulator, Space Company, Candy Box,
-Candy Box 2, Trimps, Digital Logic Simulator, Tunnel Rush (Bad), Celeste
-Speedrun Training, Big Ice Tower Tiny Square, A Dark Room, Doom,
-Geometry Dash, Run 3, A Dance of Fire and Ice, Onion's Revenge, Orbital
-Daggers, Icedodo, Neogolf, Larry's Parkour (the Unity build at
-`fps-parkour/fps-parkour/fps-parkour.html`; the folder's outer index is
-just a listing card), Mindustry Classic, Tunnel Glider, Bitburner and
-Kittens Game. For every one of them:
+(the "incrediblewebsite revived" site): **Bitburner**
+(`apps/games/bitburner/`). Forty-four games were originally copied from
+that site; at the maintainer's request the other forty-three were
+removed, and Bitburner is the only one kept.
 
-- The game files are copied byte-for-byte from that repository; the only
-  additions are proton's `app.html` wrappers, which frame each game's
-  own page unsandboxed like every other vendored game. New games use
-  named inline SVG icons rather than raster icon files.
-- Non-entry HTML pages in the source folders (translations, help, demo
-  and duplicate pages — e.g. Candy Box's per-language pages or Celeste
-  Speedrun Training's copies of pages the Celeste Community app already
-  carries) are not carried over: this repository's rule is that every
-  game page under `apps/games/` is its own catalogued game.
-- A few pages needed disclosed touch-ups, listed in their wrappers:
-  Asciispace, Packabunchas and Konnekt ship upstream as bare fragments
-  with no `<html>`/`<head>`/`<body>` prolog, so a minimal prolog was
-  added around the otherwise untouched page; Hextris lost one dead
-  ad-stub script tag that pointed outside the repository; Onion's
-  Revenge and Orbital Daggers gained a local `favicon.png` copied from
-  each game's own icon artwork (their `../favicon.png` link was made
-  local), and Onion's Revenge the missing `assets/svgs/dagger.svg` from
-  Orbital Daggers; Doom gained an empty `css/fonts.css`, Icedodo a drawn
-  `assets/icons/close.png`, and Tunnel Glider an empty `css/temp.css` —
-  files their pages reference but the source folders never ship.
-- **Space Company** is the exception: the incrediblerevived11 copy omits
-  the `lib/`, `data/` and `ui/` folders its page loads and cannot run,
-  so the complete game is vendored byte-for-byte from its own upstream
-  ([sparticle999/SpaceCompany](https://github.com/sparticle999/SpaceCompany))
-  instead, plus an empty supplied `SpaceCompany.min.js` stand-in (the
-  Grunt bundle upstream references but never commits; the page already
-  loads every file it would contain individually).
-- Not added from that site: its "Red vs Blue" page (it frames a remote
-  demo on warmerise.com — remote-embedded games are not shipped), its
-  EmulatorJS demo page and Linux VM link (not games), and the games that
-  were already in the catalog (Retro Bowl, Slope, Tunnel Rush, 2048,
-  Super Mario 64, Tetris, Flappy Bird, Cookie Clicker and the Celeste
-  Classics).
-- All rights in these games remain with their original creators; this
+- Bitburner's game files are copied byte-for-byte from that repository;
+  the only addition is proton's `app.html` wrapper, which frames the
+  game's own page unsandboxed like every other vendored game. It uses a
+  named inline SVG icon rather than a raster icon file.
+- All rights in the game remain with its original creators; this
   repository grants no rights in that content.
 
 ### Embedded-link cleanup (all vendored batches)
@@ -368,20 +329,8 @@ wrapper as well:
 - **Drift Boss** — its Google Analytics block is switched off and its
   Yandex Games SDK URL blanked, so its SDK/analytics loaders stay
   dormant.
-- **A Dark Room**, **Bitburner**, **Hextris**, **Kittens Game**,
-  **Space Company**, **Trimps** — Google Analytics snippets removed
-  (their `ga()` calls are guarded or gone), as are Space Company's
-  Kongregate API script and Google Fonts links/`@import`s and
-  Kittens Game's (commented-out and hostname-gated) Kongregate API
-  loading.
-- **Bitcoin Mining Simulator** — jQuery no longer comes from a CDN;
-  the page loads a local `jquery.min.js` (v1.10.1, copied from A Dark
-  Room's vendored `lib/`).
-- **Calamity**, **Connect 3**, **Hextris**, **Minecraft Clone**,
-  **Tunnel Rush (Bad)** — Google Fonts stylesheet links removed; the
-  games fall back to system fonts.
-- **Universal Paperclips** — the Google Analytics (gtag.js) loader
-  removed.
+- **Bitburner** — its Google Analytics snippet was removed (the
+  `ga()` calls are guarded or gone).
 
 Ordinary `<a href>` links to authors' own sites inside games are
 untouched: a reader may follow them, but nothing loads until they do.

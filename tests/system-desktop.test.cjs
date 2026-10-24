@@ -21,7 +21,7 @@ const ROOT = path.resolve(__dirname, '..');
 const source = (p) => fs.readFileSync(path.join(ROOT, p), 'utf8');
 /* The file system suite FS.appFor() resolves files to. */
 const FS_APPS = ['files', 'text-editor', 'image-viewer', 'media', 'pdf'];
-const SYSTEM_APPS = ['appcenter', 'customize', 'settings', 'about', 'browser', 'calculator', 'files', 'text-editor', 'pdf', 'image-viewer', 'media', 'ruffle-flash-player', 'web-retro', 'you-are-an-idiot', 'game-2048', 'bloons-tower-defense-1', 'bloons-tower-defense-2', 'bloons-tower-defense-5', 'bloxorz', 'breaking-the-bank', 'celeste-classic', 'celeste-two', 'celeste-community', 'celeste-practice-mod', 'celeste-two-practice-mod-1-0', 'celeste-two-practice-mod-1-1', 'celeste-webek', 'celeste-downloads', 'cookie-clicker', 'drive-mad', 'escaping-the-prison', 'fleeing-the-complex', 'grey-box-testing', 'infiltrating-the-airship', 'mari0', 'offline-paradise', 'pacman', 'slope', 'spacebar-clicker', 'stack', 'stealing-the-diamond', 'stickman-hook', 'subway-surfers', 'sm64', 'tetris', 'the-impossible-quiz', 'tunnel-rush', 'baldis-basics', 'minesweeper', 'flappy-bird', 'retro-bowl', 'drift-boss', 'football-bros', 'five-nights-at-freddys-1', 'five-nights-at-freddys-4', 'five-nights-at-freddys-2', 'five-nights-at-freddys-3', 'backrooms', 'kart-bros', 'geometry-dash-lite', 'five-nights-at-freddys-sl', 'q1k3', 'space-huggers', 'evil-glitch', 'minecraft-clone', 'black-hole-square', 'maze-of-space-goblins', 'edge-not-found', 'packabunchas', 'connect-3', 'xx142-b2exe', 'konnekt', 'roadblocks', 'asciispace', 'calamity', 'breakout', 'asteroids', 'breaklock', 'universal-paperclips', 'chess', 'tenuki', 'hextris', 'bitcoin-mining-simulator', 'space-company', 'candy-box', 'candy-box-2', 'trimps', 'digital-logic-simulator', 'tunnel-rush-bad', 'celeste-speedrun-training', 'big-ice-tower-tiny-square', 'a-dark-room', 'doom', 'geometry-dash', 'run-3', 'a-dance-of-fire-and-ice', 'onions-revenge', 'orbital-daggers', 'icedodo', 'neogolf', 'larrys-parkour', 'mindustry', 'tunnel-glider', 'bitburner', 'kittens-game'];
+const SYSTEM_APPS = ['appcenter', 'customize', 'settings', 'about', 'browser', 'calculator', 'files', 'text-editor', 'pdf', 'image-viewer', 'media', 'ruffle-flash-player', 'web-retro', 'you-are-an-idiot', 'game-2048', 'bloons-tower-defense-1', 'bloons-tower-defense-2', 'bloons-tower-defense-5', 'bloxorz', 'breaking-the-bank', 'celeste-classic', 'celeste-two', 'celeste-community', 'celeste-practice-mod', 'celeste-two-practice-mod-1-0', 'celeste-two-practice-mod-1-1', 'celeste-webek', 'celeste-downloads', 'cookie-clicker', 'drive-mad', 'escaping-the-prison', 'fleeing-the-complex', 'grey-box-testing', 'infiltrating-the-airship', 'mari0', 'offline-paradise', 'pacman', 'slope', 'spacebar-clicker', 'stack', 'stealing-the-diamond', 'stickman-hook', 'subway-surfers', 'sm64', 'tetris', 'the-impossible-quiz', 'tunnel-rush', 'baldis-basics', 'minesweeper', 'flappy-bird', 'retro-bowl', 'drift-boss', 'football-bros', 'five-nights-at-freddys-1', 'five-nights-at-freddys-4', 'five-nights-at-freddys-2', 'five-nights-at-freddys-3', 'backrooms', 'kart-bros', 'geometry-dash-lite', 'five-nights-at-freddys-sl', 'bitburner'];
 
 /* Menu sections for each app (data/applications.js cat=), in catalog order.
  * Every new app is filed here with its respective section — the catalog test
@@ -80,50 +80,7 @@ const SYSTEM_CATS = {
   'backrooms': 'Games',
   'kart-bros': 'Games',
   'geometry-dash-lite': 'Games',
-  "kittens-game": 'Games',
   "bitburner": 'Games',
-  "tunnel-glider": 'Games',
-  "mindustry": 'Games',
-  "larrys-parkour": 'Games',
-  "neogolf": 'Games',
-  "icedodo": 'Games',
-  "orbital-daggers": 'Games',
-  "onions-revenge": 'Games',
-  "a-dance-of-fire-and-ice": 'Games',
-  "run-3": 'Games',
-  "geometry-dash": 'Games',
-  "doom": 'Games',
-  "a-dark-room": 'Games',
-  "big-ice-tower-tiny-square": 'Games',
-  "celeste-speedrun-training": 'Games',
-  "tunnel-rush-bad": 'Games',
-  "digital-logic-simulator": 'Games',
-  "trimps": 'Games',
-  "candy-box-2": 'Games',
-  "candy-box": 'Games',
-  "space-company": 'Games',
-  "bitcoin-mining-simulator": 'Games',
-  "hextris": 'Games',
-  "tenuki": 'Games',
-  "chess": 'Games',
-  "universal-paperclips": 'Games',
-  "breaklock": 'Games',
-  "asteroids": 'Games',
-  "breakout": 'Games',
-  "calamity": 'Games',
-  "asciispace": 'Games',
-  "roadblocks": 'Games',
-  "konnekt": 'Games',
-  "xx142-b2exe": 'Games',
-  "connect-3": 'Games',
-  "packabunchas": 'Games',
-  "edge-not-found": 'Games',
-  "maze-of-space-goblins": 'Games',
-  "black-hole-square": 'Games',
-  "minecraft-clone": 'Games',
-  "evil-glitch": 'Games',
-  "space-huggers": 'Games',
-  "q1k3": 'Games',
   'five-nights-at-freddys-sl': 'Games',
 };
 /* Each game app frames the game page that ships in its own folder. */
@@ -175,50 +132,7 @@ const GAME_PAGES = {
   'kart-bros': 'apps/games/kart-bros/index.html',
   'geometry-dash-lite': 'apps/games/geometry-dash-lite/index.html',
   'five-nights-at-freddys-sl': 'apps/games/five-nights-at-freddys-sl/index.html',
-  "kittens-game": 'apps/games/kittens-game/index.html',
   "bitburner": 'apps/games/bitburner/index.html',
-  "tunnel-glider": 'apps/games/tunnel-glider/index.html',
-  "mindustry": 'apps/games/mindustry/index.html',
-  "larrys-parkour": 'apps/games/larrys-parkour/fps-parkour.html',
-  "neogolf": 'apps/games/neogolf/index.html',
-  "icedodo": 'apps/games/icedodo/index.html',
-  "orbital-daggers": 'apps/games/orbital-daggers/index.html',
-  "onions-revenge": 'apps/games/onions-revenge/index.html',
-  "a-dance-of-fire-and-ice": 'apps/games/a-dance-of-fire-and-ice/index.html',
-  "run-3": 'apps/games/run-3/index.html',
-  "geometry-dash": 'apps/games/geometry-dash/index.html',
-  "doom": 'apps/games/doom/index.html',
-  "a-dark-room": 'apps/games/a-dark-room/index.html',
-  "big-ice-tower-tiny-square": 'apps/games/big-ice-tower-tiny-square/index.html',
-  "celeste-speedrun-training": 'apps/games/celeste-speedrun-training/index.html',
-  "tunnel-rush-bad": 'apps/games/tunnel-rush-bad/index.html',
-  "digital-logic-simulator": 'apps/games/digital-logic-simulator/index.html',
-  "trimps": 'apps/games/trimps/index.html',
-  "candy-box-2": 'apps/games/candy-box-2/index.html',
-  "candy-box": 'apps/games/candy-box/index.html',
-  "space-company": 'apps/games/space-company/index.html',
-  "bitcoin-mining-simulator": 'apps/games/bitcoin-mining-simulator/index.html',
-  "hextris": 'apps/games/hextris/index.html',
-  "tenuki": 'apps/games/tenuki/examples/example_with_simple_controls_and_gutter.html',
-  "chess": 'apps/games/chess/index.html',
-  "universal-paperclips": 'apps/games/universal-paperclips/index.html',
-  "breaklock": 'apps/games/breaklock/index.html',
-  "asteroids": 'apps/games/asteroids/index.html',
-  "breakout": 'apps/games/breakout/index.html',
-  "calamity": 'apps/games/calamity/index.html',
-  "asciispace": 'apps/games/asciispace/index.html',
-  "roadblocks": 'apps/games/roadblocks/index.html',
-  "konnekt": 'apps/games/konnekt/index.html',
-  "xx142-b2exe": 'apps/games/xx142-b2exe/index.html',
-  "connect-3": 'apps/games/connect-3/index.html',
-  "packabunchas": 'apps/games/packabunchas/index.html',
-  "edge-not-found": 'apps/games/edge-not-found/index.html',
-  "maze-of-space-goblins": 'apps/games/maze-of-space-goblins/index.html',
-  "black-hole-square": 'apps/games/black-hole-square/index.html',
-  "minecraft-clone": 'apps/games/minecraft-clone/index.html',
-  "evil-glitch": 'apps/games/evil-glitch/index.html',
-  "space-huggers": 'apps/games/space-huggers/index.html',
-  "q1k3": 'apps/games/q1k3/index.html',
 };
 /* Games whose pages carry the source sites' href="../" all-games link. */
 const PICKER_LINKED = ['celeste-classic', 'celeste-two', 'celeste-community', 'cookie-clicker', 'sm64'];
@@ -1278,7 +1192,7 @@ test('Customize saves, displays and resets uploaded app icon images', async () =
     const browserWindow = w.eval('wins').get('browser');
     assert.equal(body.querySelector('#cust-files-shortcut'), null, 'Customize still offers a Files shortcut');
     assert.deepEqual([...body.querySelectorAll('#cust-modlist .card b')].map((b) => b.textContent).slice(0, SYSTEM_APPS.length),
-            ["App Center", "Customize", "Settings", "About", "Browser", "Calculator", "Files", "Text Editor", "PDF Viewer", "Image Viewer", "Media", "Ruffle Flash Player", "Web Retro", "You Are An Idiot", "2048", "Bloons Tower Defense 1", "Bloons Tower Defense 2", "Bloons Tower Defense 5", "Bloxorz", "Breaking The Bank", "Celeste Classic", "Celeste Classic 2", "Celeste Community", "Celeste Classic Practice Mod", "Celeste Classic 2 Practice Mod 1.0", "Celeste Classic 2 Practice Mod 1.1", "Celeste Webek", "Celeste Classic Downloads", "Cookie Clicker", "Drive Mad", "Escaping The Prison", "Fleeing The Complex", "Grey Box Testing", "Infiltrating The Airship", "Mari0", "Offline Paradise", "Pacman", "Slope", "Spacebar Clicker", "Stack", "Stealing The Diamond", "Stickman Hook", "Subway Surfers", "Super Mario 64", "Tetris", "The Impossible Quiz", "Tunnel Rush", "Baldi's Basics", "Minesweeper", "Flappy Bird", "Retro Bowl", "Drift Boss", "Football Bros", "Five Nights at Freddy's", "Five Nights at Freddy's 4", "Five Nights at Freddy's 2", "Five Nights at Freddy's 3", "Backrooms", "Kart Bros", "Geometry Dash Lite", "Five Nights at Freddy's: Sister Location", "Q1K3", "Space Huggers", "Evil Glitch", "Minecraft Clone", "Black Hole Square", "The Maze of Space Goblins", "Edge Not Found", "Packabunchas", "Connect 3", "xx142-b2exe", "Konnekt", "Roadblocks", "Asciispace", "Calamity", "Breakout", "Asteroids", "Breaklock", "Universal Paperclips", "Chess", "Go (Tenuki)", "Hextris", "Bitcoin Mining Simulator", "Space Company", "Candy Box", "Candy Box 2", "Trimps", "Digital Logic Simulator", "Tunnel Rush (Bad)", "Celeste Speedrun Training", "Big Ice Tower Tiny Square", "A Dark Room", "Doom", "Geometry Dash", "Run 3", "A Dance of Fire and Ice", "Onion's Revenge", "Orbital Daggers", "Icedodo", "Neogolf", "Larry's Parkour", "Mindustry Classic", "Tunnel Glider", "Bitburner", "Kittens Game"]);
+            ["App Center", "Customize", "Settings", "About", "Browser", "Calculator", "Files", "Text Editor", "PDF Viewer", "Image Viewer", "Media", "Ruffle Flash Player", "Web Retro", "You Are An Idiot", "2048", "Bloons Tower Defense 1", "Bloons Tower Defense 2", "Bloons Tower Defense 5", "Bloxorz", "Breaking The Bank", "Celeste Classic", "Celeste Classic 2", "Celeste Community", "Celeste Classic Practice Mod", "Celeste Classic 2 Practice Mod 1.0", "Celeste Classic 2 Practice Mod 1.1", "Celeste Webek", "Celeste Classic Downloads", "Cookie Clicker", "Drive Mad", "Escaping The Prison", "Fleeing The Complex", "Grey Box Testing", "Infiltrating The Airship", "Mari0", "Offline Paradise", "Pacman", "Slope", "Spacebar Clicker", "Stack", "Stealing The Diamond", "Stickman Hook", "Subway Surfers", "Super Mario 64", "Tetris", "The Impossible Quiz", "Tunnel Rush", "Baldi's Basics", "Minesweeper", "Flappy Bird", "Retro Bowl", "Drift Boss", "Football Bros", "Five Nights at Freddy's", "Five Nights at Freddy's 4", "Five Nights at Freddy's 2", "Five Nights at Freddy's 3", "Backrooms", "Kart Bros", "Geometry Dash Lite", "Five Nights at Freddy's: Sister Location", "Bitburner"]);
 
     const uploadBrowserIcon = async () => {
       const input = body.querySelector('[data-micon-file="browser"]');
