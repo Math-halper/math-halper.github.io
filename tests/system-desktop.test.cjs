@@ -1,8 +1,8 @@
 /* The current build keeps its five desktop System apps plus the file system
  * suite (Files, Text Editor, Image Viewer, Media, PDF Viewer — copied from
  * main), a Calculator and Web Retro (a vendored webretro emulator, no ROMs
- * included), and the vendored game apps — the Celeste Classics trio
- * (github.com/Math-halper/Celeste), Cookie Clicker plus 23 more games
+ * included), and the vendored game apps — the Celeste Hub
+ * (github.com/Math-halper/Celeste, every Celeste game in one app), Cookie Clicker plus 23 more games
  * (github.com/Gams-Offline/Gams), 12 more vendored games,
  * and Mari0 + Super Mario 64
  * (github.com/Math-halper/Mario, only the game builds) — each a thin wrapper
@@ -21,7 +21,7 @@ const ROOT = path.resolve(__dirname, '..');
 const source = (p) => fs.readFileSync(path.join(ROOT, p), 'utf8');
 /* The file system suite FS.appFor() resolves files to. */
 const FS_APPS = ['files', 'text-editor', 'image-viewer', 'media', 'pdf'];
-const SYSTEM_APPS = ['appcenter', 'customize', 'settings', 'about', 'browser', 'calculator', 'files', 'text-editor', 'pdf', 'image-viewer', 'media', 'ruffle-flash-player', 'web-retro', 'you-are-an-idiot', 'game-2048', 'bloons-tower-defense-1', 'bloons-tower-defense-2', 'bloons-tower-defense-5', 'bloxorz', 'breaking-the-bank', 'celeste-classic', 'celeste-two', 'celeste-community', 'celeste-practice-mod', 'celeste-two-practice-mod-1-0', 'celeste-two-practice-mod-1-1', 'celeste-webek', 'celeste-downloads', 'cookie-clicker', 'drive-mad', 'escaping-the-prison', 'fleeing-the-complex', 'grey-box-testing', 'infiltrating-the-airship', 'mari0', 'offline-paradise', 'pacman', 'slope', 'spacebar-clicker', 'stack', 'stealing-the-diamond', 'stickman-hook', 'subway-surfers', 'sm64', 'tetris', 'the-impossible-quiz', 'tunnel-rush', 'baldis-basics', 'minesweeper', 'flappy-bird', 'retro-bowl', 'drift-boss', 'football-bros', 'five-nights-at-freddys-1', 'five-nights-at-freddys-4', 'five-nights-at-freddys-2', 'five-nights-at-freddys-3', 'backrooms', 'kart-bros', 'geometry-dash-lite', 'five-nights-at-freddys-sl', 'q1k3', 'space-huggers', 'evil-glitch', 'minecraft-clone', 'black-hole-square', 'maze-of-space-goblins', 'edge-not-found', 'packabunchas', 'connect-3', 'xx142-b2exe', 'konnekt', 'roadblocks', 'asciispace', 'calamity', 'breakout', 'asteroids', 'breaklock', 'universal-paperclips', 'chess', 'tenuki', 'hextris', 'bitcoin-mining-simulator', 'space-company', 'candy-box', 'candy-box-2', 'trimps', 'digital-logic-simulator', 'tunnel-rush-bad', 'celeste-speedrun-training', 'big-ice-tower-tiny-square', 'a-dark-room', 'doom', 'geometry-dash', 'run-3', 'a-dance-of-fire-and-ice', 'onions-revenge', 'orbital-daggers', 'icedodo', 'neogolf', 'larrys-parkour', 'mindustry', 'tunnel-glider', 'bitburner', 'kittens-game'];
+const SYSTEM_APPS = ['appcenter', 'customize', 'settings', 'about', 'browser', 'calculator', 'files', 'text-editor', 'pdf', 'image-viewer', 'media', 'ruffle-flash-player', 'web-retro', 'you-are-an-idiot', 'game-2048', 'bloons-tower-defense-1', 'bloons-tower-defense-2', 'bloons-tower-defense-5', 'bloxorz', 'breaking-the-bank', 'celeste-hub', 'cookie-clicker', 'drive-mad', 'escaping-the-prison', 'fleeing-the-complex', 'grey-box-testing', 'infiltrating-the-airship', 'mari0', 'offline-paradise', 'pacman', 'slope', 'spacebar-clicker', 'stack', 'stealing-the-diamond', 'stickman-hook', 'sm64', 'tetris', 'the-impossible-quiz', 'tunnel-rush', 'baldis-basics', 'minesweeper', 'flappy-bird', 'retro-bowl', 'drift-boss', 'football-bros', 'five-nights-at-freddys-1', 'five-nights-at-freddys-4', 'five-nights-at-freddys-2', 'five-nights-at-freddys-3', 'backrooms', 'kart-bros', 'geometry-dash-lite', 'five-nights-at-freddys-sl', 'bitburner'];
 
 /* Menu sections for each app (data/applications.js cat=), in catalog order.
  * Every new app is filed here with its respective section — the catalog test
@@ -37,14 +37,7 @@ const SYSTEM_CATS = {
   'bloons-tower-defense-5': 'Games',
   'bloxorz': 'Games',
   'breaking-the-bank': 'Games',
-  'celeste-classic': 'Games',
-  'celeste-two': 'Games',
-  'celeste-community': 'Games',
-  'celeste-practice-mod': 'Games',
-  'celeste-two-practice-mod-1-0': 'Games',
-  'celeste-two-practice-mod-1-1': 'Games',
-  'celeste-webek': 'Games',
-  'celeste-downloads': 'Games',
+  'celeste-hub': 'Games',
   'cookie-clicker': 'Games',
   'drive-mad': 'Games',
   'escaping-the-prison': 'Games',
@@ -60,7 +53,6 @@ const SYSTEM_CATS = {
   'stack': 'Games',
   'stealing-the-diamond': 'Games',
   'stickman-hook': 'Games',
-  'subway-surfers': 'Games',
   'sm64': 'Games',
   'tetris': 'Games',
   'the-impossible-quiz': 'Games',
@@ -80,50 +72,7 @@ const SYSTEM_CATS = {
   'backrooms': 'Games',
   'kart-bros': 'Games',
   'geometry-dash-lite': 'Games',
-  "kittens-game": 'Games',
   "bitburner": 'Games',
-  "tunnel-glider": 'Games',
-  "mindustry": 'Games',
-  "larrys-parkour": 'Games',
-  "neogolf": 'Games',
-  "icedodo": 'Games',
-  "orbital-daggers": 'Games',
-  "onions-revenge": 'Games',
-  "a-dance-of-fire-and-ice": 'Games',
-  "run-3": 'Games',
-  "geometry-dash": 'Games',
-  "doom": 'Games',
-  "a-dark-room": 'Games',
-  "big-ice-tower-tiny-square": 'Games',
-  "celeste-speedrun-training": 'Games',
-  "tunnel-rush-bad": 'Games',
-  "digital-logic-simulator": 'Games',
-  "trimps": 'Games',
-  "candy-box-2": 'Games',
-  "candy-box": 'Games',
-  "space-company": 'Games',
-  "bitcoin-mining-simulator": 'Games',
-  "hextris": 'Games',
-  "tenuki": 'Games',
-  "chess": 'Games',
-  "universal-paperclips": 'Games',
-  "breaklock": 'Games',
-  "asteroids": 'Games',
-  "breakout": 'Games',
-  "calamity": 'Games',
-  "asciispace": 'Games',
-  "roadblocks": 'Games',
-  "konnekt": 'Games',
-  "xx142-b2exe": 'Games',
-  "connect-3": 'Games',
-  "packabunchas": 'Games',
-  "edge-not-found": 'Games',
-  "maze-of-space-goblins": 'Games',
-  "black-hole-square": 'Games',
-  "minecraft-clone": 'Games',
-  "evil-glitch": 'Games',
-  "space-huggers": 'Games',
-  "q1k3": 'Games',
   'five-nights-at-freddys-sl': 'Games',
 };
 /* Each game app frames the game page that ships in its own folder. */
@@ -134,14 +83,6 @@ const GAME_PAGES = {
   'bloons-tower-defense-5': 'apps/games/bloons-tower-defense-5/bloonstowerdefense5.html',
   'bloxorz': 'apps/games/bloxorz/bloxorz.html',
   'breaking-the-bank': 'apps/games/breaking-the-bank/breakingthebank.html',
-  'celeste-classic': 'apps/games/celeste-classic/index.html',
-  'celeste-two': 'apps/games/celeste-two/index.html',
-  'celeste-community': 'apps/games/celeste-community/index.html',
-  'celeste-practice-mod': 'apps/games/celeste-community/practice_mod_c.html',
-  'celeste-two-practice-mod-1-0': 'apps/games/celeste-community/cc2_practice_mod_1.0.html',
-  'celeste-two-practice-mod-1-1': 'apps/games/celeste-community/cc2_practice_mod_1.1.html',
-  'celeste-webek': 'apps/games/celeste-community/webek.html',
-  'celeste-downloads': 'apps/games/celeste-community/downloads.html',
   'cookie-clicker': 'apps/games/cookie-clicker/index.html',
   'drive-mad': 'apps/games/drive-mad/drivemad.html',
   'escaping-the-prison': 'apps/games/escaping-the-prison/escapingtheprison.html',
@@ -156,7 +97,6 @@ const GAME_PAGES = {
   'stack': 'apps/games/stack/stack.html',
   'stealing-the-diamond': 'apps/games/stealing-the-diamond/stealingthediamond.html',
   'stickman-hook': 'apps/games/stickman-hook/stickmanhook.html',
-  'subway-surfers': 'apps/games/subway-surfers/game.html',
   'sm64': 'apps/games/sm64/index.html',
   'tetris': 'apps/games/tetris/tetris.html',
   'the-impossible-quiz': 'apps/games/the-impossible-quiz/theimpossiblequiz.html',
@@ -175,51 +115,24 @@ const GAME_PAGES = {
   'kart-bros': 'apps/games/kart-bros/index.html',
   'geometry-dash-lite': 'apps/games/geometry-dash-lite/index.html',
   'five-nights-at-freddys-sl': 'apps/games/five-nights-at-freddys-sl/index.html',
-  "kittens-game": 'apps/games/kittens-game/index.html',
   "bitburner": 'apps/games/bitburner/index.html',
-  "tunnel-glider": 'apps/games/tunnel-glider/index.html',
-  "mindustry": 'apps/games/mindustry/index.html',
-  "larrys-parkour": 'apps/games/larrys-parkour/fps-parkour.html',
-  "neogolf": 'apps/games/neogolf/index.html',
-  "icedodo": 'apps/games/icedodo/index.html',
-  "orbital-daggers": 'apps/games/orbital-daggers/index.html',
-  "onions-revenge": 'apps/games/onions-revenge/index.html',
-  "a-dance-of-fire-and-ice": 'apps/games/a-dance-of-fire-and-ice/index.html',
-  "run-3": 'apps/games/run-3/index.html',
-  "geometry-dash": 'apps/games/geometry-dash/index.html',
-  "doom": 'apps/games/doom/index.html',
-  "a-dark-room": 'apps/games/a-dark-room/index.html',
-  "big-ice-tower-tiny-square": 'apps/games/big-ice-tower-tiny-square/index.html',
-  "celeste-speedrun-training": 'apps/games/celeste-speedrun-training/index.html',
-  "tunnel-rush-bad": 'apps/games/tunnel-rush-bad/index.html',
-  "digital-logic-simulator": 'apps/games/digital-logic-simulator/index.html',
-  "trimps": 'apps/games/trimps/index.html',
-  "candy-box-2": 'apps/games/candy-box-2/index.html',
-  "candy-box": 'apps/games/candy-box/index.html',
-  "space-company": 'apps/games/space-company/index.html',
-  "bitcoin-mining-simulator": 'apps/games/bitcoin-mining-simulator/index.html',
-  "hextris": 'apps/games/hextris/index.html',
-  "tenuki": 'apps/games/tenuki/examples/example_with_simple_controls_and_gutter.html',
-  "chess": 'apps/games/chess/index.html',
-  "universal-paperclips": 'apps/games/universal-paperclips/index.html',
-  "breaklock": 'apps/games/breaklock/index.html',
-  "asteroids": 'apps/games/asteroids/index.html',
-  "breakout": 'apps/games/breakout/index.html',
-  "calamity": 'apps/games/calamity/index.html',
-  "asciispace": 'apps/games/asciispace/index.html',
-  "roadblocks": 'apps/games/roadblocks/index.html',
-  "konnekt": 'apps/games/konnekt/index.html',
-  "xx142-b2exe": 'apps/games/xx142-b2exe/index.html',
-  "connect-3": 'apps/games/connect-3/index.html',
-  "packabunchas": 'apps/games/packabunchas/index.html',
-  "edge-not-found": 'apps/games/edge-not-found/index.html',
-  "maze-of-space-goblins": 'apps/games/maze-of-space-goblins/index.html',
-  "black-hole-square": 'apps/games/black-hole-square/index.html',
-  "minecraft-clone": 'apps/games/minecraft-clone/index.html',
-  "evil-glitch": 'apps/games/evil-glitch/index.html',
-  "space-huggers": 'apps/games/space-huggers/index.html',
-  "q1k3": 'apps/games/q1k3/index.html',
 };
+/* Celeste Hub is one app that frames eight Celeste pages (plus its own
+ * standalone chooser page, apps/games/celeste-hub/index.html, which the
+ * folder picker links to). The eight pages used to be eight separate
+ * catalog apps; they stay individually listed here so every one is still
+ * checked as its own tested game page below. */
+const CELESTE_HUB_PAGES = [
+  'apps/games/celeste-classic/index.html',
+  'apps/games/celeste-two/index.html',
+  'apps/games/celeste-community/index.html',
+  'apps/games/celeste-community/practice_mod_c.html',
+  'apps/games/celeste-community/cc2_practice_mod_1.0.html',
+  'apps/games/celeste-community/cc2_practice_mod_1.1.html',
+  'apps/games/celeste-community/webek.html',
+  'apps/games/celeste-community/downloads.html',
+];
+const CELESTE_HUB_ALL_PAGES = ['apps/games/celeste-hub/index.html', ...CELESTE_HUB_PAGES];
 /* Games whose pages carry the source sites' href="../" all-games link. */
 const PICKER_LINKED = ['celeste-classic', 'celeste-two', 'celeste-community', 'cookie-clicker', 'sm64'];
 /* Every script index.html loads, in order, minus boot.js (which starts the
@@ -269,14 +182,7 @@ test('the catalog is the desktop apps, the file system suite, a calculator, web 
     'bloons-tower-defense-5': 'data/icons/bloons-tower-defense-5.png',
     'bloxorz': 'data/icons/bloxorz.png',
     'breaking-the-bank': 'data/icons/breaking-the-bank.png',
-    'celeste-classic': 'data/icons/celeste-classic.png',
-    'celeste-two': 'data/icons/celeste-two.png',
-    'celeste-community': 'data/icons/celeste-community.png',
-    'celeste-practice-mod': 'data/icons/celeste-community.png',
-    'celeste-two-practice-mod-1-0': 'data/icons/celeste-two.png',
-    'celeste-two-practice-mod-1-1': 'data/icons/celeste-two.png',
-    'celeste-webek': 'data/icons/celeste-community.png',
-    'celeste-downloads': 'data/icons/celeste-community.png',
+    'celeste-hub': 'data/icons/celeste-classic.png',
     'cookie-clicker': 'data/icons/cookie-clicker.png',
     'drive-mad': 'data/icons/drive-mad.png',
     'escaping-the-prison': 'data/icons/escaping-the-prison.png',
@@ -292,7 +198,6 @@ test('the catalog is the desktop apps, the file system suite, a calculator, web 
     'stack': 'data/icons/stack.png',
     'stealing-the-diamond': 'data/icons/stealing-the-diamond.png',
     'stickman-hook': 'data/icons/stickman-hook.png',
-    'subway-surfers': 'data/icons/subway-surfers.png',
     'sm64': 'data/icons/sm64.png',
     'tetris': 'data/icons/tetris.png',
     'the-impossible-quiz': 'data/icons/the-impossible-quiz.png',
@@ -374,7 +279,7 @@ test('catalog icons accept local image paths or named inline SVG defaults', () =
   ]);
   assert.deepEqual(Array.from(ctx.window.PROTON_CATALOG_WARNINGS), []);
   assert.equal(vm.runInContext('appIcon(window.PROTON_APPLICATIONS[0])', ctx),
-    '<img class="icn app-icon-image" src="data/icons/app-logo.png" alt="" aria-hidden="true" draggable="false">');
+    '<img class="icn app-icon-image app-icon-only" src="data/icons/app-logo.png" alt="" aria-hidden="true" draggable="false">');
   assert.match(vm.runInContext('appIcon(window.PROTON_APPLICATIONS[1])', ctx), /^<svg/);
   assert.equal(vm.runInContext('isIconAssetPath("data/icons/app-logo.webp")', ctx), true);
   assert.equal(vm.runInContext('isIconAssetPath("data/icons/../app-logo.png")', ctx), false);
@@ -396,8 +301,9 @@ test('every catalog entry points at a real, syntactically valid app module', () 
     assert.match(script[1], /registerApp\(/, `${app.id} never registers itself`);
     assert.equal(app.streamed, undefined, `${app.id} should load at boot, not lazily`);
   }
-  /* The Celeste apps are wrapper + game: the actual game files are vendored
-   * from Math-halper/Celeste, byte-for-byte, one app per game. */
+  /* Most games are wrapper + game: the actual game files are vendored,
+   * byte-for-byte, one app per game. Celeste is the exception — one hub
+   * app (below) frames all eight Celeste pages. */
   for (const [id, page] of Object.entries(GAME_PAGES)) {
     const app = apps.find((entry) => entry.id === id);
     assert.ok(app, `Missing catalog entry for ${id}`);
@@ -408,6 +314,26 @@ test('every catalog entry points at a real, syntactically valid app module', () 
     assert.ok(html.includes('allowfullscreen'), `${id} frame cannot go fullscreen`);
     assert.ok(html.includes('[data-e="ext"]'), `${id} has no Open in new tab escape hatch`);
     assert.ok(fs.existsSync(path.join(ROOT, page)), `${id}'s game page is missing`);
+  }
+  /* Celeste Hub: one catalog app choosing between all eight Celeste
+   * pages. Its chooser must offer every page, frame it unsandboxed with
+   * fullscreen and an escape hatch, and be able to return to the list. */
+  const hub = apps.find((entry) => entry.id === 'celeste-hub');
+  assert.ok(hub, 'Missing catalog entry for celeste-hub');
+  const hubHtml = source(hub.path);
+  for (const page of CELESTE_HUB_PAGES) {
+    assert.ok(hubHtml.includes(page), `celeste-hub does not offer ${page}`);
+    assert.ok(fs.existsSync(path.join(ROOT, page)), `celeste-hub game page is missing: ${page}`);
+  }
+  assert.ok(hubHtml.includes('Change game'), 'celeste-hub has no way back to its game chooser');
+  assert.ok(hubHtml.includes('[data-e="ext"]'), 'celeste-hub has no Open in new tab escape hatch');
+  assert.ok(/<iframe[^>]*allowfullscreen/.test(hubHtml.replace(/\n/g, ' ')) || hubHtml.includes('allowfullscreen'),
+    'celeste-hub frame cannot go fullscreen');
+  assert.ok(!/sandbox=/.test(hubHtml), 'celeste-hub frames its own local game pages sandboxed');
+  const hubPicker = source('apps/games/celeste-hub/index.html');
+  for (const page of CELESTE_HUB_PAGES) {
+    const rel = page.replace('apps/games/', '../');
+    assert.ok(hubPicker.includes(rel), `apps/games/celeste-hub/index.html does not link to ${page}`);
   }
   /* The vendored games really are the games: their builds are huge. */
   for (const [p, min] of [
@@ -441,6 +367,9 @@ test('every catalog entry points at a real, syntactically valid app module', () 
   for (const id of Object.keys(GAME_PAGES)) {
     assert.ok(picker.includes(`./${id}/`), `apps/games/index.html does not link to ${id}`);
   }
+  assert.ok(picker.includes('./celeste-hub/'), 'apps/games/index.html does not link to celeste-hub');
+  assert.ok(!picker.includes('./celeste-classic/') && !picker.includes('./subway-surfers'),
+    'apps/games/index.html still lists a Celeste game or Subway Surfers as its own app');
 
   /* Every app lives inside its category folder — apps/<category>/<folder>/ —
    * and each category folder holds exactly its own apps. */
@@ -454,7 +383,13 @@ test('every catalog entry points at a real, syntactically valid app module', () 
       .filter((e) => e.isDirectory()).map((e) => e.name).sort();
     /* Array.from: apps lives in the catalog vm realm — copy into this realm
      * so the arrays compare by structure, not realm identity. */
-    const expected = Array.from(apps).filter((a) => a.cat === cat).map((a) => a.path.split('/')[2]).sort();
+    const expected = Array.from(apps).filter((a) => a.cat === cat).map((a) => a.path.split('/')[2]);
+    /* Celeste Hub is a single Games app, but its games keep their own
+     * vendored folders (celeste-classic/, celeste-two/, celeste-community/)
+     * beside celeste-hub/ so their byte-for-byte files and relative paths
+     * do not move. Those three are the hub's game folders, not apps. */
+    if (cat === 'Games') expected.push('celeste-classic', 'celeste-community', 'celeste-two');
+    expected.sort();
     assert.deepEqual(dirs, expected, `apps/${dir}/ should hold exactly the ${cat} apps`);
   }
 
@@ -477,8 +412,8 @@ test('every game HTML file is its own game and none of its assets are missing', 
   const pages = walk('apps/games', 'apps/games/')
     .filter((rel) => !rel.endsWith('/app.html') && rel !== 'apps/games/index.html')
     .sort();
-  assert.deepEqual([...Object.values(GAME_PAGES)].sort(), pages,
-    'every game HTML file should be its own catalogued game');
+  assert.deepEqual([...Object.values(GAME_PAGES), ...CELESTE_HUB_ALL_PAGES].sort(), pages,
+    'every game HTML file should be its own catalogued game (the Celeste pages belong to Celeste Hub)');
   for (const page of pages) {
     const html = source(page);
     assert.match(html, /<(?:html|head|body)[\s>]/i, `${page} does not look like an HTML page`);
@@ -994,6 +929,32 @@ test('the desktop boots, lists and opens all catalogued apps', async () => {
       w.closeWin(id, true);
     }
 
+    // Celeste Hub opens on its chooser, plays the game you pick in its
+    // own frame, and "Change game" returns to the chooser.
+    w.openApp('celeste-hub');
+    const hubBody = wins.get('celeste-hub').body;
+    const hubChoices = [...hubBody.querySelectorAll('[data-ch-game]')];
+    assert.equal(hubChoices.length, CELESTE_HUB_PAGES.length, 'Celeste Hub should offer every Celeste game');
+    assert.deepEqual(hubChoices.map((b) => b.querySelector('b').textContent),
+      ['Celeste Classic', 'Celeste Classic 2', 'Celeste Community', 'Celeste Classic Practice Mod',
+       'Celeste Classic 2 Practice Mod 1.0', 'Celeste Classic 2 Practice Mod 1.1', 'Celeste Webek',
+       'Celeste Classic Downloads']);
+    assert.ok(!hubBody.querySelector('#ch-frame'), 'Celeste Hub should not load a game before one is chosen');
+    hubChoices[0].click();
+    const hubFrame = hubBody.querySelector('iframe.site-frame');
+    assert.ok(hubFrame, 'Celeste Hub did not frame the chosen game');
+    assert.equal(hubFrame.getAttribute('src'), 'apps/games/celeste-classic/index.html');
+    assert.ok(hubFrame.hasAttribute('allowfullscreen'), 'Celeste Hub frame cannot go fullscreen');
+    assert.ok(!hubFrame.hasAttribute('sandbox'), 'Celeste Hub frames its local game sandboxed');
+    const hubAgain = hubBody.querySelector('#ch-again');
+    assert.ok(hubAgain && !hubAgain.hidden, 'Celeste Hub hides its Change game button while playing');
+    assert.match(hubAgain.textContent, /Change game/);
+    hubAgain.click();
+    assert.equal(hubBody.querySelectorAll('[data-ch-game]').length, CELESTE_HUB_PAGES.length,
+      'Change game should return Celeste Hub to its chooser');
+    assert.ok(!hubBody.querySelector('#ch-frame'), 'Change game should unload the Celeste game frame');
+    w.closeWin('celeste-hub', true);
+
     // The Calculator computes — keypad clicks and keyboard keys alike.
     w.openApp('calculator');
     const calc = wins.get('calculator').body;
@@ -1021,28 +982,35 @@ test('the desktop boots, lists and opens all catalogued apps', async () => {
     assert.equal(shown(), '0', 'Escape clears');
     w.closeWin('calculator', true);
 
-    // Web Retro's front page is two panels: the first half is four console
-    // rows (NES, SNES, N64, GB) over the bundled library; picking one fills
-    // the Emulators panel's grid with that console's games, and the panel's
-    // four emulator rows open a "where from?" screen (top bar, back arrow).
+    // Web Retro's front page is two tabs in the desktop's own style:
+    // ROMs — four console boxes (NES, SNES, N64, GB), each bringing up
+    // that console's bundled games with their poster art — and
+    // Emulators, the same console boxes, where picking one opens a
+    // "where from?" screen (proton Files or this computer; back arrow).
     w.openApp('web-retro');
     const retro = wins.get('web-retro').body;
-    const panels = [...retro.querySelectorAll('.wr-panel')];
-    assert.equal(panels.length, 2, 'the front page should be two panels');
-    assert.match(panels[0].querySelector('h3').textContent, /ROMs/, 'the first panel is the ROMs');
-    assert.match(panels[1].querySelector('h3').textContent, /Emulators/, 'the second panel is the Emulators');
-    assert.deepEqual([...panels[0].querySelectorAll('[data-console]')].map((b) => b.dataset.console),
-      ['NES', 'SNES', 'N64', 'GB'], 'the first half is four console rows, NES down to GB');
+    const tabBtns = [...retro.querySelectorAll('[data-wr-tab]')];
+    assert.deepEqual(tabBtns.map((b) => b.textContent.trim()), ['ROMs', 'Emulators'],
+      'the front page should be two clickable tabs');
+    assert.equal(retro.querySelector('#wr-roms').hidden, false, 'the ROMs tab starts open');
+    assert.equal(retro.querySelector('#wr-emulators').hidden, true, 'the Emulators tab starts closed');
+    assert.deepEqual([...retro.querySelectorAll('#wr-roms [data-console]')].map((b) => b.dataset.console),
+      ['NES', 'SNES', 'N64', 'GB'], 'the ROMs tab is four console boxes, NES down to GB');
     const gridCount = () => retro.querySelectorAll('#wr-grid [data-bundled]').length;
-    assert.equal(gridCount(), 5, 'the NES row starts picked, with its games in the grid');
+    assert.equal(gridCount(), 5, 'the NES box starts picked, with its games in the grid');
+    const firstArt = retro.querySelector('#wr-grid [data-bundled] img');
+    assert.ok(firstArt && /^data\/icons\/.+\.jpeg$/.test(firstArt.getAttribute('src')),
+      'bundled games show their poster art');
     retro.querySelector('[data-console="GB"]').click();
-    assert.equal(gridCount(), 13, 'the GB row shows the GB/GBC/GBA games');
+    assert.equal(gridCount(), 13, 'the GB box shows the GB/GBC/GBA games');
     retro.querySelector('[data-console="SNES"]').click();
     assert.equal(gridCount(), 0, 'no SNES games are bundled');
     retro.querySelector('[data-console="NES"]').click();
     assert.equal(gridCount(), 5, 'picking NES again refills the grid');
-    assert.ok(panels[1].querySelector('[data-core]'), 'the cores live in the Emulators panel');
-    assert.deepEqual([...retro.querySelectorAll('[data-core]')].map((b) => b.dataset.core),
+    retro.querySelector('[data-wr-tab="emulators"]').click();
+    assert.equal(retro.querySelector('#wr-roms').hidden, true, 'the Emulators tab hides the ROMs tab');
+    assert.equal(retro.querySelector('#wr-emulators').hidden, false, 'the Emulators tab shows its console boxes');
+    assert.deepEqual([...retro.querySelectorAll('#wr-emulators [data-core]')].map((b) => b.dataset.core),
       ['nestopia', 'snes9x', 'mupen64plus_next', 'mgba']);
     assert.equal(retro.querySelector('#wr-upload').hidden, true, 'no source screen before an emulator is picked');
     retro.querySelector('[data-core="snes9x"]').click();
@@ -1050,7 +1018,8 @@ test('the desktop boots, lists and opens all catalogued apps', async () => {
     assert.equal(retro.querySelector('#wr-corename').textContent, 'SNES');
     assert.ok(retro.querySelector('#wr-back'), 'the source screen has a back arrow');
     retro.querySelector('#wr-back').click();
-    assert.equal(retro.querySelector('#wr-upload').hidden, true, 'the back arrow returns to the emulator rows');
+    assert.equal(retro.querySelector('#wr-upload').hidden, true, 'the back arrow returns to the emulator boxes');
+    assert.equal(retro.querySelector('#wr-emu-home').hidden, false, 'the back arrow shows the emulator boxes again');
     retro.querySelector('[data-core="snes9x"]').click();
     assert.equal(retro.querySelector('#wr-upload').hidden, false);
     assert.ok(retro.querySelector('[data-src="device"]'), 'no "this computer" ROM source');
@@ -1082,6 +1051,40 @@ test('the desktop boots, lists and opens all catalogued apps', async () => {
     w.__wrCh.onmessage({ data: { status: 'ready' } });
     assert.equal(chSent.length, 1, 'the launch page should get the ROM over the channel');
     assert.equal(chSent[0].rom.name, 'nes-rom.nes');
+    // The emulator's own back arrow posts webretro-back from inside the
+    // frame (the page it linked to upstream is not shipped and 404'd):
+    // the launcher answers by showing the ROMs tab again.
+    const backEvent = new w.MessageEvent('message', { data: { type: 'webretro-back' } });
+    Object.defineProperty(backEvent, 'source', { value: frame.contentWindow });
+    w.dispatchEvent(backEvent);
+    assert.ok(!retro.querySelector('#wr-frame'), 'the emulator back arrow should unframe the emulator');
+    assert.equal(retro.querySelector('#wr-roms').hidden, false, 'the emulator back arrow should show the ROMs tab');
+    assert.ok(retro.querySelector('[data-wr-tab="roms"]').classList.contains('primary'),
+      'the emulator back arrow returns to the ROMs tab');
+    assert.equal(retro.querySelector('#wr-again').hidden, true, 'Change game hides again in the chooser');
+    // Play the same ROM once more, then Change game in the app bar
+    // lands in the same ROMs tab.
+    retro.querySelector('[data-wr-tab="emulators"]').click();
+    retro.querySelector('[data-core="nestopia"]').click();
+    retro.querySelector('[data-src="vfs"]').click();
+    // the proton Files browser is still in Downloads from the first run;
+    // from the home folder it is one click further away
+    let rowAgain = [...retro.querySelectorAll('[data-file]')].find((b) => b.dataset.file.endsWith('nes-rom.nes'));
+    if (!rowAgain) {
+      const dlAgain = [...retro.querySelectorAll('[data-dir]')].find((b) => b.dataset.dir.endsWith('/Downloads'));
+      assert.ok(dlAgain, 'proton Files should still show the Downloads folder');
+      dlAgain.click();
+      rowAgain = [...retro.querySelectorAll('[data-file]')].find((b) => b.dataset.file.endsWith('nes-rom.nes'));
+    }
+    assert.ok(rowAgain, 'proton Files should still list the imported ROM');
+    rowAgain.click();
+    retro.querySelector('#wr-play').click();
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    assert.ok(retro.querySelector('#wr-frame'), 'Play should frame the emulator again');
+    assert.equal(retro.querySelector('#wr-again').hidden, false, 'Change game shows while a game runs');
+    retro.querySelector('#wr-again').click();
+    assert.ok(!retro.querySelector('#wr-frame'), 'Change game should unframe the emulator');
+    assert.equal(retro.querySelector('#wr-roms').hidden, false, 'Change game should show the ROMs tab');
     w.closeWin('web-retro', true);
 
     // Every open/save asks which file system to use: "your Files" (this
@@ -1244,7 +1247,7 @@ test('Customize saves, displays and resets uploaded app icon images', async () =
     const browserWindow = w.eval('wins').get('browser');
     assert.equal(body.querySelector('#cust-files-shortcut'), null, 'Customize still offers a Files shortcut');
     assert.deepEqual([...body.querySelectorAll('#cust-modlist .card b')].map((b) => b.textContent).slice(0, SYSTEM_APPS.length),
-            ["App Center", "Customize", "Settings", "About", "Browser", "Calculator", "Files", "Text Editor", "PDF Viewer", "Image Viewer", "Media", "Ruffle Flash Player", "Web Retro", "You Are An Idiot", "2048", "Bloons Tower Defense 1", "Bloons Tower Defense 2", "Bloons Tower Defense 5", "Bloxorz", "Breaking The Bank", "Celeste Classic", "Celeste Classic 2", "Celeste Community", "Celeste Classic Practice Mod", "Celeste Classic 2 Practice Mod 1.0", "Celeste Classic 2 Practice Mod 1.1", "Celeste Webek", "Celeste Classic Downloads", "Cookie Clicker", "Drive Mad", "Escaping The Prison", "Fleeing The Complex", "Grey Box Testing", "Infiltrating The Airship", "Mari0", "Offline Paradise", "Pacman", "Slope", "Spacebar Clicker", "Stack", "Stealing The Diamond", "Stickman Hook", "Subway Surfers", "Super Mario 64", "Tetris", "The Impossible Quiz", "Tunnel Rush", "Baldi's Basics", "Minesweeper", "Flappy Bird", "Retro Bowl", "Drift Boss", "Football Bros", "Five Nights at Freddy's", "Five Nights at Freddy's 4", "Five Nights at Freddy's 2", "Five Nights at Freddy's 3", "Backrooms", "Kart Bros", "Geometry Dash Lite", "Five Nights at Freddy's: Sister Location", "Q1K3", "Space Huggers", "Evil Glitch", "Minecraft Clone", "Black Hole Square", "The Maze of Space Goblins", "Edge Not Found", "Packabunchas", "Connect 3", "xx142-b2exe", "Konnekt", "Roadblocks", "Asciispace", "Calamity", "Breakout", "Asteroids", "Breaklock", "Universal Paperclips", "Chess", "Go (Tenuki)", "Hextris", "Bitcoin Mining Simulator", "Space Company", "Candy Box", "Candy Box 2", "Trimps", "Digital Logic Simulator", "Tunnel Rush (Bad)", "Celeste Speedrun Training", "Big Ice Tower Tiny Square", "A Dark Room", "Doom", "Geometry Dash", "Run 3", "A Dance of Fire and Ice", "Onion's Revenge", "Orbital Daggers", "Icedodo", "Neogolf", "Larry's Parkour", "Mindustry Classic", "Tunnel Glider", "Bitburner", "Kittens Game"]);
+            ["App Center", "Customize", "Settings", "About", "Browser", "Calculator", "Files", "Text Editor", "PDF Viewer", "Image Viewer", "Media", "Ruffle Flash Player", "Web Retro", "You Are An Idiot", "2048", "Bloons Tower Defense 1", "Bloons Tower Defense 2", "Bloons Tower Defense 5", "Bloxorz", "Breaking The Bank", "Celeste Hub", "Cookie Clicker", "Drive Mad", "Escaping The Prison", "Fleeing The Complex", "Grey Box Testing", "Infiltrating The Airship", "Mari0", "Offline Paradise", "Pacman", "Slope", "Spacebar Clicker", "Stack", "Stealing The Diamond", "Stickman Hook", "Super Mario 64", "Tetris", "The Impossible Quiz", "Tunnel Rush", "Baldi's Basics", "Minesweeper", "Flappy Bird", "Retro Bowl", "Drift Boss", "Football Bros", "Five Nights at Freddy's", "Five Nights at Freddy's 4", "Five Nights at Freddy's 2", "Five Nights at Freddy's 3", "Backrooms", "Kart Bros", "Geometry Dash Lite", "Five Nights at Freddy's: Sister Location", "Bitburner"]);
 
     const uploadBrowserIcon = async () => {
       const input = body.querySelector('[data-micon-file="browser"]');
@@ -1260,6 +1263,30 @@ test('Customize saves, displays and resets uploaded app icon images', async () =
     assert.ok(w.document.querySelector('#panelapps .pitem[data-app="browser"] img.app-icon-image'));
     assert.ok(w.document.querySelector('.desktop-icon[data-shortcut="desktop-browser"] img.app-icon-image'));
     assert.ok(browserWindow.el.querySelector('.wic img.app-icon-image'), 'an already-open window title updates live');
+
+    /* Unless an app has an SVG icon (svgIcon === true), its image icon is
+     * always cropped to fill the icon on its own — no background behind
+     * it, and no choice about it anywhere in Customize. */
+    assert.match(source('assets/styles.css'), /\.app-icon-image\{object-fit:cover/,
+      'image icons are cropped to fill their icon box');
+    assert.match(source('assets/styles.css'), /:has\(>\.app-icon-only\)/,
+      'image icons lose the background behind them');
+    const menuBrowserImg = () => w.document.querySelector('#startmenu .sm-item[data-app="browser"] img.app-icon-image');
+    const desktopBrowserImg = () => w.document.querySelector('.desktop-icon[data-shortcut="desktop-browser"] img.app-icon-image');
+    assert.ok(menuBrowserImg().classList.contains('app-icon-only'),
+      'a raster icon always shows as just the image in the menu');
+    assert.ok(desktopBrowserImg().classList.contains('app-icon-only'),
+      'a raster icon always shows as just the image on the desktop');
+    assert.ok(browserWindow.el.querySelector('.wic img.app-icon-image.app-icon-only'),
+      'a raster icon always shows as just the image in window titles');
+    assert.equal(body.querySelector('#cust-icon-only'), null,
+      'Customize has no global image-only switch');
+    assert.equal(body.querySelector('[data-miconbg="browser"]'), null,
+      'Customize has no per-app Icon background choice');
+    const menuSettingsIcon = w.document.querySelector('#startmenu .sm-item[data-app="settings"] .ic');
+    assert.ok(menuSettingsIcon && !menuSettingsIcon.querySelector('img.app-icon-only'),
+      'an SVG-icon app keeps its drawn glyph, not an image');
+
     w.openApp('appcenter');
     const center = w.eval('wins').get('appcenter').body;
     const browserCard = [...center.querySelectorAll('#ac-grid .card')].find((card) => card.querySelector('h3')?.textContent === 'Browser');
@@ -1282,6 +1309,10 @@ test('Customize saves, displays and resets uploaded app icon images', async () =
     Object.defineProperty(customInput, 'files', { configurable: true, value: [{ type: 'image/png', size: 1024 }] });
     await customInput.onchange();
     assert.equal(w.eval("APPS['legacy-image-app'].iconImage"), storedImage);
+    assert.equal(body.querySelector('[data-ciconbg="legacy-image-app"]'), null,
+      'saved custom apps have no Icon background choice either');
+    assert.ok(w.document.querySelector('#startmenu .sm-item[data-app="legacy-image-app"] img.app-icon-image.app-icon-only'),
+      'a saved app with an uploaded image always shows as just the image in the menu');
     assert.equal(JSON.parse(w.localStorage.getItem('proton2.user.ada.v1')).customApps[0].iconImage, storedImage);
     w.openApp('appcenter');
     const centerBody = w.eval('wins').get('appcenter').body;
@@ -1323,7 +1354,7 @@ test('embedded-page templates and remote-embedded games are not shipped', () => 
   assert.ok(!source('data/applications.js').includes('EMBED_URL'), 'app catalog still mentions EMBED_URL');
   assert.ok(!source('data/websites.js').includes('EMBED_URL'), 'site catalog still mentions EMBED_URL');
   /* No shipped game page frames a remote page as the game itself. */
-  for (const page of Object.values(GAME_PAGES)) {
+  for (const page of [...Object.values(GAME_PAGES), ...CELESTE_HUB_ALL_PAGES]) {
     const html = source(page);
     assert.ok(!/<iframe\b[^>]*\bsrc\s*=\s*["']https?:\/\//i.test(html), `${page} frames a remote page`);
     assert.ok(!/\.src\s*=\s*['"]https?:\/\//.test(html), `${page} points a frame at a remote page`);
@@ -1429,6 +1460,58 @@ test('the Web Retro bundled ROM library is on disk', () => {
   for (const m of bundled[1].matchAll(/, '([a-z0-9-]+)'\]/g)) {
     assert.ok(fs.existsSync(path.join(ROOT, 'data/icons', `${m[1]}.jpeg`)), `box art missing: data/icons/${m[1]}.jpeg`);
   }
+});
+
+/* Control bindings have to survive closing a game. RetroArch writes
+ * bindings changed in its own menu to retroarch.cfg in the emulator's
+ * in-memory filesystem, and webretro rewrites that file from the keybind
+ * manager's localStorage entry on every launch — so main.js harvests the
+ * bindings back out of the config file whenever RetroArch saves it (and
+ * again on pagehide), or every in-game rebind would be lost. */
+test('Web Retro keeps control bindings between games', () => {
+  const src = fs.readFileSync(path.join(ROOT, 'apps/tools/web-retro/webretro/main.js'), 'utf8');
+  // the harvest helper is pure: pull it out and run it for real
+  const fnMatch = src.match(/function harvestKeybindsFromConfigText\(text, validKeys, current\) \{[\s\S]*?\n\}/);
+  assert.ok(fnMatch, 'main.js defines the keybind harvest helper');
+  const harvest = new Function(`${fnMatch[0]}; return harvestKeybindsFromConfigText;`)();
+  const valid = ['input_player1_a', 'input_player1_b', 'input_menu_toggle'];
+  const current = { input_player1_a: 'h', input_player1_b: 'g', input_menu_toggle: 'f1' };
+  const cfgText = [
+    'video_driver = "gl"',
+    'input_player1_a = "z"',
+    'input_player1_b = "g"',
+    'input_player1_a_btn = "0"',
+    'input_menu_toggle = "f5"',
+    '',
+  ].join('\n');
+  // only manager-known keyboard bindings that actually changed come back
+  assert.deepEqual(harvest(cfgText, valid, current), { input_player1_a: 'z', input_menu_toggle: 'f5' });
+  // an unchanged config (e.g. the one webretro itself wrote at startup) is a no-op
+  assert.equal(harvest('input_player1_a = "h"\ninput_player1_b = "g"\ninput_menu_toggle = "f1"\n', valid, current), null);
+  // the harvest is wired into the emulator's file-write routing and page close
+  assert.ok(/path == fsConfigFile\) \{\s*\n\s*\/\/ RetroArch just saved its config[\s\S]*?persistKeybindsFromConfig\(\);/.test(src),
+    'writeToFileHandler persists bindings when RetroArch saves its config');
+  assert.ok(src.includes('window.addEventListener("pagehide", persistKeybindsFromConfig);'),
+    'bindings are harvested on pagehide too');
+  assert.ok(/function persistKeybindsFromConfig\(\) \{[\s\S]*?localStorage\.setItem\("RetroArch_settings_keybinds", configObjToStr\(savedKeybindsObj\)\)/.test(src),
+    'harvested bindings land in the keybind store the startup config is written from');
+});
+
+/* The emulator's menu-bar back arrow must not navigate the frame:
+ * upstream it links to "." (webretro's core-select page), which proton
+ * does not ship, so clicking it showed a 404. Instead launch.html
+ * posts webretro-back and the launcher shows the ROMs tab, the same
+ * place Change game goes. */
+test('Web Retro back arrow returns to the chooser instead of a 404', () => {
+  const launch = fs.readFileSync(path.join(ROOT, 'apps/tools/web-retro/webretro/launch.html'), 'utf8');
+  assert.ok(!launch.includes('<li class="menuback"><a href="."'), 'the back arrow must not link to the unshipped core-select page');
+  assert.ok(launch.includes('postMessage({type: "webretro-back"}, "*")'),
+    'the back arrow tells the launcher to show the game chooser');
+  const app = fs.readFileSync(path.join(ROOT, 'apps/tools/web-retro/app.html'), 'utf8');
+  assert.ok(app.includes("event.data.type !== 'webretro-back'") && app.includes('event.source === frame.contentWindow'),
+    'the launcher returns to the chooser only for its own emulator frame');
+  assert.ok(app.includes("again.addEventListener('click', picker);"),
+    'Change game brings up the same chooser (the ROMs tab)');
 });
 
 /* proton's own UI draws artwork with its SVG icon set and raster images,
@@ -2043,7 +2126,7 @@ test('proton’s search engine answers from the repository itself', async () => 
     const must = ['/README.md', '/CREDITS.md', '/LICENSE.txt', '/apps/README.md', '/websites/README.md',
       '/data/icons/README.md', '/index.html', '/assets/core.js', '/assets/fs.js', '/assets/search.js',
       '/assets/styles.css', '/tools/gen-fs-manifest.py', '/tools/gen-search-index.py',
-      '/websites/test-page/site.html', '/apps/games/celeste-classic/app.html', '/UI.md'];
+      '/websites/test-page/site.html', '/apps/games/celeste-hub/app.html', '/UI.md'];
     for (const app of SYSTEM_APPS) {
       const entry = w.eval(`window.PROTON_APPLICATIONS.find((a) => a.id === ${JSON.stringify(app)})`);
       if (entry) must.push('/' + entry.path);
@@ -2069,7 +2152,7 @@ test('proton’s search engine answers from the repository itself', async () => 
     const results = (query, limit = 6) => w.eval(`PROTON_SEARCH.search(${JSON.stringify(query)}, {limit: ${limit}})`);
     assert.equal(results('files').results[0].appId, 'files', 'the Files app answers "files"');
     assert.equal(results('test page').results[0].siteId, 'test-page', 'the built-in website answers "test page"');
-    assert.equal(results('celeste').results[0].appId, 'celeste-classic');
+    assert.equal(results('celeste').results[0].appId, 'celeste-hub');
     assert.ok(results('zip').results.some((r) => r.path === '/assets/fs-archive.js'), 'ZIP downloads point at the code that builds them');
     assert.ok(results('wallpaper').results.some((r) => r.appId === 'customize'), 'wallpapers point at Customize');
     assert.ok(results('search index').results.some((r) => r.path === '/tools/gen-search-index.py'));

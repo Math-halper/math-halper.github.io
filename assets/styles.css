@@ -228,7 +228,14 @@ details.help summary{color:#ffffff}
 
 /* ---- SVG icons (assets/icons.js) — real vector icons, sized by context ---- */
 .icn{width:1em;height:1em;display:inline-block;vertical-align:-.13em;flex:none}
-.app-icon-image{object-fit:contain;border-radius:3px}
+/* Image icons are cropped to fill their icon box (edges cut, no empty
+ * space). Image icons always carry the app-icon-only class (below): the
+ * tile/plate behind the picture goes away and the picture itself fills
+ * that whole space instead. Named SVG icons keep their tile. */
+.app-icon-image{object-fit:cover;border-radius:3px}
+.sm-item .ic:has(>.app-icon-only),.desktop-icon-glyph:has(>.app-icon-only),.desktop-picker-glyph:has(>.app-icon-only){background:transparent;border-color:transparent;box-shadow:none}
+.sm-item .ic:has(>.app-icon-only)>.app-icon-image,.desktop-picker-glyph:has(>.app-icon-only)>.app-icon-image{width:100%;height:100%;border-radius:10px}
+.desktop-icon-glyph:has(>.app-icon-only)>.app-icon-image{width:100%;height:100%;border-radius:10px}
 .btn .icn,.chip .icn{width:1.05em;height:1.05em}
 .menu-btn .lg .icn{width:15px;height:15px;color:var(--accent-ink)}
 .auth-logo .icn{width:32px;height:32px;color:var(--accent-ink)}

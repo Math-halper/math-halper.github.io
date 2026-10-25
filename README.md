@@ -11,12 +11,13 @@ This build keeps the five desktop System apps from `main` and copies main's
 **file system suite** back in — **Files**, **Text Editor**, **Image Viewer**,
 **Media** and **PDF Viewer** — and every open/save across the desktop asks
 which file system to use: **your Files** (this computer) or the **proton
-file system** (the Files app). The **Celeste Classics** collection ships as
-three apps — **Celeste Classic**, **Celeste Classic 2** and **Celeste
-Community** — with the *actual game files*, copied byte-for-byte from
+file system** (the Files app). The **Celeste Classics** collection ships as one app — **Celeste Hub** —
+with an in-app chooser for which game to play (Celeste Classic, Celeste
+Classic 2, the community hub, its practice mods, Webek and downloads), with
+the *actual game files*, copied byte-for-byte from
 [Math-halper/Celeste](https://github.com/Math-halper/Celeste) into
 `apps/games/celeste-classic/`, `apps/games/celeste-two/` and `apps/games/celeste-community/`
-(each app folder is the game's own pages plus a thin iframe wrapper;
+(the hub in `apps/games/celeste-hub/` frames those pages;
 `apps/games/index.html` is the "all games" picker their back-links expect).
 The **Mario** collection adds **Mari0** (Mario × Portal) and **Super Mario
 64** — their game builds copied byte-for-byte from
@@ -56,14 +57,7 @@ game bundles and earlier built-in sites remain removed (except Test Page).
 | **Bloons Tower Defense 5** (`bloons-tower-defense-5`) | Play Bloons Tower Defense 5 - the classic tower defense |
 | **Bloxorz** (`bloxorz`) | Play Bloxorz - roll the block to the goal |
 | **Breaking The Bank** (`breaking-the-bank`) | Play Breaking The Bank - a Henry Stickmin adventure |
-| **Celeste Classic** (`celeste-classic`) | Play the original PICO-8 Celeste Classic — its actual game files, vendored from Math-halper/Celeste |
-| **Celeste Classic 2** (`celeste-two`) | Play Celeste Classic 2: Lani's Trek — its actual game files, vendored from Math-halper/Celeste |
-| **Celeste Community** (`celeste-community`) | The Celeste Classic community hub — practice mods, downloads and links (vendored from Math-halper/Celeste) |
-| **Celeste Classic Practice Mod** (`celeste-practice-mod`) | Play the Celeste Classic practice mod |
-| **Celeste Classic 2 Practice Mod 1.0** (`celeste-two-practice-mod-1-0`) | Play the Celeste Classic 2 v1.0 practice mod |
-| **Celeste Classic 2 Practice Mod 1.1** (`celeste-two-practice-mod-1-1`) | Play the Celeste Classic 2 v1.1 practice mod |
-| **Celeste Webek** (`celeste-webek`) | Play Webek - a Celeste Classic PICO-8 game |
-| **Celeste Classic Downloads** (`celeste-downloads`) | Celeste Classic downloads - standalone builds and links |
+| **Celeste Hub** (`celeste-hub`) | All the Celeste Classic games in one place - choose which one to play (Celeste Classic, Celeste Classic 2, the community hub, practice mods, Webek and downloads; vendored from Math-halper/Celeste) |
 | **Cookie Clicker** (`cookie-clicker`) | Play Cookie Clicker — Orteil's idle bakery game (offline mirror, vendored from Gams-Offline/Gams) |
 | **Drive Mad** (`drive-mad`) | Play Drive Mad - the physics driving game |
 | **Escaping The Prison** (`escaping-the-prison`) | Play Escaping The Prison - a Henry Stickmin adventure |
@@ -78,7 +72,6 @@ game bundles and earlier built-in sites remain removed (except Test Page).
 | **Stack** (`stack`) | Play Stack - time the falling blocks |
 | **Stealing The Diamond** (`stealing-the-diamond`) | Play Stealing The Diamond - a Henry Stickmin adventure |
 | **Stickman Hook** (`stickman-hook`) | Play Stickman Hook - swing through the levels |
-| **Subway Surfers** (`subway-surfers`) | Play Subway Surfers - dodge the trains and outrun the guard (WebGL, vendored from RohanChacko/Subway-Surfers) |
 | **Super Mario 64** (`sm64`) | Play the Super Mario 64 WebAssembly browser build (unofficial fan port, vendored from Math-halper/Mario) |
 | **Tetris** (`tetris`) | Play Tetris - the falling-blocks classic |
 | **The Impossible Quiz** (`the-impossible-quiz`) | Play The Impossible Quiz - the wildly unfair quiz |
@@ -320,7 +313,7 @@ Bookmarks and history are per-account data (`userData.bookmarks`,
   (App Center, Customize, Settings, About, Browser), **Productivity**
   (Calculator, Files, Text Editor, PDF Viewer), **Media** (Image Viewer,
   Media), **Tools** (Ruffle Flash Player, Web Retro, plus the not-preinstalled
-  You Are An Idiot once installed) and **Games** (91 games: 2048, the Bloons TD series, the Henry Stickmin
+  You Are An Idiot once installed) and **Games** (40 games: 2048, the Bloons TD series, the Henry Stickmin
   series, Pacman, Tetris, Slope, Tunnel Rush, the Exst Arcade batch below and more), with **My Apps** for
   anything an account adds. The order is `CATS` in `assets/core.js`.
 - **Search** — the Browser's bar searches *this repository* with proton's own
@@ -382,7 +375,7 @@ the Mixt authors.
 
 The Celeste Classics game files **are** copied into this repository —
 byte-for-byte from [Math-halper/Celeste](https://github.com/Math-halper/Celeste),
-one app per game (see [`CREDITS.md`](CREDITS.md) for provenance; all rights in
+all of them behind the one Celeste Hub app (see [`CREDITS.md`](CREDITS.md) for provenance; all rights in
 the games stay with their authors). The two Mario games are copied the same
 way from [Math-halper/Mario](https://github.com/Math-halper/Mario) — only the
 game builds, nothing else from that collection; they are **unofficial fan

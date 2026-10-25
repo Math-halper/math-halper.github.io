@@ -121,39 +121,47 @@ grants no rights in that content.
 
 ## Vendored Celeste Classics
 
-The Celeste apps carry the **actual game files**, copied from
+The **Celeste Hub** app (`apps/games/celeste-hub/`) carries the **actual game
+files**, copied from
 [Math-halper/Celeste](https://github.com/Math-halper/Celeste) (that
-repository's `classic/`, `two/` and `speed/` folders):
+repository's `classic/`, `two/` and `speed/` folders). It is one app with an
+in-app chooser: pick which Celeste game to play, and **Change game** returns
+to the list. The eight choices are the pages that used to be eight separate
+proton apps (`celeste-classic`, `celeste-two`, `celeste-community`,
+`celeste-practice-mod`, `celeste-two-practice-mod-1-0`,
+`celeste-two-practice-mod-1-1`, `celeste-webek` and `celeste-downloads`,
+now combined):
 
 - `apps/games/celeste-classic/` — Celeste Classic (the PICO-8 export of *Celeste
   Classic* by Maddy Thorson & Noel Berry), from `classic/`
 - `apps/games/celeste-two/` — *Celeste Classic 2: Lani's Trek* (community follow-up),
   from `two/`
 - `apps/games/celeste-community/` — the Celeste Classic community hub, its practice
-  mods, downloads and WebEK tool, from `speed/`. Five separate apps
-  (`celeste-practice-mod`, `celeste-two-practice-mod-1-0`,
-  `celeste-two-practice-mod-1-1`, `celeste-webek`, `celeste-downloads`) frame
-  the hub's own pages directly, so every page in the folder is its own game;
-  the pages stay in this shared folder so their relative paths keep working.
+  mods, downloads and WebEK tool, from `speed/`. The hub frames the community
+  hub page, both Classic 2 practice-mod pages, the Classic practice-mod page,
+  Webek and the downloads page directly, so every page in the folder is still
+  its own tested game inside the hub; the pages stay in this shared folder so
+  their relative paths keep working.
 
-Each app folder is the game's own pages plus proton's thin iframe wrappers
-(`app.html`). The only edits to the game files are link fixes in the community
-hub and practice pages: their site-absolute links (`/glossary/` and friends)
-now point at the Celeste Classic community site that hosts those pages, so
-they resolve instead of landing on this site's missing root paths. The pages'
-"all games" links go one level up (`href="../"`), as on the source site —
+The game folders keep the game's own pages; only the hub's `app.html` (in
+`celeste-hub/`) is proton's own code, plus its standalone chooser page
+(`celeste-hub/index.html`, which the "all games" picker links to). The only
+edits to the game files are link fixes in the community hub and practice
+pages: their site-absolute links (`/glossary/` and friends) now point at the
+Celeste Classic community site that hosts those pages, so they resolve
+instead of landing on this site's missing root paths. The pages' "all games"
+links go one level up (`href="../"`), as on the source site —
 `apps/games/index.html` is that picker: proton's own "all games" page listing
 every game in the folder (the source repository's root selector is not used).
 
-The app icons for `celeste-classic` and `celeste-two` are a shared pixel-art
-image uploaded by the repository maintainer; `celeste-community` keeps its
-own icon cropped from the hub's `maddy.png` avatar. Nothing else was redrawn.
+The Celeste Hub icon (`data/icons/celeste-classic.png`) is a shared pixel-art
+image uploaded by the repository maintainer. Nothing else was redrawn.
 
 All rights in the games, builds and assets remain with their authors (the
 Celeste Classic PICO-8 game is © Maddy Thorson, Noel Berry and the PICO-8
 community; the community follow-up, practice mods and tools are © their
 authors). This repository grants no rights in that content — it is here so
-the three apps run from the user's own repository files.
+the hub runs from the user's own repository files.
 
 ## Vendored Mario games
 
@@ -252,19 +260,6 @@ The app icons are the Gams collection's own icon images for each game, scaled
 into `data/icons/`.
 
 
-## Vendored Subway Surfers
-
-The Subway Surfers app (`apps/games/subway-surfers/`) vendors the WebGL 2.0
-endless-runner by [Rohan Chacko](https://github.com/RohanChacko/Subway-Surfers)
-(MIT — the upstream `LICENSE` ships beside the game):
-
-- Every file in the app folder except proton's `app.html` wrapper is copied
-  byte-for-byte from that repository: `game.html`, `style.css`, the `libs/`,
-  `src/` and `assets/` (textures, sprites and background music). Nothing was
-  edited; the game's own page runs as-is inside the wrapper's frame.
-- The app icon is the game's own `player.png` sprite, squared onto a
-  transparent 250×250 canvas as `data/icons/subway-surfers.png`.
-
 ## Vendored Exst Arcade games (proton-arcade batch)
 
 Fourteen games were copied from
@@ -297,59 +292,20 @@ Geometry Dash Lite. For every one of them:
 - All rights in these games remain with their original creators; this
   repository grants no rights in that content.
 
-## Vendored games from incrediblerevived11.github.io
+## Vendored game from incrediblerevived11.github.io
 
-Forty-four games were copied from
+One game remains copied from
 [incrediblerevived11/incrediblerevived11.github.io](https://github.com/incrediblerevived11/incrediblerevived11.github.io)
-(the "incrediblewebsite revived" site), each into `apps/games/<id>/`:
-Q1K3, Space Huggers, Evil Glitch, Minecraft Clone, Black Hole Square, The
-Maze of Space Goblins, Edge Not Found, Packabunchas, Connect 3,
-xx142-b2exe, Konnekt, Roadblocks, Asciispace, Calamity, Breakout,
-Asteroids, Breaklock, Universal Paperclips, Chess, Go (Tenuki — its entry
-page is the `examples/example_with_simple_controls_and_gutter.html`
-board), Hextris, Bitcoin Mining Simulator, Space Company, Candy Box,
-Candy Box 2, Trimps, Digital Logic Simulator, Tunnel Rush (Bad), Celeste
-Speedrun Training, Big Ice Tower Tiny Square, A Dark Room, Doom,
-Geometry Dash, Run 3, A Dance of Fire and Ice, Onion's Revenge, Orbital
-Daggers, Icedodo, Neogolf, Larry's Parkour (the Unity build at
-`fps-parkour/fps-parkour/fps-parkour.html`; the folder's outer index is
-just a listing card), Mindustry Classic, Tunnel Glider, Bitburner and
-Kittens Game. For every one of them:
+(the "incrediblewebsite revived" site): **Bitburner**
+(`apps/games/bitburner/`). Forty-four games were originally copied from
+that site; at the maintainer's request the other forty-three were
+removed, and Bitburner is the only one kept.
 
-- The game files are copied byte-for-byte from that repository; the only
-  additions are proton's `app.html` wrappers, which frame each game's
-  own page unsandboxed like every other vendored game. New games use
-  named inline SVG icons rather than raster icon files.
-- Non-entry HTML pages in the source folders (translations, help, demo
-  and duplicate pages — e.g. Candy Box's per-language pages or Celeste
-  Speedrun Training's copies of pages the Celeste Community app already
-  carries) are not carried over: this repository's rule is that every
-  game page under `apps/games/` is its own catalogued game.
-- A few pages needed disclosed touch-ups, listed in their wrappers:
-  Asciispace, Packabunchas and Konnekt ship upstream as bare fragments
-  with no `<html>`/`<head>`/`<body>` prolog, so a minimal prolog was
-  added around the otherwise untouched page; Hextris lost one dead
-  ad-stub script tag that pointed outside the repository; Onion's
-  Revenge and Orbital Daggers gained a local `favicon.png` copied from
-  each game's own icon artwork (their `../favicon.png` link was made
-  local), and Onion's Revenge the missing `assets/svgs/dagger.svg` from
-  Orbital Daggers; Doom gained an empty `css/fonts.css`, Icedodo a drawn
-  `assets/icons/close.png`, and Tunnel Glider an empty `css/temp.css` —
-  files their pages reference but the source folders never ship.
-- **Space Company** is the exception: the incrediblerevived11 copy omits
-  the `lib/`, `data/` and `ui/` folders its page loads and cannot run,
-  so the complete game is vendored byte-for-byte from its own upstream
-  ([sparticle999/SpaceCompany](https://github.com/sparticle999/SpaceCompany))
-  instead, plus an empty supplied `SpaceCompany.min.js` stand-in (the
-  Grunt bundle upstream references but never commits; the page already
-  loads every file it would contain individually).
-- Not added from that site: its "Red vs Blue" page (it frames a remote
-  demo on warmerise.com — remote-embedded games are not shipped), its
-  EmulatorJS demo page and Linux VM link (not games), and the games that
-  were already in the catalog (Retro Bowl, Slope, Tunnel Rush, 2048,
-  Super Mario 64, Tetris, Flappy Bird, Cookie Clicker and the Celeste
-  Classics).
-- All rights in these games remain with their original creators; this
+- Bitburner's game files are copied byte-for-byte from that repository;
+  the only addition is proton's `app.html` wrapper, which frames the
+  game's own page unsandboxed like every other vendored game. It uses a
+  named inline SVG icon rather than a raster icon file.
+- All rights in the game remain with its original creators; this
   repository grants no rights in that content.
 
 ### Embedded-link cleanup (all vendored batches)
@@ -368,20 +324,8 @@ wrapper as well:
 - **Drift Boss** — its Google Analytics block is switched off and its
   Yandex Games SDK URL blanked, so its SDK/analytics loaders stay
   dormant.
-- **A Dark Room**, **Bitburner**, **Hextris**, **Kittens Game**,
-  **Space Company**, **Trimps** — Google Analytics snippets removed
-  (their `ga()` calls are guarded or gone), as are Space Company's
-  Kongregate API script and Google Fonts links/`@import`s and
-  Kittens Game's (commented-out and hostname-gated) Kongregate API
-  loading.
-- **Bitcoin Mining Simulator** — jQuery no longer comes from a CDN;
-  the page loads a local `jquery.min.js` (v1.10.1, copied from A Dark
-  Room's vendored `lib/`).
-- **Calamity**, **Connect 3**, **Hextris**, **Minecraft Clone**,
-  **Tunnel Rush (Bad)** — Google Fonts stylesheet links removed; the
-  games fall back to system fonts.
-- **Universal Paperclips** — the Google Analytics (gtag.js) loader
-  removed.
+- **Bitburner** — its Google Analytics snippet was removed (the
+  `ga()` calls are guarded or gone).
 
 Ordinary `<a href>` links to authors' own sites inside games are
 untouched: a reader may follow them, but nothing loads until they do.
@@ -400,8 +344,16 @@ RetroArch compiled for the web by
   libretro/RetroArch — and the `assets/` they load, plus the maintainer's
   own ROM library under `roms/` (next point). The GIMP source
   `controller_layout.xcf` is not a runtime asset and is omitted; everything
-  else is byte-for-byte as upstream. The core/wasm wrappers
-  are Gams' `file://`-friendly packaging of those files.
+  else is byte-for-byte as upstream, except for two proton fixes.
+  In `main.js`: bindings changed in RetroArch's own menu are harvested
+  from the `retroarch.cfg` it writes back into the keybind manager's
+  localStorage entry (`harvestKeybindsFromConfigText` /
+  `persistKeybindsFromConfig`), so control bindings persist between
+  games instead of resetting on every launch. In `launch.html`: the
+  menu-bar back arrow posts a `webretro-back` message to the proton
+  launcher instead of linking to `.` (webretro's own core-select page,
+  which proton does not ship, so the link 404'd). The core/wasm
+  wrappers are Gams' `file://`-friendly packaging of those files.
 - `apps/tools/web-retro/app.html` is proton's launcher, adapted from Gams'
   `g/webretro.html`: the same core list and BroadcastChannel ROM hand-off to
   `webretro/launch.html?rom=channel`, with the UI rebuilt on proton's widgets

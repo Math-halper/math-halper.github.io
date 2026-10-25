@@ -316,22 +316,26 @@ not be saved.", etc.).
 
 ## 12. Tools
 
-- **Web Retro** — the vendored webretro emulator launcher. Its front page is
-  two panels side by side (stacked in narrow windows), with a saves/CREDITS
-  footnote underneath:
-  - **ROMs**: the first half is four console rows running top to bottom —
-    **NES**, **SNES**, **N64**, **GB (GB · GBC · GBA)** — each with its
-    bundled-game count over the maintainer's library;
-  - **Emulators**: the picked console's bundled games in a box-art + title
-    grid (click one to play it on its matching core; SNES has none bundled
-    yet), then **Play your own ROM** as four emulator rows, one per console
-    (nestopia / snes9x / mupen64plus_next / mgba). Picking a row swaps the
-    panel to a "where from?" screen — a top bar with a **←** back arrow,
-    then **From proton OS Files** (a mini file browser over the account's
-    home: crumbs, folder rows, ROM rows, one level at a time) or
-    **From your Files** (the device file picker), and **Play ROM**;
+- **Web Retro** — the vendored webretro emulator launcher. Its front page
+  is the desktop's own style with two clickable tabs:
+  - **ROMs**: four console boxes — **NES**, **SNES**, **N64**, **GB** —
+    each showing its bundled-game count; picking a box brings up that
+    console's bundled games in a poster-art + title grid (click a game to
+    play it on its matching core; SNES has none bundled yet); a
+    saves/CREDITS note sits under the grid;
+  - **Emulators**: the same four console boxes, one per core (nestopia /
+    snes9x / mupen64plus_next / mgba). Picking one swaps to a "where from?"
+    screen — a top bar with a **←** back arrow to the boxes, then **From
+    proton Files** (a mini file browser over the account's home: crumbs,
+    folder rows, ROM rows, one level at a time) or **From your Files**
+    (the device file picker), and **Play ROM**;
   - launching swaps the window to the emulator; **Change game** in the app bar
-    returns to the chooser.
+    brings up the chooser (the **ROMs** tab) again, and so does the
+    emulator's own menu-bar back arrow. Control bindings persist between games:
+    keys set in the emulator's **Controls → Keybinds** manager (press
+    **Save**) or in RetroArch's own menu (Settings → Input, then quit
+    RetroArch or save the current configuration) are kept and reapplied
+    on the next launch.
 - **Ruffle Flash Player** — the shared Flash runtime for all 12 Flash games
   and any `.swf` you own: app bar with the player path label, **Reload** and
   **Open in new tab**, the Ruffle player in a fullscreen-capable frame

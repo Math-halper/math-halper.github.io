@@ -15,7 +15,7 @@
 				<input type="checkbox" id="menuhider">
 				<label for="menuhider" class="menuhiderlabel"></label>
 				<ul id="menu">
-					<li class="menuback"><a href="." title="Back to core selection"></a></li>
+					<li class="menuback"><a href="#" title="Back to the game chooser"></a></li>
 					<li>Controls
 						<ul>
 							<li><a id="keybindsbutton" href="">Keybinds</a></li>
@@ -278,6 +278,20 @@ window.launchROMSettings = {
 
 if (!queries.core || !queries.rom) {
  alert("Please make sure to have a core and a rom");
+}
+
+// proton change: upstream's back arrow links to "." (webretro's own
+// core-select page), which proton does not ship, so clicking it 404'd.
+// Inside proton the launcher listens for this message and shows the
+// game chooser (the Roms area) again instead.
+var backToChooser = document.querySelector(".menuback a");
+if (backToChooser) {
+ backToChooser.addEventListener("click", function(e) {
+  e.preventDefault();
+  if (window.parent !== window) {
+   window.parent.postMessage({type: "webretro-back"}, "*");
+  }
+ });
 }
 
 window.addScript = function(url, callback, err, text) {

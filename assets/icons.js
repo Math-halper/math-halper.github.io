@@ -218,11 +218,18 @@ function iconImageFromFile(file) {
   });
 }
 
+/* An app whose icon is an image (svgIcon is not true — a catalog raster
+ * file or an account-uploaded picture) is always shown as just the
+ * picture, cropped to fill its icon space, with no background tile or
+ * plate behind it. Apps with a named SVG icon (svgIcon === true) keep
+ * the drawn glyph on its tile instead. There is no setting for this. */
+function imageIconHtml(value, only = false) {
+  return `<img class="icn app-icon-image${only ? ' app-icon-only' : ''}" src="${value}" alt="" aria-hidden="true" draggable="false">`;
+}
+
 /* Render an uploaded image or a named/legacy icon. */
-function iconFor(value, fallback = 'grid') {
-  if (isIconImageData(value)) {
-    return `<img class="icn app-icon-image" src="${value}" alt="" aria-hidden="true" draggable="false">`;
-  }
+function iconFor(value, fallback = 'grid', only = false) {
+  if (isIconImageData(value)) return imageIconHtml(value, only);
   return iconSvg(iconNameFrom(value, fallback));
 }
 
@@ -236,11 +243,9 @@ function isIconAssetPath(value) {
 
 /* Catalog icons either name one of proton's inline SVGs or point at a local
  * raster image. svgIcon is true for the former and false for the latter. */
-function catalogIconFor(value, svgIcon = true, fallback = 'grid') {
+function catalogIconFor(value, svgIcon = true, fallback = 'grid', only = false) {
   if (svgIcon === false) {
-    if (isIconAssetPath(value)) {
-      return `<img class="icn app-icon-image" src="${value}" alt="" aria-hidden="true" draggable="false">`;
-    }
+    if (isIconAssetPath(value)) return imageIconHtml(value, only);
     return iconSvg(fallback);
   }
   return iconSvg(iconNameFrom(value, fallback));
@@ -249,8 +254,8 @@ function catalogIconFor(value, svgIcon = true, fallback = 'grid') {
 /* An account-uploaded image overrides the catalog default; clearing it falls
  * back to either the catalog's raster path or its named inline SVG. */
 function appIcon(app, fallback = 'grid') {
-  if (app && isIconImageData(app.iconImage)) return iconFor(app.iconImage, fallback);
-  return catalogIconFor(app?.icon, app?.svgIcon !== false, fallback);
+  if (app && isIconImageData(app.iconImage)) return iconFor(app.iconImage, fallback, true);
+  return catalogIconFor(app?.icon, app?.svgIcon !== false, fallback, true);
 }
 
 /* <option> list for icon picker <select>s, with `selected` pre-chosen. */

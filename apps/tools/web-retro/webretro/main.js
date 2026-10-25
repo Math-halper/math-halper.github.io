@@ -125,6 +125,7 @@ var coreGithubLinks = {"81": "libretro/81-libretro", "dosbox": "libretro/dosbox-
 var baseFsBundleDir = "/home/web_user/retroarch/bundle";
 var baseFsSystemDir = "/home/web_user/retroarch/userdata/system/";
 var baseFsConfigDir = "/home/web_user/retroarch/userdata/config/";
+var fsConfigFile = "/home/web_user/retroarch/userdata/retroarch.cfg";
 var baseFsSaveDir = "/home/web_user/retroarch/userdata/saves/";
 var FSTracking = new EventTarget();
 var writeToFileCooldown = {};
@@ -967,6 +968,51 @@ resetKeybinds.onclick = function() {
 	}
 }
 
+// --- proton fix: keep control bindings between games ---
+// Bindings changed in RetroArch's own menu (Settings > Input) are only
+// written to retroarch.cfg in the emulator's in-memory filesystem, and
+// the startup code below rewrites that file from savedKeybindsObj on
+// every launch. Upstream webretro persists saves and states but never
+// the config, so in-game rebinding was lost every time a game was
+// opened. Harvest the bindings RetroArch writes back into the same
+// localStorage entry the keybind manager uses, so the next launch's
+// startup write reapplies them.
+
+// pick the manager-known bindings out of retroarch.cfg text; returns an
+// object of just the bindings that differ from `current`, or null
+function harvestKeybindsFromConfigText(text, validKeys, current) {
+	var changed = null;
+	var lines = String(text).split("\n");
+	for (var i = 0; i < lines.length; i++) {
+		var m = lines[i].match(/^\s*([a-z0-9_]+)\s*=\s*"(.*)"\s*$/i);
+		if (!m || validKeys.indexOf(m[1]) == -1) continue;
+		if (current[m[1]] !== m[2]) {
+			if (!changed) changed = {};
+			changed[m[1]] = m[2];
+		}
+	}
+	return changed;
+}
+
+function persistKeybindsFromConfig() {
+	try {
+		if (typeof FS == "undefined" || !FS.analyzePath(fsConfigFile).exists) return;
+		var changed = harvestKeybindsFromConfigText(u8atoutf8(FS.readFile(fsConfigFile)), validKeybinds, savedKeybindsObj);
+		if (!changed) return;
+		Object.assign(savedKeybindsObj, changed);
+		keybindsObj = Object.assign({}, savedKeybindsObj);
+		localStorage.setItem("RetroArch_settings_keybinds", configObjToStr(savedKeybindsObj));
+	} catch (e) {
+		console.warn(e);
+	}
+}
+
+// RetroArch writes its config when it quits or saves the current
+// configuration; that write is routed through writeToFileHandler below.
+// This catches the same write synchronously if the window is closed
+// before the (debounced) tracking event fires.
+window.addEventListener("pagehide", persistKeybindsFromConfig);
+
 // --- code for the screenshot manager ---
 
 // zip and download all of the screenshots in the list
@@ -1453,6 +1499,10 @@ function writeToFileHandler(path) {
 	
 	if (path.startsWith(baseFsSaveDir)) {
 		saveSRAMHandler(path);
+	} else if (path == fsConfigFile) {
+		// RetroArch just saved its config: keep any bindings the user
+		// changed in its menu (see the proton fix by the keybind manager)
+		persistKeybindsFromConfig();
 	} else if (path.startsWith("/home/web_user/retroarch/userdata/states/")) {
 		if (path == "/home/web_user/retroarch/userdata/states/rom.state") saveStateHandler();
 	}
