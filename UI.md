@@ -316,23 +316,21 @@ not be saved.", etc.).
 
 ## 12. Tools
 
-- **Web Retro** — the vendored webretro emulator launcher. Its front page is
-  a black-bordered split view (stacked in narrow windows): a **Roms** column
-  on the left, about 40% wide, beside an **emus** pane:
-  - **Roms**: a header over four big console rows running top to bottom —
-    **NES**, **SNES**, **N64**, **GB** — split by thick black lines, the
-    picked row filled black;
-  - **emus**: a header over the picked console's bundled games in a
-    box-art + title grid (click one to play it on its matching core; SNES
-    has none bundled yet), then **Play your own ROM** as four emulator
-    rows, one per console (nestopia / snes9x / mupen64plus_next / mgba).
-    Picking a row swaps the pane to a "where from?" screen — a top bar
-    with a **←** back arrow, then **From proton OS Files** (a mini file
-    browser over the account's home: crumbs, folder rows, ROM rows, one
-    level at a time) or **From your Files** (the device file picker), and
-    **Play ROM**; a saves/CREDITS note sits under the grid;
+- **Web Retro** — the vendored webretro emulator launcher. Its front page
+  is the desktop's own style with two clickable tabs:
+  - **ROMs**: four console boxes — **NES**, **SNES**, **N64**, **GB** —
+    each showing its bundled-game count; picking a box brings up that
+    console's bundled games in a poster-art + title grid (click a game to
+    play it on its matching core; SNES has none bundled yet); a
+    saves/CREDITS note sits under the grid;
+  - **Emulators**: the same four console boxes, one per core (nestopia /
+    snes9x / mupen64plus_next / mgba). Picking one swaps to a "where from?"
+    screen — a top bar with a **←** back arrow to the boxes, then **From
+    proton Files** (a mini file browser over the account's home: crumbs,
+    folder rows, ROM rows, one level at a time) or **From your Files**
+    (the device file picker), and **Play ROM**;
   - launching swaps the window to the emulator; **Change game** in the app bar
-    brings up the chooser (the **Roms** area) again, and so does the
+    brings up the chooser (the **ROMs** tab) again, and so does the
     emulator's own menu-bar back arrow. Control bindings persist between games:
     keys set in the emulator's **Controls → Keybinds** manager (press
     **Save**) or in RetroArch's own menu (Settings → Input, then quit

@@ -982,31 +982,35 @@ test('the desktop boots, lists and opens all catalogued apps', async () => {
     assert.equal(shown(), '0', 'Escape clears');
     w.closeWin('calculator', true);
 
-    // Web Retro's front page is the sketched split view: a "Roms" column
-    // of four console rows (NES, SNES, N64, GB) beside an "emus" pane.
-    // Picking a row fills the pane's grid with that console's games, and
-    // the pane's four emulator rows open a "where from?" screen (top bar,
-    // back arrow).
+    // Web Retro's front page is two tabs in the desktop's own style:
+    // ROMs — four console boxes (NES, SNES, N64, GB), each bringing up
+    // that console's bundled games with their poster art — and
+    // Emulators, the same console boxes, where picking one opens a
+    // "where from?" screen (proton Files or this computer; back arrow).
     w.openApp('web-retro');
     const retro = wins.get('web-retro').body;
-    const panels = [...retro.querySelectorAll('.wr-panel')];
-    assert.equal(panels.length, 2, 'the front page should be two panels');
-    assert.match(panels[0].querySelector('h3').textContent, /Roms/, 'the first panel is the Roms');
-    assert.match(panels[1].querySelector('h3').textContent, /emus/, 'the second panel is the emus');
-    assert.deepEqual([...panels[0].querySelectorAll('[data-console]')].map((b) => b.textContent.trim()),
-      ['NES', 'SNES', 'N64', 'GB'], 'the console rows are labelled like the sketch');
-    assert.deepEqual([...panels[0].querySelectorAll('[data-console]')].map((b) => b.dataset.console),
-      ['NES', 'SNES', 'N64', 'GB'], 'the first half is four console rows, NES down to GB');
+    const tabBtns = [...retro.querySelectorAll('[data-wr-tab]')];
+    assert.deepEqual(tabBtns.map((b) => b.textContent.trim()), ['ROMs', 'Emulators'],
+      'the front page should be two clickable tabs');
+    assert.equal(retro.querySelector('#wr-roms').hidden, false, 'the ROMs tab starts open');
+    assert.equal(retro.querySelector('#wr-emulators').hidden, true, 'the Emulators tab starts closed');
+    assert.deepEqual([...retro.querySelectorAll('#wr-roms [data-console]')].map((b) => b.dataset.console),
+      ['NES', 'SNES', 'N64', 'GB'], 'the ROMs tab is four console boxes, NES down to GB');
     const gridCount = () => retro.querySelectorAll('#wr-grid [data-bundled]').length;
-    assert.equal(gridCount(), 5, 'the NES row starts picked, with its games in the grid');
+    assert.equal(gridCount(), 5, 'the NES box starts picked, with its games in the grid');
+    const firstArt = retro.querySelector('#wr-grid [data-bundled] img');
+    assert.ok(firstArt && /^data\/icons\/.+\.jpeg$/.test(firstArt.getAttribute('src')),
+      'bundled games show their poster art');
     retro.querySelector('[data-console="GB"]').click();
-    assert.equal(gridCount(), 13, 'the GB row shows the GB/GBC/GBA games');
+    assert.equal(gridCount(), 13, 'the GB box shows the GB/GBC/GBA games');
     retro.querySelector('[data-console="SNES"]').click();
     assert.equal(gridCount(), 0, 'no SNES games are bundled');
     retro.querySelector('[data-console="NES"]').click();
     assert.equal(gridCount(), 5, 'picking NES again refills the grid');
-    assert.ok(panels[1].querySelector('[data-core]'), 'the cores live in the Emulators panel');
-    assert.deepEqual([...retro.querySelectorAll('[data-core]')].map((b) => b.dataset.core),
+    retro.querySelector('[data-wr-tab="emulators"]').click();
+    assert.equal(retro.querySelector('#wr-roms').hidden, true, 'the Emulators tab hides the ROMs tab');
+    assert.equal(retro.querySelector('#wr-emulators').hidden, false, 'the Emulators tab shows its console boxes');
+    assert.deepEqual([...retro.querySelectorAll('#wr-emulators [data-core]')].map((b) => b.dataset.core),
       ['nestopia', 'snes9x', 'mupen64plus_next', 'mgba']);
     assert.equal(retro.querySelector('#wr-upload').hidden, true, 'no source screen before an emulator is picked');
     retro.querySelector('[data-core="snes9x"]').click();
@@ -1014,7 +1018,8 @@ test('the desktop boots, lists and opens all catalogued apps', async () => {
     assert.equal(retro.querySelector('#wr-corename').textContent, 'SNES');
     assert.ok(retro.querySelector('#wr-back'), 'the source screen has a back arrow');
     retro.querySelector('#wr-back').click();
-    assert.equal(retro.querySelector('#wr-upload').hidden, true, 'the back arrow returns to the emulator rows');
+    assert.equal(retro.querySelector('#wr-upload').hidden, true, 'the back arrow returns to the emulator boxes');
+    assert.equal(retro.querySelector('#wr-emu-home').hidden, false, 'the back arrow shows the emulator boxes again');
     retro.querySelector('[data-core="snes9x"]').click();
     assert.equal(retro.querySelector('#wr-upload').hidden, false);
     assert.ok(retro.querySelector('[data-src="device"]'), 'no "this computer" ROM source');
@@ -1048,15 +1053,18 @@ test('the desktop boots, lists and opens all catalogued apps', async () => {
     assert.equal(chSent[0].rom.name, 'nes-rom.nes');
     // The emulator's own back arrow posts webretro-back from inside the
     // frame (the page it linked to upstream is not shipped and 404'd):
-    // the launcher answers by showing the Roms area again.
+    // the launcher answers by showing the ROMs tab again.
     const backEvent = new w.MessageEvent('message', { data: { type: 'webretro-back' } });
     Object.defineProperty(backEvent, 'source', { value: frame.contentWindow });
     w.dispatchEvent(backEvent);
     assert.ok(!retro.querySelector('#wr-frame'), 'the emulator back arrow should unframe the emulator');
-    assert.match(retro.querySelector('.wr-panel h3').textContent, /Roms/, 'the emulator back arrow should show the Roms area');
+    assert.equal(retro.querySelector('#wr-roms').hidden, false, 'the emulator back arrow should show the ROMs tab');
+    assert.ok(retro.querySelector('[data-wr-tab="roms"]').classList.contains('primary'),
+      'the emulator back arrow returns to the ROMs tab');
     assert.equal(retro.querySelector('#wr-again').hidden, true, 'Change game hides again in the chooser');
     // Play the same ROM once more, then Change game in the app bar
-    // lands in the same Roms area.
+    // lands in the same ROMs tab.
+    retro.querySelector('[data-wr-tab="emulators"]').click();
     retro.querySelector('[data-core="nestopia"]').click();
     retro.querySelector('[data-src="vfs"]').click();
     // the proton Files browser is still in Downloads from the first run;
@@ -1076,7 +1084,7 @@ test('the desktop boots, lists and opens all catalogued apps', async () => {
     assert.equal(retro.querySelector('#wr-again').hidden, false, 'Change game shows while a game runs');
     retro.querySelector('#wr-again').click();
     assert.ok(!retro.querySelector('#wr-frame'), 'Change game should unframe the emulator');
-    assert.match(retro.querySelector('.wr-panel h3').textContent, /Roms/, 'Change game should show the Roms area');
+    assert.equal(retro.querySelector('#wr-roms').hidden, false, 'Change game should show the ROMs tab');
     w.closeWin('web-retro', true);
 
     // Every open/save asks which file system to use: "your Files" (this
@@ -1492,7 +1500,7 @@ test('Web Retro keeps control bindings between games', () => {
 /* The emulator's menu-bar back arrow must not navigate the frame:
  * upstream it links to "." (webretro's core-select page), which proton
  * does not ship, so clicking it showed a 404. Instead launch.html
- * posts webretro-back and the launcher shows the Roms area, the same
+ * posts webretro-back and the launcher shows the ROMs tab, the same
  * place Change game goes. */
 test('Web Retro back arrow returns to the chooser instead of a 404', () => {
   const launch = fs.readFileSync(path.join(ROOT, 'apps/tools/web-retro/webretro/launch.html'), 'utf8');
@@ -1503,7 +1511,7 @@ test('Web Retro back arrow returns to the chooser instead of a 404', () => {
   assert.ok(app.includes("event.data.type !== 'webretro-back'") && app.includes('event.source === frame.contentWindow'),
     'the launcher returns to the chooser only for its own emulator frame');
   assert.ok(app.includes("again.addEventListener('click', picker);"),
-    'Change game brings up the same chooser (the Roms area)');
+    'Change game brings up the same chooser (the ROMs tab)');
 });
 
 /* proton's own UI draws artwork with its SVG icon set and raster images,
