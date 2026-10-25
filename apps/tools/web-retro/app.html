@@ -148,6 +148,18 @@ registerApp({
       if (src === 'vfs') renderVfs();
     }
 
+    /* A ROM picked in the proton Files browser launches straight
+     * into the emulator — there is no separate start button. */
+    async function playVfsRom() {
+      const core = main.querySelector('#wr-upload').dataset.core;
+      try {
+        const blob = await FS.readBlob(vfsPick);
+        play(core, new File([blob], FS.basename(vfsPick)));
+      } catch (err) {
+        MH.toast(err.message || 'Could not read that ROM.');
+      }
+    }
+
     /* Which console row a core (and so every bundled game on it)
      * belongs to. */
     function catOf(core) {
@@ -165,7 +177,7 @@ registerApp({
       title.textContent = `${label} games`;
       grid.innerHTML = items.length
         ? items.map(([g, i]) => `<button type="button" class="btn wr-game" data-bundled="${i}"><img src="data/icons/${g[4]}.jpeg" alt=""><span>${MH.esc(g[2])}</span></button>`).join('')
-        : `<p class="muted" style="margin:0">No ${MH.esc(label)} games are bundled yet — play your own with the emulator rows below.</p>`;
+        : `<p class="muted" style="margin:0">No ${MH.esc(label)} games are bundled yet — play your own from the Emulators tab.</p>`;
     }
 
     /* The Emulators tab swaps between its console boxes and the
@@ -208,6 +220,17 @@ registerApp({
       main.className = 'app-main pad';
       const countFor = (cat) => BUNDLED.filter((g) => catOf(g[1]) === cat).length;
       main.innerHTML = `<style>
+        /* Black page, white text. Any option glows deep dark blue while
+         * hovered and sits dark gray with white text once picked. Text
+         * is never selectable, so no caret or text cursor shows over
+         * titles, labels or descriptions. */
+        #wr-main{background:#000;color:#fff}
+        #wr-main,#wr-main *{user-select:none;-webkit-user-select:none;cursor:default}
+        #wr-main button,#wr-main input[type=file]{cursor:pointer}
+        #wr-main .btn{background:#0d0d0d;border-color:#3d3d3d;color:#fff}
+        #wr-main .btn.primary{background:#3d3d3d;border-color:#5c5c5c;color:#fff}
+        #wr-main .btn:hover{background:#0b2e63;border-color:#1d4e9e;color:#fff}
+        #wr-main .muted{color:#d9d9d9}
         .wr-tabs{display:flex;gap:8px;margin-bottom:14px}
         .wr-tab{flex:1;padding:10px 16px;font-size:15px}
         .wr-consoles{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:16px}
@@ -240,7 +263,6 @@ registerApp({
       </section>
       <section id="wr-emulators" hidden>
         <div id="wr-emu-home">
-          <p class="muted" style="margin-top:0">Pick an emulator to play your own ROM on it.</p>
           <div class="wr-consoles">
             ${CONSOLES.map(([cat, core, label]) => `<button type="button" class="btn wr-console" data-core="${core}"><b>${cat}</b><span>${MH.esc(label)} · ${core}</span></button>`).join('')}
           </div>
@@ -251,7 +273,7 @@ registerApp({
         <div id="wr-upload" class="wr-upload" hidden>
           <div class="wr-topbar">
             <button type="button" class="btn sm wr-back" id="wr-back" aria-label="Back to the emulators">←</button>
-            <strong>Play your own ROM — <span id="wr-corename"></span></strong>
+            <strong>Emulator — <span id="wr-corename"></span></strong>
           </div>
           <div class="field">
             <label>Where is the ROM?</label>
@@ -267,7 +289,6 @@ registerApp({
               (import more with the <b>Files</b> app) — <span id="wr-vfs-path"></span></p>
               <div id="wr-vfs-list" style="max-height:190px;overflow:auto;display:flex;flex-direction:column;gap:4px"></div>
             </div>
-            <button type="button" class="btn primary" id="wr-play" style="margin-top:10px">Play ROM</button>
           </div>
         </div>
       </section>`;
@@ -282,7 +303,14 @@ registerApp({
         const btn = e.target.closest('[data-bundled]');
         if (btn) playBundled(BUNDLED[Number(btn.dataset.bundled)]);
       });
-      main.querySelectorAll('[data-core]').forEach((b) => b.addEventListener('click', () => showUpload(b.dataset.core)));
+      main.querySelectorAll('[data-core]').forEach((b) => b.addEventListener('click', () => {
+        main.querySelectorAll('[data-core]').forEach((x) => x.classList.toggle('primary', x === b));
+        showUpload(b.dataset.core);
+      }));
+      main.querySelector('#wr-rom').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) play(main.querySelector('#wr-upload').dataset.core, file);
+      });
       main.querySelector('#wr-back').addEventListener('click', showEmuHome);
       main.querySelectorAll('[data-src]').forEach((b) => b.addEventListener('click', () => showSource(b.dataset.src)));
       main.querySelector('#wr-vfs-list').addEventListener('click', (e) => {
@@ -299,24 +327,7 @@ registerApp({
           renderVfs();
         } else if (btn.dataset.file) {
           vfsPick = btn.dataset.file;
-          renderVfs();
-        }
-      });
-      main.querySelector('#wr-play').addEventListener('click', async () => {
-        const upload = main.querySelector('#wr-upload');
-        const core = upload.dataset.core;
-        if (romSource === 'device') {
-          const file = main.querySelector('#wr-rom').files[0];
-          if (!file) { MH.toast('Choose a ROM file first.'); return; }
-          play(core, file);
-          return;
-        }
-        if (!vfsPick) { MH.toast('Choose a ROM file first.'); return; }
-        try {
-          const blob = await FS.readBlob(vfsPick);
-          play(core, new File([blob], FS.basename(vfsPick)));
-        } catch (err) {
-          MH.toast(err.message || 'Could not read that ROM.');
+          playVfsRom();
         }
       });
     }

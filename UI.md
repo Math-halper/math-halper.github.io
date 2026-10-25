@@ -317,18 +317,24 @@ not be saved.", etc.).
 ## 12. Tools
 
 - **Web Retro** — the vendored webretro emulator launcher. Its front page
-  is the desktop's own style with two clickable tabs:
+  is a black GUI with white text and two clickable tabs (the **ROMs** tab
+  is the default); hovering any option turns it deep dark blue, and a
+  picked option sits dark gray with white text. Text in the launcher is
+  not selectable, so no text caret appears over titles or labels:
   - **ROMs**: four console boxes — **NES**, **SNES**, **N64**, **GB** —
-    each showing its bundled-game count; picking a box brings up that
-    console's bundled games in a poster-art + title grid (click a game to
-    play it on its matching core; SNES has none bundled yet); a
-    saves/CREDITS note sits under the grid;
+    each showing its bundled-game count (the GB box names all its parts:
+    GB · GBC · GBA); picking a box brings up that console's bundled games
+    in a poster-art + title grid (click a game to play it on its matching
+    core; SNES has none bundled yet); a saves/CREDITS note sits under the
+    grid;
   - **Emulators**: the same four console boxes, one per core (nestopia /
-    snes9x / mupen64plus_next / mgba). Picking one swaps to a "where from?"
-    screen — a top bar with a **←** back arrow to the boxes, then **From
-    proton Files** (a mini file browser over the account's home: crumbs,
-    folder rows, ROM rows, one level at a time) or **From your Files**
-    (the device file picker), and **Play ROM**;
+    snes9x / mupen64plus_next / mgba). Picking one turns it dark gray and
+    swaps to a "where from?" screen headed **Emulator — <console>** — a
+    top bar with a **←** back arrow to the boxes, then **From proton
+    Files** (a mini file browser over the account's home: crumbs, folder
+    rows, ROM rows, one level at a time) or **From your Files** (the
+    device file picker). Picking a ROM launches it at once — there is
+    no start button;
   - launching swaps the window to the emulator; **Change game** in the app bar
     brings up the chooser (the **ROMs** tab) again, and so does the
     emulator's own menu-bar back arrow. Control bindings persist between games:

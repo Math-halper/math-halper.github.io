@@ -1024,8 +1024,8 @@ test('the desktop boots, lists and opens all catalogued apps', async () => {
     assert.equal(retro.querySelector('#wr-upload').hidden, false);
     assert.ok(retro.querySelector('[data-src="device"]'), 'no "this computer" ROM source');
     assert.ok(retro.querySelector('[data-src="vfs"]'), 'no "proton Files" ROM source');
-    retro.querySelector('#wr-play').click();
-    assert.match(w.document.querySelector('#toasts').textContent, /Choose a ROM file/);
+    assert.equal(retro.querySelector('#wr-play'), null,
+      'there is no start button — picking a ROM launches it at once');
     // A ROM imported into the proton file system is listed, then handed to the
     // emulator over the BroadcastChannel like a device file.
     const home = w.eval('FS.home()');
@@ -1036,17 +1036,16 @@ test('the desktop boots, lists and opens all catalogued apps', async () => {
     dl.click();
     const row = [...retro.querySelectorAll('[data-file]')].find((b) => b.dataset.file.endsWith('nes-rom.nes'));
     assert.ok(row, 'proton Files should list the imported ROM');
-    row.click();
     const chSent = [];
     w.BroadcastChannel = class {
       constructor(name) { this.name = name; w.__wrCh = this; }
       postMessage(m) { chSent.push(m); }
       close() {}
     };
-    retro.querySelector('#wr-play').click();
+    row.click();
     await new Promise((resolve) => setTimeout(resolve, 20));
     const frame = retro.querySelector('#wr-frame');
-    assert.ok(frame, 'Play should frame the emulator');
+    assert.ok(frame, 'picking the ROM should frame the emulator at once');
     assert.match(frame.src, /rom=channel/);
     w.__wrCh.onmessage({ data: { status: 'ready' } });
     assert.equal(chSent.length, 1, 'the launch page should get the ROM over the channel');
@@ -1078,9 +1077,8 @@ test('the desktop boots, lists and opens all catalogued apps', async () => {
     }
     assert.ok(rowAgain, 'proton Files should still list the imported ROM');
     rowAgain.click();
-    retro.querySelector('#wr-play').click();
     await new Promise((resolve) => setTimeout(resolve, 20));
-    assert.ok(retro.querySelector('#wr-frame'), 'Play should frame the emulator again');
+    assert.ok(retro.querySelector('#wr-frame'), 'picking the ROM should frame the emulator again');
     assert.equal(retro.querySelector('#wr-again').hidden, false, 'Change game shows while a game runs');
     retro.querySelector('#wr-again').click();
     assert.ok(!retro.querySelector('#wr-frame'), 'Change game should unframe the emulator');
