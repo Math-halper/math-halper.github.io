@@ -1458,6 +1458,28 @@ test('the Web Retro bundled ROM library is on disk', () => {
   for (const m of bundled[1].matchAll(/, '([a-z0-9-]+)'\]/g)) {
     assert.ok(fs.existsSync(path.join(ROOT, 'data/icons', `${m[1]}.jpeg`)), `box art missing: data/icons/${m[1]}.jpeg`);
   }
+  /* Each cover file must hold ITS game's art: the box-art upload was
+   * once shuffled (Mario Party's file held Majora's Mask, Doom 64's
+   * held Paper Mario, four covers sat in files later deleted as
+   * "unused"), so pin every cover to its verified content hash. */
+  const COVER_HASHES = {
+    'mario-kart-64': '56a0a47c72b9', 'mario-party': '1614b990be2b', 'paper-mario': 'e7d9405b544a',
+    'doom-64': '80126632ca0a', 'yoshis-story': '3016e9b6846d', 'excitebike': 'e09e97027293',
+    'super-mario-bros-duck-hunt': 'd1d66dcee713', 'super-mario-bros-2': '98fe15acfcd0',
+    'super-mario-bros-3': 'ca58cd9b87bd', 'tetris-nes': '54a4371d227f', 'doom-gba': 'b1b5e238568d',
+    'grand-theft-auto-advance': '778b0b4601ec', 'lego-star-wars-the-video-game': '6f8c76a9bc4f',
+    'pokemon-emerald': 'ffef75a31404', 'the-sims-bustin-out': '2cd1418649e4',
+    'super-mario-advance': 'f2e913549cf3', 'grand-theft-auto': 'c287d537c1b8',
+    'grand-theft-auto-2': '8fa1ee942bdb', 'pokemon-red': '43a08fbd8eb5',
+    'pokemon-yellow': 'b2d44125f07c', 'pokemon-crystal': '3bc1f697ee02',
+    'space-invaders': 'f3f0c6513229', 'super-mario-bros-deluxe': 'df29dd3956ac',
+  };
+  const crypto = require('node:crypto');
+  for (const m of bundled[1].matchAll(/, '([a-z0-9-]+)'\]/g)) {
+    const hash = crypto.createHash('sha256')
+      .update(fs.readFileSync(path.join(ROOT, 'data/icons', `${m[1]}.jpeg`))).digest('hex').slice(0, 12);
+    assert.equal(hash, COVER_HASHES[m[1]], `data/icons/${m[1]}.jpeg does not hold ${m[1]}'s cover art`);
+  }
 });
 
 /* Control bindings have to survive closing a game. RetroArch writes
