@@ -28,7 +28,7 @@
 window.PROTON_SEARCH_INDEX = {
   v: 1,
   docs: [
-    { p: '/CREDITS.md', t: 'Credits & provenance', k: 'doc', d: 'proton (this repository) is a static, browser-only clone and rebrand of Mixt , from: Upstream: https://github.com/proton-arcade/mlp/tree/arena/170861f7-mlp Commit cloned…', n: 2514 },
+    { p: '/CREDITS.md', t: 'Credits & provenance', k: 'doc', d: 'proton (this repository) is a static, browser-only clone and rebrand of Mixt , from: Upstream: https://github.com/proton-arcade/mlp/tree/arena/170861f7-mlp Commit cloned…', n: 2512 },
     { p: '/LICENSE.txt', t: 'GNU AFFERO GENERAL PUBLIC LICENSE', k: 'doc', d: 'Version 3, 19 November 2007 Copyright (C) 2007 Free Software Foundation, Inc.', n: 2947 },
     { p: '/README.md', t: 'proton — a browser desktop (static Mixt clone), System apps, a file system, its own…', k: 'doc', d: 'A desktop shell in your browser: Mint-style bottom panel and proton menu, draggable/resizable windows, per-account customisation — cloned and rebranded from Mixt (`proton-arcade/mlp` @…', n: 2741 },
     { p: '/UI.md', t: 'proton UI — every part, in detail', k: 'doc', d: 'proton is a complete desktop that runs entirely in the browser, with no server: accounts, files and settings live in this browser\'s storage.', n: 1749 },
@@ -454,7 +454,7 @@ window.PROTON_SEARCH_INDEX = {
     'bundl': '1:7,2:4,2:3,56:7,8,15',
     'bundle': '1,2:2,62:2',
     'business': '2',
-    'bustin': '1,82',
+    'bustin': '83',
     'button': '1:3,2:4,1:34,1:2,9,33:9,1,6,7,4:5,1,1:2,8,3:2,7:2,1',
     'bw': '1',
     'byte': '1:12,2:10,2:6,41:2,1,2:3,1:2,15,6,1:2,7:6,4,1:5',
@@ -2153,7 +2153,7 @@ window.PROTON_SEARCH_INDEX = {
     'sil': '1',
     'silently': '49,21,2',
     'silver': '4',
-    'sim': '1:4,82',
+    'sim': '1:3,82',
     'similar': '2:3',
     'simple': '3,77',
     'simply': '69,3,5:2',

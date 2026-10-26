@@ -372,7 +372,7 @@ were dropped once the ROMs were unzipped): Mario Kart 64, Mario Party, Paper
 Mario, Doom 64 and Yoshi's Story (N64); Excitebike, Super Mario Bros. +
 Duck Hunt, Super Mario Bros. 2, Super Mario Bros. 3 and Tetris (NES);
 Doom, Grand Theft Auto Advance, LEGO Star Wars: The Video Game, Pokémon
-Emerald, The Sims Bustin' Out and Super Mario Advance (GBA); Grand Theft
+Emerald and Super Mario Advance (GBA); Grand Theft
 Auto, Grand Theft Auto 2, Pokémon Red, Pokémon Yellow, Pokémon Crystal,
 Space Invaders and Super Mario Bros. Deluxe (Game Boy/Color). Their box
 art (also maintainer-supplied) lives in `data/icons/` and fronts them in

@@ -1002,7 +1002,7 @@ test('the desktop boots, lists and opens all catalogued apps', async () => {
     assert.ok(firstArt && /^data\/icons\/.+\.jpeg$/.test(firstArt.getAttribute('src')),
       'bundled games show their poster art');
     retro.querySelector('[data-console="GB"]').click();
-    assert.equal(gridCount(), 13, 'the GB box shows the GB/GBC/GBA games');
+    assert.equal(gridCount(), 12, 'the GB box shows the GB/GBC/GBA games');
     retro.querySelector('[data-console="SNES"]').click();
     assert.equal(gridCount(), 0, 'no SNES games are bundled');
     retro.querySelector('[data-console="NES"]').click();
@@ -1468,7 +1468,7 @@ test('the Web Retro bundled ROM library is on disk', () => {
     'super-mario-bros-duck-hunt': 'd1d66dcee713', 'super-mario-bros-2': '98fe15acfcd0',
     'super-mario-bros-3': 'ca58cd9b87bd', 'tetris-nes': '54a4371d227f', 'doom-gba': 'b1b5e238568d',
     'grand-theft-auto-advance': '778b0b4601ec', 'lego-star-wars-the-video-game': '6f8c76a9bc4f',
-    'pokemon-emerald': 'ffef75a31404', 'the-sims-bustin-out': '2cd1418649e4',
+    'pokemon-emerald': 'ffef75a31404',
     'super-mario-advance': 'f2e913549cf3', 'grand-theft-auto': 'c287d537c1b8',
     'grand-theft-auto-2': '8fa1ee942bdb', 'pokemon-red': '43a08fbd8eb5',
     'pokemon-yellow': 'b2d44125f07c', 'pokemon-crystal': '3bc1f697ee02',
