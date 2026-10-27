@@ -996,6 +996,11 @@ test('the desktop boots, lists and opens all catalogued apps', async () => {
     assert.equal(retro.querySelector('#wr-emulators').hidden, true, 'the Emulators tab starts closed');
     assert.deepEqual([...retro.querySelectorAll('#wr-roms [data-console]')].map((b) => b.dataset.console),
       ['NES', 'SNES', 'N64', 'GB'], 'the ROMs tab is four console boxes, NES down to GB');
+    const wrStyle = retro.querySelector('style').textContent;
+    assert.match(wrStyle, /\.wr-consoles\{[^}]*grid-template-columns:repeat\(4,minmax\(0,1fr\)\)[^}]*width:100%/,
+      'the four console boxes should split the entire top width evenly');
+    assert.match(wrStyle, /\.wr-topbar \.wr-back\{[^}]*font-size:28px[^}]*min-width:56px[^}]*min-height:48px/,
+      'the Emulator screen back arrow should be large');
     const gridCount = () => retro.querySelectorAll('#wr-grid [data-bundled]').length;
     assert.equal(gridCount(), 9, 'the NES box starts picked, with its games in the grid');
     const firstArt = retro.querySelector('#wr-grid [data-bundled] img');
@@ -1542,6 +1547,11 @@ test('Web Retro back arrow returns to the chooser instead of a 404', () => {
     'the launcher returns to the chooser only for its own emulator frame');
   assert.ok(app.includes("again.addEventListener('click', picker);"),
     'Change game brings up the same chooser (the ROMs tab)');
+  const baseCss = fs.readFileSync(path.join(ROOT, 'apps/tools/web-retro/webretro/assets/base.css'), 'utf8');
+  assert.match(baseCss, /\.menuback a::before \{[^}]*font-size: 28px;/,
+    'the emulator menu-bar back arrow should be large');
+  assert.match(baseCss, /\.menuback \{[^}]*width: calc\(var\(--menubuttonbordery\) \+ 16px\) !important;/,
+    'the emulator menu-bar back arrow should have a wider click target');
 });
 
 /* proton's own UI draws artwork with its SVG icon set and raster images,

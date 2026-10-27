@@ -367,7 +367,9 @@ RetroArch compiled for the web by
   libretro/RetroArch — and the `assets/` they load, plus the maintainer's
   own ROM library under `roms/` (next point). The GIMP source
   `controller_layout.xcf` is not a runtime asset and is omitted; everything
-  else is byte-for-byte as upstream, except for three proton changes.
+  else is byte-for-byte as upstream, except for the proton changes below.
+  In `assets/base.css`: the menu-bar back arrow is drawn larger than
+  upstream (28px glyph, wider click target) so it is easy to hit.
   In `main.js`: bindings changed in RetroArch's own menu are harvested
   from the `retroarch.cfg` it writes back into the keybind manager's
   localStorage entry (`harvestKeybindsFromConfigText` /

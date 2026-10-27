@@ -328,22 +328,23 @@ not be saved.", etc.).
   picked option sits dark gray with white text. Text in the launcher is
   not selectable, so no text caret appears over titles or labels:
   - **ROMs**: four console boxes — **NES**, **SNES**, **N64**, **GB** —
-    each showing its bundled-game count (the GB box names all its parts:
-    GB · GBC · GBA); picking a box brings up that console's bundled games
-    in a poster-art + title grid (click a game to play it on its matching
-    core; SNES has none bundled yet); a saves/CREDITS note sits under the
-    grid;
-  - **Emulators**: the same four console boxes, one per core (nestopia /
-    snes9x / mupen64plus_next / mgba). Picking one turns it dark gray and
-    swaps to a "where from?" screen headed **Emulator — <console>** — a
-    top bar with a **←** back arrow to the boxes, then **From proton
-    Files** (a mini file browser over the account's home: crumbs, folder
-    rows, ROM rows, one level at a time) or **From your Files** (the
-    device file picker). Picking a ROM launches it at once — there is
-    no start button;
+    in one row of four equal columns filling the full width of the top of
+    the tab, each showing its bundled-game count (the GB box names all its
+    parts: GB · GBC · GBA); picking a box brings up that console's bundled
+    games in a poster-art + title grid (click a game to play it on its
+    matching core); a saves/CREDITS note sits under the grid;
+  - **Emulators**: the same four console boxes in the same full-width,
+    evenly split row, one per core (nestopia / snes9x / mupen64plus_next /
+    mgba). Picking one turns it dark gray and swaps to a "where from?"
+    screen headed **Emulator — <console>** — a top bar with a large
+    **←** back-arrow button to the boxes, then **From proton Files** (a
+    mini file browser over the account's home: crumbs, folder rows, ROM
+    rows, one level at a time) or **From your Files** (the device file
+    picker). Picking a ROM launches it at once — there is no start button;
   - launching swaps the window to the emulator; **Change game** in the app bar
     brings up the chooser (the **ROMs** tab) again, and so does the
-    emulator's own menu-bar back arrow. Control bindings persist between games:
+    emulator's own menu-bar back arrow (drawn larger than upstream, with a
+    wider click target). Control bindings persist between games:
     keys set in the emulator's **Controls → Keybinds** manager (press
     **Save**) or in RetroArch's own menu (Settings → Input, then quit
     RetroArch or save the current configuration) are kept and reapplied

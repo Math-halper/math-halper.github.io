@@ -337,7 +337,7 @@ input[disabled] {
 
 .menuback {
 	padding: 0px !important;
-	width: var(--menubuttonbordery) !important;
+	width: calc(var(--menubuttonbordery) + 16px) !important;
 	height: var(--menubuttonbordery) !important;
 }
 
@@ -349,6 +349,8 @@ input[disabled] {
 
 .menuback a::before {
 	content: "\25C0";
+	font-size: 28px;
+	line-height: 1;
 	position: absolute;
 	top: 50%;
 	left: 50%;

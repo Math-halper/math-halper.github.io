@@ -244,8 +244,8 @@ registerApp({
         #wr-main .muted{color:#d9d9d9}
         .wr-tabs{display:flex;gap:8px;margin-bottom:14px}
         .wr-tab{flex:1;padding:10px 16px;font-size:15px}
-        .wr-consoles{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:16px}
-        .wr-console{display:flex;flex-direction:column;align-items:flex-start;gap:3px;height:auto;padding:14px 16px;text-align:left}
+        .wr-consoles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:16px;width:100%}
+        .wr-console{display:flex;flex-direction:column;align-items:flex-start;gap:3px;height:auto;padding:14px 16px;text-align:left;min-width:0;width:100%}
         .wr-console b{font-size:19px;line-height:1.2}
         .wr-console span{font-size:12px;opacity:.75}
         .wr-sys{margin:2px 0 8px;font-size:13px;letter-spacing:.06em;text-transform:uppercase}
@@ -254,7 +254,7 @@ registerApp({
         .wr-game img{width:76px;height:76px;object-fit:cover;border-radius:6px;background:#000}
         .wr-game span{font-size:11.5px;line-height:1.25;text-align:center}
         .wr-topbar{display:flex;align-items:center;gap:10px;margin:0 0 12px}
-        .wr-topbar .wr-back{font-size:15px;line-height:1;padding:6px 11px}
+        .wr-topbar .wr-back{font-size:28px;line-height:1;padding:10px 18px;min-width:56px;min-height:48px;display:inline-flex;align-items:center;justify-content:center}
         .wr-note{margin:16px 0 0}
       </style>
       <div class="wr-tabs" role="tablist" aria-label="Web Retro">
