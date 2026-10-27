@@ -216,13 +216,13 @@ h=640
 
 [application]
 id=media
-name=Media
+name=VLC
 path=apps/media/media/app.html
 icon=film
 svg-icon=true
 cat=Media
 preinstalled=true
-desc=Play audio and video files stored in your home folder, with your browser's own codecs
+desc=VLC media player — the open-source libvlc engine compiled to WebAssembly; plays audio and video itself
 w=940
 h=620
 

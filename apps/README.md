@@ -120,7 +120,7 @@ matching the menu sections (`cat=`, ordered by `CATS` in `assets/core.js`).
 | `productivity/` | Text Editor (`text-editor`) — edit text files in your home folder; proton's own files open read-only |
 | `productivity/` | PDF Viewer (`pdf`) — read PDFs in your browser's own viewer |
 | `media/` | Image Viewer (`image-viewer`) — PNG, JPG, GIF, WebP, AVIF, BMP, ICO and SVG with zoom and playlists |
-| `media/` | Media (`media`) — play audio and video files from your home folder |
+| `media/` | VLC (`media`) — the open-source VLC player (libvlc WebAssembly port): play audio and video from your home folder or this computer |
 | `media/` | Paint (`paint`) — draw on a canvas, save PNGs into Pictures |
 | `media/` | Piano (`piano`) — two playable octaves with record and playback |
 | `tools/` | Ruffle Flash Player (`ruffle-flash-player`) — the vendored Ruffle Flash player (from Gams-Offline/Gams `g/g/Ruffle/`, without the swfs library) plus its wrapper |

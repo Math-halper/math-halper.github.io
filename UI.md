@@ -310,15 +310,20 @@ not be saved.", etc.).
   zoom levels), the image stage, a note area, and a status line with the
   image's natural dimensions; empty state "No image open" + **"Your pictures"**
   list.
-- **Media** — **Open…**, a **stage** with a native audio/video player, a
-  **Playlist** sidebar (`#md-side`), a note area and a status line (metadata
-  once loaded); empty state + inline "Open a media file" prompt. A file
-  whose codec the browser lacks (an HEVC MKV, say) offers **Convert &
-  play**: the vendored FFmpeg (WebAssembly) transcodes it on-device to
-  MP4/MP3 with a progress bar and Cancel; the original is untouched.
-  Media longer than 20 minutes is split into parts of up to 10 minutes:
-  part 1 starts as soon as it is ready, later parts keep converting in
-  the background, and playback advances through the parts in order.
+- **VLC** (the `media` app) — a port of the open-source VLC media
+  player: desktop-VLC style menus (**Media / Playback / Audio / Video /
+  Subtitle / Tools / Help**), a **Playlist** sidebar (`#vlc-playlist`),
+  the libvlc video canvas (`#vlc-canvas`), seek bar, play/pause/stop/
+  previous/next, repeat and shuffle, playback-rate and volume controls,
+  fullscreen, snapshots, audio/video/subtitle track selection and
+  external subtitle/audio files, plus a status line. Playback is by the
+  vendored libvlc engine compiled to WebAssembly
+  (`apps/media/media/vendor/libvlc/`, see CREDITS.md), so VLC itself
+  plays formats the browser cannot decode — nothing is transcoded or
+  uploaded. libvlc needs a cross-origin isolated page (SharedArrayBuffer);
+  until the **Enable VLC engine** button has loaded the root
+  `coi-serviceworker.js` shim and proton has reloaded once, the player
+  shows that prompt and queues the chosen file instead of playing it.
 
 ## 12. Tools
 

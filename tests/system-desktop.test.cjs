@@ -1250,7 +1250,7 @@ test('Customize saves, displays and resets uploaded app icon images', async () =
     const browserWindow = w.eval('wins').get('browser');
     assert.equal(body.querySelector('#cust-files-shortcut'), null, 'Customize still offers a Files shortcut');
     assert.deepEqual([...body.querySelectorAll('#cust-modlist .card b')].map((b) => b.textContent).slice(0, SYSTEM_APPS.length),
-            ["App Center", "Customize", "Settings", "About", "Browser", "System Monitor", "Calculator", "Clock", "Files", "Text Editor", "PDF Viewer", "Image Viewer", "Media", "Paint", "Piano", "Ruffle Flash Player", "Web Retro", "Terminal", "You Are An Idiot", "2048", "Bloons Tower Defense 1", "Bloons Tower Defense 2", "Bloons Tower Defense 5", "Bloxorz", "Breaking The Bank", "Celeste Hub", "Cookie Clicker", "Drive Mad", "Escaping The Prison", "Fleeing The Complex", "Grey Box Testing", "Infiltrating The Airship", "Mari0", "Offline Paradise", "Pacman", "Slope", "Spacebar Clicker", "Stack", "Stealing The Diamond", "Stickman Hook", "Super Mario 64", "Tetris", "The Impossible Quiz", "Tunnel Rush", "Baldi's Basics", "Minesweeper", "Flappy Bird", "Retro Bowl", "Drift Boss", "Football Bros", "Five Nights at Freddy's", "Five Nights at Freddy's 4", "Five Nights at Freddy's 2", "Five Nights at Freddy's 3", "Backrooms", "Kart Bros", "Geometry Dash Lite", "Five Nights at Freddy's: Sister Location", "Bitburner"]);
+            ["App Center", "Customize", "Settings", "About", "Browser", "System Monitor", "Calculator", "Clock", "Files", "Text Editor", "PDF Viewer", "Image Viewer", "VLC", "Paint", "Piano", "Ruffle Flash Player", "Web Retro", "Terminal", "You Are An Idiot", "2048", "Bloons Tower Defense 1", "Bloons Tower Defense 2", "Bloons Tower Defense 5", "Bloxorz", "Breaking The Bank", "Celeste Hub", "Cookie Clicker", "Drive Mad", "Escaping The Prison", "Fleeing The Complex", "Grey Box Testing", "Infiltrating The Airship", "Mari0", "Offline Paradise", "Pacman", "Slope", "Spacebar Clicker", "Stack", "Stealing The Diamond", "Stickman Hook", "Super Mario 64", "Tetris", "The Impossible Quiz", "Tunnel Rush", "Baldi's Basics", "Minesweeper", "Flappy Bird", "Retro Bowl", "Drift Boss", "Football Bros", "Five Nights at Freddy's", "Five Nights at Freddy's 4", "Five Nights at Freddy's 2", "Five Nights at Freddy's 3", "Backrooms", "Kart Bros", "Geometry Dash Lite", "Five Nights at Freddy's: Sister Location", "Bitburner"]);
 
     const uploadBrowserIcon = async () => {
       const input = body.querySelector('[data-micon-file="browser"]');
@@ -2089,17 +2089,22 @@ test('every kind of file has an app that opens it', async () => {
     assert.equal(viewer.querySelector('#iv-download').disabled, false);
     w.closeWin('image-viewer', true);
 
-    // Audio and video go to Media, which picks the right element.
+    // Audio and video go to VLC (the media app): its libvlc canvas is
+    // the stage and the opened file is queued on its playlist. jsdom is
+    // not cross-origin isolated, so the engine itself stays queued here;
+    // the vendored-engine test below pins the real libvlc build.
     await store('song.mp3', [73, 68, 51, 4, 0, 0], 'audio/mpeg');
     w.eval("openFSItem('/home/ada/song.mp3')");
     await settle();
-    assert.equal(wins.get('media').body.querySelector('#md-el').tagName, 'AUDIO');
-    assert.ok(wins.get('media').body.querySelector('[data-play="/home/ada/song.mp3"]'), 'the playlist lists it');
+    assert.equal(wins.get('media').body.querySelector('#vlc-canvas').tagName, 'CANVAS');
+    assert.equal(wins.get('media').body.querySelector('#vlc-file-name').textContent, 'song.mp3');
+    assert.ok(wins.get('media').body.querySelector('#vlc-playlist-items [data-queue]'), 'the playlist lists it');
     w.closeWin('media', true);
     await store('clip.mp4', [0, 0, 0, 24, 102, 116, 121, 112], 'video/mp4');
     w.eval("openFSItem('/home/ada/clip.mp4')");
     await settle();
-    assert.equal(wins.get('media').body.querySelector('#md-el').tagName, 'VIDEO');
+    assert.equal(wins.get('media').body.querySelector('#vlc-canvas').tagName, 'CANVAS');
+    assert.equal(wins.get('media').body.querySelector('#vlc-file-name').textContent, 'clip.mp4');
     w.closeWin('media', true);
 
     // PDFs are handed to the browser's own viewer in a frame.
@@ -2148,27 +2153,36 @@ test('every kind of file has an app that opens it', async () => {
     assert.equal(wins.get('files').body.querySelector('#fm-path').value, '/assets');
     assert.equal(opened().length, 1, 'opening a folder does not launch a viewer');
 
-    assert.ok(blobs.length >= 4, 'each viewer made a blob URL for the file it shows');
+    assert.ok(blobs.length >= 2, 'the blob-URL viewers (image, PDF) made blob URLs; VLC queues files for libvlc instead');
     assert.deepEqual(errors.filter((m) => !ignorable(m)), []);
   } finally { close(); }
 });
 
-test('Media can convert codecs the browser lacks, with the vendored FFmpeg', () => {
-  const vendor = path.join(ROOT, 'apps/media/media/vendor');
-  for (const f of ['ffmpeg.js', '814.ffmpeg.js', 'ffmpeg-core.js', 'ffmpeg-core.wasm']) {
-    assert.ok(fs.existsSync(path.join(vendor, f)), `vendored FFmpeg file missing: vendor/${f}`);
+test('VLC is a port of the open-source VLC player (vendored libvlc)', () => {
+  const vendor = path.join(ROOT, 'apps/media/media/vendor/libvlc');
+  for (const f of ['src/index.js', 'src/worker.js', 'src/player.js', 'wasm/libvlc.js', 'wasm/libvlc.wasm',
+    'wasm/VLC_COMMIT', 'fonts/NotoSans-Regular.ttf', 'LICENSE', 'COPYING']) {
+    assert.ok(fs.existsSync(path.join(vendor, f)), `vendored libvlc file missing: vendor/libvlc/${f}`);
   }
-  assert.ok(fs.statSync(path.join(vendor, 'ffmpeg-core.wasm')).size > 20_000_000,
-    'ffmpeg-core.wasm should be the real FFmpeg core, not a stub');
+  assert.ok(fs.statSync(path.join(vendor, 'wasm/libvlc.wasm')).size > 20_000_000,
+    'libvlc.wasm should be the real VLC engine, not a stub');
+  assert.match(fs.readFileSync(path.join(vendor, 'wasm/VLC_COMMIT'), 'utf8'), /^[0-9a-f]{40}/,
+    'the vendored engine records the VLC commit it was built from');
+  assert.ok(!fs.existsSync(path.join(ROOT, 'apps/media/media/vendor/ffmpeg-core.wasm')),
+    'the old FFmpeg transcoder should be gone now that VLC plays files itself');
+  assert.ok(fs.existsSync(path.join(ROOT, 'coi-serviceworker.js')),
+    'the root isolation shim should be served with the site');
   const app = source('apps/media/media/app.html');
-  assert.match(app, /Convert & play|Convert &amp; play/, 'a failed playback should offer conversion');
-  assert.match(app, /ffmpeg-core\.wasm/, 'conversion should load the vendored core');
-  assert.match(app, /libx264/, 'video should convert to H.264 MP4');
-  assert.match(app, /libmp3lame/, 'audio should convert to MP3');
-  assert.match(app, /duration > 1200/, 'media longer than 20 minutes should be segmented');
-  assert.match(app, /Math\.ceil\(duration \/ 600\)/, 'long media should be cut into 10-minute parts');
-  assert.match(app, /playConvertedPart\(index \+ 1\)/, 'converted parts should play in order');
-  assert.match(app, /data-part/, 'each converted part should be selectable');
+  assert.match(app, /createVLC/, 'the player should be created from the libvlc engine');
+  assert.match(app, /vendor\/libvlc\/src\/index\.js/, 'the app should load the vendored libvlc SDK');
+  assert.match(app, /crossOriginIsolated/, 'the app should handle libvlc\'s isolation requirement');
+  assert.match(app, /coi-serviceworker\.js/, 'the app should offer the one-reload isolation shim');
+  assert.match(app, /id="vlc-canvas"/, 'VLC should draw on its canvas');
+  assert.match(app, /id="vlc-playlist"/, 'VLC should have its playlist panel');
+  assert.ok(!/Convert &(?:amp;)? play|libx264|libmp3lame/.test(app),
+    'VLC replaces the converter: no Convert & play fallback remains');
+  const catalog = source('data/applications.js');
+  assert.match(catalog, /id=media\nname=VLC/, 'the media app is presented as VLC');
 });
 
 test('the desktop can link any file or folder again', async () => {

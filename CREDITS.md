@@ -330,28 +330,38 @@ wrapper as well:
 Ordinary `<a href>` links to authors' own sites inside games are
 untouched: a reader may follow them, but nothing loads until they do.
 
-## Vendored media converter (FFmpeg, WebAssembly)
+## Vendored media player (VLC / libvlc, WebAssembly)
 
-The Media app can play files whose codecs the browser itself lacks by
-transcoding them on the device. That uses **FFmpeg compiled to
-WebAssembly**, vendored byte-for-byte from the npm packages
-[@ffmpeg/ffmpeg](https://www.npmjs.com/package/@ffmpeg/ffmpeg) and
-[@ffmpeg/core](https://www.npmjs.com/package/@ffmpeg/core) (the
-single-threaded core; no cross-origin isolation needed):
+The VLC app (`apps/media/media/`) is a port of the open-source **VLC
+media player** to the browser: playback is done by **libvlc** (VLC's
+engine, © the VideoLAN project) compiled to WebAssembly, vendored from
+the npm package [`libvlc-wasm`](https://www.npmjs.com/package/libvlc-wasm)
+0.2.0 (upstream: github.com/lucasgelfond/libvlc-wasm; the vendored
+engine is built from VLC commit
+`b11917943e3a32578d65edd54f3d12023da29d46`, recorded in
+`apps/media/media/vendor/libvlc/wasm/VLC_COMMIT`):
 
-- `apps/media/media/vendor/ffmpeg.js` and `814.ffmpeg.js` — the
-  `@ffmpeg/ffmpeg` 0.12.15 UMD wrapper (MIT, © the FFmpeg.wasm team);
-- `apps/media/media/vendor/ffmpeg-core.js` and `ffmpeg-core.wasm` —
-  `@ffmpeg/core` 0.12.10: FFmpeg (© the FFmpeg developers, GPL-3.0 —
-  this build includes libx264 and libmp3lame) compiled to WebAssembly.
+- `apps/media/media/vendor/libvlc/src/` — the libvlc-wasm JavaScript
+  SDK (MIT, © Lucas Gelfond and contributors; `LICENSE` in that folder);
+- `apps/media/media/vendor/libvlc/wasm/libvlc.js` and `libvlc.wasm` —
+  the compiled libvlc engine. The SDK code is MIT, but the compiled
+  engine links VLC and GPL codec modules, so the binary as a whole is
+  GPL (`COPYING` in that folder);
+- `apps/media/media/vendor/libvlc/fonts/NotoSans-Regular.ttf` — the
+  subtitle font the SDK loads by default (SIL Open Font License; see
+  the upstream package).
 
-Nothing is modified: `apps/media/media/app.html` loads the wrapper only
-when a file fails to play natively and you choose **Convert & play**;
-video becomes H.264/AAC MP4, audio becomes MP3, entirely in the
-browser. The wrapper's own package is MIT; the core binary is a GPL
-build of FFmpeg — its licence travels with the wasm file, and building
-a differently-licensed core from the FFmpeg sources is possible if
-that ever matters.
+Nothing in the SDK or engine is modified: `apps/media/media/app.html`
+dynamically imports `vendor/libvlc/src/index.js`, creates one libvlc
+player on the app's canvas, and drives it with VLC-style menus,
+playlist, seek/volume/rate controls, track and subtitle selection —
+files are played by VLC itself, never transcoded or uploaded.
+libvlc's threads need SharedArrayBuffer, hence a cross-origin isolated
+page; GitHub Pages cannot send the COOP/COEP headers, so the app can
+load `coi-serviceworker.js` (the isolation shim from the same package,
+MIT, served from the site root so its service worker can cover the
+site) and reload once to enable the engine. The earlier FFmpeg
+transcoding fallback was removed when the player became VLC.
 
 ## Vendored emulator (Web Retro)
 
