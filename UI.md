@@ -319,7 +319,22 @@ not be saved.", etc.).
   the libvlc video canvas (`#vlc-canvas`), seek bar, play/pause/stop/
   previous/next, repeat and shuffle, playback-rate and volume controls,
   fullscreen, snapshots, audio/video/subtitle track selection and
-  external subtitle/audio files, plus a status line. Playback is by the
+  external subtitle/audio files, plus a status line. The keyboard works
+  like desktop VLC (Help → **Keyboard shortcuts** lists the set):
+  **Space** play/pause, **S** stop, **N**/**P** next/previous, **B**
+  next audio track, **V** next subtitle track (**Alt+V** reverse,
+  **Shift+V** on/off), **M** mute, **Ctrl+↑/↓** volume, the
+  **Shift/Alt/Ctrl(+Alt)+←/→** seek ladders (3 s / 10 s / 1 min /
+  5 min), **H**/**G** and **J**/**K** subtitle/audio delay, subtitle
+  sync bookmarks (**Shift+H**/**J**/**K**, **Ctrl+Shift+K** reset),
+  **+**/**−**/**[**/**]**/**=** speed, **L** repeat, **R** shuffle,
+  **E** next frame, **F** fullscreen, **A**/**C** aspect/crop,
+  **D** deinterlace, **Z** zoom, **Shift+S** snapshot, disc-menu /
+  title / chapter keys, playlist bookmarks (**F1–F10**, set with
+  **Ctrl+F1–F10**), and the **Ctrl+O/F/N/V/T/L/W/Y/I/J/M/H/Q** file,
+  playlist and window shortcuts. Keys act only while the VLC window
+  has focus and never while typing in a text box or drop-down.
+  Playback is by the
   vendored libvlc engine compiled to WebAssembly
   (`apps/media/media/vendor/libvlc/`, see CREDITS.md), so VLC itself
   plays formats the browser cannot decode — nothing is transcoded or

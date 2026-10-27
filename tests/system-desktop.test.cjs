@@ -2243,6 +2243,87 @@ test('VLC is a port of the open-source VLC player (vendored libvlc)', () => {
   const summaries = [...app.matchAll(/<summary>([A-Za-z]+)<\/summary>/g)].map((m) => m[1]);
   assert.deepEqual(summaries.slice(0, 8), ['Media', 'Playback', 'Audio', 'Video', 'Subtitle', 'Tools', 'View', 'Help'],
     'the menus should run in desktop VLC\'s order');
+  // Desktop VLC's default hotkeys, wired onto the libvlc-wasm player.
+  for (const needle of [
+    'function cycleAudioTrack()', 'function cycleSubtitleTrack(direction = 1)', 'function toggleSubtitles()',
+    'function adjustSubtitleDelay(delta)', 'function adjustAudioDelay(delta)', 'function setSubtitleScale(scale)',
+    "markSubtitleSync('audio')", "markSubtitleSync('subtitle')", 'applySubtitleSync', 'resetSubtitleSync',
+    "case 'b': return done(cycleAudioTrack);", "case 'v': return done(() => cycleSubtitleTrack(1));",
+    'cycleSubtitleTrack(-1)', 'function cycleAspectRatio()', 'function cycleCropRatio()',
+    'function toggleDeinterlace()', 'function cycleProgram(direction)', 'function stepTitle(direction)',
+    'function stepChapter(direction)', 'function showGoToTimeForm()', 'function savePlaylist()',
+    'function clearPlaylist()', 'Keyboard shortcuts (desktop VLC defaults)',
+  ]) assert.ok(app.includes(needle), `VLC hotkey support is missing: ${needle}`);
+  assert.match(app, /Shift\+←\/→ 3 seconds · Alt\+←\/→ 10 seconds · Ctrl\+←\/→ 1 minute · Ctrl\+Alt\+←\/→ 5 minutes/,
+    'the shortcut help should state VLC\'s seek ladder');
+  assert.match(app, /tag === 'SELECT'.*target\?\.isContentEditable/s,
+    'hotkeys must not fire while typing or using a drop-down');
+});
+
+test('VLC keyboard shortcuts follow desktop VLC and stay out of text fields', async () => {
+  const { w, wins, close } = await bootDesktop();
+  try {
+    w.openApp('media');
+    const media = wins.get('media').body;
+    const stage = media.querySelector('#vlc-stage-wrap');
+    const status = () => media.querySelector('#vlc-status-text').textContent;
+    const key = (init) => stage.dispatchEvent(new w.KeyboardEvent('keydown', { bubbles: true, cancelable: true, ...init }));
+
+    // The user's headline keys explain themselves before the engine exists.
+    key({ key: 'b' });
+    assert.match(status(), /audio track/i, 'B should reach for the next audio track');
+    key({ key: 'v' });
+    assert.match(status(), /subtitle track/i, 'V should reach for the next subtitle track');
+    key({ key: 'V', shiftKey: true });
+    assert.match(status(), /subtitles/i, 'Shift+V should toggle subtitles');
+
+    // Playlist-mode keys act on the window itself: L repeats, R shuffles.
+    key({ key: 'l' });
+    assert.equal(media.querySelector('#vlc-repeat').getAttribute('aria-pressed'), 'true', 'L should cycle repeat on');
+    assert.match(media.querySelector('#vlc-repeat').title, /Repeat all/);
+    key({ key: 'r' });
+    assert.equal(media.querySelector('#vlc-shuffle').getAttribute('aria-pressed'), 'true', 'R should toggle shuffle on');
+
+    // Ctrl+arrows drive volume even before a player exists; the slider follows.
+    key({ key: 'ArrowUp', ctrlKey: true });
+    assert.equal(media.querySelector('#vlc-volume').value, '105', 'Ctrl+Up should raise the volume one VLC step');
+    key({ key: 'ArrowDown', ctrlKey: true });
+    assert.equal(media.querySelector('#vlc-volume').value, '100', 'Ctrl+Down should lower it back');
+
+    // Speed keys: +/− by 0.5×, [ ] by 0.1×, = back to normal.
+    key({ key: '+' });
+    assert.equal(media.querySelector('#vlc-speed').value, '1.5', '+ should speed playback up');
+    key({ key: ']' });
+    assert.equal(media.querySelector('#vlc-speed').value, '1.6', '] should fine-speed playback up');
+    key({ key: '=' });
+    assert.equal(media.querySelector('#vlc-speed').value, '1', '= should restore normal speed');
+
+    // Ctrl+L hides and shows the playlist, like View → Playlist.
+    key({ key: 'l', ctrlKey: true });
+    assert.equal(media.querySelector('#vlc-playlist').style.display, 'none', 'Ctrl+L should hide the playlist');
+    key({ key: 'l', ctrlKey: true });
+    assert.equal(media.querySelector('#vlc-playlist').style.display, '', 'Ctrl+L should show the playlist again');
+
+    // Typing in the URL box must not trigger bare-letter hotkeys.
+    key({ key: 'n', ctrlKey: true });
+    const url = media.querySelector('#vlc-url');
+    assert.ok(url, 'Ctrl+N should open the network URL form');
+    const before = status();
+    url.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'b', bubbles: true, cancelable: true }));
+    url.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'v', bubbles: true, cancelable: true }));
+    assert.equal(status(), before, 'B/V typed in a text field must not switch tracks');
+    media.querySelector('#vlc-url-cancel').click();
+
+    // Space with nothing loaded opens the file chooser, as Play does.
+    key({ key: ' ' });
+    const modal = w.document.querySelector('.file-source-backdrop');
+    assert.ok(modal, 'Space should start the open flow when nothing is loaded');
+    modal.querySelector('[data-fs="cancel"]').click();
+
+    w.closeWin('media', true);
+  } finally {
+    close();
+  }
 });
 
 test('the desktop can link any file or folder again', async () => {
