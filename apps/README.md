@@ -114,13 +114,17 @@ matching the menu sections (`cat=`, ordered by `CATS` in `assets/core.js`).
 | `system/` | About (`about`) — provenance, licence, what's inside |
 | `system/` | Browser (`browser`) — Test Page, saved websites, external addresses and VFS HTML files |
 | `productivity/` | Calculator (`calculator`) — quick maths from the keypad or your keyboard |
+| `productivity/` | Clock (`clock`) — the time and date, a stopwatch and a countdown timer |
 | `productivity/` | Files (`files`) — browse, create, rename, move, import, search and download the virtual file system |
 | `productivity/` | Text Editor (`text-editor`) — edit text files in your home folder; proton's own files open read-only |
 | `productivity/` | PDF Viewer (`pdf`) — read PDFs in your browser's own viewer |
 | `media/` | Image Viewer (`image-viewer`) — PNG, JPG, GIF, WebP, AVIF, BMP, ICO and SVG with zoom and playlists |
 | `media/` | Media (`media`) — play audio and video files from your home folder |
+| `media/` | Paint (`paint`) — draw on a canvas, save PNGs into Pictures |
+| `media/` | Piano (`piano`) — two playable octaves with record and playback |
 | `tools/` | Ruffle Flash Player (`ruffle-flash-player`) — the vendored Ruffle Flash player (from Gams-Offline/Gams `g/g/Ruffle/`, without the swfs library) plus its wrapper |
 | `tools/` | Web Retro (`web-retro`) — the vendored webretro emulator (the maintainer's bundled ROM library, or your own ROMs — from this computer or proton Files) |
+| `tools/` | Terminal (`terminal`) — a small shell over the proton file system (ls, cd, cat, open) |
 | `games/` | 2048 (`game-2048`) — the vendored single-file game (from Gams-Offline/Gams `g/`) plus its wrapper |
 | `games/` | Bloons Tower Defense 1 (`bloons-tower-defense-1`) — the vendored Flash build and loader shim (from Gams-Offline/Gams `g/g/Ruffle/swfs/`; runs on the shared Ruffle player) plus its wrapper |
 | `games/` | Bloons Tower Defense 2 (`bloons-tower-defense-2`) — the vendored Flash build and loader shim (from Gams-Offline/Gams `g/g/Ruffle/swfs/`; runs on the shared Ruffle player) plus its wrapper |

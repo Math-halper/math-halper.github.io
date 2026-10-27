@@ -143,6 +143,18 @@ w=360
 h=540
 
 [application]
+id=clock
+name=Clock
+path=apps/productivity/clock/app.html
+icon=clock
+svg-icon=true
+cat=Productivity
+preinstalled=true
+desc=The time and date, a stopwatch and a countdown timer
+w=420
+h=520
+
+[application]
 id=files
 name=Files
 path=apps/productivity/files/app.html
@@ -203,6 +215,30 @@ w=940
 h=620
 
 [application]
+id=paint
+name=Paint
+path=apps/media/paint/app.html
+icon=palette
+svg-icon=true
+cat=Media
+preinstalled=true
+desc=Draw on a canvas and save PNGs into your Pictures folder
+w=880
+h=640
+
+[application]
+id=piano
+name=Piano
+path=apps/media/piano/app.html
+icon=music
+svg-icon=true
+cat=Media
+preinstalled=true
+desc=Play two octaves, record what you play and hear it back
+w=780
+h=460
+
+[application]
 id=ruffle-flash-player
 name=Ruffle Flash Player
 path=apps/tools/ruffle-flash-player/app.html
@@ -225,6 +261,18 @@ preinstalled=true
 desc=Play retro classics or your own ROMs - N64, SNES, NES, Game Boy
 w=980
 h=640
+
+[application]
+id=terminal
+name=Terminal
+path=apps/tools/terminal/app.html
+icon=terminal
+svg-icon=true
+cat=Tools
+preinstalled=true
+desc=A small shell over your proton Files: ls, cd, cat, open
+w=720
+h=500
 [application]
 id=you-are-an-idiot
 name=You Are An Idiot

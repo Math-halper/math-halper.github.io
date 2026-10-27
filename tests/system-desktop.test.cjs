@@ -21,7 +21,7 @@ const ROOT = path.resolve(__dirname, '..');
 const source = (p) => fs.readFileSync(path.join(ROOT, p), 'utf8');
 /* The file system suite FS.appFor() resolves files to. */
 const FS_APPS = ['files', 'text-editor', 'image-viewer', 'media', 'pdf'];
-const SYSTEM_APPS = ['appcenter', 'customize', 'settings', 'about', 'browser', 'calculator', 'files', 'text-editor', 'pdf', 'image-viewer', 'media', 'ruffle-flash-player', 'web-retro', 'you-are-an-idiot', 'game-2048', 'bloons-tower-defense-1', 'bloons-tower-defense-2', 'bloons-tower-defense-5', 'bloxorz', 'breaking-the-bank', 'celeste-hub', 'cookie-clicker', 'drive-mad', 'escaping-the-prison', 'fleeing-the-complex', 'grey-box-testing', 'infiltrating-the-airship', 'mari0', 'offline-paradise', 'pacman', 'slope', 'spacebar-clicker', 'stack', 'stealing-the-diamond', 'stickman-hook', 'sm64', 'tetris', 'the-impossible-quiz', 'tunnel-rush', 'baldis-basics', 'minesweeper', 'flappy-bird', 'retro-bowl', 'drift-boss', 'football-bros', 'five-nights-at-freddys-1', 'five-nights-at-freddys-4', 'five-nights-at-freddys-2', 'five-nights-at-freddys-3', 'backrooms', 'kart-bros', 'geometry-dash-lite', 'five-nights-at-freddys-sl', 'bitburner'];
+const SYSTEM_APPS = ['appcenter', 'customize', 'settings', 'about', 'browser', 'calculator', 'clock', 'files', 'text-editor', 'pdf', 'image-viewer', 'media', 'paint', 'piano', 'ruffle-flash-player', 'web-retro', 'terminal', 'you-are-an-idiot', 'game-2048', 'bloons-tower-defense-1', 'bloons-tower-defense-2', 'bloons-tower-defense-5', 'bloxorz', 'breaking-the-bank', 'celeste-hub', 'cookie-clicker', 'drive-mad', 'escaping-the-prison', 'fleeing-the-complex', 'grey-box-testing', 'infiltrating-the-airship', 'mari0', 'offline-paradise', 'pacman', 'slope', 'spacebar-clicker', 'stack', 'stealing-the-diamond', 'stickman-hook', 'sm64', 'tetris', 'the-impossible-quiz', 'tunnel-rush', 'baldis-basics', 'minesweeper', 'flappy-bird', 'retro-bowl', 'drift-boss', 'football-bros', 'five-nights-at-freddys-1', 'five-nights-at-freddys-4', 'five-nights-at-freddys-2', 'five-nights-at-freddys-3', 'backrooms', 'kart-bros', 'geometry-dash-lite', 'five-nights-at-freddys-sl', 'bitburner'];
 
 /* Menu sections for each app (data/applications.js cat=), in catalog order.
  * Every new app is filed here with its respective section — the catalog test
@@ -29,8 +29,8 @@ const SYSTEM_APPS = ['appcenter', 'customize', 'settings', 'about', 'browser', '
  * groups, so an unfiled app fails the suite. */
 const SYSTEM_CATS = {
   appcenter: 'System', customize: 'System', settings: 'System', about: 'System', browser: 'System',
-  calculator: 'Productivity', files: 'Productivity', 'text-editor': 'Productivity', pdf: 'Productivity',
-  'image-viewer': 'Media', media: 'Media',
+  calculator: 'Productivity', clock: 'Productivity', files: 'Productivity', 'text-editor': 'Productivity', pdf: 'Productivity',
+  'image-viewer': 'Media', media: 'Media', paint: 'Media', piano: 'Media',
   'game-2048': 'Games',
   'bloons-tower-defense-1': 'Games',
   'bloons-tower-defense-2': 'Games',
@@ -57,7 +57,7 @@ const SYSTEM_CATS = {
   'tetris': 'Games',
   'the-impossible-quiz': 'Games',
   'tunnel-rush': 'Games',
-  'web-retro': 'Tools',
+  'web-retro': 'Tools', terminal: 'Tools',
   'you-are-an-idiot': 'Tools',
   'baldis-basics': 'Games',
   'minesweeper': 'Games',
@@ -1245,7 +1245,7 @@ test('Customize saves, displays and resets uploaded app icon images', async () =
     const browserWindow = w.eval('wins').get('browser');
     assert.equal(body.querySelector('#cust-files-shortcut'), null, 'Customize still offers a Files shortcut');
     assert.deepEqual([...body.querySelectorAll('#cust-modlist .card b')].map((b) => b.textContent).slice(0, SYSTEM_APPS.length),
-            ["App Center", "Customize", "Settings", "About", "Browser", "Calculator", "Files", "Text Editor", "PDF Viewer", "Image Viewer", "Media", "Ruffle Flash Player", "Web Retro", "You Are An Idiot", "2048", "Bloons Tower Defense 1", "Bloons Tower Defense 2", "Bloons Tower Defense 5", "Bloxorz", "Breaking The Bank", "Celeste Hub", "Cookie Clicker", "Drive Mad", "Escaping The Prison", "Fleeing The Complex", "Grey Box Testing", "Infiltrating The Airship", "Mari0", "Offline Paradise", "Pacman", "Slope", "Spacebar Clicker", "Stack", "Stealing The Diamond", "Stickman Hook", "Super Mario 64", "Tetris", "The Impossible Quiz", "Tunnel Rush", "Baldi's Basics", "Minesweeper", "Flappy Bird", "Retro Bowl", "Drift Boss", "Football Bros", "Five Nights at Freddy's", "Five Nights at Freddy's 4", "Five Nights at Freddy's 2", "Five Nights at Freddy's 3", "Backrooms", "Kart Bros", "Geometry Dash Lite", "Five Nights at Freddy's: Sister Location", "Bitburner"]);
+            ["App Center", "Customize", "Settings", "About", "Browser", "Calculator", "Clock", "Files", "Text Editor", "PDF Viewer", "Image Viewer", "Media", "Paint", "Piano", "Ruffle Flash Player", "Web Retro", "Terminal", "You Are An Idiot", "2048", "Bloons Tower Defense 1", "Bloons Tower Defense 2", "Bloons Tower Defense 5", "Bloxorz", "Breaking The Bank", "Celeste Hub", "Cookie Clicker", "Drive Mad", "Escaping The Prison", "Fleeing The Complex", "Grey Box Testing", "Infiltrating The Airship", "Mari0", "Offline Paradise", "Pacman", "Slope", "Spacebar Clicker", "Stack", "Stealing The Diamond", "Stickman Hook", "Super Mario 64", "Tetris", "The Impossible Quiz", "Tunnel Rush", "Baldi's Basics", "Minesweeper", "Flappy Bird", "Retro Bowl", "Drift Boss", "Football Bros", "Five Nights at Freddy's", "Five Nights at Freddy's 4", "Five Nights at Freddy's 2", "Five Nights at Freddy's 3", "Backrooms", "Kart Bros", "Geometry Dash Lite", "Five Nights at Freddy's: Sister Location", "Bitburner"]);
 
     const uploadBrowserIcon = async () => {
       const input = body.querySelector('[data-micon-file="browser"]');
@@ -1779,6 +1779,55 @@ function clickLabel(host, label) {
   button.click();
   return button;
 }
+
+test('Paint, Piano, Terminal and Clock render and respond', async () => {
+  const { w, wins, close } = await bootDesktop();
+  try {
+    // Clock shows the time and its stopwatch starts and pauses.
+    w.openApp('clock');
+    const clock = wins.get('clock').body;
+    assert.match(clock.querySelector('#clock-now').textContent, /^\d{2}:\d{2}:\d{2}$/);
+    clock.querySelector('#sw-toggle').click();
+    assert.equal(clock.querySelector('#sw-toggle').textContent, 'Pause');
+    clock.querySelector('#sw-toggle').click();
+    assert.equal(clock.querySelector('#sw-toggle').textContent, 'Start');
+    w.closeWin('clock', true);
+
+    // Paint renders its palette, brush size and save button.
+    w.openApp('paint');
+    const paint = wins.get('paint').body;
+    assert.equal(paint.querySelectorAll('#paint-colors [data-color]').length, 10);
+    assert.ok(paint.querySelector('#paint-save'), 'Paint has a Save PNG button');
+    w.closeWin('paint', true);
+
+    // Piano renders two octaves of playable keys.
+    w.openApp('piano');
+    const piano = wins.get('piano').body;
+    assert.equal(piano.querySelectorAll('#piano-keys [data-midi]').length, 25,
+      'Piano should render 15 white and 10 black keys');
+    assert.ok(piano.querySelector('#piano-rec'), 'Piano can record');
+    w.closeWin('piano', true);
+
+    // The Terminal runs commands against the virtual file system.
+    w.openApp('terminal');
+    const term = wins.get('terminal').body;
+    const input = term.querySelector('#term-in');
+    const run = async (line) => {
+      input.value = line;
+      term.querySelector('#term-form').dispatchEvent(new w.Event('submit', { cancelable: true, bubbles: true }));
+      await new Promise((resolve) => setTimeout(resolve, 30));
+    };
+    await run('pwd');
+    assert.match(term.querySelector('#term-out').textContent, /\/home\/ada/);
+    await run('ls');
+    assert.match(term.querySelector('#term-out').textContent, /Downloads/);
+    await run('bogus');
+    assert.match(term.querySelector('#term-out').textContent, /Unknown command: bogus/);
+    w.closeWin('terminal', true);
+  } finally {
+    close();
+  }
+});
 
 test('the Files app manages the account’s folders and files end to end', async () => {
   const { w, errors, blobs, settle, saved, wins, close } = await bootDesktop();

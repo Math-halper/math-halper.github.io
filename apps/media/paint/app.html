@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Paint - proton app</title>
+</head>
+<body>
+<p>This file is a proton app. It is not meant to be opened on its own:
+open <a href="../../../index.html">proton</a> and launch <b>Paint</b> from the
+proton menu. The script below is fetched and run by proton's HTML loader
+(assets/html-loader.js) at boot.</p>
+<!-- proton app: everything that registers and renders this app lives in
+     this one script block. Edit it, then reload proton. -->
+<script data-proton-app>
+/* proton app module: paint — a small canvas drawing board. Pick a colour
+ * and brush size, draw with the mouse or a finger, and Save PNG drops the
+ * picture into the Pictures folder of your proton Files home, ready to
+ * open in Image Viewer. */
+'use strict';
+
+/* ============================ PAINT ============================ */
+registerApp({
+  /* Metadata (name, icon, cat, desc, w, h) lives in the app catalog:
+   * data/applications.js — edit it there, not here. */
+  render(body) {
+    const COLORS = ['#000000', '#7f7f7f', '#b02a30', '#e07b39', '#e3c341', '#3f9e4d',
+      '#2a6fb0', '#6a4fb0', '#e38bb0', '#ffffff'];
+    body.innerHTML = `${bar('Paint')}<div class="app-main pad">
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
+        <div id="paint-colors" style="display:flex;gap:5px">
+          ${COLORS.map((c, i) => `<button type="button" class="btn sm" data-color="${c}" aria-label="Colour ${c}" style="width:28px;height:28px;padding:0;background:${c};${i === 0 ? 'outline:2px solid var(--accent);outline-offset:1px' : ''}"></button>`).join('')}
+        </div>
+        <label class="muted" style="display:flex;gap:6px;align-items:center">Brush
+          <input type="range" id="paint-size" min="1" max="40" value="5" style="width:110px">
+        </label>
+        <button type="button" class="btn sm" id="paint-eraser">Eraser</button>
+        <button type="button" class="btn sm" id="paint-clear">Clear</button>
+        <button type="button" class="btn sm primary" id="paint-save">Save PNG</button>
+      </div>
+      <div id="paint-stage" style="background:#fff;border:1px solid var(--line);border-radius:6px;overflow:hidden;line-height:0">
+        <canvas id="paint-canvas" width="900" height="540" style="width:100%;height:auto;display:block;touch-action:none;cursor:crosshair"></canvas>
+      </div>
+      <p class="muted" style="margin:10px 0 0">Saved pictures land in <b>Pictures</b> in your proton Files home — open them with Image Viewer.</p>
+    </div>`;
+    const canvas = body.querySelector('#paint-canvas');
+    const ctx = typeof CanvasRenderingContext2D !== 'undefined' ? canvas.getContext('2d') : null;
+    if (!ctx) {
+      body.querySelector('#paint-stage').innerHTML =
+        '<p class="muted" style="padding:16px;line-height:1.5">Paint needs a browser with canvas support to draw.</p>';
+      return;
+    }
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+    let color = COLORS[0];
+    let size = 5;
+    let drawing = false;
+    let last = null;
+    const pos = (e) => {
+      const r = canvas.getBoundingClientRect();
+      return {
+        x: (e.clientX - r.left) * (canvas.width / r.width),
+        y: (e.clientY - r.top) * (canvas.height / r.height),
+      };
+    };
+    const strokeTo = (p) => {
+      ctx.strokeStyle = color;
+      ctx.lineWidth = size;
+      ctx.beginPath();
+      ctx.moveTo(last.x, last.y);
+      ctx.lineTo(p.x, p.y);
+      ctx.stroke();
+      last = p;
+    };
+    canvas.addEventListener('pointerdown', (e) => {
+      drawing = true;
+      last = pos(e);
+      canvas.setPointerCapture(e.pointerId);
+      strokeTo({ x: last.x + 0.01, y: last.y + 0.01 });
+    });
+    canvas.addEventListener('pointermove', (e) => { if (drawing) strokeTo(pos(e)); });
+    const stop = () => { drawing = false; last = null; };
+    canvas.addEventListener('pointerup', stop);
+    canvas.addEventListener('pointercancel', stop);
+
+    body.querySelector('#paint-colors').addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-color]');
+      if (!btn) return;
+      color = btn.dataset.color;
+      body.querySelectorAll('#paint-colors [data-color]').forEach((b) => {
+        b.style.outline = b === btn ? '2px solid var(--accent)' : '';
+        b.style.outlineOffset = b === btn ? '1px' : '';
+      });
+    });
+    body.querySelector('#paint-size').addEventListener('input', (e) => { size = Number(e.target.value); });
+    body.querySelector('#paint-eraser').addEventListener('click', () => { color = '#ffffff'; });
+    body.querySelector('#paint-clear').addEventListener('click', () => {
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    });
+    body.querySelector('#paint-save').addEventListener('click', () => {
+      if (typeof canvas.toBlob !== 'function') { MH.toast('Saving is not supported here.'); return; }
+      canvas.toBlob(async (blob) => {
+        if (!blob) { MH.toast('Could not save that picture.'); return; }
+        const name = `paint-${new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)}.png`;
+        try {
+          await FS.writeBlob(`${FS.home()}/Pictures/${name}`, blob);
+          MH.toast(`Saved to Pictures/${name}`);
+        } catch (err) {
+          MH.toast(err.message || 'Could not save that picture.');
+        }
+      }, 'image/png');
+    });
+  },
+});
+</script>
+</body>
+</html>
