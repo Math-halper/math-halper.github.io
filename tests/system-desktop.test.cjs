@@ -2155,6 +2155,10 @@ test('Media can convert codecs the browser lacks, with the vendored FFmpeg', () 
   assert.match(app, /ffmpeg-core\.wasm/, 'conversion should load the vendored core');
   assert.match(app, /libx264/, 'video should convert to H.264 MP4');
   assert.match(app, /libmp3lame/, 'audio should convert to MP3');
+  assert.match(app, /duration > 1200/, 'media longer than 20 minutes should be segmented');
+  assert.match(app, /Math\.ceil\(duration \/ 600\)/, 'long media should be cut into 10-minute parts');
+  assert.match(app, /playConvertedPart\(index \+ 1\)/, 'converted parts should play in order');
+  assert.match(app, /data-part/, 'each converted part should be selectable');
 });
 
 test('the desktop can link any file or folder again', async () => {

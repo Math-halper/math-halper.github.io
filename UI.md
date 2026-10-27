@@ -316,6 +316,9 @@ not be saved.", etc.).
   whose codec the browser lacks (an HEVC MKV, say) offers **Convert &
   play**: the vendored FFmpeg (WebAssembly) transcodes it on-device to
   MP4/MP3 with a progress bar and Cancel; the original is untouched.
+  Media longer than 20 minutes is split into parts of up to 10 minutes:
+  part 1 starts as soon as it is ready, later parts keep converting in
+  the background, and playback advances through the parts in order.
 
 ## 12. Tools
 

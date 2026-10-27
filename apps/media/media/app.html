@@ -19,7 +19,9 @@ proton menu. The script below is fetched and run by proton's HTML loader
  * FS.mediaKind() decides between <audio> and <video>: mp3, m4a, aac, flac, wav,
  * ogg and oga play as audio; mp4, mov, webm, avi, ogv and mkv as video.
  * Anything the browser still cannot decode is transcoded on-device by
- * the vendored FFmpeg (vendor/, see CREDITS.md) when you ask it to. Bytes come
+ * the vendored FFmpeg (vendor/, see CREDITS.md) when you ask it to.
+ * Media longer than 20 minutes is converted in 10-minute parts; the
+ * first part starts as soon as it is ready and parts play in order. Bytes come
  * from FS.readBlob() and are handed to the browser's own codecs through a blob
  * URL — this site has no player library and adds no dependencies, so what your
  * browser can decode is what plays here (and what it cannot is reported, not
@@ -35,12 +37,27 @@ registerApp({
     const HOME = FS.home();
     let path = null, url = null, token = 0, loop = false;
     let deviceBlob = null, deviceName = '';   // opened from the device ("your Files")
+    let convertedParts = [];                  // on-device conversion output, in playback order
+    let convertedIndex = -1, convertedName = '', convertedKind = '', convertedTotal = 0;
+    let convertingPart = 0, conversionError = '', waitingForPart = -1;
+    let conversionCancelRequested = false;
     const isMedia = (p) => !!FS.mediaKind(p);
     const esc = MH.esc;
     const q = (s) => body.querySelector(s);
 
     function revoke() {
       if (url) { URL.revokeObjectURL(url); url = null; }
+      for (const part of convertedParts) {
+        if (part.url && part.url !== url) URL.revokeObjectURL(part.url);
+      }
+      convertedParts = [];
+      convertedIndex = -1;
+      convertedName = '';
+      convertedKind = '';
+      convertedTotal = 0;
+      convertingPart = 0;
+      conversionError = '';
+      waitingForPart = -1;
     }
     /* The playlist: media files sitting next to this one, or everything in
      * your home folder when nothing is open yet. */
@@ -151,67 +168,221 @@ registerApp({
       }
       return ffmpegPromise;
     }
+    function formatMediaTime(seconds) {
+      if (!Number.isFinite(seconds)) return '';
+      const total = Math.max(0, Math.round(seconds));
+      const hours = Math.floor(total / 3600);
+      const minutes = Math.floor((total % 3600) / 60);
+      const secs = total % 60;
+      return hours
+        ? `${hours}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`
+        : `${minutes}:${String(secs).padStart(2, '0')}`;
+    }
+
+    async function probeDuration(ff, inName) {
+      let output = '';
+      const onLog = ({ message }) => { output += `${message || ''}\n`; };
+      const parse = () => {
+        const clock = output.match(/Duration:\s*(\d+):(\d\d):(\d\d(?:\.\d+)?)/);
+        if (clock) return Number(clock[1]) * 3600 + Number(clock[2]) * 60 + Number(clock[3]);
+        for (const line of output.split('\n').map((x) => x.trim())) {
+          if (/^\d+(?:\.\d+)?$/.test(line)) return Number(line);
+        }
+        return null;
+      };
+      ff.on('log', onLog);
+      try {
+        try {
+          if (typeof ff.ffprobe === 'function') {
+            await ff.ffprobe(['-v', 'error', '-show_entries', 'format=duration',
+              '-of', 'default=noprint_wrappers=1:nokey=1', inName]);
+            const found = parse();
+            if (found) return found;
+          }
+        } catch { /* fall through to the FFmpeg banner below */ }
+        try { await ff.exec(['-i', inName]); } catch { /* -i without an output reports the input details */ }
+      } finally {
+        if (typeof ff.off === 'function') ff.off('log', onLog);
+      }
+      return parse();
+    }
+
+    function renderConvertedParts() {
+      const wrap = q('#md-parts');
+      if (!wrap) return;
+      const buttons = convertedParts.map((part, i) => {
+        const label = `Part ${i + 1} · ${formatMediaTime(part.start)}–${formatMediaTime(part.end)}`;
+        const current = i === convertedIndex ? ' primary' : '';
+        return `<button type="button" class="btn sm${current}" data-part="${i}" ${part.url ? '' : 'disabled'}>${esc(label)}${part.url ? '' : ' (waiting)'}</button>`;
+      }).join('');
+      const state = conversionError
+        ? `<span style="color:var(--danger)">${esc(conversionError)}</span>`
+        : convertingPart
+          ? `<span>Converting part ${convertingPart} of ${convertedTotal}…</span><progress id="md-conv-bar" max="1" value="0" style="width:150px;vertical-align:middle"></progress> <button type="button" class="btn sm" data-stop-conversion="1">Stop</button>`
+          : '<span>All parts are ready.</span>';
+      wrap.innerHTML = convertedTotal > 1
+        ? `<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:9px 10px;border-top:1px solid var(--line)">
+             <strong>Converted parts</strong>${buttons}<span class="muted" style="font-size:12.5px">${state}</span>
+           </div>`
+        : '';
+      wrap.querySelectorAll('[data-part]').forEach((b) => {
+        b.onclick = () => playConvertedPart(Number(b.dataset.part));
+      });
+      const stop = wrap.querySelector('[data-stop-conversion]');
+      if (stop) stop.onclick = () => { conversionCancelRequested = true; };
+    }
+
+    function playConvertedPart(index) {
+      const part = convertedParts[index];
+      if (!part) return;
+      if (!part.url) {
+        waitingForPart = index;
+        renderConvertedParts();
+        say(`<b>${esc(convertedName)}</b> — waiting for converted part ${index + 1}…`);
+        return;
+      }
+      waitingForPart = -1;
+      convertedIndex = index;
+      url = part.url;
+      stage.innerHTML = `<div class="viewer-stage"><${convertedKind} id="md-el" controls autoplay preload="metadata" ${loop ? 'loop' : ''}
+          aria-label="${esc(convertedName)} (converted part ${index + 1})"></${convertedKind}></div><div id="md-parts"></div>`;
+      const el = q('#md-el');
+      el.onloadedmetadata = () => statusLine();
+      el.onended = () => {
+        if (!loop && index + 1 < convertedTotal) playConvertedPart(index + 1);
+      };
+      el.src = part.url;
+      try { el.play()?.catch?.(() => {}); } catch { /* controls remain available */ }
+      renderConvertedParts();
+      say(`<b>${esc(convertedName)}</b> — playing converted part ${index + 1} of ${convertedTotal}.`);
+      statusLine();
+    }
+
     async function convertAndPlay(blob, name, kind, mine) {
       const isAudio = kind === 'audio';
       const ext = (name.split('.').pop() || 'bin').toLowerCase().replace(/[^a-z0-9]/g, '') || 'bin';
       const inName = `input.${ext}`;
-      const outName = isAudio ? 'output.mp3' : 'output.mp4';
       stage.innerHTML = `<div class="viewer-stage"><div class="fm-empty">${iconSvg('film')}
-        <p>Converting <b>${esc(name)}</b> to ${isAudio ? 'MP3' : 'MP4 (H.264/AAC)'}…</p>
+        <p>Preparing to convert <b>${esc(name)}</b>…</p>
         <progress id="md-conv-bar" max="1" value="0" style="width:min(420px,80%)"></progress>
-        <p class="muted" style="font-size:12.5px">Conversion happens on this device and can take a while
-        ${blob.size > 150 * 1048576 ? ' — this is a large file, so expect several minutes' : ''}. Nothing is uploaded.</p>
+        <p class="muted" style="font-size:12.5px">Conversion happens on this device. Nothing is uploaded.</p>
         <p><button type="button" class="btn sm" id="md-conv-cancel">Cancel</button></p></div></div>`;
       say(`Converting <b>${esc(name)}</b> with the built-in FFmpeg…`);
       let cancelled = false;
-      q('#md-conv-cancel').onclick = () => { cancelled = true; };
+      conversionCancelRequested = false;
+      const cancelBtn = q('#md-conv-cancel');
+      if (cancelBtn) cancelBtn.onclick = () => { cancelled = true; };
       try {
         const ff = await getFfmpeg();
-        if (cancelled || mine !== token) { return; }
-        progressCb = (p) => {
-          const bar = q('#md-conv-bar');
-          if (bar) bar.value = Math.max(0, Math.min(1, p));
-          if (cancelled) ff.terminate();
-        };
-        await ff.writeFile(inName, new Uint8Array(await blob.arrayBuffer()));
-        const args = isAudio
-          ? ['-i', inName, '-vn', '-c:a', 'libmp3lame', '-q:a', '3', outName]
-          : ['-i', inName, '-c:v', 'libx264', '-preset', 'ultrafast', '-crf', '23',
-             '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-b:a', '160k', '-movflags', '+faststart', outName];
-        const code = await ff.exec(args);
-        progressCb = null;
         if (cancelled) throw new Error('Conversion cancelled.');
-        if (code !== 0) throw new Error(`FFmpeg could not convert this file (exit ${code}).`);
-        const data = await ff.readFile(outName);
-        await ff.deleteFile(inName).catch(() => {});
-        await ff.deleteFile(outName).catch(() => {});
         if (mine !== token) return;
-        revoke();
-        url = URL.createObjectURL(new Blob([data], { type: isAudio ? 'audio/mpeg' : 'video/mp4' }));
-        stage.innerHTML = `<div class="viewer-stage"><${kind} id="md-el" controls autoplay preload="metadata"
-          aria-label="${esc(name)} (converted)"></${kind}></div>`;
-        const el = q('#md-el');
-        el.onloadedmetadata = () => { if (mine === token) statusLine(); };
-        el.src = url;
-        say(`<b>${esc(name)}</b> — converted to ${isAudio ? 'MP3' : 'MP4'} on this device because the browser lacks its codec.`);
-        statusLine();
+        await ff.writeFile(inName, new Uint8Array(await blob.arrayBuffer()));
+        if (cancelled) throw new Error('Conversion cancelled.');
+        if (mine !== token) return;
+
+        const duration = await probeDuration(ff, inName);
+        const segmented = Number.isFinite(duration) && duration > 1200;
+        const partCount = segmented ? Math.ceil(duration / 600) : 1;
+        convertedParts = Array.from({ length: partCount }, (_, i) => ({
+          start: i * 600,
+          end: segmented ? Math.min(duration, (i + 1) * 600) : duration,
+          url: null,
+        }));
+        convertedIndex = -1;
+        convertedName = name;
+        convertedKind = kind;
+        convertedTotal = partCount;
+        convertingPart = 0;
+        conversionError = '';
+        waitingForPart = -1;
+
+        stage.innerHTML = `<div class="viewer-stage"><div class="fm-empty">${iconSvg('film')}
+          <p>Converting <b>${esc(name)}</b> to ${isAudio ? 'MP3' : 'MP4 (H.264/AAC)'}…</p>
+          ${segmented ? `<p class="muted" style="font-size:12.5px">This is ${esc(formatMediaTime(duration))} long, so it is being split into
+            ${partCount} parts of up to 10 minutes. Part 1 starts playing as soon as it is ready; the rest keep converting.</p>` : ''}
+          <progress id="md-conv-bar" max="1" value="0" style="width:min(420px,80%)"></progress>
+          <p class="muted" style="font-size:12.5px">Conversion happens on this device and can take a while
+          ${blob.size > 150 * 1048576 ? ' — this is a large file, so expect several minutes' : ''}. Nothing is uploaded.</p>
+          <p><button type="button" class="btn sm" id="md-conv-cancel">Cancel</button></p></div></div><div id="md-parts"></div>`;
+        const cancelBtn2 = q('#md-conv-cancel');
+        if (cancelBtn2) cancelBtn2.onclick = () => { cancelled = true; };
+        renderConvertedParts();
+
+        const encodeArgs = (partName, startAt, length) => {
+          const seek = segmented && startAt ? ['-ss', String(startAt)] : [];
+          const limit = segmented ? ['-t', String(length)] : [];
+          return isAudio
+            ? [...seek, '-i', inName, ...limit, '-vn', '-c:a', 'libmp3lame', '-q:a', '3', partName]
+            : [...seek, '-i', inName, ...limit, '-c:v', 'libx264', '-preset', 'ultrafast', '-crf', '23',
+               '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-b:a', '160k', '-movflags', '+faststart', partName];
+        };
+
+        for (let i = 0; i < partCount; i++) {
+          if (cancelled || conversionCancelRequested) throw new Error('Conversion cancelled.');
+          if (mine !== token) return;
+          convertingPart = i + 1;
+          renderConvertedParts();
+          const partName = partCount === 1
+            ? (isAudio ? 'output.mp3' : 'output.mp4')
+            : `part-${String(i + 1).padStart(3, '0')}.${isAudio ? 'mp3' : 'mp4'}`;
+          progressCb = (p) => {
+            const bar = q('#md-conv-bar');
+            if (bar) bar.value = Math.max(0, Math.min(1, (i + Math.max(0, Math.min(1, p))) / partCount));
+            if (cancelled || conversionCancelRequested || mine !== token) ff.terminate();
+          };
+          const code = await ff.exec(encodeArgs(partName, convertedParts[i].start, convertedParts[i].end - convertedParts[i].start));
+          progressCb = null;
+          if (cancelled || conversionCancelRequested) throw new Error('Conversion cancelled.');
+          if (mine !== token) return;
+          if (code !== 0) throw new Error(`FFmpeg could not convert part ${i + 1} (exit ${code}).`);
+          const data = await ff.readFile(partName);
+          await ff.deleteFile(partName).catch(() => {});
+          convertedParts[i].url = URL.createObjectURL(new Blob([data], { type: isAudio ? 'audio/mpeg' : 'video/mp4' }));
+          convertingPart = 0;
+          if (i === 0) playConvertedPart(0);
+          else if (waitingForPart === i) playConvertedPart(i);
+          else renderConvertedParts();
+        }
+
+        await ff.deleteFile(inName).catch(() => {});
+        convertingPart = 0;
+        renderConvertedParts();
+        if (mine === token) {
+          say(partCount > 1
+            ? `<b>${esc(name)}</b> — all ${partCount} converted parts are ready.`
+            : `<b>${esc(name)}</b> — converted to ${isAudio ? 'MP3' : 'MP4'} on this device because the browser lacks its codec.`);
+        }
       } catch (err) {
         progressCb = null;
-        ffmpegPromise = null;
+        if (cancelled || conversionCancelRequested) ffmpegPromise = null;
         if (mine !== token) return;
-        stage.innerHTML = `<div class="viewer-stage"><div class="fm-empty">${iconSvg('alert')}
-          <p>Could not convert <b>${esc(name)}</b>.</p>
-          <p class="muted" style="font-size:12.5px">${esc(err.message || String(err))} The original file is untouched.</p></div></div>`;
-        statusLine();
+        convertingPart = 0;
+        conversionError = (cancelled || conversionCancelRequested) ? 'Conversion stopped. Any ready parts are still playable below.' : (err.message || String(err));
+        if (convertedParts.some((part) => part.url)) {
+          if (convertedIndex < 0) {
+            stage.innerHTML = `<div class="viewer-stage"><div class="fm-empty">${iconSvg('alert')}
+              <p>Conversion stopped before the next part of <b>${esc(name)}</b>.</p>
+              <p class="muted" style="font-size:12.5px">${esc(conversionError)}</p></div></div><div id="md-parts"></div>`;
+          }
+          renderConvertedParts();
+          say(`<b>${esc(name)}</b> — ${esc(conversionError)}`);
+          statusLine();
+        } else {
+          stage.innerHTML = `<div class="viewer-stage"><div class="fm-empty">${iconSvg('alert')}
+            <p>Could not convert <b>${esc(name)}</b>.</p>
+            <p class="muted" style="font-size:12.5px">${esc(conversionError)} The original file is untouched.</p></div></div>`;
+          statusLine();
+        }
       }
     }
+
     function convertPrompt(blob, name, kind, mine, whyHtml) {
       stage.innerHTML = `<div class="viewer-stage"><div class="fm-empty">${iconSvg('alert')}
         <p>This browser cannot play <b>${esc(name)}</b> — the codec is missing here.</p>
         ${whyHtml}
         <p><button type="button" class="btn sm primary" id="md-convert">Convert &amp; play</button></p>
         <p class="muted" style="font-size:12.5px">Conversion runs entirely on this device (built-in FFmpeg);
-        the original file is not changed.</p></div></div>`;
+        the original file is not changed. Media longer than 20 minutes is split into 10-minute parts.</p></div></div>`;
       q('#md-convert').onclick = () => convertAndPlay(blob, name, kind, mine);
       statusLine();
     }
