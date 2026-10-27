@@ -17,7 +17,7 @@ proton menu. The script below is fetched and run by proton's HTML loader
  * system. Loaded by index.html; calls registerApp() (see apps/README.md).
  *
  * FS.mediaKind() decides between <audio> and <video>: mp3, m4a, aac, flac, wav,
- * ogg and oga play as audio; mp4, mov, webm, avi and ogv as video. Bytes come
+ * ogg and oga play as audio; mp4, mov, webm, avi, ogv and mkv as video. Bytes come
  * from FS.readBlob() and are handed to the browser's own codecs through a blob
  * URL — this site has no player library and adds no dependencies, so what your
  * browser can decode is what plays here (and what it cannot is reported, not
@@ -141,7 +141,9 @@ registerApp({
           stage.innerHTML = `<div class="viewer-stage"><div class="fm-empty">${iconSvg('alert')}
             <p>This browser cannot play <b>${esc(FS.basename(target))}</b> (${esc(blob.type || FS.mime(target))}).</p>
             <p class="muted" style="font-size:12.5px">Download it and play it with an app on your computer — the file
-            itself is fine, only the codec is missing here.</p></div></div>`;
+            itself is fine, only the codec is missing here.</p>${FS.extname(target) === 'mkv' ? `
+            <p class="muted" style="font-size:12.5px">MKV is only a container: the picture and sound inside still need
+            codecs this browser has (H.264 with AAC usually plays; HEVC, AV1 or DTS often does not).</p>` : ''}</div></div>`;
           statusLine();
         };
         el.src = url;
@@ -167,7 +169,7 @@ registerApp({
       });
     }
     async function openDeviceMedia() {
-      const file = await MH.devicePick('audio/*,video/*,.mp3,.m4a,.aac,.flac,.wav,.ogg,.mp4,.mov,.webm,.avi');
+      const file = await MH.devicePick('audio/*,video/*,.mp3,.m4a,.aac,.flac,.wav,.ogg,.mp4,.mov,.webm,.avi,.mkv');
       if (!file) return;
       const kind = FS.mediaKind(file.name) || (/^audio\//i.test(file.type) ? 'audio' : 'video');
       const mine = ++token;
@@ -183,7 +185,7 @@ registerApp({
       el.onended = () => { if (mine === token && !loop) step(1); };
       el.onerror = () => {
         if (mine !== token) return;
-        MH.toast(`This browser cannot play ${file.name} — the codec is missing here.`);
+        MH.toast(`This browser cannot play ${file.name} — the codec is missing here.${file.name.toLowerCase().endsWith('.mkv') ? ' Inside an MKV, H.264/AAC usually plays; HEVC, AV1 or DTS often does not.' : ''}`);
       };
       el.src = url;
       sync();

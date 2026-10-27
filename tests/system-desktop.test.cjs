@@ -2053,12 +2053,15 @@ test('every kind of file has an app that opens it', async () => {
     /* FS.appFor() only ever returns ids that are installed, so nothing in the
      * file system is unopenable — and the ids match the catalog exactly. */
     const cases = [['page.html', 'browser'], ['paper.pdf', 'pdf'], ['photo.png', 'image-viewer'],
-      ['drawing.svg', 'image-viewer'], ['song.mp3', 'media'], ['clip.mp4', 'media'],
+      ['drawing.svg', 'image-viewer'], ['song.mp3', 'media'], ['clip.mp4', 'media'], ['movie.mkv', 'media'],
       ['notes.txt', 'text-editor'], ['data.json', 'text-editor'], ['module.js', 'text-editor']];
     for (const [name, id] of cases) {
       assert.equal(w.eval(`FS.appFor('/home/ada/${name}')`), id, `${name} should open in ${id}`);
       assert.ok(APPS[id], `${id} is named by FS.appFor() but is not installed`);
     }
+    assert.equal(w.eval(`FS.mediaKind('/home/ada/movie.mkv')`), 'video', 'an MKV file should count as video');
+    assert.equal(w.eval(`FS.mime('/home/ada/movie.mkv')`), 'video/x-matroska', 'an MKV file gets the Matroska MIME type');
+    assert.equal(w.eval(`FS.isBinary('/home/ada/movie.mkv')`), true, 'MKV bytes must never be decoded as text');
     assert.deepEqual(FS_APPS.filter((id) => !APPS[id]), [], 'the whole suite is installed');
 
     const store = async (name, bytes, type) => {
