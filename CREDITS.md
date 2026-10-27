@@ -351,6 +351,15 @@ engine is built from VLC commit
   subtitle font the SDK loads by default (SIL Open Font License; see
   the upstream package).
 
+The player wears VLC's own artwork: `data/icons/vlc.png` (and the cone
+shown in the app) is the VideoLAN traffic cone, rasterised from the
+Inkscape SVG shipped in
+[addyosmani/vlc.js](https://github.com/addyosmani/vlc.js)
+(`assets/VLC_Icon.svg`, © the VideoLAN project; the cone is VideoLAN's
+trademark, used here to dress a port of their own player). The
+interface copies the classic VLC 3 layout — its menu order and
+light-grey chrome with the VLC orange `#ff7900`.
+
 Nothing in the SDK or engine is modified: `apps/media/media/app.html`
 dynamically imports `vendor/libvlc/src/index.js`, creates one libvlc
 player on the app's canvas, and drives it with VLC-style menus,

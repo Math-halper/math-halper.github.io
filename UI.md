@@ -311,8 +311,11 @@ not be saved.", etc.).
   image's natural dimensions; empty state "No image open" + **"Your pictures"**
   list.
 - **VLC** (the `media` app) — a port of the open-source VLC media
-  player: desktop-VLC style menus (**Media / Playback / Audio / Video /
-  Subtitle / Tools / Help**), a **Playlist** sidebar (`#vlc-playlist`),
+  player, dressed as the real thing: the VideoLAN traffic cone as its
+  icon (`data/icons/vlc.png`, also the stage artwork) and the classic
+  light-grey VLC 3 chrome. Its menus run in desktop VLC's order
+  (**Media / Playback / Audio / Video / Subtitle / Tools / View /
+  Help** — View toggles the playlist panel), a **Playlist** sidebar (`#vlc-playlist`),
   the libvlc video canvas (`#vlc-canvas`), seek bar, play/pause/stop/
   previous/next, repeat and shuffle, playback-rate and volume controls,
   fullscreen, snapshots, audio/video/subtitle track selection and

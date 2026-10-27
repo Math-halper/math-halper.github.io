@@ -176,6 +176,7 @@ test('the catalog is the desktop apps, the file system suite, a calculator, web 
    * is its own artwork under data/icons/<id>.png (Web Retro keeps Gams'
    * raster webretro.png). */
   const RASTER_ICON_APPS = {
+    'media': 'data/icons/vlc.png',
     'game-2048': 'data/icons/game-2048.png',
     'bloons-tower-defense-1': 'data/icons/bloons-tower-defense-1.png',
     'bloons-tower-defense-2': 'data/icons/bloons-tower-defense-2.png',
@@ -2231,6 +2232,17 @@ test('VLC is a port of the open-source VLC player (vendored libvlc)', () => {
     'VLC replaces the converter: no Convert & play fallback remains');
   const catalog = source('data/applications.js');
   assert.match(catalog, /id=media\nname=VLC/, 'the media app is presented as VLC');
+  // The proper VLC icon: the VideoLAN traffic cone as a real PNG.
+  assert.match(catalog, /icon=data\/icons\/vlc\.png\nsvg-icon=false/, 'VLC should use the cone artwork as its icon');
+  const cone = fs.readFileSync(path.join(ROOT, 'data/icons/vlc.png'));
+  assert.deepEqual([...cone.subarray(1, 4)], [...Buffer.from('PNG')], 'data/icons/vlc.png should be a real PNG');
+  assert.ok(cone.length > 10_000, 'the cone icon should be real artwork, not a placeholder');
+  assert.match(app, /<img src="data\/icons\/vlc\.png"/, 'the stage should show the cone artwork');
+  // And the classic VLC 3 dress: light chrome, exact menu order.
+  assert.match(app, /\.vlc-shell\{[^}]*background:#e8e8e8/, 'the player should wear the classic light VLC chrome');
+  const summaries = [...app.matchAll(/<summary>([A-Za-z]+)<\/summary>/g)].map((m) => m[1]);
+  assert.deepEqual(summaries.slice(0, 8), ['Media', 'Playback', 'Audio', 'Video', 'Subtitle', 'Tools', 'View', 'Help'],
+    'the menus should run in desktop VLC\'s order');
 });
 
 test('the desktop can link any file or folder again', async () => {
