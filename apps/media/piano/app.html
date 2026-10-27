@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Piano - proton app</title>
+</head>
+<body>
+<p>This file is a proton app. It is not meant to be opened on its own:
+open <a href="../../../index.html">proton</a> and launch <b>Piano</b> from the
+proton menu. The script below is fetched and run by proton's HTML loader
+(assets/html-loader.js) at boot.</p>
+<!-- proton app: everything that registers and renders this app lives in
+     this one script block. Edit it, then reload proton. -->
+<script data-proton-app>
+/* proton app module: piano — two playable octaves, synthesised in the
+ * browser (no samples). Click or tap the keys, or play from the computer
+ * keyboard (A W S E D F T G Y H U J K O L P ; for the two rows). Record
+ * keeps whatever you play and plays it back. */
+'use strict';
+
+/* ============================ PIANO ============================ */
+registerApp({
+  /* Metadata (name, icon, cat, desc, w, h) lives in the app catalog:
+   * data/applications.js — edit it there, not here. */
+  render(body) {
+    /* 15 white keys, C4..C6 (MIDI 60..84), black keys after C D F G A. */
+    const WHITE = [60, 62, 64, 65, 67, 69, 71, 72, 74, 76, 77, 79, 81, 83, 84];
+    const BLACK_AFTER = { 0: 61, 1: 63, 3: 66, 4: 68, 5: 70, 7: 73, 8: 75, 10: 78, 11: 80, 12: 82 };
+    const KEYMAP = { a: 60, w: 61, s: 62, e: 63, d: 64, f: 65, t: 66, g: 67, y: 68, h: 69, u: 70, j: 71, k: 72, o: 73, l: 74, p: 75, ';': 76 };
+    const freq = (midi) => 440 * Math.pow(2, (midi - 69) / 12);
+
+    body.innerHTML = `${bar('Piano')}<div class="app-main pad">
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap">
+        <button type="button" class="btn sm" id="piano-rec">Record</button>
+        <button type="button" class="btn sm primary" id="piano-play" disabled>Play back</button>
+        <span class="muted" id="piano-status">Click the keys, or use your keyboard: A W S E D F T G Y H U J K O L P ;</span>
+      </div>
+      <div id="piano-keys" tabindex="0" aria-label="Piano keyboard"
+        style="position:relative;display:flex;height:220px;max-width:720px;outline:none;user-select:none">
+        ${WHITE.map((m) => `<button type="button" data-midi="${m}" aria-label="Note ${m}"
+          style="flex:1;background:#fff;border:1px solid #999;border-radius:0 0 5px 5px;padding:0"></button>`).join('')}
+        ${Object.entries(BLACK_AFTER).map(([i, m]) => `<button type="button" data-midi="${m}" aria-label="Note ${m}"
+          style="position:absolute;top:0;left:calc(${Number(i) + 1} * (100% / 15) - 3%);width:6%;height:58%;background:#111;border:1px solid #000;border-radius:0 0 4px 4px;padding:0;z-index:2"></button>`).join('')}
+      </div>
+    </div>`;
+    const keysEl = body.querySelector('#piano-keys');
+    const status = body.querySelector('#piano-status');
+    const keyFor = (midi) => keysEl.querySelector(`[data-midi="${midi}"]`);
+
+    let ac = null;
+    const audio = () => {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return null;
+      if (!ac) ac = new AC();
+      if (ac.state === 'suspended') ac.resume();
+      return ac;
+    };
+    const downAt = new Map();
+    const noteOn = (midi) => {
+      const btn = keyFor(midi);
+      if (btn) btn.style.filter = 'brightness(0.75)';
+      const ctx = audio();
+      if (!ctx || downAt.has(midi)) return;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.value = freq(midi);
+      gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.25, ctx.currentTime + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.12, ctx.currentTime + 0.35);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start();
+      downAt.set(midi, { osc, gain });
+      if (recording) song.push({ midi, at: performance.now() - recStart });
+    };
+    const noteOff = (midi) => {
+      const btn = keyFor(midi);
+      if (btn) btn.style.filter = '';
+      const held = downAt.get(midi);
+      if (!held) return;
+      downAt.delete(midi);
+      const { osc, gain } = held;
+      gain.gain.cancelScheduledValues(ac.currentTime);
+      gain.gain.setValueAtTime(gain.gain.value, ac.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + 0.12);
+      osc.stop(ac.currentTime + 0.15);
+    };
+
+    keysEl.addEventListener('pointerdown', (e) => {
+      const btn = e.target.closest('[data-midi]');
+      if (btn) { keysEl.focus(); noteOn(Number(btn.dataset.midi)); }
+    });
+    keysEl.addEventListener('pointerup', (e) => {
+      const btn = e.target.closest('[data-midi]');
+      if (btn) noteOff(Number(btn.dataset.midi));
+    });
+    keysEl.addEventListener('pointerleave', () => { for (const m of [...downAt.keys()]) noteOff(m); });
+    keysEl.addEventListener('keydown', (e) => {
+      const midi = KEYMAP[e.key.toLowerCase()];
+      if (midi && !e.repeat) { e.preventDefault(); noteOn(midi); }
+    });
+    keysEl.addEventListener('keyup', (e) => {
+      const midi = KEYMAP[e.key.toLowerCase()];
+      if (midi) noteOff(midi);
+    });
+
+    /* ---- record / playback ---- */
+    let recording = false;
+    let recStart = 0;
+    let song = [];
+    let playTimers = [];
+    const recBtn = body.querySelector('#piano-rec');
+    const playBtn = body.querySelector('#piano-play');
+    recBtn.addEventListener('click', () => {
+      recording = !recording;
+      if (recording) {
+        song = [];
+        recStart = performance.now();
+        recBtn.textContent = 'Stop recording';
+        recBtn.classList.add('primary');
+        playBtn.disabled = true;
+        status.textContent = 'Recording... play something.';
+      } else {
+        recBtn.textContent = 'Record';
+        recBtn.classList.remove('primary');
+        playBtn.disabled = !song.length;
+        status.textContent = song.length ? `Recorded ${song.length} notes.` : 'Nothing recorded.';
+      }
+    });
+    playBtn.addEventListener('click', () => {
+      if (playTimers.length) {
+        playTimers.forEach(clearTimeout);
+        playTimers = [];
+        playBtn.textContent = 'Play back';
+        for (const m of [...downAt.keys()]) noteOff(m);
+        return;
+      }
+      playBtn.textContent = 'Stop';
+      const t0 = performance.now();
+      for (const ev of song) {
+        playTimers.push(setTimeout(() => noteOn(ev.midi), ev.at));
+        playTimers.push(setTimeout(() => noteOff(ev.midi), ev.at + 320));
+      }
+      const total = song.length ? song[song.length - 1].at + 400 : 0;
+      playTimers.push(setTimeout(() => {
+        playTimers = [];
+        playBtn.textContent = 'Play back';
+      }, total - (performance.now() - t0)));
+    });
+  },
+});
+</script>
+</body>
+</html>

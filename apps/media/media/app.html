@@ -3,274 +3,515 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Media - proton app</title>
+<title>VLC - proton app</title>
 </head>
 <body>
 <p>This file is a proton app. It is not meant to be opened on its own:
-open <a href="../../../index.html">proton</a> and launch <b>Media</b> from the
+open <a href="../../../index.html">proton</a> and launch <b>VLC</b> from the
 proton menu. The script below is fetched and run by proton's HTML loader
 (assets/html-loader.js) at boot.</p>
 <!-- proton app: everything that registers and renders this app lives in
      this one script block. Edit it, then reload proton. -->
 <script data-proton-app>
-/* proton app module: media — audio and video player for the virtual file
- * system. Loaded by index.html; calls registerApp() (see apps/README.md).
+/* proton app module: media — VLC for proton.
  *
- * FS.mediaKind() decides between <audio> and <video>: mp3, m4a, aac, flac, wav,
- * ogg and oga play as audio; mp4, mov, webm, avi and ogv as video. Bytes come
- * from FS.readBlob() and are handed to the browser's own codecs through a blob
- * URL — this site has no player library and adds no dependencies, so what your
- * browser can decode is what plays here (and what it cannot is reported, not
- * guessed at).
+ * This is a port of the open-source VLC media player to the proton
+ * desktop: playback is done by libvlc (VLC's engine) compiled to
+ * WebAssembly, vendored from the libvlc-wasm package under vendor/libvlc/
+ * (MIT JavaScript SDK; the compiled libvlc engine is GPL — see
+ * CREDITS.md). The interface follows desktop VLC: menus, a playlist
+ * panel, a seek bar, play/pause/stop/previous/next, volume, playback
+ * rate, repeat/shuffle, fullscreen, subtitles and track selection.
  *
- * The blob URL is revoked when another file replaces it and when the window
- * closes (body.onDestroy), which also stops playback; nothing is uploaded.
+ * libvlc's threads need SharedArrayBuffer, so the page has to be
+ * cross-origin isolated. GitHub Pages cannot send the COOP/COEP headers
+ * for that, so the app can load the root coi-serviceworker.js (the
+ * isolation shim shipped with libvlc-wasm) and reload once; after that
+ * the real VLC engine starts in a worker. Nothing is transcoded and
+ * nothing is uploaded: VLC reads proton Files entries through
+ * FS.readBlob() and device files as File objects, and plays them itself.
  */
 'use strict';
 
 registerApp({
   render(body, options) {
     const HOME = FS.home();
-    let path = null, url = null, token = 0, loop = false;
-    let deviceBlob = null, deviceName = '';   // opened from the device ("your Files")
-    const isMedia = (p) => !!FS.mediaKind(p);
     const esc = MH.esc;
     const q = (s) => body.querySelector(s);
+    const VLC_SDK = 'apps/media/media/vendor/libvlc/src/index.js';
+    const MEDIA_EXTS = ['mp3', 'm4a', 'aac', 'flac', 'wav', 'ogg', 'oga', 'mp4', 'mov', 'webm', 'avi', 'ogv', 'mkv',
+      'wmv', 'mpg', 'mpeg', 'm4v', '3gp', 'flv', 'rm', 'rmvb', 'asf', 'vob', 'ts', 'm2ts', 'mts', 'mid', 'midi', 'aif', 'aiff'];
+    const ACCEPT = 'audio/*,video/*,' + MEDIA_EXTS.map((e) => '.' + e).join(',');
 
-    function revoke() {
-      if (url) { URL.revokeObjectURL(url); url = null; }
-    }
-    /* The playlist: media files sitting next to this one, or everything in
-     * your home folder when nothing is open yet. */
-    function playlist() {
-      try {
-        const near = path ? FS.list(FS.dirname(path)).filter((e) => e.type === 'file' && isMedia(e.path)).map((e) => e.path) : [];
-        if (near.length) return near;
-        return FS.find('', HOME).filter((e) => e.type === 'file' && isMedia(e.path)).map((e) => e.path).sort();
-      } catch { return path ? [path] : []; }
-    }
-    function drawPlaylist() {
-      const list = playlist();
-      q('#md-side').innerHTML = `<h3>Playlist</h3>` + (list.length
-        ? list.map((p) => `<button type="button" class="fm-place${p === path ? ' sel' : ''}" data-play="${esc(p)}">
-            ${iconSvg(FS.mediaKind(p) === 'audio' ? 'music' : 'film')}<span>${esc(FS.basename(p))}</span></button>`).join('')
-        : `<p class="muted" style="padding:4px 9px;font-size:12.5px">No media in this folder. Import audio or video with <b>Files → Import</b>.</p>`);
-      q('#md-side').querySelectorAll('[data-play]').forEach((b) => { b.onclick = () => load(b.dataset.play); });
-      q('#md-prev').disabled = list.length < 2;
-      q('#md-next').disabled = list.length < 2;
-    }
-    function statusLine() {
-      const st = path ? FS.stat(path) : null;
-      const el = q('#md-el');
-      const time = el && Number.isFinite(el.duration) && el.duration
-        ? `${Math.floor(el.duration / 60)}:${String(Math.floor(el.duration % 60)).padStart(2, '0')}` : '';
-      status.innerHTML = st
-        ? `<span>${esc(st.path)}</span><span>${MH.fmtBytes(st.size)}</span>
-           <span>${FS.mediaKind(st.path) === 'audio' ? 'Audio' : 'Video'}${time ? ' · ' + time : ''}</span>
-           <span style="margin-left:auto">${loop ? 'Repeat on' : 'Repeat off'} · ${st.user ? 'your account' : 'read-only system file'}</span>`
-        : deviceName
-          ? `<span>${esc(deviceName)}</span><span>${deviceBlob ? MH.fmtBytes(deviceBlob.size) : ''}</span>
-           <span>${time ? time + ' · ' : ''}your Files (this computer)</span>
-           <span style="margin-left:auto">${loop ? 'Repeat on' : 'Repeat off'}</span>`
-          : `<span>Nothing playing</span><span style="margin-left:auto">MP3 · M4A · AAC · FLAC · WAV · OGG · MP4 · MOV · WebM · AVI</span>`;
-    }
-    function sync() {
-      q('#md-download').disabled = !path && !deviceBlob;
-      q('#md-files').disabled = !path;
-      q('#md-loop').disabled = !path && !deviceBlob;
-      q('#md-loop').innerHTML = loop ? `${iconSvg('repeat')} Repeat on` : `${iconSvg('repeat')} Repeat`;
-      drawPlaylist();
-      statusLine();
-    }
+    let queue = [];              // [{name, kind:'vfs'|'device'|'url', path?, file?, url?}]
+    let current = null;
+    let currentIndex = -1;
+    let vlc = null;
+    let player = null;
+    let enginePromise = null;
+    let engineState = window.crossOriginIsolated ? 'ready to start' : 'needs cross-origin isolation';
+    let playerState = 'idle';
+    let repeatMode = 0;          // 0 off, 1 all, 2 one
+    let shuffle = false;
+    let destroyed = false;
+    let timer = null;
+    let seeking = false;
 
-    body.innerHTML = `${bar('Media', `<button class="btn sm" type="button" id="md-open">${iconSvg('folder-open')} Open…</button>
-        <button class="btn sm" type="button" id="md-prev" title="Previous in playlist">${iconSvg('skip-back')}</button>
-        <button class="btn sm" type="button" id="md-next" title="Next in playlist">${iconSvg('skip-forward')}</button>
-        <button class="btn sm" type="button" id="md-loop" disabled>${iconSvg('repeat')} Repeat</button>
+    const isMediaPath = (p) => !!FS.mediaKind(p) || MEDIA_EXTS.includes(FS.extname(p));
+    const kindOfName = (name) => (['mp3', 'm4a', 'aac', 'flac', 'wav', 'ogg', 'oga', 'mid', 'midi', 'aif', 'aiff']
+      .includes(String(name).split('.').pop().toLowerCase()) ? 'audio' : 'video');
+    const fmt = (seconds) => {
+      if (!Number.isFinite(seconds) || seconds < 0) return '0:00';
+      const total = Math.floor(seconds);
+      const h = Math.floor(total / 3600), m = Math.floor((total % 3600) / 60), s = total % 60;
+      return h ? `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}` : `${m}:${String(s).padStart(2, '0')}`;
+    };
+    const guard = (p) => { if (p && typeof p.catch === 'function') p.catch(() => {}); return p; };
+
+    body.innerHTML = `${bar('VLC', `<button class="btn sm" type="button" id="md-open">${iconSvg('folder-open')} Open…</button>
+        <button class="btn sm" type="button" id="vlc-prev" title="Previous">${iconSvg('skip-back')}</button>
+        <button class="btn sm" type="button" id="vlc-next" title="Next">${iconSvg('skip-forward')}</button>
         <button class="btn sm" type="button" id="md-download" disabled>${iconSvg('download')} Download</button>
         <button class="btn sm" type="button" id="md-files" disabled>${iconSvg('folder')} Show in Files</button>`)}
-      <div class="viewer-note" id="md-note" hidden></div>
-      <div class="app-main fm-body"><div class="split">
-        <div class="side fm-side" id="md-side"></div>
-        <div class="viewer" id="md-stage"></div>
-      </div></div>
-      <div class="fm-status" id="md-status"></div>`;
+      <style>
+        .vlc-shell{display:flex;flex-direction:column;height:100%;background:#111;color:#f5f5f5;min-height:0}
+        .vlc-menus{display:flex;gap:2px;align-items:center;padding:4px 6px;background:#1d1d1d;border-bottom:1px solid #333;flex-wrap:wrap}
+        .vlc-menu{position:relative}.vlc-menu summary{list-style:none;cursor:pointer;padding:5px 9px;border-radius:4px;color:#eee;user-select:none}
+        .vlc-menu summary::-webkit-details-marker{display:none}.vlc-menu summary:hover,.vlc-menu[open ] summary{background:#ff7900;color:#111}
+        .vlc-menu-items{position:absolute;z-index:30;top:calc(100% + 3px);left:0;min-width:210px;background:#242424;border:1px solid #444;border-radius:6px;padding:5px;box-shadow:0 10px 28px rgba(0,0,0,.45)}
+        .vlc-menu-items button{display:flex;width:100%;text-align:left;background:none;border:0;color:#f0f0f0;padding:7px 8px;border-radius:4px;cursor:pointer}
+        .vlc-menu-items button:hover{background:#ff7900;color:#111}.vlc-menu-items button:disabled{opacity:.45;cursor:default}
+        .vlc-engine{margin-left:auto;font-size:12px;color:#ffb26b;padding:4px 6px}
+        .vlc-main{display:flex;flex:1;min-height:0}.vlc-side{width:230px;flex:0 0 230px;background:#181818;border-right:1px solid #333;overflow:auto;padding:8px}
+        .vlc-side h3{margin:2px 0 8px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#ffb26b}
+        .vlc-item{display:flex;gap:7px;width:100%;align-items:center;background:none;border:0;border-radius:5px;color:#eee;text-align:left;padding:7px;cursor:pointer}
+        .vlc-item:hover{background:#2a2a2a}.vlc-item.sel{background:#ff7900;color:#111}.vlc-item span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .vlc-stage-wrap{position:relative;flex:1;min-width:0;background:#000;display:flex;align-items:center;justify-content:center;overflow:hidden}
+        #vlc-canvas{width:100%;height:100%;display:block;background:#000}
+        .vlc-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:22px;background:radial-gradient(circle at 50% 38%,#2b1a08,#000 68%);color:#fff}
+        .vlc-overlay[hidden]{display:none}.vlc-overlay h2{margin:0;font-size:26px}.vlc-overlay p{max-width:560px;margin:0;color:#ddd;line-height:1.45}
+        .vlc-controls{padding:8px 10px 9px;background:#1d1d1d;border-top:1px solid #333}
+        .vlc-seekrow,.vlc-btnrow{display:flex;align-items:center;gap:8px}.vlc-seekrow{margin-bottom:7px}
+        .vlc-btnrow{flex-wrap:wrap}.vlc-time{font-variant-numeric:tabular-nums;font-size:12.5px;color:#ddd;min-width:118px;text-align:center}
+        .vlc-btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;min-width:36px;height:34px;padding:5px 9px;border-radius:5px;border:1px solid #444;background:#2a2a2a;color:#fff;cursor:pointer}
+        .vlc-btn:hover{background:#ff7900;color:#111}.vlc-btn.primary{background:#ff7900;color:#111;border-color:#ff9a33}.vlc-btn[aria-pressed="true"]{background:#ff7900;color:#111}
+        .vlc-btn svg{width:18px;height:18px}.vlc-spacer{flex:1}.vlc-vol{width:130px}.vlc-speed{height:34px;background:#2a2a2a;color:#fff;border:1px solid #444;border-radius:5px}
+        .vlc-note{padding:8px 10px;background:#fff3e2;color:#422600;border-bottom:1px solid #e5c99f;font-size:13px}.vlc-note[hidden]{display:none}
+        .vlc-status{display:flex;gap:12px;align-items:center;padding:6px 10px;background:#151515;border-top:1px solid #303030;color:#ccc;font-size:12.5px;min-height:30px}
+        .vlc-status span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.vlc-tracks{display:flex;gap:6px;flex-wrap:wrap;padding:7px 10px;background:#181818;border-top:1px solid #2d2d2d}
+        .vlc-tracks[hidden]{display:none}.vlc-tracks label{font-size:12px;color:#ccc;display:flex;gap:5px;align-items:center}.vlc-tracks select{max-width:210px}
+        .vlc-urlrow{display:flex;gap:7px}.vlc-urlrow input{flex:1}
+        @media (max-width:720px){.vlc-side{display:none}.vlc-time{min-width:96px}.vlc-vol{width:86px}}
+      </style>
+      <div class="vlc-shell">
+        <div class="vlc-menus" aria-label="VLC menus">
+          <details class="vlc-menu"><summary>Media</summary><div class="vlc-menu-items">
+            <button type="button" data-act="open">Open file…</button>
+            <button type="button" data-act="url">Open URL…</button>
+            <button type="button" data-act="files">Show in Files</button>
+            <button type="button" data-act="download">Download / save copy…</button>
+          </div></details>
+          <details class="vlc-menu"><summary>Playback</summary><div class="vlc-menu-items">
+            <button type="button" data-act="play">Play / Pause</button>
+            <button type="button" data-act="stop">Stop</button>
+            <button type="button" data-act="prev">Previous</button>
+            <button type="button" data-act="next">Next</button>
+          </div></details>
+          <details class="vlc-menu"><summary>Audio</summary><div class="vlc-menu-items">
+            <button type="button" data-act="mute">Mute / unmute</button>
+            <button type="button" data-act="audio-track">Add audio track…</button>
+          </div></details>
+          <details class="vlc-menu"><summary>Video</summary><div class="vlc-menu-items">
+            <button type="button" data-act="fullscreen">Fullscreen</button>
+            <button type="button" data-act="snapshot">Take snapshot</button>
+          </div></details>
+          <details class="vlc-menu"><summary>Subtitle</summary><div class="vlc-menu-items">
+            <button type="button" data-act="subtitles">Add subtitle file…</button>
+          </div></details>
+          <details class="vlc-menu"><summary>Tools</summary><div class="vlc-menu-items">
+            <button type="button" data-act="engine">Start VLC engine</button>
+            <button type="button" data-act="enable">Enable VLC engine (reload once)</button>
+          </div></details>
+          <details class="vlc-menu"><summary>Help</summary><div class="vlc-menu-items">
+            <button type="button" data-act="about">About this VLC port</button>
+          </div></details>
+          <span class="vlc-engine" id="vlc-engine-status">VLC engine: ${esc(engineState)}</span>
+        </div>
+        <div class="viewer-note vlc-note" id="vlc-note" hidden></div>
+        <div class="vlc-main">
+          <aside class="vlc-side" id="vlc-playlist" aria-label="Playlist"><h3>Playlist</h3><div id="vlc-playlist-items"></div></aside>
+          <section class="vlc-stage-wrap" id="vlc-stage-wrap">
+            <canvas id="vlc-canvas" width="960" height="540" aria-label="VLC video output"></canvas>
+            <div class="vlc-overlay" id="vlc-overlay">
+              <svg width="92" height="82" viewBox="0 0 100 90" aria-hidden="true"><polygon points="50,4 78,58 22,58" fill="#ff7900"/><polygon points="36,34 64,34 70,48 30,48" fill="#fff"/><polygon points="28,58 72,58 82,82 18,82" fill="#ff7900"/></svg>
+              <h2>VLC media player</h2>
+              <p id="vlc-overlay-text">Open an audio or video file. Playback is by the open-source VLC engine (libvlc) compiled to WebAssembly — not by a separate converter.</p>
+              <button class="btn primary" type="button" id="vlc-enable" hidden>Enable VLC engine</button>
+              <button class="btn primary" type="button" id="vlc-start" hidden>Start VLC engine</button>
+            </div>
+          </section>
+        </div>
+        <div class="vlc-tracks" id="vlc-tracks" hidden>
+          <label>Video <select id="vlc-track-video"></select></label>
+          <label>Audio <select id="vlc-track-audio"></select></label>
+          <label>Subtitles <select id="vlc-track-text"></select></label>
+        </div>
+        <div class="vlc-controls">
+          <div class="vlc-seekrow">
+            <span class="vlc-time" id="vlc-time">0:00 / 0:00</span>
+            <input id="vlc-seek" type="range" min="0" max="1000" value="0" step="1" aria-label="Seek" style="flex:1">
+          </div>
+          <div class="vlc-btnrow">
+            <button class="vlc-btn primary" type="button" id="vlc-play" aria-label="Play or pause">${iconSvg('play')}</button>
+            <button class="vlc-btn" type="button" id="vlc-stop" aria-label="Stop">${iconSvg('square')}</button>
+            <button class="vlc-btn" type="button" id="vlc-prev2" aria-label="Previous">${iconSvg('skip-back')}</button>
+            <button class="vlc-btn" type="button" id="vlc-next2" aria-label="Next">${iconSvg('skip-forward')}</button>
+            <button class="vlc-btn" type="button" id="vlc-repeat" aria-label="Repeat" aria-pressed="false">${iconSvg('repeat')}</button>
+            <button class="vlc-btn" type="button" id="vlc-shuffle" aria-label="Shuffle" aria-pressed="false">${iconSvg('shuffle')}</button>
+            <span class="vlc-spacer"></span>
+            <label style="font-size:12.5px;color:#ddd">Speed <select class="vlc-speed" id="vlc-speed" aria-label="Playback speed">
+              <option value="0.5">0.5×</option><option value="0.75">0.75×</option><option value="1" selected>1×</option>
+              <option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="2">2×</option></select></label>
+            <button class="vlc-btn" type="button" id="vlc-mute">Mute</button>
+            <label style="font-size:12.5px;color:#ddd">Volume <input class="vlc-vol" id="vlc-volume" type="range" min="0" max="200" value="100" step="1" aria-label="Volume"></label>
+            <button class="vlc-btn" type="button" id="vlc-fullscreen">Fullscreen</button>
+          </div>
+        </div>
+        <div class="vlc-status" id="vlc-status"><span id="vlc-file-name">Nothing loaded</span><span id="vlc-status-text" style="margin-left:auto">VLC is idle.</span></div>
+      </div>`;
 
-    const stage = q('#md-stage'), note = q('#md-note'), status = q('#md-status');
+    const note = q('#vlc-note'), overlay = q('#vlc-overlay'), overlayText = q('#vlc-overlay-text');
+    const statusText = q('#vlc-status-text'), fileName = q('#vlc-file-name'), engineStatus = q('#vlc-engine-status');
 
-    function say(html) {
-      note.hidden = !html;
-      note.innerHTML = html || '';
+    function say(html) { note.hidden = !html; note.innerHTML = html || ''; }
+    function setEngineStatus(text) { engineState = text; engineStatus.textContent = `VLC engine: ${text}`; }
+    function showOverlay(title, text, mode) {
+      overlay.hidden = false;
+      overlay.querySelector('h2').textContent = title;
+      overlayText.textContent = text;
+      q('#vlc-enable').hidden = mode !== 'enable';
+      q('#vlc-start').hidden = mode !== 'start';
     }
-    function startScreen(message = '') {
-      path = null;
-      deviceBlob = null; deviceName = '';
-      revoke();
-      say(message || `<b>Media</b> — import audio or video with <b>Files → Import</b>, then play it here. Playback uses
-        your browser's own codecs: proton adds no player library and streams nothing anywhere.`);
-      stage.innerHTML = `<div class="viewer-stage"><div class="fm-empty">${iconSvg('music')}
-        <p>Nothing playing.</p><p class="muted" style="font-size:12.5px">Choose a file from the playlist, or use <b>Open…</b>.
-        Files up to ${Math.round(FS.MAX_BLOB_SIZE / 1048576)} MB can be stored in this browser — larger media is best
-        played straight from your computer.</p></div></div>`;
-      sync();
+    function hideOverlay() { overlay.hidden = true; }
+    function status(text) { statusText.textContent = text; }
+    function currentTitle() { return current ? current.name : 'Nothing loaded'; }
+
+    function vfsPlaylist() {
+      try {
+        const near = current?.path ? FS.list(FS.dirname(current.path)).filter((e) => e.type === 'file' && isMediaPath(e.path)) : [];
+        const entries = near.length ? near : FS.find('', HOME).filter((e) => e.type === 'file' && isMediaPath(e.path));
+        return entries.map((e) => ({ name: e.name || FS.basename(e.path), kind: 'vfs', path: e.path })).sort((a, b) => a.name.localeCompare(b.name));
+      } catch { return current?.path ? [{ name: FS.basename(current.path), kind: 'vfs', path: current.path }] : []; }
     }
-    async function load(p) {
+    function setQueue(entries, index) { queue = entries; currentIndex = index; current = index >= 0 ? queue[index] : null; drawPlaylist(); syncChrome(); }
+    function drawPlaylist() {
+      const box = q('#vlc-playlist-items');
+      box.innerHTML = queue.length ? queue.map((item, i) => `<button type="button" class="vlc-item${i === currentIndex ? ' sel' : ''}" data-queue="${i}">${iconSvg(kindOfName(item.name) === 'audio' ? 'music' : 'film')}<span>${esc(item.name)}</span></button>`).join('')
+        : '<p class="muted" style="font-size:12.5px;margin:0">No media yet. Use Media → Open file… or open audio/video from Files.</p>';
+      box.querySelectorAll('[data-queue]').forEach((b) => { b.onclick = () => openEntry(queue[Number(b.dataset.queue)]); });
+    }
+    function syncChrome() {
+      fileName.textContent = currentTitle();
+      q('#md-download').disabled = !current;
+      q('#md-files').disabled = !(current && current.kind === 'vfs');
+      q('#vlc-repeat').setAttribute('aria-pressed', repeatMode ? 'true' : 'false');
+      q('#vlc-repeat').title = repeatMode === 2 ? 'Repeat one' : repeatMode === 1 ? 'Repeat all' : 'Repeat off';
+      q('#vlc-shuffle').setAttribute('aria-pressed', shuffle ? 'true' : 'false');
+      q('#vlc-play').innerHTML = iconSvg(playerState === 'playing' ? 'pause' : 'play');
+      drawPlaylist();
+    }
+    function updateProgress() {
+      if (!player || seeking) return;
+      const dur = Number(player.duration) || 0, now = Number(player.currentTime) || 0;
+      q('#vlc-time').textContent = `${fmt(now)} / ${fmt(dur)}`;
+      q('#vlc-seek').value = dur > 0 ? String(Math.round((now / dur) * 1000)) : '0';
+      if (current) status(`${playerState} · ${fmt(now)} / ${fmt(dur)} · ${current.name}`);
+    }
+
+    async function loadVlcModule() {
+      const url = new URL(VLC_SDK, document.baseURI).href;
+      return import(/* @vite-ignore */ url);
+    }
+    async function ensureEngine() {
+      if (player) return player;
+      if (!window.crossOriginIsolated) { showEnable(current); throw new Error('VLC needs cross-origin isolation first.'); }
+      if (enginePromise) return enginePromise;
+      enginePromise = (async () => {
+        setEngineStatus('loading libvlc (WebAssembly)…');
+        status('Starting the VLC engine…');
+        showOverlay('VLC media player', 'Loading the open-source VLC engine (libvlc) into a WebAssembly worker…', 'none');
+        const mod = await loadVlcModule();
+        vlc = await mod.createVLC({ logLevel: 'error' });
+        player = await vlc.createPlayer({ canvas: q('#vlc-canvas'), fit: 'contain' });
+        wirePlayer(player);
+        setEngineStatus('running (libvlc WebAssembly)');
+        status('VLC engine ready.');
+        hideOverlay();
+        return player;
+      })();
+      try { return await enginePromise; }
+      catch (err) { enginePromise = null; setEngineStatus('failed to start'); showOverlay('VLC could not start', err.message || String(err), window.crossOriginIsolated ? 'start' : 'enable'); throw err; }
+    }
+    function showEnable(entry) {
+      setEngineStatus('needs cross-origin isolation');
+      const name = entry ? ` “${entry.name}” is queued.` : '';
+      showOverlay('Enable the VLC engine', `VLC's WebAssembly threads need a cross-origin isolated page.${name} Click Enable, proton reloads once with the libvlc-wasm isolation shim, then reopen VLC and the file will play in VLC itself.`, 'enable');
+      status('VLC is queued; enable cross-origin isolation to start libvlc.');
+    }
+    function enableIsolation() {
+      if (window.crossOriginIsolated) { ensureEngine().then(() => { if (current) openEntry(current); }).catch(() => {}); return; }
+      setEngineStatus('enabling isolation…');
+      status('Loading the cross-origin isolation shim; proton will reload once…');
+      const script = document.createElement('script');
+      script.src = new URL('coi-serviceworker.js', document.baseURI).href;
+      script.onerror = () => { setEngineStatus('isolation shim failed to load'); MH.toast('Could not load coi-serviceworker.js.'); };
+      document.head.appendChild(script);
+      showOverlay('Enabling VLC', 'If proton does not reload by itself in a moment, reload the page once, sign in, and open VLC again.', 'none');
+    }
+
+    function wirePlayer(p) {
+      p.on('statechange', (state) => {
+        playerState = state;
+        syncChrome();
+        if (state === 'playing') hideOverlay();
+        if (state === 'stopped') updateProgress();
+      });
+      p.on('timeupdate', updateProgress);
+      p.on('durationchange', updateProgress);
+      p.on('tracks', renderTracks);
+      p.on('volumechange', ({ volume, muted }) => {
+        q('#vlc-volume').value = String(Math.round((Number(volume) || 0) * 100));
+        q('#vlc-mute').textContent = muted ? 'Unmute' : 'Mute';
+      });
+      p.on('ended', handleEnded);
+      p.on('error', (err) => { status(`VLC error: ${err.message || err}`); say(`<b>VLC could not play this file.</b> ${esc(err.message || String(err))}`); });
+    }
+    function renderTracks() {
+      if (!player) return;
+      const groups = { video: [], audio: [], text: [] };
+      for (const track of player.tracks || []) if (groups[track.type]) groups[track.type].push(track);
+      let any = false;
+      for (const type of ['video', 'audio', 'text']) {
+        const sel = q(`#vlc-track-${type}`);
+        const list = groups[type];
+        sel.innerHTML = `<option value="">${list.length ? 'Disable / none' : 'None'}</option>` + list.map((t) => `<option value="${esc(t.id)}" ${t.selected ? 'selected' : ''}>${esc(t.name || t.codecName || t.codec || t.id)}</option>`).join('');
+        sel.onchange = () => { if (!player) return; guard(sel.value ? player.selectTrack(sel.value) : player.disableTrack(type)); };
+        if (list.length) any = true;
+      }
+      q('#vlc-tracks').hidden = !any;
+    }
+    async function sourceFor(entry) {
+      if (entry.kind === 'device') return entry.file;
+      if (entry.kind === 'url') return entry.url;
+      const blob = await FS.readBlob(entry.path);
+      return blob instanceof File ? blob : new File([blob], FS.basename(entry.path), { type: blob.type || FS.mime(entry.path) });
+    }
+    async function openEntry(entry) {
+      if (!entry) return;
+      const idx = queue.indexOf(entry);
+      if (idx >= 0) currentIndex = idx;
+      current = entry;
+      syncChrome();
+      say('');
+      if (!player) {
+        if (!window.crossOriginIsolated) { showEnable(entry); return; }
+        try { await ensureEngine(); } catch { return; }
+      }
+      try {
+        status(`Opening ${entry.name} in VLC…`);
+        await player.open(await sourceFor(entry), { autoplay: true });
+        playerState = 'playing';
+        hideOverlay();
+        renderTracks();
+        updateProgress();
+        status(`Playing ${entry.name} with VLC.`);
+      } catch (err) {
+        status(`VLC could not open ${entry.name}.`);
+        showOverlay('VLC could not play that file', err.message || String(err), 'none');
+      }
+    }
+    function loadPath(p) {
       const target = FS.normalize(p);
       const st = FS.stat(target);
       if (!st || st.type !== 'file') { MH.toast(`No such file: ${target}`); return; }
-      const kind = FS.mediaKind(target);
-      if (!kind) { MH.toast(`${FS.basename(target)} is not audio or video — Files opens it with the right app.`); return; }
-      const mine = ++token;
-      path = target;
-      deviceBlob = null; deviceName = '';
-      say(`Opening <b>${esc(target)}</b>…`);
-      sync();
-      try {
-        const blob = await FS.readBlob(target);
-        if (mine !== token) return; // a newer file won
-        revoke();
-        url = URL.createObjectURL(blob);
-        stage.innerHTML = `<div class="viewer-stage"><${kind} id="md-el" controls preload="metadata" ${loop ? 'loop' : ''}
-          aria-label="${esc(FS.basename(target))}"></${kind}></div>`;
-        const el = q('#md-el');
-        el.onloadedmetadata = () => { if (mine === token) statusLine(); };
-        el.onended = () => { if (mine === token && !loop) step(1); };
-        el.onerror = () => {
-          if (mine !== token) return;
-          revoke();
-          stage.innerHTML = `<div class="viewer-stage"><div class="fm-empty">${iconSvg('alert')}
-            <p>This browser cannot play <b>${esc(FS.basename(target))}</b> (${esc(blob.type || FS.mime(target))}).</p>
-            <p class="muted" style="font-size:12.5px">Download it and play it with an app on your computer — the file
-            itself is fine, only the codec is missing here.</p></div></div>`;
-          statusLine();
-        };
-        el.src = url;
-        say(`<b>${esc(target)}</b> · ${esc(blob.type || FS.mime(target))} · playing from your account's file system, not the network.`);
-        statusLine();
-      } catch (err) {
-        if (mine !== token) return;
-        path = null;
-        startScreen('');
-        MH.toast(`Could not open ${FS.basename(target)}: ${err.message}`);
-      }
+      if (!isMediaPath(target)) { MH.toast(`${FS.basename(target)} is not audio or video — Files opens it with the right app.`); return; }
+      current = { name: FS.basename(target), kind: 'vfs', path: target };
+      const list = vfsPlaylist();
+      const idx = list.findIndex((x) => x.path === target);
+      setQueue(list.length ? list : [current], idx >= 0 ? idx : 0);
+      openEntry(queue[currentIndex]);
+    }
+    function openDevice(file) {
+      if (!file) return;
+      setQueue([{ name: file.name, kind: 'device', file }], 0);
+      openEntry(queue[0]);
+    }
+    function openUrl(url) {
+      const name = (() => { try { return decodeURIComponent(new URL(url).pathname.split('/').pop()) || url; } catch { return url; } })();
+      setQueue([{ name, kind: 'url', url }], 0);
+      openEntry(queue[0]);
     }
     function step(delta) {
-      const list = playlist();
-      if (!list.length) return;
-      const at = path ? list.indexOf(path) : -1;
-      load(list[(at + delta + list.length) % list.length]);
+      if (!queue.length) return;
+      let next = currentIndex + delta;
+      if (shuffle && queue.length > 1) { do { next = Math.floor(Math.random() * queue.length); } while (next === currentIndex); }
+      if (next < 0 || next >= queue.length) {
+        if (repeatMode === 1) next = (next + queue.length) % queue.length;
+        else return;
+      }
+      openEntry(queue[next]);
     }
-    function askOpen() {
-      MH.askFileSource('open').then((src) => {
-        if (src === 'device') openDeviceMedia();
-        else if (src === 'vfs') askOpenVfs();
-      });
-    }
-    async function openDeviceMedia() {
-      const file = await MH.devicePick('audio/*,video/*,.mp3,.m4a,.aac,.flac,.wav,.ogg,.mp4,.mov,.webm,.avi');
-      if (!file) return;
-      const kind = FS.mediaKind(file.name) || (/^audio\//i.test(file.type) ? 'audio' : 'video');
-      const mine = ++token;
-      path = null;
-      deviceBlob = file; deviceName = file.name;
-      say(`Opening <b>${esc(file.name)}</b>…`);
-      revoke();
-      url = URL.createObjectURL(file);
-      stage.innerHTML = `<div class="viewer-stage"><${kind} id="md-el" controls preload="metadata" ${loop ? 'loop' : ''}
-        aria-label="${esc(file.name)}"></${kind}></div>`;
-      const el = q('#md-el');
-      el.onloadedmetadata = () => { if (mine === token) statusLine(); };
-      el.onended = () => { if (mine === token && !loop) step(1); };
-      el.onerror = () => {
-        if (mine !== token) return;
-        MH.toast(`This browser cannot play ${file.name} — the codec is missing here.`);
-      };
-      el.src = url;
-      sync();
-      say(`<b>${esc(file.name)}</b> from your Files (this computer) — it is not in the proton file system yet.
-           <b>Save…</b> asks where to put it.`);
-    }
-    function askOpenVfs() {
-      const list = playlist();
-      say(`<div class="field" style="margin:0"><label for="md-ask"><b>Open a media file</b></label>
-        <div class="fm-ask-row"><input id="md-ask" type="text" placeholder="${esc(HOME + '/Music/song.mp3')}" list="md-ask-list" autocomplete="off" spellcheck="false">
-        <datalist id="md-ask-list">${list.map((p) => `<option value="${esc(p)}"></option>`).join('')}</datalist>
-        <button class="btn sm primary" type="button" id="md-ask-ok">Open</button>
-        <button class="btn sm" type="button" id="md-ask-browse">${iconSvg('folder')} Browse…</button>
-        <button class="btn sm" type="button" id="md-ask-cancel">Cancel</button></div></div>`);
-      const input = q('#md-ask');
-      q('#md-ask-ok').onclick = () => {
-        const typed = input.value.trim();
-        if (!typed) { input.focus(); return; }
-        load(typed);
-      };
-      q('#md-ask-browse').onclick = () => openApp('files', { path: path ? FS.dirname(path) : HOME });
-      q('#md-ask-cancel').onclick = () => (path ? say(`Playing <b>${esc(path)}</b>.`) : startScreen());
-      input.onkeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); q('#md-ask-ok').click(); } };
-      input.focus();
+    function handleEnded() {
+      if (!current) return;
+      if (repeatMode === 2) { guard(player?.seek(0)); guard(player?.play()); return; }
+      if (currentIndex + 1 < queue.length || repeatMode === 1) step(1);
+      else playerState = 'stopped';
+      syncChrome();
     }
 
-    q('#md-open').onclick = askOpen;
-    q('#md-prev').onclick = () => step(-1);
-    q('#md-next').onclick = () => step(1);
-    q('#md-loop').onclick = () => {
-      loop = !loop;
-      const el = q('#md-el');
-      if (el) el.loop = loop;
-      sync();
-    };
-    q('#md-download').onclick = async () => {
-      if (!path && !deviceBlob) return;
+    async function askOpen() {
+      const src = await MH.askFileSource('open');
+      if (src === 'device') {
+        const file = await MH.devicePick(ACCEPT);
+        openDevice(file);
+      } else if (src === 'vfs') {
+        const picked = await MH.vfsPick({ title: 'Open with VLC', accept: ACCEPT });
+        if (picked) loadPath(picked);
+      }
+    }
+    async function saveCopy() {
+      if (!current) return;
       const dest = await MH.askFileSource('save');
       if (!dest) return;
       try {
-        const blob = deviceBlob || await FS.readBlob(path);
-        const name = deviceName || FS.basename(path);
-        if (dest === 'device') {
-          MH.downloadBlob(name, blob);
-          MH.toast(`Saved ${name} to your Files (this computer).`);
-        } else {
+        const blob = current.kind === 'device' ? current.file : current.kind === 'vfs' ? await FS.readBlob(current.path) : await (await fetch(current.url)).blob();
+        if (dest === 'device') MH.downloadBlob(current.name, blob);
+        else {
           const dir = FS.join(HOME, 'Downloads');
-          let target = FS.join(dir, name);
+          let target = FS.join(dir, current.name);
           if (FS.exists(target)) {
-            const dot = name.lastIndexOf('.');
-            const base = dot > 0 ? name.slice(0, dot) : name, ext = dot > 0 ? name.slice(dot) : '';
-            for (let i = 2; i < 500; i++) {
-              const n = `${base} (${i})${ext}`;
-              if (!FS.exists(FS.join(dir, n))) { target = FS.join(dir, n); break; }
-            }
+            const dot = current.name.lastIndexOf('.');
+            const base = dot > 0 ? current.name.slice(0, dot) : current.name, ext = dot > 0 ? current.name.slice(dot) : '';
+            for (let i = 2; i < 500; i++) { const candidate = FS.join(dir, `${base} (${i})${ext}`); if (!FS.exists(candidate)) { target = candidate; break; } }
           }
           await FS.writeBlob(target, blob);
           MH.toast(`Saved to the proton file system: ${target}`);
         }
       } catch (err) { MH.toast(err.message); }
-    };
-    q('#md-files').onclick = () => openApp('files', { path: path ? FS.dirname(path) : HOME, select: path || undefined });
+    }
+    function showUrlForm() {
+      say(`<div class="vlc-urlrow"><input id="vlc-url" type="url" placeholder="https://example.org/movie.mkv" aria-label="Media URL" autocomplete="off" spellcheck="false">
+        <button class="btn sm primary" type="button" id="vlc-url-open">Open in VLC</button>
+        <button class="btn sm" type="button" id="vlc-url-cancel">Cancel</button></div>`);
+      const input = q('#vlc-url');
+      q('#vlc-url-open').onclick = () => { const url = input.value.trim(); if (url) openUrl(url); else input.focus(); };
+      q('#vlc-url-cancel').onclick = () => say('');
+      input.onkeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); q('#vlc-url-open').click(); } };
+      input.focus();
+    }
+    async function addSlave(kind) {
+      if (!player) { MH.toast('Start the VLC engine and open media first.'); return; }
+      const file = await MH.devicePick(kind === 'subtitles' ? '.srt,.ass,.ssa,.vtt,.sub,.idx' : ACCEPT);
+      if (!file) return;
+      try {
+        if (kind === 'subtitles') await player.addSubtitles(file);
+        else await player.addAudioTrack(file, { select: true });
+        MH.toast(kind === 'subtitles' ? 'Subtitle track added.' : 'Audio track added.');
+        renderTracks();
+      } catch (err) { MH.toast(err.message); }
+    }
+    function about() {
+      say(`<b>VLC media player (open source)</b> — this proton app is a WebAssembly port of VLC's libvlc engine
+        (libvlc-wasm: MIT SDK, GPL engine; see <b>CREDITS.md</b>). It plays files itself, including formats the
+        browser cannot decode natively, and never uploads or transcodes them.`);
+    }
+    function doAction(act) {
+      body.querySelectorAll('.vlc-menu[open]').forEach((d) => d.removeAttribute('open'));
+      if (act === 'open') askOpen();
+      else if (act === 'url') showUrlForm();
+      else if (act === 'files') { if (current?.kind === 'vfs') openApp('files', { path: FS.dirname(current.path), select: current.path }); }
+      else if (act === 'download') saveCopy();
+      else if (act === 'play') togglePlay();
+      else if (act === 'stop') guard(player?.stop());
+      else if (act === 'prev') step(-1);
+      else if (act === 'next') step(1);
+      else if (act === 'mute') { if (player) player.muted = !player.muted; }
+      else if (act === 'audio-track') addSlave('audio');
+      else if (act === 'subtitles') addSlave('subtitles');
+      else if (act === 'fullscreen') fullscreen();
+      else if (act === 'snapshot') snapshot();
+      else if (act === 'engine') ensureEngine().then(() => { if (current) openEntry(current); }).catch(() => {});
+      else if (act === 'enable') enableIsolation();
+      else if (act === 'about') about();
+    }
+    async function togglePlay() {
+      if (!current) { askOpen(); return; }
+      if (!player) { openEntry(current); return; }
+      if (playerState === 'playing') await guard(player.pause());
+      else await guard(player.play());
+      syncChrome();
+    }
+    function fullscreen() {
+      const wrap = q('#vlc-stage-wrap');
+      try {
+        if (document.fullscreenElement) document.exitFullscreen();
+        else if (wrap.requestFullscreen) guard(wrap.requestFullscreen());
+      } catch { /* fullscreen refused */ }
+    }
+    async function snapshot() {
+      if (!player) { MH.toast('Nothing is playing in VLC yet.'); return; }
+      try {
+        const blob = await player.snapshot('image/png');
+        if (blob) MH.downloadBlob('vlc-snapshot.png', blob);
+      } catch (err) { MH.toast(err.message); }
+    }
+
+    q('#md-open').onclick = askOpen;
+    q('#md-download').onclick = saveCopy;
+    q('#md-files').onclick = () => { if (current?.kind === 'vfs') openApp('files', { path: FS.dirname(current.path), select: current.path }); };
+    q('#vlc-enable').onclick = enableIsolation;
+    q('#vlc-start').onclick = () => ensureEngine().then(() => { if (current) openEntry(current); }).catch(() => {});
+    q('#vlc-play').onclick = togglePlay;
+    q('#vlc-stop').onclick = () => guard(player?.stop());
+    q('#vlc-prev').onclick = () => step(-1);
+    q('#vlc-next').onclick = () => step(1);
+    q('#vlc-prev2').onclick = () => step(-1);
+    q('#vlc-next2').onclick = () => step(1);
+    q('#vlc-repeat').onclick = () => { repeatMode = (repeatMode + 1) % 3; syncChrome(); status(repeatMode === 2 ? 'Repeat one.' : repeatMode === 1 ? 'Repeat all.' : 'Repeat off.'); };
+    q('#vlc-shuffle').onclick = () => { shuffle = !shuffle; syncChrome(); status(shuffle ? 'Shuffle on.' : 'Shuffle off.'); };
+    q('#vlc-mute').onclick = () => { if (player) player.muted = !player.muted; };
+    q('#vlc-fullscreen').onclick = fullscreen;
+    q('#vlc-volume').oninput = (e) => { if (player) player.volume = Number(e.target.value) / 100; };
+    q('#vlc-speed').onchange = (e) => { if (player) player.rate = Number(e.target.value); };
+    q('#vlc-seek').oninput = () => { seeking = true; };
+    q('#vlc-seek').onchange = (e) => { seeking = false; if (player && Number(player.duration) > 0) guard(player.seek((Number(e.target.value) / 1000) * Number(player.duration))); };
+    q('#vlc-canvas').onclick = () => { if (current) togglePlay(); };
+    body.querySelectorAll('[data-act]').forEach((b) => { b.onclick = () => doAction(b.dataset.act); });
     body.addEventListener('keydown', (e) => {
-      if (!path || e.target.tagName === 'INPUT') return;
-      const el = q('#md-el');
-      if (e.key === 'ArrowRight' && e.shiftKey) { e.preventDefault(); step(1); }
-      else if (e.key === 'ArrowLeft' && e.shiftKey) { e.preventDefault(); step(-1); }
-      else if (e.key === ' ' && el) {
-        e.preventDefault();
-        /* Space plays/pauses; the browser implements both, so guard them. */
-        try { el.paused ? el.play()?.catch?.(() => {}) : el.pause(); } catch { /* codec or context refuses */ }
-      }
+      const tag = e.target?.tagName;
+      if (tag === 'TEXTAREA' || (tag === 'INPUT' && e.target.type === 'text') || (tag === 'INPUT' && e.target.type === 'url')) return;
+      if (e.key === ' ') { e.preventDefault(); togglePlay(); }
+      else if (e.key === 'ArrowRight' && player) { e.preventDefault(); guard(player.seek(Math.min(Number(player.duration) || 0, (Number(player.currentTime) || 0) + 5))); }
+      else if (e.key === 'ArrowLeft' && player) { e.preventDefault(); guard(player.seek(Math.max(0, (Number(player.currentTime) || 0) - 5))); }
+      else if (e.key.toLowerCase() === 'f') fullscreen();
+      else if (e.key.toLowerCase() === 'm' && player) player.muted = !player.muted;
     });
-    body.openPath = ({ path: p } = {}) => { if (p) load(p); };
+
+    timer = setInterval(updateProgress, 500);
+    body.openPath = ({ path: p } = {}) => { if (p) loadPath(p); };
     body.onDestroy = () => {
-      token++;
-      const el = q('#md-el');
-      /* Stopping playback first is what the revoked URL would do anyway, but
-       * pausing is immediate. Both are wrapped: a media element that never
-       * loaded can refuse. */
-      try { if (el && !el.paused) el.pause(); } catch { /* nothing was playing */ }
-      el?.remove();
-      revoke();
+      destroyed = true;
+      if (timer) clearInterval(timer);
+      if (vlc) guard(vlc.destroy());
+      player = null;
+      vlc = null;
     };
 
-    if (options.path) load(options.path);
-    else startScreen();
+    setQueue(vfsPlaylist(), -1);
+    if (options.path) loadPath(options.path);
+    else if (!window.crossOriginIsolated) showOverlay('VLC media player', 'Open an audio or video file. VLC needs one reload with its cross-origin isolation shim before libvlc can start; after that, files play in the real VLC engine.', 'enable');
+    else showOverlay('VLC media player', 'Open an audio or video file, or start the VLC engine. Playback is by libvlc compiled to WebAssembly.', 'start');
+    syncChrome();
   },
 });
 </script>

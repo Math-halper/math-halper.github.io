@@ -21,16 +21,16 @@ const ROOT = path.resolve(__dirname, '..');
 const source = (p) => fs.readFileSync(path.join(ROOT, p), 'utf8');
 /* The file system suite FS.appFor() resolves files to. */
 const FS_APPS = ['files', 'text-editor', 'image-viewer', 'media', 'pdf'];
-const SYSTEM_APPS = ['appcenter', 'customize', 'settings', 'about', 'browser', 'calculator', 'files', 'text-editor', 'pdf', 'image-viewer', 'media', 'ruffle-flash-player', 'web-retro', 'you-are-an-idiot', 'game-2048', 'bloons-tower-defense-1', 'bloons-tower-defense-2', 'bloons-tower-defense-5', 'bloxorz', 'breaking-the-bank', 'celeste-hub', 'cookie-clicker', 'drive-mad', 'escaping-the-prison', 'fleeing-the-complex', 'grey-box-testing', 'infiltrating-the-airship', 'mari0', 'offline-paradise', 'pacman', 'slope', 'spacebar-clicker', 'stack', 'stealing-the-diamond', 'stickman-hook', 'sm64', 'tetris', 'the-impossible-quiz', 'tunnel-rush', 'baldis-basics', 'minesweeper', 'flappy-bird', 'retro-bowl', 'drift-boss', 'football-bros', 'five-nights-at-freddys-1', 'five-nights-at-freddys-4', 'five-nights-at-freddys-2', 'five-nights-at-freddys-3', 'backrooms', 'kart-bros', 'geometry-dash-lite', 'five-nights-at-freddys-sl', 'bitburner'];
+const SYSTEM_APPS = ['appcenter', 'customize', 'settings', 'about', 'browser', 'system-monitor', 'calculator', 'clock', 'files', 'text-editor', 'pdf', 'image-viewer', 'media', 'paint', 'piano', 'ruffle-flash-player', 'web-retro', 'terminal', 'you-are-an-idiot', 'game-2048', 'bloons-tower-defense-1', 'bloons-tower-defense-2', 'bloons-tower-defense-5', 'bloxorz', 'breaking-the-bank', 'celeste-hub', 'cookie-clicker', 'drive-mad', 'escaping-the-prison', 'fleeing-the-complex', 'grey-box-testing', 'infiltrating-the-airship', 'mari0', 'offline-paradise', 'pacman', 'slope', 'spacebar-clicker', 'stack', 'stealing-the-diamond', 'stickman-hook', 'sm64', 'tetris', 'the-impossible-quiz', 'tunnel-rush', 'baldis-basics', 'minesweeper', 'flappy-bird', 'retro-bowl', 'drift-boss', 'football-bros', 'five-nights-at-freddys-1', 'five-nights-at-freddys-4', 'five-nights-at-freddys-2', 'five-nights-at-freddys-3', 'backrooms', 'kart-bros', 'geometry-dash-lite', 'five-nights-at-freddys-sl', 'bitburner'];
 
 /* Menu sections for each app (data/applications.js cat=), in catalog order.
  * Every new app is filed here with its respective section — the catalog test
  * asserts each app's cat matches, and the boot test asserts the five menu
  * groups, so an unfiled app fails the suite. */
 const SYSTEM_CATS = {
-  appcenter: 'System', customize: 'System', settings: 'System', about: 'System', browser: 'System',
-  calculator: 'Productivity', files: 'Productivity', 'text-editor': 'Productivity', pdf: 'Productivity',
-  'image-viewer': 'Media', media: 'Media',
+  appcenter: 'System', customize: 'System', settings: 'System', about: 'System', browser: 'System', 'system-monitor': 'System',
+  calculator: 'Productivity', clock: 'Productivity', files: 'Productivity', 'text-editor': 'Productivity', pdf: 'Productivity',
+  'image-viewer': 'Media', media: 'Media', paint: 'Media', piano: 'Media',
   'game-2048': 'Games',
   'bloons-tower-defense-1': 'Games',
   'bloons-tower-defense-2': 'Games',
@@ -57,7 +57,7 @@ const SYSTEM_CATS = {
   'tetris': 'Games',
   'the-impossible-quiz': 'Games',
   'tunnel-rush': 'Games',
-  'web-retro': 'Tools',
+  'web-retro': 'Tools', terminal: 'Tools',
   'you-are-an-idiot': 'Tools',
   'baldis-basics': 'Games',
   'minesweeper': 'Games',
@@ -996,17 +996,22 @@ test('the desktop boots, lists and opens all catalogued apps', async () => {
     assert.equal(retro.querySelector('#wr-emulators').hidden, true, 'the Emulators tab starts closed');
     assert.deepEqual([...retro.querySelectorAll('#wr-roms [data-console]')].map((b) => b.dataset.console),
       ['NES', 'SNES', 'N64', 'GB'], 'the ROMs tab is four console boxes, NES down to GB');
+    const wrStyle = retro.querySelector('style').textContent;
+    assert.match(wrStyle, /\.wr-consoles\{[^}]*grid-template-columns:repeat\(4,minmax\(0,1fr\)\)[^}]*width:100%/,
+      'the four console boxes should split the entire top width evenly');
+    assert.match(wrStyle, /\.wr-topbar \.wr-back\{[^}]*font-size:28px[^}]*min-width:56px[^}]*min-height:48px/,
+      'the Emulator screen back arrow should be large');
     const gridCount = () => retro.querySelectorAll('#wr-grid [data-bundled]').length;
-    assert.equal(gridCount(), 5, 'the NES box starts picked, with its games in the grid');
+    assert.equal(gridCount(), 9, 'the NES box starts picked, with its games in the grid');
     const firstArt = retro.querySelector('#wr-grid [data-bundled] img');
     assert.ok(firstArt && /^data\/icons\/.+\.jpeg$/.test(firstArt.getAttribute('src')),
       'bundled games show their poster art');
     retro.querySelector('[data-console="GB"]').click();
-    assert.equal(gridCount(), 13, 'the GB box shows the GB/GBC/GBA games');
+    assert.equal(gridCount(), 12, 'the GB box shows the GB/GBC/GBA games');
     retro.querySelector('[data-console="SNES"]').click();
-    assert.equal(gridCount(), 0, 'no SNES games are bundled');
+    assert.equal(gridCount(), 5, 'the SNES box shows the SNES games');
     retro.querySelector('[data-console="NES"]').click();
-    assert.equal(gridCount(), 5, 'picking NES again refills the grid');
+    assert.equal(gridCount(), 9, 'picking NES again refills the grid');
     retro.querySelector('[data-wr-tab="emulators"]').click();
     assert.equal(retro.querySelector('#wr-roms').hidden, true, 'the Emulators tab hides the ROMs tab');
     assert.equal(retro.querySelector('#wr-emulators').hidden, false, 'the Emulators tab shows its console boxes');
@@ -1024,8 +1029,8 @@ test('the desktop boots, lists and opens all catalogued apps', async () => {
     assert.equal(retro.querySelector('#wr-upload').hidden, false);
     assert.ok(retro.querySelector('[data-src="device"]'), 'no "this computer" ROM source');
     assert.ok(retro.querySelector('[data-src="vfs"]'), 'no "proton Files" ROM source');
-    retro.querySelector('#wr-play').click();
-    assert.match(w.document.querySelector('#toasts').textContent, /Choose a ROM file/);
+    assert.equal(retro.querySelector('#wr-play'), null,
+      'there is no start button — picking a ROM launches it at once');
     // A ROM imported into the proton file system is listed, then handed to the
     // emulator over the BroadcastChannel like a device file.
     const home = w.eval('FS.home()');
@@ -1036,17 +1041,16 @@ test('the desktop boots, lists and opens all catalogued apps', async () => {
     dl.click();
     const row = [...retro.querySelectorAll('[data-file]')].find((b) => b.dataset.file.endsWith('nes-rom.nes'));
     assert.ok(row, 'proton Files should list the imported ROM');
-    row.click();
     const chSent = [];
     w.BroadcastChannel = class {
       constructor(name) { this.name = name; w.__wrCh = this; }
       postMessage(m) { chSent.push(m); }
       close() {}
     };
-    retro.querySelector('#wr-play').click();
+    row.click();
     await new Promise((resolve) => setTimeout(resolve, 20));
     const frame = retro.querySelector('#wr-frame');
-    assert.ok(frame, 'Play should frame the emulator');
+    assert.ok(frame, 'picking the ROM should frame the emulator at once');
     assert.match(frame.src, /rom=channel/);
     w.__wrCh.onmessage({ data: { status: 'ready' } });
     assert.equal(chSent.length, 1, 'the launch page should get the ROM over the channel');
@@ -1078,9 +1082,8 @@ test('the desktop boots, lists and opens all catalogued apps', async () => {
     }
     assert.ok(rowAgain, 'proton Files should still list the imported ROM');
     rowAgain.click();
-    retro.querySelector('#wr-play').click();
     await new Promise((resolve) => setTimeout(resolve, 20));
-    assert.ok(retro.querySelector('#wr-frame'), 'Play should frame the emulator again');
+    assert.ok(retro.querySelector('#wr-frame'), 'picking the ROM should frame the emulator again');
     assert.equal(retro.querySelector('#wr-again').hidden, false, 'Change game shows while a game runs');
     retro.querySelector('#wr-again').click();
     assert.ok(!retro.querySelector('#wr-frame'), 'Change game should unframe the emulator');
@@ -1247,7 +1250,7 @@ test('Customize saves, displays and resets uploaded app icon images', async () =
     const browserWindow = w.eval('wins').get('browser');
     assert.equal(body.querySelector('#cust-files-shortcut'), null, 'Customize still offers a Files shortcut');
     assert.deepEqual([...body.querySelectorAll('#cust-modlist .card b')].map((b) => b.textContent).slice(0, SYSTEM_APPS.length),
-            ["App Center", "Customize", "Settings", "About", "Browser", "Calculator", "Files", "Text Editor", "PDF Viewer", "Image Viewer", "Media", "Ruffle Flash Player", "Web Retro", "You Are An Idiot", "2048", "Bloons Tower Defense 1", "Bloons Tower Defense 2", "Bloons Tower Defense 5", "Bloxorz", "Breaking The Bank", "Celeste Hub", "Cookie Clicker", "Drive Mad", "Escaping The Prison", "Fleeing The Complex", "Grey Box Testing", "Infiltrating The Airship", "Mari0", "Offline Paradise", "Pacman", "Slope", "Spacebar Clicker", "Stack", "Stealing The Diamond", "Stickman Hook", "Super Mario 64", "Tetris", "The Impossible Quiz", "Tunnel Rush", "Baldi's Basics", "Minesweeper", "Flappy Bird", "Retro Bowl", "Drift Boss", "Football Bros", "Five Nights at Freddy's", "Five Nights at Freddy's 4", "Five Nights at Freddy's 2", "Five Nights at Freddy's 3", "Backrooms", "Kart Bros", "Geometry Dash Lite", "Five Nights at Freddy's: Sister Location", "Bitburner"]);
+            ["App Center", "Customize", "Settings", "About", "Browser", "System Monitor", "Calculator", "Clock", "Files", "Text Editor", "PDF Viewer", "Image Viewer", "VLC", "Paint", "Piano", "Ruffle Flash Player", "Web Retro", "Terminal", "You Are An Idiot", "2048", "Bloons Tower Defense 1", "Bloons Tower Defense 2", "Bloons Tower Defense 5", "Bloxorz", "Breaking The Bank", "Celeste Hub", "Cookie Clicker", "Drive Mad", "Escaping The Prison", "Fleeing The Complex", "Grey Box Testing", "Infiltrating The Airship", "Mari0", "Offline Paradise", "Pacman", "Slope", "Spacebar Clicker", "Stack", "Stealing The Diamond", "Stickman Hook", "Super Mario 64", "Tetris", "The Impossible Quiz", "Tunnel Rush", "Baldi's Basics", "Minesweeper", "Flappy Bird", "Retro Bowl", "Drift Boss", "Football Bros", "Five Nights at Freddy's", "Five Nights at Freddy's 4", "Five Nights at Freddy's 2", "Five Nights at Freddy's 3", "Backrooms", "Kart Bros", "Geometry Dash Lite", "Five Nights at Freddy's: Sister Location", "Bitburner"]);
 
     const uploadBrowserIcon = async () => {
       const input = body.querySelector('[data-micon-file="browser"]');
@@ -1460,6 +1463,30 @@ test('the Web Retro bundled ROM library is on disk', () => {
   for (const m of bundled[1].matchAll(/, '([a-z0-9-]+)'\]/g)) {
     assert.ok(fs.existsSync(path.join(ROOT, 'data/icons', `${m[1]}.jpeg`)), `box art missing: data/icons/${m[1]}.jpeg`);
   }
+  /* Each cover file must hold ITS game's art: the box-art upload was
+   * shuffled when it was copied into data/icons under proper names,
+   * and every file's contents were identified from a labelled contact
+   * sheet of the original upload before being pinned here by hash. */
+  const COVER_HASHES = {
+    'Castlevania': '63d7a8390bea', 'Contra': 'cd1dd7132512', 'banjo-kazooie': 'a1413cfb8acc',
+    'chrono-trigger': '285e9db261a4', 'donkey-kong-country': 'd78689ad5937', 'doom-64': '2cd1418649e4',
+    'doom-gba': '54a4371d227f', 'excitebike': 'd1d66dcee713', 'grand-theft-auto-2': 'b2d44125f07c',
+    'grand-theft-auto-advance': '778b0b4601ec', 'grand-theft-auto': '8fa1ee942bdb', 'lego-star-wars-the-video-game': 'ffef75a31404',
+    'mario-kart-64': '56a0a47c72b9', 'mario-party': '1614b990be2b', 'mega-man-2': '79ea0cbccd38',
+    'metroid': 'bf1bfb031205', 'paper-mario': '3016e9b6846d', 'pokemon-crystal': '3bc1f697ee02',
+    'pokemon-emerald': 'e36d289a2b1a', 'pokemon-red': '60129b90c936', 'pokemon-yellow': 'c287d537c1b8',
+    'space-invaders': 'f3f0c6513229', 'super-mario-64': '4e60a921ad5a', 'super-mario-advance': 'f2e913549cf3',
+    'super-mario-bros-2': '98fe15acfcd0', 'super-mario-bros-3': 'b1b5e238568d', 'super-mario-bros-deluxe': '43a08fbd8eb5',
+    'super-mario-bros-duck-hunt': 'e09e97027293', 'super-mario-world': '039bc3dd95ab', 'super-metroid': 'ddbb268835e7',
+    'super-smash-bros': '10d355992d29', 'tetris-nes': 'ca58cd9b87bd', 'the-legend-of-zelda-a-link-to-the-past': '980216a2f6dc',
+    'yoshis-story': 'e7d9405b544a',
+  };
+  const crypto = require('node:crypto');
+  for (const m of bundled[1].matchAll(/, '([a-z0-9-]+)'\]/g)) {
+    const hash = crypto.createHash('sha256')
+      .update(fs.readFileSync(path.join(ROOT, 'data/icons', `${m[1]}.jpeg`))).digest('hex').slice(0, 12);
+    assert.equal(hash, COVER_HASHES[m[1]], `data/icons/${m[1]}.jpeg does not hold ${m[1]}'s cover art`);
+  }
 });
 
 /* Control bindings have to survive closing a game. RetroArch writes
@@ -1468,6 +1495,14 @@ test('the Web Retro bundled ROM library is on disk', () => {
  * manager's localStorage entry on every launch — so main.js harvests the
  * bindings back out of the config file whenever RetroArch saves it (and
  * again on pagehide), or every in-game rebind would be lost. */
+test('Web Retro boots games straight in, with no Start button', () => {
+  const src = fs.readFileSync(path.join(ROOT, 'apps/tools/web-retro/webretro/main.js'), 'utf8');
+  assert.ok(!src.includes('startButton.style.display = "initial"'),
+    'the emulator must not wait on the Start button before booting a game');
+  assert.match(src, /readyForInit[\s\S]*?initFromData\(files\)/,
+    'the ROM hand-off still boots the emulator');
+});
+
 test('Web Retro keeps control bindings between games', () => {
   const src = fs.readFileSync(path.join(ROOT, 'apps/tools/web-retro/webretro/main.js'), 'utf8');
   // the harvest helper is pure: pull it out and run it for real
@@ -1512,6 +1547,11 @@ test('Web Retro back arrow returns to the chooser instead of a 404', () => {
     'the launcher returns to the chooser only for its own emulator frame');
   assert.ok(app.includes("again.addEventListener('click', picker);"),
     'Change game brings up the same chooser (the ROMs tab)');
+  const baseCss = fs.readFileSync(path.join(ROOT, 'apps/tools/web-retro/webretro/assets/base.css'), 'utf8');
+  assert.match(baseCss, /\.menuback a::before \{[^}]*font-size: 28px;/,
+    'the emulator menu-bar back arrow should be large');
+  assert.match(baseCss, /\.menuback \{[^}]*width: calc\(var\(--menubuttonbordery\) \+ 16px\) !important;/,
+    'the emulator menu-bar back arrow should have a wider click target');
 });
 
 /* proton's own UI draws artwork with its SVG icon set and raster images,
@@ -1750,6 +1790,76 @@ function clickLabel(host, label) {
   return button;
 }
 
+test('System Monitor reports real desktop state', async () => {
+  const { w, wins, close } = await bootDesktop();
+  try {
+    w.openApp('calculator');
+    w.openApp('system-monitor');
+    const mon = wins.get('system-monitor').body;
+    assert.match(mon.querySelector('#sm-cpu-now').textContent, /%/, 'the CPU readout shows a percentage');
+    const rows = mon.querySelector('#sm-procs').textContent;
+    assert.match(rows, /Calculator/, 'the window list should name the open Calculator');
+    assert.match(rows, /System Monitor/, 'the window list should include itself');
+    assert.match(mon.querySelector('#sm-stats').textContent, /Open windows/);
+    const closeBtn = mon.querySelector('[data-close="calculator"]');
+    assert.ok(closeBtn, 'each open window gets a Close button');
+    closeBtn.click();
+    assert.ok(!wins.has('calculator'), 'Close should close that window');
+    w.closeWin('system-monitor', true);
+  } finally {
+    close();
+  }
+});
+
+test('Paint, Piano, Terminal and Clock render and respond', async () => {
+  const { w, wins, close } = await bootDesktop();
+  try {
+    // Clock shows the time and its stopwatch starts and pauses.
+    w.openApp('clock');
+    const clock = wins.get('clock').body;
+    assert.match(clock.querySelector('#clock-now').textContent, /^\d{2}:\d{2}:\d{2}$/);
+    clock.querySelector('#sw-toggle').click();
+    assert.equal(clock.querySelector('#sw-toggle').textContent, 'Pause');
+    clock.querySelector('#sw-toggle').click();
+    assert.equal(clock.querySelector('#sw-toggle').textContent, 'Start');
+    w.closeWin('clock', true);
+
+    // Paint renders its palette, brush size and save button.
+    w.openApp('paint');
+    const paint = wins.get('paint').body;
+    assert.equal(paint.querySelectorAll('#paint-colors [data-color]').length, 10);
+    assert.ok(paint.querySelector('#paint-save'), 'Paint has a Save PNG button');
+    w.closeWin('paint', true);
+
+    // Piano renders two octaves of playable keys.
+    w.openApp('piano');
+    const piano = wins.get('piano').body;
+    assert.equal(piano.querySelectorAll('#piano-keys [data-midi]').length, 25,
+      'Piano should render 15 white and 10 black keys');
+    assert.ok(piano.querySelector('#piano-rec'), 'Piano can record');
+    w.closeWin('piano', true);
+
+    // The Terminal runs commands against the virtual file system.
+    w.openApp('terminal');
+    const term = wins.get('terminal').body;
+    const input = term.querySelector('#term-in');
+    const run = async (line) => {
+      input.value = line;
+      term.querySelector('#term-form').dispatchEvent(new w.Event('submit', { cancelable: true, bubbles: true }));
+      await new Promise((resolve) => setTimeout(resolve, 30));
+    };
+    await run('pwd');
+    assert.match(term.querySelector('#term-out').textContent, /\/home\/ada/);
+    await run('ls');
+    assert.match(term.querySelector('#term-out').textContent, /Downloads/);
+    await run('bogus');
+    assert.match(term.querySelector('#term-out').textContent, /Unknown command: bogus/);
+    w.closeWin('terminal', true);
+  } finally {
+    close();
+  }
+});
+
 test('the Files app manages the account’s folders and files end to end', async () => {
   const { w, errors, blobs, settle, saved, wins, close } = await bootDesktop();
   const HOME = '/home/ada';
@@ -1953,12 +2063,15 @@ test('every kind of file has an app that opens it', async () => {
     /* FS.appFor() only ever returns ids that are installed, so nothing in the
      * file system is unopenable — and the ids match the catalog exactly. */
     const cases = [['page.html', 'browser'], ['paper.pdf', 'pdf'], ['photo.png', 'image-viewer'],
-      ['drawing.svg', 'image-viewer'], ['song.mp3', 'media'], ['clip.mp4', 'media'],
+      ['drawing.svg', 'image-viewer'], ['song.mp3', 'media'], ['clip.mp4', 'media'], ['movie.mkv', 'media'],
       ['notes.txt', 'text-editor'], ['data.json', 'text-editor'], ['module.js', 'text-editor']];
     for (const [name, id] of cases) {
       assert.equal(w.eval(`FS.appFor('/home/ada/${name}')`), id, `${name} should open in ${id}`);
       assert.ok(APPS[id], `${id} is named by FS.appFor() but is not installed`);
     }
+    assert.equal(w.eval(`FS.mediaKind('/home/ada/movie.mkv')`), 'video', 'an MKV file should count as video');
+    assert.equal(w.eval(`FS.mime('/home/ada/movie.mkv')`), 'video/x-matroska', 'an MKV file gets the Matroska MIME type');
+    assert.equal(w.eval(`FS.isBinary('/home/ada/movie.mkv')`), true, 'MKV bytes must never be decoded as text');
     assert.deepEqual(FS_APPS.filter((id) => !APPS[id]), [], 'the whole suite is installed');
 
     const store = async (name, bytes, type) => {
@@ -1976,17 +2089,22 @@ test('every kind of file has an app that opens it', async () => {
     assert.equal(viewer.querySelector('#iv-download').disabled, false);
     w.closeWin('image-viewer', true);
 
-    // Audio and video go to Media, which picks the right element.
+    // Audio and video go to VLC (the media app): its libvlc canvas is
+    // the stage and the opened file is queued on its playlist. jsdom is
+    // not cross-origin isolated, so the engine itself stays queued here;
+    // the vendored-engine test below pins the real libvlc build.
     await store('song.mp3', [73, 68, 51, 4, 0, 0], 'audio/mpeg');
     w.eval("openFSItem('/home/ada/song.mp3')");
     await settle();
-    assert.equal(wins.get('media').body.querySelector('#md-el').tagName, 'AUDIO');
-    assert.ok(wins.get('media').body.querySelector('[data-play="/home/ada/song.mp3"]'), 'the playlist lists it');
+    assert.equal(wins.get('media').body.querySelector('#vlc-canvas').tagName, 'CANVAS');
+    assert.equal(wins.get('media').body.querySelector('#vlc-file-name').textContent, 'song.mp3');
+    assert.ok(wins.get('media').body.querySelector('#vlc-playlist-items [data-queue]'), 'the playlist lists it');
     w.closeWin('media', true);
     await store('clip.mp4', [0, 0, 0, 24, 102, 116, 121, 112], 'video/mp4');
     w.eval("openFSItem('/home/ada/clip.mp4')");
     await settle();
-    assert.equal(wins.get('media').body.querySelector('#md-el').tagName, 'VIDEO');
+    assert.equal(wins.get('media').body.querySelector('#vlc-canvas').tagName, 'CANVAS');
+    assert.equal(wins.get('media').body.querySelector('#vlc-file-name').textContent, 'clip.mp4');
     w.closeWin('media', true);
 
     // PDFs are handed to the browser's own viewer in a frame.
@@ -2035,9 +2153,36 @@ test('every kind of file has an app that opens it', async () => {
     assert.equal(wins.get('files').body.querySelector('#fm-path').value, '/assets');
     assert.equal(opened().length, 1, 'opening a folder does not launch a viewer');
 
-    assert.ok(blobs.length >= 4, 'each viewer made a blob URL for the file it shows');
+    assert.ok(blobs.length >= 2, 'the blob-URL viewers (image, PDF) made blob URLs; VLC queues files for libvlc instead');
     assert.deepEqual(errors.filter((m) => !ignorable(m)), []);
   } finally { close(); }
+});
+
+test('VLC is a port of the open-source VLC player (vendored libvlc)', () => {
+  const vendor = path.join(ROOT, 'apps/media/media/vendor/libvlc');
+  for (const f of ['src/index.js', 'src/worker.js', 'src/player.js', 'wasm/libvlc.js', 'wasm/libvlc.wasm',
+    'wasm/VLC_COMMIT', 'fonts/NotoSans-Regular.ttf', 'LICENSE', 'COPYING']) {
+    assert.ok(fs.existsSync(path.join(vendor, f)), `vendored libvlc file missing: vendor/libvlc/${f}`);
+  }
+  assert.ok(fs.statSync(path.join(vendor, 'wasm/libvlc.wasm')).size > 20_000_000,
+    'libvlc.wasm should be the real VLC engine, not a stub');
+  assert.match(fs.readFileSync(path.join(vendor, 'wasm/VLC_COMMIT'), 'utf8'), /^[0-9a-f]{40}/,
+    'the vendored engine records the VLC commit it was built from');
+  assert.ok(!fs.existsSync(path.join(ROOT, 'apps/media/media/vendor/ffmpeg-core.wasm')),
+    'the old FFmpeg transcoder should be gone now that VLC plays files itself');
+  assert.ok(fs.existsSync(path.join(ROOT, 'coi-serviceworker.js')),
+    'the root isolation shim should be served with the site');
+  const app = source('apps/media/media/app.html');
+  assert.match(app, /createVLC/, 'the player should be created from the libvlc engine');
+  assert.match(app, /vendor\/libvlc\/src\/index\.js/, 'the app should load the vendored libvlc SDK');
+  assert.match(app, /crossOriginIsolated/, 'the app should handle libvlc\'s isolation requirement');
+  assert.match(app, /coi-serviceworker\.js/, 'the app should offer the one-reload isolation shim');
+  assert.match(app, /id="vlc-canvas"/, 'VLC should draw on its canvas');
+  assert.match(app, /id="vlc-playlist"/, 'VLC should have its playlist panel');
+  assert.ok(!/Convert &(?:amp;)? play|libx264|libmp3lame/.test(app),
+    'VLC replaces the converter: no Convert & play fallback remains');
+  const catalog = source('data/applications.js');
+  assert.match(catalog, /id=media\nname=VLC/, 'the media app is presented as VLC');
 });
 
 test('the desktop can link any file or folder again', async () => {

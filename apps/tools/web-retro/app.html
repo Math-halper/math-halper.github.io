@@ -59,16 +59,27 @@ registerApp({
       ['Paper Mario (USA).z64', 'mupen64plus_next', 'Paper Mario', 'Nintendo 64', 'paper-mario'],
       ['Doom 64 (USA) (Rev 1).z64', 'mupen64plus_next', 'Doom 64', 'Nintendo 64', 'doom-64'],
       ['Yoshi\'s Story (USA) (En,Ja).z64', 'mupen64plus_next', "Yoshi's Story", 'Nintendo 64', 'yoshis-story'],
+      ['Super Mario 64 (USA).z64', 'mupen64plus_next', 'Super Mario 64', 'Nintendo 64', 'super-mario-64'],
+      ['Banjo-Kazooie (USA) (Rev 1).z64', 'mupen64plus_next', 'Banjo-Kazooie', 'Nintendo 64', 'banjo-kazooie'],
+      ['Super Smash Bros. (USA).z64', 'mupen64plus_next', 'Super Smash Bros.', 'Nintendo 64', 'super-smash-bros'],
       ['Excitebike (Japan, USA).nes', 'nestopia', 'Excitebike', 'NES', 'excitebike'],
       ['Super Mario Bros. + Duck Hunt (USA).nes', 'nestopia', 'Super Mario Bros. + Duck Hunt', 'NES', 'super-mario-bros-duck-hunt'],
       ['Super Mario Bros. 2 (USA) (Rev 1).nes', 'nestopia', 'Super Mario Bros. 2', 'NES', 'super-mario-bros-2'],
       ['Super Mario Bros. 3 (USA) (Rev 1).nes', 'nestopia', 'Super Mario Bros. 3', 'NES', 'super-mario-bros-3'],
       ['Tetris (USA) (Tengen) (Unl).nes', 'nestopia', 'Tetris', 'NES', 'tetris-nes'],
+      ['Castlevania (USA) (Rev 1).nes', 'nestopia', 'Castlevania', 'NES', 'Castlevania'],
+      ['Contra (USA).nes', 'nestopia', 'Contra', 'NES', 'Contra'],
+      ['Mega Man 2 (USA).nes', 'nestopia', 'Mega Man 2', 'NES', 'mega-man-2'],
+      ['Metroid (USA).nes', 'nestopia', 'Metroid', 'NES', 'metroid'],
+      ['Super Mario World (U) [!].smc', 'snes9x', 'Super Mario World', 'SNES', 'super-mario-world'],
+      ['Legend of Zelda, The - A Link to the Past (USA).sfc', 'snes9x', 'The Legend of Zelda: A Link to the Past', 'SNES', 'the-legend-of-zelda-a-link-to-the-past'],
+      ['Donkey Kong Country (U) (V1.2) [!].smc', 'snes9x', 'Donkey Kong Country', 'SNES', 'donkey-kong-country'],
+      ['Super Metroid (Japan, USA) (En,Ja).sfc', 'snes9x', 'Super Metroid', 'SNES', 'super-metroid'],
+      ['Chrono Trigger (USA).sfc', 'snes9x', 'Chrono Trigger', 'SNES', 'chrono-trigger'],
       ['Doom (USA, Europe).gba', 'mgba', 'Doom', 'Game Boy Advance', 'doom-gba'],
       ['Grand Theft Auto Advance (USA).gba', 'mgba', 'Grand Theft Auto Advance', 'Game Boy Advance', 'grand-theft-auto-advance'],
       ['LEGO Star Wars - The Video Game (USA, Europe) (En,Fr,De,Es,It,Nl,Da).gba', 'mgba', 'LEGO Star Wars: The Video Game', 'Game Boy Advance', 'lego-star-wars-the-video-game'],
       ['Pokemon - Emerald Version (USA, Europe).gba', 'mgba', 'Pokémon Emerald', 'Game Boy Advance', 'pokemon-emerald'],
-      ['Sims, The - Bustin\' Out (USA) (En,Fr,De,Es,It,Nl) (Rev 1).gba', 'mgba', "The Sims Bustin' Out", 'Game Boy Advance', 'the-sims-bustin-out'],
       ['Super Mario Advance (USA, Europe).gba', 'mgba', 'Super Mario Advance', 'Game Boy Advance', 'super-mario-advance'],
       ['Grand Theft Auto (USA) (GB Compatible).gbc', 'mgba', 'Grand Theft Auto', 'Game Boy Color', 'grand-theft-auto'],
       ['Grand Theft Auto 2 (USA).gbc', 'mgba', 'Grand Theft Auto 2', 'Game Boy Color', 'grand-theft-auto-2'],
@@ -148,6 +159,18 @@ registerApp({
       if (src === 'vfs') renderVfs();
     }
 
+    /* A ROM picked in the proton Files browser launches straight
+     * into the emulator — there is no separate start button. */
+    async function playVfsRom() {
+      const core = main.querySelector('#wr-upload').dataset.core;
+      try {
+        const blob = await FS.readBlob(vfsPick);
+        play(core, new File([blob], FS.basename(vfsPick)));
+      } catch (err) {
+        MH.toast(err.message || 'Could not read that ROM.');
+      }
+    }
+
     /* Which console row a core (and so every bundled game on it)
      * belongs to. */
     function catOf(core) {
@@ -165,7 +188,7 @@ registerApp({
       title.textContent = `${label} games`;
       grid.innerHTML = items.length
         ? items.map(([g, i]) => `<button type="button" class="btn wr-game" data-bundled="${i}"><img src="data/icons/${g[4]}.jpeg" alt=""><span>${MH.esc(g[2])}</span></button>`).join('')
-        : `<p class="muted" style="margin:0">No ${MH.esc(label)} games are bundled yet — play your own with the emulator rows below.</p>`;
+        : `<p class="muted" style="margin:0">No ${MH.esc(label)} games are bundled yet — play your own from the Emulators tab.</p>`;
     }
 
     /* The Emulators tab swaps between its console boxes and the
@@ -208,10 +231,21 @@ registerApp({
       main.className = 'app-main pad';
       const countFor = (cat) => BUNDLED.filter((g) => catOf(g[1]) === cat).length;
       main.innerHTML = `<style>
+        /* Black page, white text. Any option glows deep dark blue while
+         * hovered and sits dark gray with white text once picked. Text
+         * is never selectable, so no caret or text cursor shows over
+         * titles, labels or descriptions. */
+        #wr-main{background:#000;color:#fff}
+        #wr-main,#wr-main *{user-select:none;-webkit-user-select:none;cursor:default}
+        #wr-main button,#wr-main input[type=file]{cursor:pointer}
+        #wr-main .btn{background:#0d0d0d;border-color:#3d3d3d;color:#fff}
+        #wr-main .btn.primary{background:#3d3d3d;border-color:#5c5c5c;color:#fff}
+        #wr-main .btn:hover{background:#0b2e63;border-color:#1d4e9e;color:#fff}
+        #wr-main .muted{color:#d9d9d9}
         .wr-tabs{display:flex;gap:8px;margin-bottom:14px}
         .wr-tab{flex:1;padding:10px 16px;font-size:15px}
-        .wr-consoles{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:16px}
-        .wr-console{display:flex;flex-direction:column;align-items:flex-start;gap:3px;height:auto;padding:14px 16px;text-align:left}
+        .wr-consoles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:16px;width:100%}
+        .wr-console{display:flex;flex-direction:column;align-items:flex-start;gap:3px;height:auto;padding:14px 16px;text-align:left;min-width:0;width:100%}
         .wr-console b{font-size:19px;line-height:1.2}
         .wr-console span{font-size:12px;opacity:.75}
         .wr-sys{margin:2px 0 8px;font-size:13px;letter-spacing:.06em;text-transform:uppercase}
@@ -220,7 +254,7 @@ registerApp({
         .wr-game img{width:76px;height:76px;object-fit:cover;border-radius:6px;background:#000}
         .wr-game span{font-size:11.5px;line-height:1.25;text-align:center}
         .wr-topbar{display:flex;align-items:center;gap:10px;margin:0 0 12px}
-        .wr-topbar .wr-back{font-size:15px;line-height:1;padding:6px 11px}
+        .wr-topbar .wr-back{font-size:28px;line-height:1;padding:10px 18px;min-width:56px;min-height:48px;display:inline-flex;align-items:center;justify-content:center}
         .wr-note{margin:16px 0 0}
       </style>
       <div class="wr-tabs" role="tablist" aria-label="Web Retro">
@@ -240,7 +274,6 @@ registerApp({
       </section>
       <section id="wr-emulators" hidden>
         <div id="wr-emu-home">
-          <p class="muted" style="margin-top:0">Pick an emulator to play your own ROM on it.</p>
           <div class="wr-consoles">
             ${CONSOLES.map(([cat, core, label]) => `<button type="button" class="btn wr-console" data-core="${core}"><b>${cat}</b><span>${MH.esc(label)} · ${core}</span></button>`).join('')}
           </div>
@@ -251,7 +284,7 @@ registerApp({
         <div id="wr-upload" class="wr-upload" hidden>
           <div class="wr-topbar">
             <button type="button" class="btn sm wr-back" id="wr-back" aria-label="Back to the emulators">←</button>
-            <strong>Play your own ROM — <span id="wr-corename"></span></strong>
+            <strong>Emulator — <span id="wr-corename"></span></strong>
           </div>
           <div class="field">
             <label>Where is the ROM?</label>
@@ -267,7 +300,6 @@ registerApp({
               (import more with the <b>Files</b> app) — <span id="wr-vfs-path"></span></p>
               <div id="wr-vfs-list" style="max-height:190px;overflow:auto;display:flex;flex-direction:column;gap:4px"></div>
             </div>
-            <button type="button" class="btn primary" id="wr-play" style="margin-top:10px">Play ROM</button>
           </div>
         </div>
       </section>`;
@@ -282,7 +314,14 @@ registerApp({
         const btn = e.target.closest('[data-bundled]');
         if (btn) playBundled(BUNDLED[Number(btn.dataset.bundled)]);
       });
-      main.querySelectorAll('[data-core]').forEach((b) => b.addEventListener('click', () => showUpload(b.dataset.core)));
+      main.querySelectorAll('[data-core]').forEach((b) => b.addEventListener('click', () => {
+        main.querySelectorAll('[data-core]').forEach((x) => x.classList.toggle('primary', x === b));
+        showUpload(b.dataset.core);
+      }));
+      main.querySelector('#wr-rom').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) play(main.querySelector('#wr-upload').dataset.core, file);
+      });
       main.querySelector('#wr-back').addEventListener('click', showEmuHome);
       main.querySelectorAll('[data-src]').forEach((b) => b.addEventListener('click', () => showSource(b.dataset.src)));
       main.querySelector('#wr-vfs-list').addEventListener('click', (e) => {
@@ -299,24 +338,7 @@ registerApp({
           renderVfs();
         } else if (btn.dataset.file) {
           vfsPick = btn.dataset.file;
-          renderVfs();
-        }
-      });
-      main.querySelector('#wr-play').addEventListener('click', async () => {
-        const upload = main.querySelector('#wr-upload');
-        const core = upload.dataset.core;
-        if (romSource === 'device') {
-          const file = main.querySelector('#wr-rom').files[0];
-          if (!file) { MH.toast('Choose a ROM file first.'); return; }
-          play(core, file);
-          return;
-        }
-        if (!vfsPick) { MH.toast('Choose a ROM file first.'); return; }
-        try {
-          const blob = await FS.readBlob(vfsPick);
-          play(core, new File([blob], FS.basename(vfsPick)));
-        } catch (err) {
-          MH.toast(err.message || 'Could not read that ROM.');
+          playVfsRom();
         }
       });
     }

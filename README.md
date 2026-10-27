@@ -9,7 +9,7 @@ text, and white/grey accents** (no colour in the UI).
 
 This build keeps the five desktop System apps from `main` and copies main's
 **file system suite** back in — **Files**, **Text Editor**, **Image Viewer**,
-**Media** and **PDF Viewer** — and every open/save across the desktop asks
+**VLC** and **PDF Viewer** — and every open/save across the desktop asks
 which file system to use: **your Files** (this computer) or the **proton
 file system** (the Files app). The **Celeste Classics** collection ships as one app — **Celeste Hub** —
 with an in-app chooser for which game to play (Celeste Classic, Celeste
@@ -48,7 +48,7 @@ game bundles and earlier built-in sites remain removed (except Test Page).
 | **Text Editor** (`text-editor`) | Open, edit and save text files in your home folder; proton's own files open read-only |
 | **PDF Viewer** (`pdf`) | Read PDF files in your browser's own viewer — no extra library, nothing uploaded |
 | **Image Viewer** (`image-viewer`) | View PNG, JPG, GIF, WebP, AVIF, BMP, ICO and SVG files with zoom and a folder playlist |
-| **Media** (`media`) | Play audio and video files stored in your home folder, with your browser's own codecs |
+| **VLC** (`media`) | The open-source VLC media player ported to WebAssembly (libvlc): menus, playlist, seek/volume/rate, tracks and subtitles; plays audio and video itself |
 | **Ruffle Flash Player** (`ruffle-flash-player`) | Load and play your own Flash .swf files |
 | **Web Retro** (`web-retro`) | Play the bundled classics — or your own ROMs — N64, SNES, NES and Game Boy (webretro) |
 | **2048** (`game-2048`) | Play 2048 - join the tiles |
@@ -202,7 +202,7 @@ created again.
 
 The password is stored in **`data/password.txt`** so it is easy to change:
 edit the password line in that file (lines starting with `#` are comments),
-save it, and reload the website. The default password is `proton`.
+save it, and reload the website. The default password is `hitter`.
 
 1. Every visit — fresh or refreshed — starts on the cover. Signing out
    returns there too, with the search field cleared.
@@ -306,13 +306,13 @@ Bookmarks and history are per-account data (`userData.bookmarks`,
   manager (drag/resize/minimise/maximise), toasts.
 - **Two file systems, one chooser** — every open/save asks whether to use
   **your Files** (this computer) or the **proton file system** (the Files
-  app, in this browser): the Text Editor, Files, Image Viewer, Media, PDF
+  app, in this browser): the Text Editor, Files, Image Viewer, VLC, PDF
   Viewer, Settings backups, Customize icons and Web Retro's ROM picker all
   work with either.
 - **Menu sections** — the start menu groups the apps by `cat=`: **System**
   (App Center, Customize, Settings, About, Browser), **Productivity**
   (Calculator, Files, Text Editor, PDF Viewer), **Media** (Image Viewer,
-  Media), **Tools** (Ruffle Flash Player, Web Retro, plus the not-preinstalled
+  VLC), **Tools** (Ruffle Flash Player, Web Retro, plus the not-preinstalled
   You Are An Idiot once installed) and **Games** (40 games: 2048, the Bloons TD series, the Henry Stickmin
   series, Pacman, Tetris, Slope, Tunnel Rush, the Exst Arcade batch below and more), with **My Apps** for
   anything an account adds. The order is `CATS` in `assets/core.js`.
@@ -343,7 +343,7 @@ Bookmarks and history are per-account data (`userData.bookmarks`,
   account, and saved web-apps remain launchable from the menu as before.
   Mail, Team Chat, Meetings, G-Talk and Admin Vault were removed
   earlier; the rest of the old bundles were removed with them, apart from the
-  file system suite (Files, Text Editor, Image Viewer, Media, PDF Viewer),
+  file system suite (Files, Text Editor, Image Viewer, VLC, PDF Viewer),
   which is copied back from `main`. All saved per account.
 - **Virtual file system** — `assets/fs.js` builds the full read-only `/` tree
   of this repository from `data/fs-manifest.js` plus each account's writable
@@ -351,7 +351,7 @@ Bookmarks and history are per-account data (`userData.bookmarks`,
   backup. **Files** is its manager (two layers in one tree: proton's own code
   above, your folders below), and the Browser opens any HTML page in it at
   `file:///path/to/page.html`. `FS.appFor()` maps an extension to the app that
-  opens it — Browser, PDF Viewer, Image Viewer, Media or Text Editor — and
+  opens it — Browser, PDF Viewer, Image Viewer, VLC or Text Editor — and
   Files is the fallback for anything no viewer claims (a `.zip`, say): it
   opens with that file selected so you can still inspect or download it.
   Storage is this browser's localStorage: text files save as text, imports as

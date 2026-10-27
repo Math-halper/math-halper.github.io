@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Terminal - proton app</title>
+</head>
+<body>
+<p>This file is a proton app. It is not meant to be opened on its own:
+open <a href="../../../index.html">proton</a> and launch <b>Terminal</b> from the
+proton menu. The script below is fetched and run by proton's HTML loader
+(assets/html-loader.js) at boot.</p>
+<!-- proton app: everything that registers and renders this app lives in
+     this one script block. Edit it, then reload proton. -->
+<script data-proton-app>
+/* proton app module: terminal — a small shell over the account's proton
+ * file system (the same FS the Files app uses). Commands: help, ls, cd,
+ * pwd, cat, echo, open, date, whoami, clear. Nothing here can touch the
+ * real device; paths stay inside the virtual home folder. */
+'use strict';
+
+/* ============================ TERMINAL ============================ */
+registerApp({
+  /* Metadata (name, icon, cat, desc, w, h) lives in the app catalog:
+   * data/applications.js — edit it there, not here. */
+  render(body) {
+    const user = (typeof currentUser !== 'undefined' && currentUser && currentUser.username) || 'user';
+    let cwd = FS.home();
+    const history = [];
+    let histIdx = -1;
+
+    body.innerHTML = `${bar('Terminal')}<div class="app-main" style="display:flex;flex-direction:column;background:#000;color:#fff">
+      <div id="term-out" style="flex:1;overflow:auto;padding:12px 14px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;line-height:1.5;white-space:pre-wrap;word-break:break-word"></div>
+      <form id="term-form" style="display:flex;gap:8px;align-items:center;padding:8px 14px;border-top:1px solid #333">
+        <span id="term-prompt" style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;color:#9ecbff"></span>
+        <input type="text" id="term-in" autocomplete="off" spellcheck="false" aria-label="Terminal command"
+          style="flex:1;background:#111;border:1px solid #444;color:#fff;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;padding:6px 8px">
+      </form>
+    </div>`;
+    const out = body.querySelector('#term-out');
+    const input = body.querySelector('#term-in');
+    const promptEl = body.querySelector('#term-prompt');
+    const nice = (p) => (p === FS.home() ? '~' : (p.startsWith(FS.home() + '/') ? '~' + p.slice(FS.home().length) : p));
+    const prompt = () => `${user}@proton:${nice(cwd)}$`;
+    const print = (text = '') => { out.textContent += text + '\n'; out.scrollTop = out.scrollHeight; };
+    promptEl.textContent = prompt();
+    print('proton terminal — type "help" for the commands.');
+
+    const resolve = (arg) => {
+      if (!arg) return cwd;
+      let p = arg.replace(/^~(?=\/|$)/, FS.home());
+      if (!p.startsWith('/')) p = cwd + '/' + p;
+      const parts = [];
+      for (const seg of p.split('/')) {
+        if (!seg || seg === '.') continue;
+        if (seg === '..') parts.pop(); else parts.push(seg);
+      }
+      return '/' + parts.join('/');
+    };
+
+    const commands = {
+      help() {
+        print([
+          'help            this list',
+          'ls [folder]     list a folder (default: here)',
+          'cd <folder>     move (cd .. goes up, cd goes home)',
+          'pwd             print the current folder',
+          'cat <file>      print a text file',
+          'echo <text>     print text',
+          'open <app>      open an app, e.g. open paint',
+          'date            the current date and time',
+          'whoami          your username',
+          'clear           clear the screen',
+        ].join('\n'));
+      },
+      pwd() { print(cwd); },
+      whoami() { print(user); },
+      date() { print(new Date().toString()); },
+      clear() { out.textContent = ''; },
+      echo(args) { print(args.join(' ')); },
+      async ls(args) {
+        const target = resolve(args[0]);
+        const entries = await FS.list(target);
+        if (!entries.length) { print('(empty)'); return; }
+        print(entries.map((e) => (e.type === 'dir' ? e.name + '/' : e.name)).join('  '));
+      },
+      async cd(args) {
+        const target = resolve(args[0]);
+        const entries = await FS.list(target).catch(() => null);
+        if (entries === null) { print(`cd: no such folder: ${args[0] || ''}`); return; }
+        cwd = target;
+        promptEl.textContent = prompt();
+      },
+      async cat(args) {
+        if (!args[0]) { print('cat: which file?'); return; }
+        try {
+          const blob = await FS.readBlob(resolve(args[0]));
+          print(await blob.text());
+        } catch (err) {
+          print(`cat: cannot read ${args[0]}`);
+        }
+      },
+      open(args) {
+        const id = (args[0] || '').toLowerCase();
+        if (!id) { print('open: which app? e.g. open paint'); return; }
+        if (typeof openApp === 'function' && APPS && APPS[id]) {
+          openApp(id);
+          print(`Opening ${APPS[id].name || id}...`);
+        } else {
+          print(`open: no app called "${args[0]}" — check the proton menu for names`);
+        }
+      },
+    };
+
+    body.querySelector('#term-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const line = input.value.trim();
+      input.value = '';
+      print(`${prompt()} ${line}`);
+      if (!line) return;
+      history.push(line);
+      histIdx = history.length;
+      const [cmd, ...args] = line.split(/\s+/);
+      const fn = commands[cmd.toLowerCase()];
+      if (!fn) { print(`Unknown command: ${cmd} — type "help"`); return; }
+      try { await fn(args); } catch (err) { print(`Error: ${err.message || err}`); }
+      promptEl.textContent = prompt();
+    });
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (!history.length) return;
+        histIdx = e.key === 'ArrowUp'
+          ? Math.max(0, histIdx - 1)
+          : Math.min(history.length, histIdx + 1);
+        input.value = history[histIdx] || '';
+      }
+    });
+    out.addEventListener('click', () => input.focus());
+    input.focus();
+  },
+});
+</script>
+</body>
+</html>

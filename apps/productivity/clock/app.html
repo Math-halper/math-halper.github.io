@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Clock - proton app</title>
+</head>
+<body>
+<p>This file is a proton app. It is not meant to be opened on its own:
+open <a href="../../../index.html">proton</a> and launch <b>Clock</b> from the
+proton menu. The script below is fetched and run by proton's HTML loader
+(assets/html-loader.js) at boot.</p>
+<!-- proton app: everything that registers and renders this app lives in
+     this one script block. Edit it, then reload proton. -->
+<script data-proton-app>
+/* proton app module: clock — the current time and date, a stopwatch and
+ * a countdown timer (which beeps when it finishes, where the browser
+ * allows audio). Timers stop themselves once the window is gone. */
+'use strict';
+
+/* ============================ CLOCK ============================ */
+registerApp({
+  /* Metadata (name, icon, cat, desc, w, h) lives in the app catalog:
+   * data/applications.js — edit it there, not here. */
+  render(body) {
+    body.innerHTML = `${bar('Clock')}<div class="app-main pad">
+      <div class="card" style="text-align:center;margin-bottom:12px">
+        <div id="clock-now" style="font-size:44px;line-height:1.15;font-variant-numeric:tabular-nums">--:--:--</div>
+        <div id="clock-date" class="muted"></div>
+      </div>
+      <div class="card" style="margin-bottom:12px">
+        <h4 style="margin:0 0 8px">Stopwatch</h4>
+        <div id="sw-display" style="font-size:30px;font-variant-numeric:tabular-nums;margin-bottom:8px">00:00.0</div>
+        <div style="display:flex;gap:8px">
+          <button type="button" class="btn sm primary" id="sw-toggle">Start</button>
+          <button type="button" class="btn sm" id="sw-reset">Reset</button>
+        </div>
+      </div>
+      <div class="card">
+        <h4 style="margin:0 0 8px">Timer</h4>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <input type="number" id="tm-min" min="0" max="999" value="5" style="width:80px" aria-label="Minutes">
+          <span class="muted">minutes</span>
+          <button type="button" class="btn sm primary" id="tm-toggle">Start timer</button>
+          <span id="tm-display" style="font-size:20px;font-variant-numeric:tabular-nums"></span>
+        </div>
+      </div>
+    </div>`;
+    const $ = (id) => body.querySelector('#' + id);
+    const alive = () => body.isConnected;
+    const pad2 = (n) => String(n).padStart(2, '0');
+
+    /* ---- clock ---- */
+    const tickClock = () => {
+      const now = new Date();
+      $('clock-now').textContent =
+        `${pad2(now.getHours())}:${pad2(now.getMinutes())}:${pad2(now.getSeconds())}`;
+      $('clock-date').textContent = now.toLocaleDateString(undefined,
+        { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    };
+    tickClock();
+    const clockTimer = setInterval(() => { if (alive()) tickClock(); else clearInterval(clockTimer); }, 250);
+
+    /* ---- stopwatch ---- */
+    let swStart = 0, swElapsed = 0, swRunning = false, swTimer = null;
+    const swShow = () => {
+      const ms = swElapsed + (swRunning ? Date.now() - swStart : 0);
+      const t = Math.floor(ms / 100);
+      $('sw-display').textContent =
+        `${pad2(Math.floor(t / 600))}:${pad2(Math.floor(t / 10) % 60)}.${t % 10}`;
+    };
+    $('sw-toggle').addEventListener('click', () => {
+      swRunning = !swRunning;
+      if (swRunning) {
+        swStart = Date.now();
+        $('sw-toggle').textContent = 'Pause';
+        swTimer = setInterval(() => { if (alive()) swShow(); else clearInterval(swTimer); }, 50);
+      } else {
+        swElapsed += Date.now() - swStart;
+        $('sw-toggle').textContent = 'Start';
+        clearInterval(swTimer);
+        swShow();
+      }
+    });
+    $('sw-reset').addEventListener('click', () => {
+      swRunning = false; swElapsed = 0;
+      clearInterval(swTimer);
+      $('sw-toggle').textContent = 'Start';
+      swShow();
+    });
+
+    /* ---- countdown timer ---- */
+    let tmEnd = 0, tmRunning = false, tmTimer = null;
+    const beep = () => {
+      try {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return;
+        const ac = new AC();
+        const osc = ac.createOscillator();
+        const gain = ac.createGain();
+        osc.frequency.value = 880;
+        gain.gain.setValueAtTime(0.15, ac.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.7);
+        osc.connect(gain).connect(ac.destination);
+        osc.start();
+        osc.stop(ac.currentTime + 0.7);
+        osc.onended = () => ac.close();
+      } catch (err) { /* no audio: the toast below still says time is up */ }
+    };
+    const tmShow = () => {
+      const left = Math.max(0, tmEnd - Date.now());
+      const s = Math.ceil(left / 1000);
+      $('tm-display').textContent = `${Math.floor(s / 60)}:${pad2(s % 60)}`;
+      return left;
+    };
+    const tmStop = () => { tmRunning = false; clearInterval(tmTimer); $('tm-toggle').textContent = 'Start timer'; };
+    $('tm-toggle').addEventListener('click', () => {
+      if (tmRunning) { tmStop(); $('tm-display').textContent = ''; return; }
+      const mins = Number($('tm-min').value);
+      if (!mins || mins <= 0) { MH.toast('Set how many minutes the timer runs for.'); return; }
+      tmEnd = Date.now() + mins * 60000;
+      tmRunning = true;
+      $('tm-toggle').textContent = 'Cancel';
+      tmShow();
+      tmTimer = setInterval(() => {
+        if (!alive()) { clearInterval(tmTimer); return; }
+        if (tmShow() <= 0) {
+          tmStop();
+          $('tm-display').textContent = 'Time up';
+          beep();
+          MH.toast('Timer finished.');
+        }
+      }, 200);
+    });
+  },
+});
+</script>
+</body>
+</html>

@@ -42,7 +42,7 @@ const FS = {
   BINARY_EXT: new Set([
     'png', 'jpg', 'jpeg', 'gif', 'webp', 'avif', 'bmp', 'ico', 'pdf',
     'ttf', 'otf', 'woff', 'woff2', 'mp3', 'm4a', 'aac', 'flac', 'mp4', 'wav',
-    'ogg', 'oga', 'ogv', 'mov', 'webm', 'avi', 'zip', 'gz', 'wasm', 'exe', 'dll', 'so',
+    'ogg', 'oga', 'ogv', 'mov', 'webm', 'avi', 'mkv', 'zip', 'gz', 'wasm', 'exe', 'dll', 'so',
   ]),
   /* localStorage holds the account, not just its files. Larger media should
    * be opened with Media/PDF Viewer directly from the computer instead. */
@@ -110,14 +110,14 @@ const FS = {
       webp: 'image/webp', avif: 'image/avif', bmp: 'image/bmp', ico: 'image/x-icon',
       mp3: 'audio/mpeg', m4a: 'audio/mp4', aac: 'audio/aac', flac: 'audio/flac',
       wav: 'audio/wav', ogg: 'audio/ogg', oga: 'audio/ogg', ogv: 'video/ogg',
-      mp4: 'video/mp4', mov: 'video/quicktime', webm: 'video/webm', avi: 'video/x-msvideo',
+      mp4: 'video/mp4', mov: 'video/quicktime', webm: 'video/webm', avi: 'video/x-msvideo', mkv: 'video/x-matroska',
     };
     return types[this.extname(path)] || (this.isBinary(path) ? 'application/octet-stream' : 'text/plain;charset=utf-8');
   },
   mediaKind(path) {
     const ext = this.extname(path);
     if (['mp3', 'm4a', 'aac', 'flac', 'wav', 'ogg', 'oga'].includes(ext)) return 'audio';
-    if (['mp4', 'mov', 'webm', 'avi', 'ogv'].includes(ext)) return 'video';
+    if (['mp4', 'mov', 'webm', 'avi', 'ogv', 'mkv'].includes(ext)) return 'video';
     return null;
   },
   /* Which app opens a file, by extension. The ids are catalog ids: an app

@@ -131,6 +131,18 @@ w=940
 h=600
 
 [application]
+id=system-monitor
+name=System Monitor
+path=apps/system/system-monitor/app.html
+icon=chart
+svg-icon=true
+cat=System
+preinstalled=true
+desc=Live CPU and memory graphs, open windows and storage
+w=760
+h=560
+
+[application]
 id=calculator
 name=Calculator
 path=apps/productivity/calculator/app.html
@@ -141,6 +153,18 @@ preinstalled=true
 desc=Do quick maths from the keypad or your keyboard
 w=360
 h=540
+
+[application]
+id=clock
+name=Clock
+path=apps/productivity/clock/app.html
+icon=clock
+svg-icon=true
+cat=Productivity
+preinstalled=true
+desc=The time and date, a stopwatch and a countdown timer
+w=420
+h=520
 
 [application]
 id=files
@@ -192,15 +216,39 @@ h=640
 
 [application]
 id=media
-name=Media
+name=VLC
 path=apps/media/media/app.html
 icon=film
 svg-icon=true
 cat=Media
 preinstalled=true
-desc=Play audio and video files stored in your home folder, with your browser's own codecs
+desc=VLC media player — the open-source libvlc engine compiled to WebAssembly; plays audio and video itself
 w=940
 h=620
+
+[application]
+id=paint
+name=Paint
+path=apps/media/paint/app.html
+icon=palette
+svg-icon=true
+cat=Media
+preinstalled=true
+desc=Draw on a canvas and save PNGs into your Pictures folder
+w=880
+h=640
+
+[application]
+id=piano
+name=Piano
+path=apps/media/piano/app.html
+icon=music
+svg-icon=true
+cat=Media
+preinstalled=true
+desc=Play two octaves, record what you play and hear it back
+w=780
+h=460
 
 [application]
 id=ruffle-flash-player
@@ -225,6 +273,18 @@ preinstalled=true
 desc=Play retro classics or your own ROMs - N64, SNES, NES, Game Boy
 w=980
 h=640
+
+[application]
+id=terminal
+name=Terminal
+path=apps/tools/terminal/app.html
+icon=terminal
+svg-icon=true
+cat=Tools
+preinstalled=true
+desc=A small shell over your proton Files: ls, cd, cat, open
+w=720
+h=500
 [application]
 id=you-are-an-idiot
 name=You Are An Idiot

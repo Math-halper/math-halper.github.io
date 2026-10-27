@@ -310,28 +310,46 @@ not be saved.", etc.).
   zoom levels), the image stage, a note area, and a status line with the
   image's natural dimensions; empty state "No image open" + **"Your pictures"**
   list.
-- **Media** — **Open…**, a **stage** with a native audio/video player, a
-  **Playlist** sidebar (`#md-side`), a note area and a status line (metadata
-  once loaded); empty state + inline "Open a media file" prompt.
+- **VLC** (the `media` app) — a port of the open-source VLC media
+  player: desktop-VLC style menus (**Media / Playback / Audio / Video /
+  Subtitle / Tools / Help**), a **Playlist** sidebar (`#vlc-playlist`),
+  the libvlc video canvas (`#vlc-canvas`), seek bar, play/pause/stop/
+  previous/next, repeat and shuffle, playback-rate and volume controls,
+  fullscreen, snapshots, audio/video/subtitle track selection and
+  external subtitle/audio files, plus a status line. Playback is by the
+  vendored libvlc engine compiled to WebAssembly
+  (`apps/media/media/vendor/libvlc/`, see CREDITS.md), so VLC itself
+  plays formats the browser cannot decode — nothing is transcoded or
+  uploaded. libvlc needs a cross-origin isolated page (SharedArrayBuffer);
+  until the **Enable VLC engine** button has loaded the root
+  `coi-serviceworker.js` shim and proton has reloaded once, the player
+  shows that prompt and queues the chosen file instead of playing it.
 
 ## 12. Tools
 
 - **Web Retro** — the vendored webretro emulator launcher. Its front page
-  is the desktop's own style with two clickable tabs:
+  is a black GUI with white text and two clickable tabs (the **ROMs** tab
+  is the default); hovering any option turns it deep dark blue, and a
+  picked option sits dark gray with white text. Text in the launcher is
+  not selectable, so no text caret appears over titles or labels:
   - **ROMs**: four console boxes — **NES**, **SNES**, **N64**, **GB** —
-    each showing its bundled-game count; picking a box brings up that
-    console's bundled games in a poster-art + title grid (click a game to
-    play it on its matching core; SNES has none bundled yet); a
-    saves/CREDITS note sits under the grid;
-  - **Emulators**: the same four console boxes, one per core (nestopia /
-    snes9x / mupen64plus_next / mgba). Picking one swaps to a "where from?"
-    screen — a top bar with a **←** back arrow to the boxes, then **From
-    proton Files** (a mini file browser over the account's home: crumbs,
-    folder rows, ROM rows, one level at a time) or **From your Files**
-    (the device file picker), and **Play ROM**;
+    in one row of four equal columns filling the full width of the top of
+    the tab, each showing its bundled-game count (the GB box names all its
+    parts: GB · GBC · GBA); picking a box brings up that console's bundled
+    games in a poster-art + title grid (click a game to play it on its
+    matching core); a saves/CREDITS note sits under the grid;
+  - **Emulators**: the same four console boxes in the same full-width,
+    evenly split row, one per core (nestopia / snes9x / mupen64plus_next /
+    mgba). Picking one turns it dark gray and swaps to a "where from?"
+    screen headed **Emulator — <console>** — a top bar with a large
+    **←** back-arrow button to the boxes, then **From proton Files** (a
+    mini file browser over the account's home: crumbs, folder rows, ROM
+    rows, one level at a time) or **From your Files** (the device file
+    picker). Picking a ROM launches it at once — there is no start button;
   - launching swaps the window to the emulator; **Change game** in the app bar
     brings up the chooser (the **ROMs** tab) again, and so does the
-    emulator's own menu-bar back arrow. Control bindings persist between games:
+    emulator's own menu-bar back arrow (drawn larger than upstream, with a
+    wider click target). Control bindings persist between games:
     keys set in the emulator's **Controls → Keybinds** manager (press
     **Save**) or in RetroArch's own menu (Settings → Input, then quit
     RetroArch or save the current configuration) are kept and reapplied
