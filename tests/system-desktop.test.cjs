@@ -997,16 +997,16 @@ test('the desktop boots, lists and opens all catalogued apps', async () => {
     assert.deepEqual([...retro.querySelectorAll('#wr-roms [data-console]')].map((b) => b.dataset.console),
       ['NES', 'SNES', 'N64', 'GB'], 'the ROMs tab is four console boxes, NES down to GB');
     const gridCount = () => retro.querySelectorAll('#wr-grid [data-bundled]').length;
-    assert.equal(gridCount(), 5, 'the NES box starts picked, with its games in the grid');
+    assert.equal(gridCount(), 9, 'the NES box starts picked, with its games in the grid');
     const firstArt = retro.querySelector('#wr-grid [data-bundled] img');
     assert.ok(firstArt && /^data\/icons\/.+\.jpeg$/.test(firstArt.getAttribute('src')),
       'bundled games show their poster art');
     retro.querySelector('[data-console="GB"]').click();
     assert.equal(gridCount(), 12, 'the GB box shows the GB/GBC/GBA games');
     retro.querySelector('[data-console="SNES"]').click();
-    assert.equal(gridCount(), 0, 'no SNES games are bundled');
+    assert.equal(gridCount(), 5, 'the SNES box shows the SNES games');
     retro.querySelector('[data-console="NES"]').click();
-    assert.equal(gridCount(), 5, 'picking NES again refills the grid');
+    assert.equal(gridCount(), 9, 'picking NES again refills the grid');
     retro.querySelector('[data-wr-tab="emulators"]').click();
     assert.equal(retro.querySelector('#wr-roms').hidden, true, 'the Emulators tab hides the ROMs tab');
     assert.equal(retro.querySelector('#wr-emulators').hidden, false, 'the Emulators tab shows its console boxes');
@@ -1463,13 +1463,17 @@ test('the Web Retro bundled ROM library is on disk', () => {
    * and every file's contents were identified from a labelled contact
    * sheet of the original upload before being pinned here by hash. */
   const COVER_HASHES = {
-    'doom-64': '2cd1418649e4', 'doom-gba': '54a4371d227f', 'excitebike': 'd1d66dcee713',
-    'grand-theft-auto-2': 'b2d44125f07c', 'grand-theft-auto-advance': '778b0b4601ec', 'grand-theft-auto': '8fa1ee942bdb',
-    'lego-star-wars-the-video-game': 'ffef75a31404', 'mario-kart-64': '56a0a47c72b9', 'mario-party': '1614b990be2b',
-    'paper-mario': '3016e9b6846d', 'pokemon-crystal': '3bc1f697ee02', 'pokemon-emerald': 'e36d289a2b1a',
-    'pokemon-red': '60129b90c936', 'pokemon-yellow': 'c287d537c1b8', 'space-invaders': 'f3f0c6513229',
-    'super-mario-advance': 'f2e913549cf3', 'super-mario-bros-2': '98fe15acfcd0', 'super-mario-bros-3': 'b1b5e238568d',
-    'super-mario-bros-deluxe': '43a08fbd8eb5', 'super-mario-bros-duck-hunt': 'e09e97027293', 'tetris-nes': 'ca58cd9b87bd',
+    'Castlevania': '63d7a8390bea', 'Contra': 'cd1dd7132512', 'banjo-kazooie': 'a1413cfb8acc',
+    'chrono-trigger': '285e9db261a4', 'donkey-kong-country': 'd78689ad5937', 'doom-64': '2cd1418649e4',
+    'doom-gba': '54a4371d227f', 'excitebike': 'd1d66dcee713', 'grand-theft-auto-2': 'b2d44125f07c',
+    'grand-theft-auto-advance': '778b0b4601ec', 'grand-theft-auto': '8fa1ee942bdb', 'lego-star-wars-the-video-game': 'ffef75a31404',
+    'mario-kart-64': '56a0a47c72b9', 'mario-party': '1614b990be2b', 'mega-man-2': '79ea0cbccd38',
+    'metroid': 'bf1bfb031205', 'paper-mario': '3016e9b6846d', 'pokemon-crystal': '3bc1f697ee02',
+    'pokemon-emerald': 'e36d289a2b1a', 'pokemon-red': '60129b90c936', 'pokemon-yellow': 'c287d537c1b8',
+    'space-invaders': 'f3f0c6513229', 'super-mario-64': '4e60a921ad5a', 'super-mario-advance': 'f2e913549cf3',
+    'super-mario-bros-2': '98fe15acfcd0', 'super-mario-bros-3': 'b1b5e238568d', 'super-mario-bros-deluxe': '43a08fbd8eb5',
+    'super-mario-bros-duck-hunt': 'e09e97027293', 'super-mario-world': '039bc3dd95ab', 'super-metroid': 'ddbb268835e7',
+    'super-smash-bros': '10d355992d29', 'tetris-nes': 'ca58cd9b87bd', 'the-legend-of-zelda-a-link-to-the-past': '980216a2f6dc',
     'yoshis-story': 'e7d9405b544a',
   };
   const crypto = require('node:crypto');

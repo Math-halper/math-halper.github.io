@@ -374,10 +374,13 @@ RetroArch compiled for the web by
 request, `apps/tools/web-retro/webretro/roms/` carries their own ROM
 library — supplied as `.zip` files, stored here extracted (the archives
 were dropped once the ROMs were unzipped): Mario Kart 64, Mario Party, Paper
-Mario, Doom 64 and Yoshi's Story (N64); Excitebike, Super Mario Bros. +
-Duck Hunt, Super Mario Bros. 2, Super Mario Bros. 3 and Tetris (NES);
-Doom, Grand Theft Auto Advance, LEGO Star Wars: The Video Game, Pokémon
-Emerald and Super Mario Advance (GBA); Grand Theft
+Mario, Doom 64, Yoshi's Story, Super Mario 64, Banjo-Kazooie and
+Super Smash Bros. (N64); Excitebike, Super Mario Bros. + Duck Hunt,
+Super Mario Bros. 2, Super Mario Bros. 3, Tetris, Castlevania, Contra,
+Mega Man 2 and Metroid (NES); Super Mario World, The Legend of
+Zelda: A Link to the Past, Donkey Kong Country, Super Metroid and
+Chrono Trigger (SNES); Doom, Grand Theft Auto Advance, LEGO Star Wars:
+The Video Game, Pokémon Emerald and Super Mario Advance (GBA); Grand Theft
 Auto, Grand Theft Auto 2, Pokémon Red, Pokémon Yellow, Pokémon Crystal,
 Space Invaders and Super Mario Bros. Deluxe (Game Boy/Color). Their box
 art (also maintainer-supplied) lives in `data/icons/` and fronts them in
