@@ -17,7 +17,9 @@ proton menu. The script below is fetched and run by proton's HTML loader
  * system. Loaded by index.html; calls registerApp() (see apps/README.md).
  *
  * FS.mediaKind() decides between <audio> and <video>: mp3, m4a, aac, flac, wav,
- * ogg and oga play as audio; mp4, mov, webm, avi, ogv and mkv as video. Bytes come
+ * ogg and oga play as audio; mp4, mov, webm, avi, ogv and mkv as video.
+ * Anything the browser still cannot decode is transcoded on-device by
+ * the vendored FFmpeg (vendor/, see CREDITS.md) when you ask it to. Bytes come
  * from FS.readBlob() and are handed to the browser's own codecs through a blob
  * URL — this site has no player library and adds no dependencies, so what your
  * browser can decode is what plays here (and what it cannot is reported, not
@@ -114,6 +116,106 @@ registerApp({
         played straight from your computer.</p></div></div>`;
       sync();
     }
+    /* ---- codec conversion (vendored FFmpeg, WebAssembly) ----
+     * Playback above is native: the browser either has the codec or it
+     * has not. When it has not, the fallback is to transcode the file
+     * here on the device with the vendored ffmpeg-core (see vendor/ and
+     * CREDITS.md) — video to H.264/AAC MP4, audio to MP3 — and play the
+     * result. Nothing is uploaded; the conversion costs time and memory
+     * roughly proportional to the file, and can be cancelled. */
+    const FFMPEG_VENDOR = 'apps/media/media/vendor/';
+    let ffmpegPromise = null;
+    let progressCb = null;
+    function loadScriptOnce(src) {
+      return new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = src;
+        s.onload = resolve;
+        s.onerror = () => reject(new Error(`Could not load ${src}`));
+        document.head.appendChild(s);
+      });
+    }
+    function getFfmpeg() {
+      if (!ffmpegPromise) {
+        ffmpegPromise = (async () => {
+          await loadScriptOnce(FFMPEG_VENDOR + 'ffmpeg.js');
+          const ff = new window.FFmpegWASM.FFmpeg();
+          ff.on('progress', ({ progress }) => { if (progressCb) progressCb(progress); });
+          await ff.load({
+            coreURL: new URL(FFMPEG_VENDOR + 'ffmpeg-core.js', document.baseURI).href,
+            wasmURL: new URL(FFMPEG_VENDOR + 'ffmpeg-core.wasm', document.baseURI).href,
+          });
+          return ff;
+        })();
+        ffmpegPromise.catch(() => { ffmpegPromise = null; });
+      }
+      return ffmpegPromise;
+    }
+    async function convertAndPlay(blob, name, kind, mine) {
+      const isAudio = kind === 'audio';
+      const ext = (name.split('.').pop() || 'bin').toLowerCase().replace(/[^a-z0-9]/g, '') || 'bin';
+      const inName = `input.${ext}`;
+      const outName = isAudio ? 'output.mp3' : 'output.mp4';
+      stage.innerHTML = `<div class="viewer-stage"><div class="fm-empty">${iconSvg('film')}
+        <p>Converting <b>${esc(name)}</b> to ${isAudio ? 'MP3' : 'MP4 (H.264/AAC)'}…</p>
+        <progress id="md-conv-bar" max="1" value="0" style="width:min(420px,80%)"></progress>
+        <p class="muted" style="font-size:12.5px">Conversion happens on this device and can take a while
+        ${blob.size > 150 * 1048576 ? ' — this is a large file, so expect several minutes' : ''}. Nothing is uploaded.</p>
+        <p><button type="button" class="btn sm" id="md-conv-cancel">Cancel</button></p></div></div>`;
+      say(`Converting <b>${esc(name)}</b> with the built-in FFmpeg…`);
+      let cancelled = false;
+      q('#md-conv-cancel').onclick = () => { cancelled = true; };
+      try {
+        const ff = await getFfmpeg();
+        if (cancelled || mine !== token) { return; }
+        progressCb = (p) => {
+          const bar = q('#md-conv-bar');
+          if (bar) bar.value = Math.max(0, Math.min(1, p));
+          if (cancelled) ff.terminate();
+        };
+        await ff.writeFile(inName, new Uint8Array(await blob.arrayBuffer()));
+        const args = isAudio
+          ? ['-i', inName, '-vn', '-c:a', 'libmp3lame', '-q:a', '3', outName]
+          : ['-i', inName, '-c:v', 'libx264', '-preset', 'ultrafast', '-crf', '23',
+             '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-b:a', '160k', '-movflags', '+faststart', outName];
+        const code = await ff.exec(args);
+        progressCb = null;
+        if (cancelled) throw new Error('Conversion cancelled.');
+        if (code !== 0) throw new Error(`FFmpeg could not convert this file (exit ${code}).`);
+        const data = await ff.readFile(outName);
+        await ff.deleteFile(inName).catch(() => {});
+        await ff.deleteFile(outName).catch(() => {});
+        if (mine !== token) return;
+        revoke();
+        url = URL.createObjectURL(new Blob([data], { type: isAudio ? 'audio/mpeg' : 'video/mp4' }));
+        stage.innerHTML = `<div class="viewer-stage"><${kind} id="md-el" controls autoplay preload="metadata"
+          aria-label="${esc(name)} (converted)"></${kind}></div>`;
+        const el = q('#md-el');
+        el.onloadedmetadata = () => { if (mine === token) statusLine(); };
+        el.src = url;
+        say(`<b>${esc(name)}</b> — converted to ${isAudio ? 'MP3' : 'MP4'} on this device because the browser lacks its codec.`);
+        statusLine();
+      } catch (err) {
+        progressCb = null;
+        ffmpegPromise = null;
+        if (mine !== token) return;
+        stage.innerHTML = `<div class="viewer-stage"><div class="fm-empty">${iconSvg('alert')}
+          <p>Could not convert <b>${esc(name)}</b>.</p>
+          <p class="muted" style="font-size:12.5px">${esc(err.message || String(err))} The original file is untouched.</p></div></div>`;
+        statusLine();
+      }
+    }
+    function convertPrompt(blob, name, kind, mine, whyHtml) {
+      stage.innerHTML = `<div class="viewer-stage"><div class="fm-empty">${iconSvg('alert')}
+        <p>This browser cannot play <b>${esc(name)}</b> — the codec is missing here.</p>
+        ${whyHtml}
+        <p><button type="button" class="btn sm primary" id="md-convert">Convert &amp; play</button></p>
+        <p class="muted" style="font-size:12.5px">Conversion runs entirely on this device (built-in FFmpeg);
+        the original file is not changed.</p></div></div>`;
+      q('#md-convert').onclick = () => convertAndPlay(blob, name, kind, mine);
+      statusLine();
+    }
+
     async function load(p) {
       const target = FS.normalize(p);
       const st = FS.stat(target);
@@ -138,13 +240,11 @@ registerApp({
         el.onerror = () => {
           if (mine !== token) return;
           revoke();
-          stage.innerHTML = `<div class="viewer-stage"><div class="fm-empty">${iconSvg('alert')}
-            <p>This browser cannot play <b>${esc(FS.basename(target))}</b> (${esc(blob.type || FS.mime(target))}).</p>
-            <p class="muted" style="font-size:12.5px">Download it and play it with an app on your computer — the file
-            itself is fine, only the codec is missing here.</p>${FS.extname(target) === 'mkv' ? `
+          convertPrompt(blob, FS.basename(target), kind, mine, `
+            <p class="muted" style="font-size:12.5px">(${esc(blob.type || FS.mime(target))}) Download it and play it with an app on your
+            computer, or convert it here — the file itself is fine, only the codec is missing.</p>${FS.extname(target) === 'mkv' ? `
             <p class="muted" style="font-size:12.5px">MKV is only a container: the picture and sound inside still need
-            codecs this browser has (H.264 with AAC usually plays; HEVC, AV1 or DTS often does not).</p>` : ''}</div></div>`;
-          statusLine();
+            codecs this browser has (H.264 with AAC usually plays; HEVC, AV1 or DTS often does not).</p>` : ''}`);
         };
         el.src = url;
         say(`<b>${esc(target)}</b> · ${esc(blob.type || FS.mime(target))} · playing from your account's file system, not the network.`);
@@ -185,7 +285,8 @@ registerApp({
       el.onended = () => { if (mine === token && !loop) step(1); };
       el.onerror = () => {
         if (mine !== token) return;
-        MH.toast(`This browser cannot play ${file.name} — the codec is missing here.${file.name.toLowerCase().endsWith('.mkv') ? ' Inside an MKV, H.264/AAC usually plays; HEVC, AV1 or DTS often does not.' : ''}`);
+        convertPrompt(file, file.name, kind, mine, file.name.toLowerCase().endsWith('.mkv') ? `
+          <p class="muted" style="font-size:12.5px">Inside an MKV, H.264/AAC usually plays; HEVC, AV1 or DTS often does not.</p>` : '');
       };
       el.src = url;
       sync();

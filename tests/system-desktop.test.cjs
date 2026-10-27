@@ -2143,6 +2143,20 @@ test('every kind of file has an app that opens it', async () => {
   } finally { close(); }
 });
 
+test('Media can convert codecs the browser lacks, with the vendored FFmpeg', () => {
+  const vendor = path.join(ROOT, 'apps/media/media/vendor');
+  for (const f of ['ffmpeg.js', '814.ffmpeg.js', 'ffmpeg-core.js', 'ffmpeg-core.wasm']) {
+    assert.ok(fs.existsSync(path.join(vendor, f)), `vendored FFmpeg file missing: vendor/${f}`);
+  }
+  assert.ok(fs.statSync(path.join(vendor, 'ffmpeg-core.wasm')).size > 20_000_000,
+    'ffmpeg-core.wasm should be the real FFmpeg core, not a stub');
+  const app = source('apps/media/media/app.html');
+  assert.match(app, /Convert & play|Convert &amp; play/, 'a failed playback should offer conversion');
+  assert.match(app, /ffmpeg-core\.wasm/, 'conversion should load the vendored core');
+  assert.match(app, /libx264/, 'video should convert to H.264 MP4');
+  assert.match(app, /libmp3lame/, 'audio should convert to MP3');
+});
+
 test('the desktop can link any file or folder again', async () => {
   const { w, errors, settle, saved, wins, close } = await bootDesktop();
   try {

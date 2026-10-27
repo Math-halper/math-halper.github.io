@@ -330,6 +330,29 @@ wrapper as well:
 Ordinary `<a href>` links to authors' own sites inside games are
 untouched: a reader may follow them, but nothing loads until they do.
 
+## Vendored media converter (FFmpeg, WebAssembly)
+
+The Media app can play files whose codecs the browser itself lacks by
+transcoding them on the device. That uses **FFmpeg compiled to
+WebAssembly**, vendored byte-for-byte from the npm packages
+[@ffmpeg/ffmpeg](https://www.npmjs.com/package/@ffmpeg/ffmpeg) and
+[@ffmpeg/core](https://www.npmjs.com/package/@ffmpeg/core) (the
+single-threaded core; no cross-origin isolation needed):
+
+- `apps/media/media/vendor/ffmpeg.js` and `814.ffmpeg.js` — the
+  `@ffmpeg/ffmpeg` 0.12.15 UMD wrapper (MIT, © the FFmpeg.wasm team);
+- `apps/media/media/vendor/ffmpeg-core.js` and `ffmpeg-core.wasm` —
+  `@ffmpeg/core` 0.12.10: FFmpeg (© the FFmpeg developers, GPL-3.0 —
+  this build includes libx264 and libmp3lame) compiled to WebAssembly.
+
+Nothing is modified: `apps/media/media/app.html` loads the wrapper only
+when a file fails to play natively and you choose **Convert & play**;
+video becomes H.264/AAC MP4, audio becomes MP3, entirely in the
+browser. The wrapper's own package is MIT; the core binary is a GPL
+build of FFmpeg — its licence travels with the wasm file, and building
+a differently-licensed core from the FFmpeg sources is possible if
+that ever matters.
+
 ## Vendored emulator (Web Retro)
 
 The Web Retro app (`apps/tools/web-retro/`) vendors the **webretro** emulator —

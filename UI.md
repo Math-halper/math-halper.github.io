@@ -312,7 +312,10 @@ not be saved.", etc.).
   list.
 - **Media** — **Open…**, a **stage** with a native audio/video player, a
   **Playlist** sidebar (`#md-side`), a note area and a status line (metadata
-  once loaded); empty state + inline "Open a media file" prompt.
+  once loaded); empty state + inline "Open a media file" prompt. A file
+  whose codec the browser lacks (an HEVC MKV, say) offers **Convert &
+  play**: the vendored FFmpeg (WebAssembly) transcodes it on-device to
+  MP4/MP3 with a progress bar and Cancel; the original is untouched.
 
 ## 12. Tools
 

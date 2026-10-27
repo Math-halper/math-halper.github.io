@@ -374,6 +374,11 @@ def collect():
             # or one bundled game manual would outrank the desktop.
             if rel.startswith('apps/games/') and fn != 'app.html' and rel != 'apps/games/index.html':
                 continue
+            # Vendored runtime trees (the FFmpeg WebAssembly build under
+            # the Media app) are likewise third-party code on disk, not
+            # prose this repository speaks with.
+            if '/vendor/' in rel:
+                continue
             files.append(rel)
     files.sort()
     return files
