@@ -1334,16 +1334,12 @@ function readyForInit(files) {
 		document.removeEventListener("drop", fileDropped);
 	}
 	
-	if (romMode == "querystring" && (queries.hasOwnProperty("forcestartbutton") || !isAudioAllowed())) {
-		// start button (don't delete this section, audio contexts are not allowed to start until a user gesture on the page, in this case, clicking the start button) https://goo.gl/7K7WLu
-		startButton.style.display = "initial";
-		startButton.onclick = function() {
-			startButton.style.display = "none";
-			initFromData(files);
-		}
-	} else {
-		initFromData(files);
-	}
+	// proton: the Start button gate is removed on purpose — a game
+	// picked in the launcher boots straight in instead of waiting on
+	// this button click (upstream waits for the click only so the
+	// audio context may start; here the game starts muted and the
+	// browser allows audio from the first input in the frame).
+	initFromData(files);
 }
 
 // prepare FS with bundle

@@ -1486,6 +1486,14 @@ test('the Web Retro bundled ROM library is on disk', () => {
  * manager's localStorage entry on every launch — so main.js harvests the
  * bindings back out of the config file whenever RetroArch saves it (and
  * again on pagehide), or every in-game rebind would be lost. */
+test('Web Retro boots games straight in, with no Start button', () => {
+  const src = fs.readFileSync(path.join(ROOT, 'apps/tools/web-retro/webretro/main.js'), 'utf8');
+  assert.ok(!src.includes('startButton.style.display = "initial"'),
+    'the emulator must not wait on the Start button before booting a game');
+  assert.match(src, /readyForInit[\s\S]*?initFromData\(files\)/,
+    'the ROM hand-off still boots the emulator');
+});
+
 test('Web Retro keeps control bindings between games', () => {
   const src = fs.readFileSync(path.join(ROOT, 'apps/tools/web-retro/webretro/main.js'), 'utf8');
   // the harvest helper is pure: pull it out and run it for real

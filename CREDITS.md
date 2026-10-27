@@ -344,12 +344,17 @@ RetroArch compiled for the web by
   libretro/RetroArch — and the `assets/` they load, plus the maintainer's
   own ROM library under `roms/` (next point). The GIMP source
   `controller_layout.xcf` is not a runtime asset and is omitted; everything
-  else is byte-for-byte as upstream, except for two proton fixes.
+  else is byte-for-byte as upstream, except for three proton changes.
   In `main.js`: bindings changed in RetroArch's own menu are harvested
   from the `retroarch.cfg` it writes back into the keybind manager's
   localStorage entry (`harvestKeybindsFromConfigText` /
   `persistKeybindsFromConfig`), so control bindings persist between
-  games instead of resetting on every launch. In `launch.html`: the
+  games instead of resetting on every launch; and the Start-button
+  gate in `readyForInit` is removed, so a launched game boots straight
+  in instead of waiting for a click on Start (upstream waits for the
+  click only so the audio context may start; here the game starts
+  muted and audio follows the first input in the frame).
+  In `launch.html`: the
   menu-bar back arrow posts a `webretro-back` message to the proton
   launcher instead of linking to `.` (webretro's own core-select page,
   which proton does not ship, so the link 404'd). The core/wasm
