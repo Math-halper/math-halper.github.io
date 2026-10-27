@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>System Monitor - proton app</title>
+</head>
+<body>
+<p>This file is a proton app. It is not meant to be opened on its own:
+open <a href="../../../index.html">proton</a> and launch <b>System Monitor</b> from the
+proton menu. The script below is fetched and run by proton's HTML loader
+(assets/html-loader.js) at boot.</p>
+<!-- proton app: everything that registers and renders this app lives in
+     this one script block. Edit it, then reload proton. -->
+<script data-proton-app>
+/* proton app module: system-monitor — live CPU and memory graphs (the
+ * load is simulated, as befits a fake OS, but it rises with the number
+ * of open windows), the real list of open windows — closable from here —
+ * and real storage figures: the account's file count and byte total from
+ * FS.count(), and the browser's own storage estimate where available. */
+'use strict';
+
+/* ============================ SYSTEM MONITOR ============================ */
+registerApp({
+  /* Metadata (name, icon, cat, desc, w, h) lives in the app catalog:
+   * data/applications.js — edit it there, not here. */
+  render(body) {
+    body.innerHTML = `${bar('System Monitor')}<div class="app-main pad">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+        <div class="card">
+          <div class="muted">CPU</div>
+          <div id="sm-cpu-now" style="font-size:32px;font-variant-numeric:tabular-nums">–</div>
+          <svg id="sm-cpu-graph" viewBox="0 0 100 30" preserveAspectRatio="none" style="width:100%;height:52px;display:block">
+            <polyline id="sm-cpu-line" fill="none" stroke="currentColor" stroke-width="1.4" points=""/>
+          </svg>
+        </div>
+        <div class="card">
+          <div class="muted">Memory</div>
+          <div id="sm-mem-now" style="font-size:32px;font-variant-numeric:tabular-nums">–</div>
+          <svg id="sm-mem-graph" viewBox="0 0 100 30" preserveAspectRatio="none" style="width:100%;height:52px;display:block">
+            <polyline id="sm-mem-line" fill="none" stroke="currentColor" stroke-width="1.4" points=""/>
+          </svg>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:12px">
+        <h4 style="margin:0 0 8px">This account</h4>
+        <div id="sm-stats" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px"></div>
+      </div>
+      <div class="card">
+        <h4 style="margin:0 0 8px">Open windows</h4>
+        <div id="sm-procs"></div>
+      </div>
+    </div>`;
+    const $ = (id) => body.querySelector('#' + id);
+    const alive = () => body.isConnected;
+    const fmtBytes = (n) => {
+      if (n === null || n === undefined || Number.isNaN(n)) return '—';
+      const units = ['B', 'KB', 'MB', 'GB'];
+      let i = 0;
+      while (n >= 1024 && i < units.length - 1) { n /= 1024; i++; }
+      return `${n.toFixed(i ? 1 : 0)} ${units[i]}`;
+    };
+
+    /* Simulated load, drifting like a real machine at idle; more open
+     * windows means a busier machine. */
+    const HIST = 48;
+    const cpuHist = Array(HIST).fill(4);
+    const memHist = Array(HIST).fill(24);
+    let cpu = 6, mem = 26;
+    const walk = (v, target, step) => {
+      v += (Math.random() - 0.5) * step + (target - v) * 0.08;
+      return Math.max(1, Math.min(99, v));
+    };
+    const points = (hist) => hist.map((v, i) =>
+      `${(i / (HIST - 1)) * 100},${30 - (v / 100) * 29}`).join(' ');
+
+    let lastProcSig = '';
+    const renderProcs = () => {
+      const rows = [];
+      for (const [key, win] of wins) {
+        const base = key.split('#')[0];
+        const name = (APPS[base] && APPS[base].name) || win.title || base;
+        rows.push(`<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--line)">
+          <span style="flex:1">${MH.esc(name)}${key === 'system-monitor' ? ' <span class="muted">(this window)</span>' : ''}</span>
+          <span class="muted">${MH.esc(key)}</span>
+          <button type="button" class="btn sm" data-close="${MH.esc(key)}">Close</button>
+        </div>`);
+      }
+      $('sm-procs').innerHTML = rows.length ? rows.join('') : '<p class="muted" style="margin:0">No windows open.</p>';
+    };
+    $('sm-procs').addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-close]');
+      if (btn) closeWin(btn.dataset.close, true);
+    });
+
+    const renderStats = async () => {
+      const counts = FS.count();
+      let browser = '—';
+      try {
+        if (navigator.storage && typeof navigator.storage.estimate === 'function') {
+          const est = await navigator.storage.estimate();
+          if (est && typeof est.usage === 'number') browser = fmtBytes(est.usage);
+        }
+      } catch (err) { /* estimate unavailable: leave the dash */ }
+      if (browser === '—') {
+        try {
+          let bytes = 0;
+          for (let i = 0; i < localStorage.length; i++) {
+            const k = localStorage.key(i);
+            if (k && k.startsWith('proton2.')) bytes += k.length + (localStorage.getItem(k) || '').length;
+          }
+          browser = `${fmtBytes(bytes)} (accounts)`;
+        } catch (err) { /* storage unavailable */ }
+      }
+      $('sm-stats').innerHTML = [
+        ['Open windows', String(wins.size)],
+        ['Files in your home', String(counts.files)],
+        ['Folders', String(counts.dirs)],
+        ['Home data', fmtBytes(counts.bytes)],
+        ['Browser storage', browser],
+      ].map(([k, v]) => `<div><div class="muted">${k}</div><div style="font-size:19px">${MH.esc(v)}</div></div>`).join('');
+    };
+
+    const tick = () => {
+      cpu = walk(cpu, 6 + wins.size * 3, 7);
+      mem = walk(mem, 24 + Math.min(30, wins.size * 3), 3);
+      cpuHist.push(cpu); cpuHist.shift();
+      memHist.push(mem); memHist.shift();
+      $('sm-cpu-now').textContent = `${Math.round(cpu)}%`;
+      $('sm-mem-now').textContent = `${Math.round(mem)}%`;
+      $('sm-cpu-line').setAttribute('points', points(cpuHist));
+      $('sm-mem-line').setAttribute('points', points(memHist));
+      const sig = [...wins.keys()].join(',');
+      if (sig !== lastProcSig) { lastProcSig = sig; renderProcs(); renderStats(); }
+    };
+    tick();
+    renderStats();
+    const timer = setInterval(() => { if (alive()) tick(); else clearInterval(timer); }, 1000);
+  },
+});
+</script>
+</body>
+</html>

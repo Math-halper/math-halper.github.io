@@ -131,6 +131,18 @@ w=940
 h=600
 
 [application]
+id=system-monitor
+name=System Monitor
+path=apps/system/system-monitor/app.html
+icon=chart
+svg-icon=true
+cat=System
+preinstalled=true
+desc=Live CPU and memory graphs, open windows and storage
+w=760
+h=560
+
+[application]
 id=calculator
 name=Calculator
 path=apps/productivity/calculator/app.html

@@ -113,6 +113,7 @@ matching the menu sections (`cat=`, ordered by `CATS` in `assets/core.js`).
 | `system/` | Settings (`settings`) — account, wallpaper & accent, password, backup, accounts on this device |
 | `system/` | About (`about`) — provenance, licence, what's inside |
 | `system/` | Browser (`browser`) — Test Page, saved websites, external addresses and VFS HTML files |
+| `system/` | System Monitor (`system-monitor`) — CPU/memory graphs, open windows, storage |
 | `productivity/` | Calculator (`calculator`) — quick maths from the keypad or your keyboard |
 | `productivity/` | Clock (`clock`) — the time and date, a stopwatch and a countdown timer |
 | `productivity/` | Files (`files`) — browse, create, rename, move, import, search and download the virtual file system |

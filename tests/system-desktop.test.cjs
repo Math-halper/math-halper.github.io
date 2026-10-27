@@ -21,14 +21,14 @@ const ROOT = path.resolve(__dirname, '..');
 const source = (p) => fs.readFileSync(path.join(ROOT, p), 'utf8');
 /* The file system suite FS.appFor() resolves files to. */
 const FS_APPS = ['files', 'text-editor', 'image-viewer', 'media', 'pdf'];
-const SYSTEM_APPS = ['appcenter', 'customize', 'settings', 'about', 'browser', 'calculator', 'clock', 'files', 'text-editor', 'pdf', 'image-viewer', 'media', 'paint', 'piano', 'ruffle-flash-player', 'web-retro', 'terminal', 'you-are-an-idiot', 'game-2048', 'bloons-tower-defense-1', 'bloons-tower-defense-2', 'bloons-tower-defense-5', 'bloxorz', 'breaking-the-bank', 'celeste-hub', 'cookie-clicker', 'drive-mad', 'escaping-the-prison', 'fleeing-the-complex', 'grey-box-testing', 'infiltrating-the-airship', 'mari0', 'offline-paradise', 'pacman', 'slope', 'spacebar-clicker', 'stack', 'stealing-the-diamond', 'stickman-hook', 'sm64', 'tetris', 'the-impossible-quiz', 'tunnel-rush', 'baldis-basics', 'minesweeper', 'flappy-bird', 'retro-bowl', 'drift-boss', 'football-bros', 'five-nights-at-freddys-1', 'five-nights-at-freddys-4', 'five-nights-at-freddys-2', 'five-nights-at-freddys-3', 'backrooms', 'kart-bros', 'geometry-dash-lite', 'five-nights-at-freddys-sl', 'bitburner'];
+const SYSTEM_APPS = ['appcenter', 'customize', 'settings', 'about', 'browser', 'system-monitor', 'calculator', 'clock', 'files', 'text-editor', 'pdf', 'image-viewer', 'media', 'paint', 'piano', 'ruffle-flash-player', 'web-retro', 'terminal', 'you-are-an-idiot', 'game-2048', 'bloons-tower-defense-1', 'bloons-tower-defense-2', 'bloons-tower-defense-5', 'bloxorz', 'breaking-the-bank', 'celeste-hub', 'cookie-clicker', 'drive-mad', 'escaping-the-prison', 'fleeing-the-complex', 'grey-box-testing', 'infiltrating-the-airship', 'mari0', 'offline-paradise', 'pacman', 'slope', 'spacebar-clicker', 'stack', 'stealing-the-diamond', 'stickman-hook', 'sm64', 'tetris', 'the-impossible-quiz', 'tunnel-rush', 'baldis-basics', 'minesweeper', 'flappy-bird', 'retro-bowl', 'drift-boss', 'football-bros', 'five-nights-at-freddys-1', 'five-nights-at-freddys-4', 'five-nights-at-freddys-2', 'five-nights-at-freddys-3', 'backrooms', 'kart-bros', 'geometry-dash-lite', 'five-nights-at-freddys-sl', 'bitburner'];
 
 /* Menu sections for each app (data/applications.js cat=), in catalog order.
  * Every new app is filed here with its respective section — the catalog test
  * asserts each app's cat matches, and the boot test asserts the five menu
  * groups, so an unfiled app fails the suite. */
 const SYSTEM_CATS = {
-  appcenter: 'System', customize: 'System', settings: 'System', about: 'System', browser: 'System',
+  appcenter: 'System', customize: 'System', settings: 'System', about: 'System', browser: 'System', 'system-monitor': 'System',
   calculator: 'Productivity', clock: 'Productivity', files: 'Productivity', 'text-editor': 'Productivity', pdf: 'Productivity',
   'image-viewer': 'Media', media: 'Media', paint: 'Media', piano: 'Media',
   'game-2048': 'Games',
@@ -1245,7 +1245,7 @@ test('Customize saves, displays and resets uploaded app icon images', async () =
     const browserWindow = w.eval('wins').get('browser');
     assert.equal(body.querySelector('#cust-files-shortcut'), null, 'Customize still offers a Files shortcut');
     assert.deepEqual([...body.querySelectorAll('#cust-modlist .card b')].map((b) => b.textContent).slice(0, SYSTEM_APPS.length),
-            ["App Center", "Customize", "Settings", "About", "Browser", "Calculator", "Clock", "Files", "Text Editor", "PDF Viewer", "Image Viewer", "Media", "Paint", "Piano", "Ruffle Flash Player", "Web Retro", "Terminal", "You Are An Idiot", "2048", "Bloons Tower Defense 1", "Bloons Tower Defense 2", "Bloons Tower Defense 5", "Bloxorz", "Breaking The Bank", "Celeste Hub", "Cookie Clicker", "Drive Mad", "Escaping The Prison", "Fleeing The Complex", "Grey Box Testing", "Infiltrating The Airship", "Mari0", "Offline Paradise", "Pacman", "Slope", "Spacebar Clicker", "Stack", "Stealing The Diamond", "Stickman Hook", "Super Mario 64", "Tetris", "The Impossible Quiz", "Tunnel Rush", "Baldi's Basics", "Minesweeper", "Flappy Bird", "Retro Bowl", "Drift Boss", "Football Bros", "Five Nights at Freddy's", "Five Nights at Freddy's 4", "Five Nights at Freddy's 2", "Five Nights at Freddy's 3", "Backrooms", "Kart Bros", "Geometry Dash Lite", "Five Nights at Freddy's: Sister Location", "Bitburner"]);
+            ["App Center", "Customize", "Settings", "About", "Browser", "System Monitor", "Calculator", "Clock", "Files", "Text Editor", "PDF Viewer", "Image Viewer", "Media", "Paint", "Piano", "Ruffle Flash Player", "Web Retro", "Terminal", "You Are An Idiot", "2048", "Bloons Tower Defense 1", "Bloons Tower Defense 2", "Bloons Tower Defense 5", "Bloxorz", "Breaking The Bank", "Celeste Hub", "Cookie Clicker", "Drive Mad", "Escaping The Prison", "Fleeing The Complex", "Grey Box Testing", "Infiltrating The Airship", "Mari0", "Offline Paradise", "Pacman", "Slope", "Spacebar Clicker", "Stack", "Stealing The Diamond", "Stickman Hook", "Super Mario 64", "Tetris", "The Impossible Quiz", "Tunnel Rush", "Baldi's Basics", "Minesweeper", "Flappy Bird", "Retro Bowl", "Drift Boss", "Football Bros", "Five Nights at Freddy's", "Five Nights at Freddy's 4", "Five Nights at Freddy's 2", "Five Nights at Freddy's 3", "Backrooms", "Kart Bros", "Geometry Dash Lite", "Five Nights at Freddy's: Sister Location", "Bitburner"]);
 
     const uploadBrowserIcon = async () => {
       const input = body.querySelector('[data-micon-file="browser"]');
@@ -1779,6 +1779,27 @@ function clickLabel(host, label) {
   button.click();
   return button;
 }
+
+test('System Monitor reports real desktop state', async () => {
+  const { w, wins, close } = await bootDesktop();
+  try {
+    w.openApp('calculator');
+    w.openApp('system-monitor');
+    const mon = wins.get('system-monitor').body;
+    assert.match(mon.querySelector('#sm-cpu-now').textContent, /%/, 'the CPU readout shows a percentage');
+    const rows = mon.querySelector('#sm-procs').textContent;
+    assert.match(rows, /Calculator/, 'the window list should name the open Calculator');
+    assert.match(rows, /System Monitor/, 'the window list should include itself');
+    assert.match(mon.querySelector('#sm-stats').textContent, /Open windows/);
+    const closeBtn = mon.querySelector('[data-close="calculator"]');
+    assert.ok(closeBtn, 'each open window gets a Close button');
+    closeBtn.click();
+    assert.ok(!wins.has('calculator'), 'Close should close that window');
+    w.closeWin('system-monitor', true);
+  } finally {
+    close();
+  }
+});
 
 test('Paint, Piano, Terminal and Clock render and respond', async () => {
   const { w, wins, close } = await bootDesktop();
