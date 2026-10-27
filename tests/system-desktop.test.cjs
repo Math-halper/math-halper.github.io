@@ -1854,6 +1854,54 @@ test('Paint, Piano, Terminal and Clock render and respond', async () => {
     assert.match(term.querySelector('#term-out').textContent, /Downloads/);
     await run('bogus');
     assert.match(term.querySelector('#term-out').textContent, /Unknown command: bogus/);
+
+    // The file commands work against the same virtual file system:
+    // mkdir / touch / cp / mv / find / stat / tree / rm.
+    await run('mkdir Notes');
+    await run('touch Notes/first.txt');
+    assert.equal(await w.eval("FS.read('/home/ada/Notes/first.txt')"), '');
+    await run('cp Notes/first.txt Notes/second.txt');
+    assert.equal(w.eval("FS.exists('/home/ada/Notes/second.txt')"), true, 'cp copies the file');
+    await run('mv Notes/second.txt Notes/renamed.txt');
+    assert.equal(w.eval("FS.exists('/home/ada/Notes/second.txt')"), false, 'mv moves the file away');
+    assert.equal(w.eval("FS.exists('/home/ada/Notes/renamed.txt')"), true, 'mv lands the file at the new name');
+    await run('stat Notes/renamed.txt');
+    assert.match(term.querySelector('#term-out').textContent, /Type: file/);
+    await run('find renamed');
+    assert.match(term.querySelector('#term-out').textContent, /\/home\/ada\/Notes\/renamed\.txt/);
+    await run('tree Notes');
+    const treeOut = term.querySelector('#term-out').textContent;
+    assert.match(treeOut, /├── first\.txt/, 'tree draws the folder with branch glyphs');
+    assert.match(treeOut, /└── renamed\.txt/);
+    assert.match(treeOut, /0 directories, 2 files/);
+    await run('rm Notes/renamed.txt');
+    assert.equal(w.eval("FS.exists('/home/ada/Notes/renamed.txt')"), false, 'rm deletes the file');
+    await run('rm Notes');
+    assert.match(term.querySelector('#term-out').textContent, /rm: Directory not empty/, 'rm refuses a non-empty folder without -r');
+    await run('rm -r Notes');
+    assert.equal(w.eval("FS.exists('/home/ada/Notes')"), false, 'rm -r deletes the folder');
+
+    // nano edits a file in the terminal: type, Ctrl+S writes, Ctrl+X exits.
+    await run('nano edit-me.txt');
+    const ta = term.querySelector('#nano-ta');
+    assert.ok(ta && term.querySelector('#term-nano').style.display === 'flex', 'nano opens its editor pane');
+    ta.value = 'written in nano';
+    ta.dispatchEvent(new w.KeyboardEvent('keydown', { key: 's', ctrlKey: true, bubbles: true, cancelable: true }));
+    assert.equal(await w.eval("FS.read('/home/ada/edit-me.txt')"), 'written in nano', 'Ctrl+S writes the file');
+    assert.match(term.querySelector('#term-out').textContent, /Wrote .*lines to ~\/edit-me\.txt/);
+    // Unsaved changes ask before exiting; Discard drops them.
+    ta.value = 'changed but unwanted';
+    ta.dispatchEvent(new w.Event('input', { bubbles: true }));
+    ta.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'x', ctrlKey: true, bubbles: true, cancelable: true }));
+    assert.equal(term.querySelector('#nano-confirm').style.display, 'flex', 'nano asks before discarding changes');
+    term.querySelector('#nano-confirm-discard').click();
+    assert.equal(term.querySelector('#term-nano').style.display, 'none', 'discard closes nano');
+    assert.equal(await w.eval("FS.read('/home/ada/edit-me.txt')"), 'written in nano', 'discarded edits were not saved');
+    // A clean nano exits straight away on Ctrl+X.
+    await run('nano edit-me.txt');
+    assert.equal(ta.value, 'written in nano', 'nano reopens with the saved text');
+    ta.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'x', ctrlKey: true, bubbles: true, cancelable: true }));
+    assert.equal(term.querySelector('#term-nano').style.display, 'none', 'Ctrl+X exits nano when nothing changed');
     w.closeWin('terminal', true);
   } finally {
     close();

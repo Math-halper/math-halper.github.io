@@ -125,7 +125,7 @@ matching the menu sections (`cat=`, ordered by `CATS` in `assets/core.js`).
 | `media/` | Piano (`piano`) — two playable octaves with record and playback |
 | `tools/` | Ruffle Flash Player (`ruffle-flash-player`) — the vendored Ruffle Flash player (from Gams-Offline/Gams `g/g/Ruffle/`, without the swfs library) plus its wrapper |
 | `tools/` | Web Retro (`web-retro`) — the vendored webretro emulator (the maintainer's bundled ROM library, or your own ROMs — from this computer or proton Files) |
-| `tools/` | Terminal (`terminal`) — a small shell over the proton file system (ls, cd, cat, open) |
+| `tools/` | Terminal (`terminal`) — a small shell over the proton file system (ls, cd, cat, pwd, echo, open, nano, tree, mkdir, touch, rm, cp, mv, find, stat) |
 | `games/` | 2048 (`game-2048`) — the vendored single-file game (from Gams-Offline/Gams `g/`) plus its wrapper |
 | `games/` | Bloons Tower Defense 1 (`bloons-tower-defense-1`) — the vendored Flash build and loader shim (from Gams-Offline/Gams `g/g/Ruffle/swfs/`; runs on the shared Ruffle player) plus its wrapper |
 | `games/` | Bloons Tower Defense 2 (`bloons-tower-defense-2`) — the vendored Flash build and loader shim (from Gams-Offline/Gams `g/g/Ruffle/swfs/`; runs on the shared Ruffle player) plus its wrapper |
