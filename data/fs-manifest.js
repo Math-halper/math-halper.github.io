@@ -1750,7 +1750,7 @@ window.PROTON_FS_MANIFEST = [
   { p: 'data/icons/webretro.png', s: 8658 },
   { p: 'data/icons/yoshis-story.jpeg', s: 32922 },
   { p: 'data/password.txt', s: 166 },
-  { p: 'data/search-index.js', s: 94943 },
+  { p: 'data/search-index.js', s: 94962 },
   { p: 'data/websites.js', s: 1823 },
   { p: 'index.html', s: 13478 },
   { p: 'package-lock.json', s: 18599 },

@@ -202,7 +202,7 @@ created again.
 
 The password is stored in **`data/password.txt`** so it is easy to change:
 edit the password line in that file (lines starting with `#` are comments),
-save it, and reload the website. The default password is `proton`.
+save it, and reload the website. The default password is `hitter`.
 
 1. Every visit — fresh or refreshed — starts on the cover. Signing out
    returns there too, with the search field cleared.
