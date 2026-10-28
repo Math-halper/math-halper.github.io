@@ -266,6 +266,31 @@ picked it, so VLC tells you to *Media → Download / save copy…* it into proto
 Files and open that copy in a tab; and inside the tab, Alt+Enter reports that
 VLC is already in a browser tab of its own.
 
+## VLC: audio and keys
+
+Two things VLC gets right everywhere — MKV included, because VLC reads the file
+with its own demuxer first and FFmpeg's second, so the extension never decides
+whether something plays:
+
+- **Keys follow the front window.** The shortcut handler sits on the document,
+  not on the app's own box, so VLC answers its keys whenever it is the window in
+  front — clicking the video is enough (and focuses the stage) — or always, in
+  VLC's own browser tab. It stays out of the way of text fields, of a dialog
+  opened from VLC, of the start menu and panel, and of another app's window.
+- **Sound starts on the first click.** Browsers only let a page make sound after
+  it has been clicked, and VLC's audio output is also the clock that paces
+  playback. So the app owns the page's `AudioContext`: it is created at the first
+  real click or key press inside VLC, resumed by every later one, and handed to
+  the engine instead of the engine making a suspended one seconds later. If the
+  browser still holds audio back mid-playback, VLC says
+  *“VLC is playing, but the browser is holding the audio back”* and offers
+  **Enable audio** — it never plays silently.
+
+*Tools → Messages* reports the engine, the audio state and the output level;
+*Media → Media information* lists the tracks and codecs VLC read; and a failed
+open lists what it found (or says it found no tracks at all — usually an
+incomplete file).
+
 ## Search
 
 The Browser's bar is a search bar first: **type words and it searches, type an

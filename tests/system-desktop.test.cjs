@@ -2371,6 +2371,103 @@ test('VLC hands its video to a browser tab and the shortcuts go with it', async 
   }
 });
 
+test('VLC hotkeys answer the keyboard wherever the focus is, like desktop VLC', async () => {
+  const { w, wins, close } = await bootDesktop();
+  try {
+    w.openApp('media');
+    const media = wins.get('media').body;
+    const status = () => media.querySelector('#vlc-status-text').textContent;
+    /* A real click on the video leaves the focus on the document (a proton
+     * window has no tabindex), so this is the key press that used to be lost. */
+    const press = (init) => w.document.body.dispatchEvent(
+      new w.KeyboardEvent('keydown', { bubbles: true, cancelable: true, ...init }));
+
+    media.querySelector('#vlc-playlist')?.click();
+    press({ key: 'l' });
+    assert.equal(media.querySelector('#vlc-repeat').getAttribute('aria-pressed'), 'true',
+      'L must cycle repeat with focus on the document, not only inside the app');
+    press({ key: 'r' });
+    assert.equal(media.querySelector('#vlc-shuffle').getAttribute('aria-pressed'), 'true', 'R must reach VLC too');
+
+    /* Clicking the picture puts the keyboard on VLC's stage. */
+    media.querySelector('#vlc-canvas').click();
+    assert.equal(w.document.activeElement, media.querySelector('#vlc-stage-wrap'),
+      'clicking the video should focus the VLC stage');
+
+    /* Keys never fire while typing in a text box inside VLC. */
+    media.querySelector('#vlc-stage-wrap').dispatchEvent(
+      new w.KeyboardEvent('keydown', { key: 'n', ctrlKey: true, bubbles: true, cancelable: true }));
+    const url = media.querySelector('#vlc-url');
+    assert.ok(url, 'Ctrl+N opens the network URL form');
+    const before = status();
+    url.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'l', bubbles: true, cancelable: true }));
+    assert.equal(media.querySelector('#vlc-repeat').getAttribute('aria-pressed'), 'true',
+      'typing L in a text field must not cycle repeat again');
+    assert.equal(status(), before, 'and it must not run the shortcut either');
+    media.querySelector('#vlc-url-cancel').click();
+
+    /* Another app in front owns the keyboard. */
+    w.openApp('text-editor');
+    const repeatBefore = media.querySelector('#vlc-repeat').getAttribute('aria-pressed');
+    press({ key: 'l' });
+    assert.equal(media.querySelector('#vlc-repeat').getAttribute('aria-pressed'), repeatBefore,
+      'VLC must not take letters while another window is in front');
+
+    w.closeWin('text-editor', true);
+    w.closeWin('media', true);
+  } finally {
+    close();
+  }
+});
+
+test('VLC makes its audio output on the first click and says when it is held back', async () => {
+  const { w, wins, close } = await bootDesktop();
+  try {
+    const made = [];
+    w.AudioContext = class {
+      constructor(opts = {}) { this.opts = opts; this.state = 'suspended'; this.resumed = 0; made.push(this); }
+      resume() { this.resumed += 1; this.state = 'running'; if (this.onstatechange) this.onstatechange(); return Promise.resolve(); }
+      close() { this.state = 'closed'; return Promise.resolve(); }
+    };
+    w.openApp('media');
+    const media = wins.get('media').body;
+    assert.equal(made.length, 0, 'VLC should not open an audio device before it is used');
+
+    // The first click inside VLC is what the browser counts as permission.
+    media.querySelector('#vlc-stage-wrap').dispatchEvent(new w.MouseEvent('pointerdown', { bubbles: true }));
+    assert.equal(made.length, 1, 'the first click inside VLC should create the AudioContext');
+    assert.equal(made[0].state, 'running', 'and resume it while the gesture still counts');
+
+    // Clicks in another window are none of VLC's business.
+    w.openApp('text-editor');
+    wins.get('text-editor').body.dispatchEvent(new w.MouseEvent('pointerdown', { bubbles: true }));
+    assert.equal(made.length, 1, 'VLC should not answer clicks in other windows');
+    w.closeWin('text-editor', true);
+
+    // Closing the window closes the output it owns.
+    w.closeWin('media', true);
+    assert.equal(made[0].state, 'closed', 'closing VLC should close its AudioContext');
+
+    // The engine is handed VLC's own context, so the output can be unlocked.
+    const app = source('apps/media/media/app.html');
+    assert.match(app, /createPlayer\(\{ canvas: q\('#vlc-canvas'\), fit: 'contain', audioContext/,
+      'the engine should use VLC’s own AudioContext');
+    assert.match(app, /function ensureAudioContext\(\)/);
+    assert.match(app, /document\.addEventListener\('pointerdown', unlockAudio, true\)/);
+    assert.match(app, /document\.addEventListener\('keydown', unlockAudio, true\)/);
+    assert.match(app, /VLC is playing, but the browser is holding the audio back/,
+      'a suspended context should be explained, not played silently');
+    assert.match(app, /id="vlc-audio-on"/, 'with a button that resumes it inside a click');
+
+    // A failure names what VLC actually saw, so an MKV report is diagnostic.
+    assert.match(app, /What VLC found in it: /, 'a failed open should list the tracks it read');
+    assert.match(app, /VLC read no tracks in it at all/, 'and say when it read none');
+    assert.match(app, /Audio output: \$\{esc\(audio\)\}/, 'Messages should report the audio output state');
+  } finally {
+    close();
+  }
+});
+
 test('the VLC browser tab runs the same module, shortcuts and all', () => {
   const page = source('apps/media/media/player.html');
   const boot = source('apps/media/media/player.js');
@@ -2455,6 +2552,11 @@ test('the VLC tab boots the app, lists the handover file and keeps the hotkeys',
     const key = (init) => stage.dispatchEvent(new w.KeyboardEvent('keydown', { bubbles: true, cancelable: true, ...init }));
     key({ key: 'l' });
     assert.equal(body.querySelector('#vlc-repeat').getAttribute('aria-pressed'), 'true', 'L still cycles repeat in the tab');
+    /* In a real tab nothing is focused to begin with, so the key press lands
+     * on the document: the tab must still answer it. */
+    w.document.body.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'r', bubbles: true, cancelable: true }));
+    assert.equal(body.querySelector('#vlc-shuffle').getAttribute('aria-pressed'), 'true',
+      'R must work in the tab before anything has been clicked');
     key({ key: 'ArrowUp', ctrlKey: true });
     assert.equal(body.querySelector('#vlc-volume').value, '105', 'Ctrl+Up still drives the volume in the tab');
     key({ key: 'Enter', altKey: true });

@@ -332,8 +332,24 @@ not be saved.", etc.).
   **D** deinterlace, **Z** zoom, **Shift+S** snapshot, disc-menu /
   title / chapter keys, playlist bookmarks (**F1–F10**, set with
   **Ctrl+F1–F10**), and the **Ctrl+O/F/N/V/T/L/W/Y/I/J/M/H/Q** file,
-  playlist and window shortcuts. Keys act only while the VLC window
-  has focus and never while typing in a text box or drop-down.
+  playlist and window shortcuts. The key handler sits on the document,
+  so keys work as in desktop VLC: **VLC answers them whenever it is the
+  window in front** — clicking the video is enough, and clicking the
+  picture also focuses the stage — or always, in VLC's own browser tab.
+  They never fire while typing in a text box or drop-down, while a
+  dialog opened from VLC is up, or while another app's window or the
+  start menu holds the focus.
+  **Audio out**: browsers only allow sound after a page has been
+  clicked, so VLC owns the page's `AudioContext` — created at the first
+  real click or key press inside VLC, resumed by every later one, and
+  handed to the engine (`createPlayer({ audioContext })`) instead of
+  letting it make a suspended one seconds later. If the browser still
+  holds the audio back while a file plays, the app says so
+  ("VLC is playing, but the browser is holding the audio back") and
+  offers an **Enable audio** button that resumes it inside a click,
+  rather than playing silently. Closing the window or tab closes that
+  context. *Messages* reports the audio state (and the worklet's level),
+  and a failed open lists the tracks and codecs VLC did read.
   Playback is by the
   vendored libvlc engine compiled to WebAssembly
   (`apps/media/media/vendor/libvlc/`, see CREDITS.md), so VLC itself
