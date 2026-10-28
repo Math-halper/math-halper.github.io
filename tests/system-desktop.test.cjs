@@ -176,6 +176,7 @@ test('the catalog is the desktop apps, the file system suite, a calculator, web 
    * is its own artwork under data/icons/<id>.png (Web Retro keeps Gams'
    * raster webretro.png). */
   const RASTER_ICON_APPS = {
+    'media': 'data/icons/vlc.png',
     'game-2048': 'data/icons/game-2048.png',
     'bloons-tower-defense-1': 'data/icons/bloons-tower-defense-1.png',
     'bloons-tower-defense-2': 'data/icons/bloons-tower-defense-2.png',
@@ -1854,6 +1855,54 @@ test('Paint, Piano, Terminal and Clock render and respond', async () => {
     assert.match(term.querySelector('#term-out').textContent, /Downloads/);
     await run('bogus');
     assert.match(term.querySelector('#term-out').textContent, /Unknown command: bogus/);
+
+    // The file commands work against the same virtual file system:
+    // mkdir / touch / cp / mv / find / stat / tree / rm.
+    await run('mkdir Notes');
+    await run('touch Notes/first.txt');
+    assert.equal(await w.eval("FS.read('/home/ada/Notes/first.txt')"), '');
+    await run('cp Notes/first.txt Notes/second.txt');
+    assert.equal(w.eval("FS.exists('/home/ada/Notes/second.txt')"), true, 'cp copies the file');
+    await run('mv Notes/second.txt Notes/renamed.txt');
+    assert.equal(w.eval("FS.exists('/home/ada/Notes/second.txt')"), false, 'mv moves the file away');
+    assert.equal(w.eval("FS.exists('/home/ada/Notes/renamed.txt')"), true, 'mv lands the file at the new name');
+    await run('stat Notes/renamed.txt');
+    assert.match(term.querySelector('#term-out').textContent, /Type: file/);
+    await run('find renamed');
+    assert.match(term.querySelector('#term-out').textContent, /\/home\/ada\/Notes\/renamed\.txt/);
+    await run('tree Notes');
+    const treeOut = term.querySelector('#term-out').textContent;
+    assert.match(treeOut, /├── first\.txt/, 'tree draws the folder with branch glyphs');
+    assert.match(treeOut, /└── renamed\.txt/);
+    assert.match(treeOut, /0 directories, 2 files/);
+    await run('rm Notes/renamed.txt');
+    assert.equal(w.eval("FS.exists('/home/ada/Notes/renamed.txt')"), false, 'rm deletes the file');
+    await run('rm Notes');
+    assert.match(term.querySelector('#term-out').textContent, /rm: Directory not empty/, 'rm refuses a non-empty folder without -r');
+    await run('rm -r Notes');
+    assert.equal(w.eval("FS.exists('/home/ada/Notes')"), false, 'rm -r deletes the folder');
+
+    // nano edits a file in the terminal: type, Ctrl+S writes, Ctrl+X exits.
+    await run('nano edit-me.txt');
+    const ta = term.querySelector('#nano-ta');
+    assert.ok(ta && term.querySelector('#term-nano').style.display === 'flex', 'nano opens its editor pane');
+    ta.value = 'written in nano';
+    ta.dispatchEvent(new w.KeyboardEvent('keydown', { key: 's', ctrlKey: true, bubbles: true, cancelable: true }));
+    assert.equal(await w.eval("FS.read('/home/ada/edit-me.txt')"), 'written in nano', 'Ctrl+S writes the file');
+    assert.match(term.querySelector('#term-out').textContent, /Wrote .*lines to ~\/edit-me\.txt/);
+    // Unsaved changes ask before exiting; Discard drops them.
+    ta.value = 'changed but unwanted';
+    ta.dispatchEvent(new w.Event('input', { bubbles: true }));
+    ta.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'x', ctrlKey: true, bubbles: true, cancelable: true }));
+    assert.equal(term.querySelector('#nano-confirm').style.display, 'flex', 'nano asks before discarding changes');
+    term.querySelector('#nano-confirm-discard').click();
+    assert.equal(term.querySelector('#term-nano').style.display, 'none', 'discard closes nano');
+    assert.equal(await w.eval("FS.read('/home/ada/edit-me.txt')"), 'written in nano', 'discarded edits were not saved');
+    // A clean nano exits straight away on Ctrl+X.
+    await run('nano edit-me.txt');
+    assert.equal(ta.value, 'written in nano', 'nano reopens with the saved text');
+    ta.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'x', ctrlKey: true, bubbles: true, cancelable: true }));
+    assert.equal(term.querySelector('#term-nano').style.display, 'none', 'Ctrl+X exits nano when nothing changed');
     w.closeWin('terminal', true);
   } finally {
     close();
@@ -2183,6 +2232,98 @@ test('VLC is a port of the open-source VLC player (vendored libvlc)', () => {
     'VLC replaces the converter: no Convert & play fallback remains');
   const catalog = source('data/applications.js');
   assert.match(catalog, /id=media\nname=VLC/, 'the media app is presented as VLC');
+  // The proper VLC icon: the VideoLAN traffic cone as a real PNG.
+  assert.match(catalog, /icon=data\/icons\/vlc\.png\nsvg-icon=false/, 'VLC should use the cone artwork as its icon');
+  const cone = fs.readFileSync(path.join(ROOT, 'data/icons/vlc.png'));
+  assert.deepEqual([...cone.subarray(1, 4)], [...Buffer.from('PNG')], 'data/icons/vlc.png should be a real PNG');
+  assert.ok(cone.length > 10_000, 'the cone icon should be real artwork, not a placeholder');
+  assert.match(app, /<img src="data\/icons\/vlc\.png"/, 'the stage should show the cone artwork');
+  // And the classic VLC 3 dress: light chrome, exact menu order.
+  assert.match(app, /\.vlc-shell\{[^}]*background:#e8e8e8/, 'the player should wear the classic light VLC chrome');
+  const summaries = [...app.matchAll(/<summary>([A-Za-z]+)<\/summary>/g)].map((m) => m[1]);
+  assert.deepEqual(summaries.slice(0, 8), ['Media', 'Playback', 'Audio', 'Video', 'Subtitle', 'Tools', 'View', 'Help'],
+    'the menus should run in desktop VLC\'s order');
+  // Desktop VLC's default hotkeys, wired onto the libvlc-wasm player.
+  for (const needle of [
+    'function cycleAudioTrack()', 'function cycleSubtitleTrack(direction = 1)', 'function toggleSubtitles()',
+    'function adjustSubtitleDelay(delta)', 'function adjustAudioDelay(delta)', 'function setSubtitleScale(scale)',
+    "markSubtitleSync('audio')", "markSubtitleSync('subtitle')", 'applySubtitleSync', 'resetSubtitleSync',
+    "case 'b': return done(cycleAudioTrack);", "case 'v': return done(() => cycleSubtitleTrack(1));",
+    'cycleSubtitleTrack(-1)', 'function cycleAspectRatio()', 'function cycleCropRatio()',
+    'function toggleDeinterlace()', 'function cycleProgram(direction)', 'function stepTitle(direction)',
+    'function stepChapter(direction)', 'function showGoToTimeForm()', 'function savePlaylist()',
+    'function clearPlaylist()', 'Keyboard shortcuts (desktop VLC defaults)',
+  ]) assert.ok(app.includes(needle), `VLC hotkey support is missing: ${needle}`);
+  assert.match(app, /Shift\+←\/→ 3 seconds · Alt\+←\/→ 10 seconds · Ctrl\+←\/→ 1 minute · Ctrl\+Alt\+←\/→ 5 minutes/,
+    'the shortcut help should state VLC\'s seek ladder');
+  assert.match(app, /tag === 'SELECT'.*target\?\.isContentEditable/s,
+    'hotkeys must not fire while typing or using a drop-down');
+});
+
+test('VLC keyboard shortcuts follow desktop VLC and stay out of text fields', async () => {
+  const { w, wins, close } = await bootDesktop();
+  try {
+    w.openApp('media');
+    const media = wins.get('media').body;
+    const stage = media.querySelector('#vlc-stage-wrap');
+    const status = () => media.querySelector('#vlc-status-text').textContent;
+    const key = (init) => stage.dispatchEvent(new w.KeyboardEvent('keydown', { bubbles: true, cancelable: true, ...init }));
+
+    // The user's headline keys explain themselves before the engine exists.
+    key({ key: 'b' });
+    assert.match(status(), /audio track/i, 'B should reach for the next audio track');
+    key({ key: 'v' });
+    assert.match(status(), /subtitle track/i, 'V should reach for the next subtitle track');
+    key({ key: 'V', shiftKey: true });
+    assert.match(status(), /subtitles/i, 'Shift+V should toggle subtitles');
+
+    // Playlist-mode keys act on the window itself: L repeats, R shuffles.
+    key({ key: 'l' });
+    assert.equal(media.querySelector('#vlc-repeat').getAttribute('aria-pressed'), 'true', 'L should cycle repeat on');
+    assert.match(media.querySelector('#vlc-repeat').title, /Repeat all/);
+    key({ key: 'r' });
+    assert.equal(media.querySelector('#vlc-shuffle').getAttribute('aria-pressed'), 'true', 'R should toggle shuffle on');
+
+    // Ctrl+arrows drive volume even before a player exists; the slider follows.
+    key({ key: 'ArrowUp', ctrlKey: true });
+    assert.equal(media.querySelector('#vlc-volume').value, '105', 'Ctrl+Up should raise the volume one VLC step');
+    key({ key: 'ArrowDown', ctrlKey: true });
+    assert.equal(media.querySelector('#vlc-volume').value, '100', 'Ctrl+Down should lower it back');
+
+    // Speed keys: +/− by 0.5×, [ ] by 0.1×, = back to normal.
+    key({ key: '+' });
+    assert.equal(media.querySelector('#vlc-speed').value, '1.5', '+ should speed playback up');
+    key({ key: ']' });
+    assert.equal(media.querySelector('#vlc-speed').value, '1.6', '] should fine-speed playback up');
+    key({ key: '=' });
+    assert.equal(media.querySelector('#vlc-speed').value, '1', '= should restore normal speed');
+
+    // Ctrl+L hides and shows the playlist, like View → Playlist.
+    key({ key: 'l', ctrlKey: true });
+    assert.equal(media.querySelector('#vlc-playlist').style.display, 'none', 'Ctrl+L should hide the playlist');
+    key({ key: 'l', ctrlKey: true });
+    assert.equal(media.querySelector('#vlc-playlist').style.display, '', 'Ctrl+L should show the playlist again');
+
+    // Typing in the URL box must not trigger bare-letter hotkeys.
+    key({ key: 'n', ctrlKey: true });
+    const url = media.querySelector('#vlc-url');
+    assert.ok(url, 'Ctrl+N should open the network URL form');
+    const before = status();
+    url.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'b', bubbles: true, cancelable: true }));
+    url.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'v', bubbles: true, cancelable: true }));
+    assert.equal(status(), before, 'B/V typed in a text field must not switch tracks');
+    media.querySelector('#vlc-url-cancel').click();
+
+    // Space with nothing loaded opens the file chooser, as Play does.
+    key({ key: ' ' });
+    const modal = w.document.querySelector('.file-source-backdrop');
+    assert.ok(modal, 'Space should start the open flow when nothing is loaded');
+    modal.querySelector('[data-fs="cancel"]').click();
+
+    w.closeWin('media', true);
+  } finally {
+    close();
+  }
 });
 
 test('the desktop can link any file or folder again', async () => {

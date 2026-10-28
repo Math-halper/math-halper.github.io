@@ -311,12 +311,30 @@ not be saved.", etc.).
   image's natural dimensions; empty state "No image open" + **"Your pictures"**
   list.
 - **VLC** (the `media` app) — a port of the open-source VLC media
-  player: desktop-VLC style menus (**Media / Playback / Audio / Video /
-  Subtitle / Tools / Help**), a **Playlist** sidebar (`#vlc-playlist`),
+  player, dressed as the real thing: the VideoLAN traffic cone as its
+  icon (`data/icons/vlc.png`, also the stage artwork) and the classic
+  light-grey VLC 3 chrome. Its menus run in desktop VLC's order
+  (**Media / Playback / Audio / Video / Subtitle / Tools / View /
+  Help** — View toggles the playlist panel), a **Playlist** sidebar (`#vlc-playlist`),
   the libvlc video canvas (`#vlc-canvas`), seek bar, play/pause/stop/
   previous/next, repeat and shuffle, playback-rate and volume controls,
   fullscreen, snapshots, audio/video/subtitle track selection and
-  external subtitle/audio files, plus a status line. Playback is by the
+  external subtitle/audio files, plus a status line. The keyboard works
+  like desktop VLC (Help → **Keyboard shortcuts** lists the set):
+  **Space** play/pause, **S** stop, **N**/**P** next/previous, **B**
+  next audio track, **V** next subtitle track (**Alt+V** reverse,
+  **Shift+V** on/off), **M** mute, **Ctrl+↑/↓** volume, the
+  **Shift/Alt/Ctrl(+Alt)+←/→** seek ladders (3 s / 10 s / 1 min /
+  5 min), **H**/**G** and **J**/**K** subtitle/audio delay, subtitle
+  sync bookmarks (**Shift+H**/**J**/**K**, **Ctrl+Shift+K** reset),
+  **+**/**−**/**[**/**]**/**=** speed, **L** repeat, **R** shuffle,
+  **E** next frame, **F** fullscreen, **A**/**C** aspect/crop,
+  **D** deinterlace, **Z** zoom, **Shift+S** snapshot, disc-menu /
+  title / chapter keys, playlist bookmarks (**F1–F10**, set with
+  **Ctrl+F1–F10**), and the **Ctrl+O/F/N/V/T/L/W/Y/I/J/M/H/Q** file,
+  playlist and window shortcuts. Keys act only while the VLC window
+  has focus and never while typing in a text box or drop-down.
+  Playback is by the
   vendored libvlc engine compiled to WebAssembly
   (`apps/media/media/vendor/libvlc/`, see CREDITS.md), so VLC itself
   plays formats the browser cannot decode — nothing is transcoded or

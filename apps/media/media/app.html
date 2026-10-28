@@ -22,6 +22,18 @@ proton menu. The script below is fetched and run by proton's HTML loader
  * CREDITS.md). The interface follows desktop VLC: menus, a playlist
  * panel, a seek bar, play/pause/stop/previous/next, volume, playback
  * rate, repeat/shuffle, fullscreen, subtitles and track selection.
+ * The window is dressed as the real thing too: the light-grey classic
+ * VLC 3 chrome, its exact menu order (Media, Playback, Audio, Video,
+ * Subtitle, Tools, View, Help) and the VideoLAN traffic cone
+ * (data/icons/vlc.png) as the app icon and stage artwork.
+ *
+ * Keyboard control follows desktop VLC's default hotkeys (see Help →
+ * Keyboard shortcuts in the app): Space play/pause, S stop, N/P
+ * next/previous, B next audio track, V next subtitle track (Alt+V
+ * reverse, Shift+V on/off), the Shift/Alt/Ctrl arrow seek ladders,
+ * Ctrl+arrows for volume, H/G and J/K delay nudges, +/-/[/] speed,
+ * L repeat, R shuffle, F fullscreen, and the rest of the VLC set that
+ * the libvlc-wasm player can actually drive.
  *
  * libvlc's threads need SharedArrayBuffer, so the page has to be
  * cross-origin isolated. GitHub Pages cannot send the COOP/COEP headers
@@ -56,6 +68,24 @@ registerApp({
     let destroyed = false;
     let timer = null;
     let seeking = false;
+    /* VLC hotkey state (desktop VLC keeps the same kind of state per input). */
+    let playbackRate = 1;
+    let volumeLevel = 1;
+    let mutedWanted = false;
+    let audioDelay = 0;
+    let subtitleDelay = 0;
+    let subtitleScale = 1;
+    let lastSubtitleTrackId = null;
+    let subtitleMarks = { audio: null, subtitle: null };
+    let aspectIndex = 0;
+    let cropIndex = 0;
+    let cropBorder = [0, 0, 0, 0]; // left, right, top, bottom (pixels)
+    let deinterlaceOn = false;
+    let deinterlaceModeIndex = 5;  // yadif, VLC's usual default mode
+    let videoZoom = 1;
+    let autoscale = true;
+    let recording = false;
+    let playlistBookmarks = Array(10).fill(null);
 
     const isMediaPath = (p) => !!FS.mediaKind(p) || MEDIA_EXTS.includes(FS.extname(p));
     const kindOfName = (name) => (['mp3', 'm4a', 'aac', 'flac', 'wav', 'ogg', 'oga', 'mid', 'midi', 'aif', 'aiff']
@@ -74,65 +104,88 @@ registerApp({
         <button class="btn sm" type="button" id="md-download" disabled>${iconSvg('download')} Download</button>
         <button class="btn sm" type="button" id="md-files" disabled>${iconSvg('folder')} Show in Files</button>`)}
       <style>
-        .vlc-shell{display:flex;flex-direction:column;height:100%;background:#111;color:#f5f5f5;min-height:0}
-        .vlc-menus{display:flex;gap:2px;align-items:center;padding:4px 6px;background:#1d1d1d;border-bottom:1px solid #333;flex-wrap:wrap}
-        .vlc-menu{position:relative}.vlc-menu summary{list-style:none;cursor:pointer;padding:5px 9px;border-radius:4px;color:#eee;user-select:none}
-        .vlc-menu summary::-webkit-details-marker{display:none}.vlc-menu summary:hover,.vlc-menu[open ] summary{background:#ff7900;color:#111}
-        .vlc-menu-items{position:absolute;z-index:30;top:calc(100% + 3px);left:0;min-width:210px;background:#242424;border:1px solid #444;border-radius:6px;padding:5px;box-shadow:0 10px 28px rgba(0,0,0,.45)}
-        .vlc-menu-items button{display:flex;width:100%;text-align:left;background:none;border:0;color:#f0f0f0;padding:7px 8px;border-radius:4px;cursor:pointer}
-        .vlc-menu-items button:hover{background:#ff7900;color:#111}.vlc-menu-items button:disabled{opacity:.45;cursor:default}
-        .vlc-engine{margin-left:auto;font-size:12px;color:#ffb26b;padding:4px 6px}
-        .vlc-main{display:flex;flex:1;min-height:0}.vlc-side{width:230px;flex:0 0 230px;background:#181818;border-right:1px solid #333;overflow:auto;padding:8px}
-        .vlc-side h3{margin:2px 0 8px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#ffb26b}
-        .vlc-item{display:flex;gap:7px;width:100%;align-items:center;background:none;border:0;border-radius:5px;color:#eee;text-align:left;padding:7px;cursor:pointer}
-        .vlc-item:hover{background:#2a2a2a}.vlc-item.sel{background:#ff7900;color:#111}.vlc-item span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        /* The classic VLC 3 look: light-grey Qt chrome, black video area
+         * with the cone, VLC orange (#ff7900) accents. */
+        .vlc-shell{display:flex;flex-direction:column;height:100%;background:#e8e8e8;color:#111;min-height:0;font-family:"Segoe UI",system-ui,sans-serif}
+        .vlc-menus{display:flex;gap:2px;align-items:center;padding:3px 6px;background:linear-gradient(#fdfdfd,#ececec);border-bottom:1px solid #c6c6c6;flex-wrap:wrap}
+        .vlc-menu{position:relative}.vlc-menu summary{list-style:none;cursor:pointer;padding:5px 10px;border-radius:3px;color:#111;user-select:none;font-size:13.5px}
+        .vlc-menu summary::-webkit-details-marker{display:none}.vlc-menu summary:hover,.vlc-menu[open ] summary{background:#ff7900;color:#fff}
+        .vlc-menu-items{position:absolute;z-index:30;top:calc(100% + 3px);left:0;min-width:220px;background:#fff;border:1px solid #b5b5b5;border-radius:4px;padding:4px;box-shadow:0 10px 28px rgba(0,0,0,.30)}
+        .vlc-menu-items button{display:flex;width:100%;text-align:left;background:none;border:0;color:#111;padding:7px 9px;border-radius:3px;cursor:pointer;font-size:13.5px}
+        .vlc-menu-items button:hover{background:#ff7900;color:#fff}.vlc-menu-items button:disabled{opacity:.45;cursor:default}
+        .vlc-engine{margin-left:auto;font-size:12px;color:#9a5200;padding:4px 6px}
+        .vlc-main{display:flex;flex:1;min-height:0}.vlc-side{width:230px;flex:0 0 230px;background:#fff;border-right:1px solid #c6c6c6;overflow:auto;padding:8px}
+        .vlc-side h3{margin:2px 0 8px;font-size:13px;font-weight:600;color:#333}
+        .vlc-item{display:flex;gap:7px;width:100%;align-items:center;background:none;border:0;border-radius:3px;color:#111;text-align:left;padding:6px 7px;cursor:pointer;font-size:13px}
+        .vlc-item:hover{background:#f0f0f0}.vlc-item.sel{background:#ff7900;color:#fff}.vlc-item span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
         .vlc-stage-wrap{position:relative;flex:1;min-width:0;background:#000;display:flex;align-items:center;justify-content:center;overflow:hidden}
         #vlc-canvas{width:100%;height:100%;display:block;background:#000}
-        .vlc-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:22px;background:radial-gradient(circle at 50% 38%,#2b1a08,#000 68%);color:#fff}
-        .vlc-overlay[hidden]{display:none}.vlc-overlay h2{margin:0;font-size:26px}.vlc-overlay p{max-width:560px;margin:0;color:#ddd;line-height:1.45}
-        .vlc-controls{padding:8px 10px 9px;background:#1d1d1d;border-top:1px solid #333}
+        .vlc-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:22px;background:#000;color:#fff}
+        .vlc-overlay[hidden]{display:none}.vlc-overlay img{width:190px;height:auto}.vlc-overlay.vlc-art img{width:170px}
+        .vlc-overlay h2{margin:0;font-size:24px;font-weight:600}.vlc-overlay p{max-width:560px;margin:0;color:#ddd;line-height:1.45;font-size:13.5px}
+        .vlc-overlay .btn{background:#f4f4f4;color:#111;border:1px solid #bbb}.vlc-overlay .btn.primary{background:#ff7900;border-color:#ff9a33;color:#fff}
+        .vlc-controls{padding:8px 10px 9px;background:linear-gradient(#f8f8f8,#e3e3e3);border-top:1px solid #c6c6c6}
         .vlc-seekrow,.vlc-btnrow{display:flex;align-items:center;gap:8px}.vlc-seekrow{margin-bottom:7px}
-        .vlc-btnrow{flex-wrap:wrap}.vlc-time{font-variant-numeric:tabular-nums;font-size:12.5px;color:#ddd;min-width:118px;text-align:center}
-        .vlc-btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;min-width:36px;height:34px;padding:5px 9px;border-radius:5px;border:1px solid #444;background:#2a2a2a;color:#fff;cursor:pointer}
-        .vlc-btn:hover{background:#ff7900;color:#111}.vlc-btn.primary{background:#ff7900;color:#111;border-color:#ff9a33}.vlc-btn[aria-pressed="true"]{background:#ff7900;color:#111}
-        .vlc-btn svg{width:18px;height:18px}.vlc-spacer{flex:1}.vlc-vol{width:130px}.vlc-speed{height:34px;background:#2a2a2a;color:#fff;border:1px solid #444;border-radius:5px}
+        .vlc-btnrow{flex-wrap:wrap}.vlc-time{font-variant-numeric:tabular-nums;font-size:12.5px;color:#111;min-width:118px;text-align:center}
+        .vlc-btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;min-width:36px;height:34px;padding:5px 9px;border-radius:4px;border:1px solid #b5b5b5;background:linear-gradient(#fdfdfd,#eaeaea);color:#111;cursor:pointer;font-size:13px}
+        .vlc-btn:hover{border-color:#ff7900;background:#fff1e2}.vlc-btn.primary{background:#ff7900;color:#fff;border-color:#e56f00}.vlc-btn.primary:hover{background:#ff8c1a}
+        .vlc-btn[aria-pressed="true"]{background:#ff7900;color:#fff;border-color:#e56f00}
+        .vlc-btn svg{width:18px;height:18px}.vlc-spacer{flex:1}.vlc-vol{width:130px}.vlc-controls input[type=range]{accent-color:#ff7900}
+        .vlc-speed{height:34px;background:#fff;color:#111;border:1px solid #b5b5b5;border-radius:4px}
         .vlc-note{padding:8px 10px;background:#fff3e2;color:#422600;border-bottom:1px solid #e5c99f;font-size:13px}.vlc-note[hidden]{display:none}
-        .vlc-status{display:flex;gap:12px;align-items:center;padding:6px 10px;background:#151515;border-top:1px solid #303030;color:#ccc;font-size:12.5px;min-height:30px}
-        .vlc-status span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.vlc-tracks{display:flex;gap:6px;flex-wrap:wrap;padding:7px 10px;background:#181818;border-top:1px solid #2d2d2d}
-        .vlc-tracks[hidden]{display:none}.vlc-tracks label{font-size:12px;color:#ccc;display:flex;gap:5px;align-items:center}.vlc-tracks select{max-width:210px}
+        .vlc-status{display:flex;gap:12px;align-items:center;padding:6px 10px;background:#ececec;border-top:1px solid #d2d2d2;color:#333;font-size:12.5px;min-height:30px}
+        .vlc-status span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.vlc-tracks{display:flex;gap:6px;flex-wrap:wrap;padding:7px 10px;background:#f4f4f4;border-top:1px solid #d8d8d8}
+        .vlc-tracks[hidden]{display:none}.vlc-tracks label{font-size:12px;color:#111;display:flex;gap:5px;align-items:center}.vlc-tracks select{max-width:210px}
         .vlc-urlrow{display:flex;gap:7px}.vlc-urlrow input{flex:1}
+        .vlc-shell.vlc-minimal .vlc-menus,.vlc-shell.vlc-minimal .vlc-side,.vlc-shell.vlc-minimal .vlc-tracks,.vlc-shell.vlc-minimal .vlc-controls,.vlc-shell.vlc-minimal .vlc-status,.vlc-shell.vlc-minimal .vlc-note{display:none!important}
+        .vlc-shortcuts{line-height:1.65}.vlc-shortcuts b{color:#7a3c00}
+        #vlc-canvas{transition:transform .15s ease}
+        #vlc-stage-wrap:focus{outline:2px solid #ff7900;outline-offset:-2px}
         @media (max-width:720px){.vlc-side{display:none}.vlc-time{min-width:96px}.vlc-vol{width:86px}}
       </style>
       <div class="vlc-shell">
         <div class="vlc-menus" aria-label="VLC menus">
-          <details class="vlc-menu"><summary>Media</summary><div class="vlc-menu-items">
+          <details class="vlc-menu" data-menu="media"><summary>Media</summary><div class="vlc-menu-items">
             <button type="button" data-act="open">Open file…</button>
+            <button type="button" data-act="folder">Open folder…</button>
             <button type="button" data-act="url">Open URL…</button>
             <button type="button" data-act="files">Show in Files</button>
             <button type="button" data-act="download">Download / save copy…</button>
+            <button type="button" data-act="save-playlist">Save playlist…</button>
+            <button type="button" data-act="quit">Quit VLC</button>
           </div></details>
-          <details class="vlc-menu"><summary>Playback</summary><div class="vlc-menu-items">
+          <details class="vlc-menu" data-menu="playback"><summary>Playback</summary><div class="vlc-menu-items">
             <button type="button" data-act="play">Play / Pause</button>
             <button type="button" data-act="stop">Stop</button>
             <button type="button" data-act="prev">Previous</button>
             <button type="button" data-act="next">Next</button>
+            <button type="button" data-act="goto">Go to time…</button>
           </div></details>
-          <details class="vlc-menu"><summary>Audio</summary><div class="vlc-menu-items">
+          <details class="vlc-menu" data-menu="audio"><summary>Audio</summary><div class="vlc-menu-items">
             <button type="button" data-act="mute">Mute / unmute</button>
             <button type="button" data-act="audio-track">Add audio track…</button>
           </div></details>
-          <details class="vlc-menu"><summary>Video</summary><div class="vlc-menu-items">
+          <details class="vlc-menu" data-menu="video"><summary>Video</summary><div class="vlc-menu-items">
             <button type="button" data-act="fullscreen">Fullscreen</button>
             <button type="button" data-act="snapshot">Take snapshot</button>
           </div></details>
-          <details class="vlc-menu"><summary>Subtitle</summary><div class="vlc-menu-items">
+          <details class="vlc-menu" data-menu="subtitle"><summary>Subtitle</summary><div class="vlc-menu-items">
             <button type="button" data-act="subtitles">Add subtitle file…</button>
           </div></details>
-          <details class="vlc-menu"><summary>Tools</summary><div class="vlc-menu-items">
+          <details class="vlc-menu" data-menu="tools"><summary>Tools</summary><div class="vlc-menu-items">
             <button type="button" data-act="engine">Start VLC engine</button>
             <button type="button" data-act="enable">Enable VLC engine (reload once)</button>
+            <button type="button" data-act="info">Media information</button>
+            <button type="button" data-act="codec-info">Codec information</button>
+            <button type="button" data-act="messages">Messages</button>
           </div></details>
-          <details class="vlc-menu"><summary>Help</summary><div class="vlc-menu-items">
+          <details class="vlc-menu" data-menu="view"><summary>View</summary><div class="vlc-menu-items">
+            <button type="button" data-act="playlist">Playlist</button>
+            <button type="button" data-act="minimal">Minimal interface</button>
+            <button type="button" data-act="fullscreen">Fullscreen</button>
+          </div></details>
+          <details class="vlc-menu" data-menu="help"><summary>Help</summary><div class="vlc-menu-items">
+            <button type="button" data-act="shortcuts">Keyboard shortcuts</button>
             <button type="button" data-act="about">About this VLC port</button>
           </div></details>
           <span class="vlc-engine" id="vlc-engine-status">VLC engine: ${esc(engineState)}</span>
@@ -140,10 +193,10 @@ registerApp({
         <div class="viewer-note vlc-note" id="vlc-note" hidden></div>
         <div class="vlc-main">
           <aside class="vlc-side" id="vlc-playlist" aria-label="Playlist"><h3>Playlist</h3><div id="vlc-playlist-items"></div></aside>
-          <section class="vlc-stage-wrap" id="vlc-stage-wrap">
+          <section class="vlc-stage-wrap" id="vlc-stage-wrap" tabindex="0" aria-label="VLC video stage. Click here, then use the VLC keyboard shortcuts: Space plays or pauses, B switches audio track, V switches subtitles.">
             <canvas id="vlc-canvas" width="960" height="540" aria-label="VLC video output"></canvas>
             <div class="vlc-overlay" id="vlc-overlay">
-              <svg width="92" height="82" viewBox="0 0 100 90" aria-hidden="true"><polygon points="50,4 78,58 22,58" fill="#ff7900"/><polygon points="36,34 64,34 70,48 30,48" fill="#fff"/><polygon points="28,58 72,58 82,82 18,82" fill="#ff7900"/></svg>
+              <img src="data/icons/vlc.png" alt="VLC cone" draggable="false">
               <h2>VLC media player</h2>
               <p id="vlc-overlay-text">Open an audio or video file. Playback is by the open-source VLC engine (libvlc) compiled to WebAssembly — not by a separate converter.</p>
               <button class="btn primary" type="button" id="vlc-enable" hidden>Enable VLC engine</button>
@@ -159,22 +212,22 @@ registerApp({
         <div class="vlc-controls">
           <div class="vlc-seekrow">
             <span class="vlc-time" id="vlc-time">0:00 / 0:00</span>
-            <input id="vlc-seek" type="range" min="0" max="1000" value="0" step="1" aria-label="Seek" style="flex:1">
+            <input id="vlc-seek" type="range" min="0" max="1000" value="0" step="1" aria-label="Seek" title="Seek. VLC jumps: Shift+←/→ 3 seconds, Alt+←/→ 10 seconds, Ctrl+←/→ 1 minute, Ctrl+Alt+←/→ 5 minutes" style="flex:1">
           </div>
           <div class="vlc-btnrow">
-            <button class="vlc-btn primary" type="button" id="vlc-play" aria-label="Play or pause">${iconSvg('play')}</button>
-            <button class="vlc-btn" type="button" id="vlc-stop" aria-label="Stop">${iconSvg('square')}</button>
-            <button class="vlc-btn" type="button" id="vlc-prev2" aria-label="Previous">${iconSvg('skip-back')}</button>
-            <button class="vlc-btn" type="button" id="vlc-next2" aria-label="Next">${iconSvg('skip-forward')}</button>
-            <button class="vlc-btn" type="button" id="vlc-repeat" aria-label="Repeat" aria-pressed="false">${iconSvg('repeat')}</button>
-            <button class="vlc-btn" type="button" id="vlc-shuffle" aria-label="Shuffle" aria-pressed="false">${iconSvg('shuffle')}</button>
+            <button class="vlc-btn primary" type="button" id="vlc-play" aria-label="Play or pause" title="Play / Pause (Space)" aria-keyshortcuts="Space">${iconSvg('play')}</button>
+            <button class="vlc-btn" type="button" id="vlc-stop" aria-label="Stop" title="Stop (S)" aria-keyshortcuts="s">${iconSvg('square')}</button>
+            <button class="vlc-btn" type="button" id="vlc-prev2" aria-label="Previous" title="Previous (P)" aria-keyshortcuts="p">${iconSvg('skip-back')}</button>
+            <button class="vlc-btn" type="button" id="vlc-next2" aria-label="Next" title="Next (N)" aria-keyshortcuts="n">${iconSvg('skip-forward')}</button>
+            <button class="vlc-btn" type="button" id="vlc-repeat" aria-label="Repeat" title="Repeat: off / all / one (L)" aria-keyshortcuts="l" aria-pressed="false">${iconSvg('repeat')}</button>
+            <button class="vlc-btn" type="button" id="vlc-shuffle" aria-label="Shuffle" title="Shuffle (R)" aria-keyshortcuts="r" aria-pressed="false">${iconSvg('shuffle')}</button>
             <span class="vlc-spacer"></span>
-            <label style="font-size:12.5px;color:#ddd">Speed <select class="vlc-speed" id="vlc-speed" aria-label="Playback speed">
+            <label style="font-size:12.5px;color:#333">Speed <select class="vlc-speed" id="vlc-speed" aria-label="Playback speed" title="Playback speed (+ / − by 0.5×, [ / ] by 0.1×, = normal)">
               <option value="0.5">0.5×</option><option value="0.75">0.75×</option><option value="1" selected>1×</option>
               <option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="2">2×</option></select></label>
-            <button class="vlc-btn" type="button" id="vlc-mute">Mute</button>
-            <label style="font-size:12.5px;color:#ddd">Volume <input class="vlc-vol" id="vlc-volume" type="range" min="0" max="200" value="100" step="1" aria-label="Volume"></label>
-            <button class="vlc-btn" type="button" id="vlc-fullscreen">Fullscreen</button>
+            <button class="vlc-btn" type="button" id="vlc-mute" title="Mute / unmute (M)" aria-keyshortcuts="m">Mute</button>
+            <label style="font-size:12.5px;color:#333">Volume <input class="vlc-vol" id="vlc-volume" type="range" min="0" max="200" value="100" step="1" aria-label="Volume" title="Volume (Ctrl+↑ / Ctrl+↓)"></label>
+            <button class="vlc-btn" type="button" id="vlc-fullscreen" title="Fullscreen (F)" aria-keyshortcuts="f">Fullscreen</button>
           </div>
         </div>
         <div class="vlc-status" id="vlc-status"><span id="vlc-file-name">Nothing loaded</span><span id="vlc-status-text" style="margin-left:auto">VLC is idle.</span></div>
@@ -185,7 +238,20 @@ registerApp({
 
     function say(html) { note.hidden = !html; note.innerHTML = html || ''; }
     function setEngineStatus(text) { engineState = text; engineStatus.textContent = `VLC engine: ${text}`; }
+    function showArt() {
+      overlay.hidden = false;
+      overlay.classList.add('vlc-art');
+      overlay.querySelector('h2').textContent = current ? current.name : 'VLC media player';
+      overlayText.textContent = 'Playing with VLC';
+      q('#vlc-enable').hidden = true;
+      q('#vlc-start').hidden = true;
+    }
+    function settleOverlay() {
+      if (current && kindOfName(current.name) === 'audio' && playerState === 'playing') showArt();
+      else hideOverlay();
+    }
     function showOverlay(title, text, mode) {
+      overlay.classList.remove('vlc-art');
       overlay.hidden = false;
       overlay.querySelector('h2').textContent = title;
       overlayText.textContent = text;
@@ -193,8 +259,359 @@ registerApp({
       q('#vlc-start').hidden = mode !== 'start';
     }
     function hideOverlay() { overlay.hidden = true; }
+    let statusHoldUntil = 0;
     function status(text) { statusText.textContent = text; }
+    /* Hotkey feedback is VLC's on-screen display; the status line plays
+     * that role here, so hold it briefly before the progress line resumes. */
+    function actionStatus(text) { statusText.textContent = text; statusHoldUntil = Date.now() + 3200; }
     function currentTitle() { return current ? current.name : 'Nothing loaded'; }
+
+    /* ---------------- VLC hotkey helpers ----------------
+     * The key handler at the bottom maps desktop VLC's default keys onto
+     * these. Everything player-shaped goes through needPlayer() so a key
+     * pressed before the engine exists explains itself instead of failing
+     * silently. */
+    function needPlayer(what) {
+      if (player) return true;
+      actionStatus(current ? `Start the VLC engine to ${what}.` : `Open media first to ${what}.`);
+      return false;
+    }
+    function trackList(type) { return (player?.tracks || []).filter((t) => t.type === type); }
+    function selectedTrack(type) { return trackList(type).find((t) => t.selected) || null; }
+    function trackName(t) { return t?.name || t?.language || t?.codecName || t?.codec || t?.id || 'track'; }
+    async function chooseTrack(type, track) {
+      if (!needPlayer('switch tracks')) return;
+      try {
+        if (track) await player.selectTrack(track.id);
+        else await player.disableTrack(type);
+        for (const t of player.tracks || []) if (t.type === type) t.selected = !!track && t.id === track.id;
+        if (type === 'text' && track) lastSubtitleTrackId = track.id;
+        renderTracks();
+      } catch (err) { actionStatus(`VLC could not switch tracks: ${err.message || err}`); }
+    }
+    function cycleAudioTrack() {
+      if (!needPlayer('switch the audio track')) return;
+      const list = trackList('audio');
+      if (!list.length) { actionStatus('No audio tracks in this file.'); return; }
+      const cur = selectedTrack('audio');
+      const next = cur ? list[(list.indexOf(cur) + 1) % list.length] : list[0];
+      chooseTrack('audio', next);
+      actionStatus(`Audio track: ${trackName(next)}`);
+    }
+    function cycleSubtitleTrack(direction = 1) {
+      if (!needPlayer('switch the subtitle track')) return;
+      const list = trackList('text');
+      if (!list.length) { actionStatus('No subtitle tracks in this file.'); return; }
+      /* VLC cycles through "subtitles off" as one stop on the dial. */
+      const choices = [null, ...list];
+      let idx = choices.findIndex((t) => (t?.id || null) === (selectedTrack('text')?.id || null));
+      if (idx < 0) idx = 0;
+      const next = choices[(idx + direction + choices.length) % choices.length];
+      chooseTrack('text', next);
+      actionStatus(next ? `Subtitle track: ${trackName(next)}` : 'Subtitles off');
+    }
+    function toggleSubtitles() {
+      if (!needPlayer('toggle subtitles')) return;
+      const list = trackList('text');
+      if (!list.length) { actionStatus('No subtitle tracks in this file.'); return; }
+      const cur = selectedTrack('text');
+      if (cur) {
+        lastSubtitleTrackId = cur.id;
+        chooseTrack('text', null);
+        actionStatus('Subtitles off');
+      } else {
+        const next = list.find((t) => t.id === lastSubtitleTrackId) || list[0];
+        chooseTrack('text', next);
+        actionStatus(`Subtitle track: ${trackName(next)}`);
+      }
+    }
+    function formatRate(r) { return `${Math.round(r * 100) / 100}×`; }
+    function syncRateSelect() {
+      const sel = q('#vlc-speed');
+      const value = String(playbackRate);
+      if (![...sel.options].some((o) => o.value === value)) {
+        const opt = document.createElement('option');
+        opt.value = value;
+        opt.textContent = formatRate(playbackRate);
+        sel.insertBefore(opt, [...sel.options].find((o) => Number(o.value) > playbackRate) || null);
+      }
+      sel.value = value;
+    }
+    function setRate(rate, announce = true) {
+      playbackRate = Math.min(8, Math.max(0.1, Math.round((Number(rate) || 1) * 10) / 10));
+      syncRateSelect();
+      if (player) player.rate = playbackRate;
+      if (announce) actionStatus(`Speed: ${formatRate(playbackRate)}`);
+    }
+    function setVolume(volume, announce = true) {
+      volumeLevel = Math.min(2, Math.max(0, Number(volume) || 0));
+      q('#vlc-volume').value = String(Math.round(volumeLevel * 100));
+      if (player) player.volume = volumeLevel;
+      if (announce) actionStatus(`Volume ${Math.round(volumeLevel * 100)}%`);
+    }
+    function adjustVolume(delta) { setVolume(volumeLevel + delta); }
+    function toggleMute() {
+      mutedWanted = player ? !player.muted : !mutedWanted;
+      if (player) player.muted = mutedWanted;
+      q('#vlc-mute').textContent = mutedWanted ? 'Unmute' : 'Mute';
+      actionStatus(mutedWanted ? 'Muted.' : 'Unmuted.');
+    }
+    function seekBy(delta) {
+      if (!needPlayer('seek')) return;
+      const dur = Number(player.duration) || 0, now = Number(player.currentTime) || 0;
+      seekTo(now + delta);
+    }
+    function seekTo(seconds) {
+      if (!needPlayer('seek')) return;
+      const dur = Number(player.duration) || 0;
+      const target = Math.max(0, dur > 0 ? Math.min(dur, seconds) : seconds);
+      try { guard(player.seek(target)); } catch { /* player went away */ }
+      actionStatus(`${fmt(target)} / ${fmt(dur)}`);
+    }
+    function showPosition() {
+      if (!needPlayer('show the position')) return;
+      actionStatus(`${fmt(Number(player.currentTime) || 0)} / ${fmt(Number(player.duration) || 0)}${current ? ` · ${current.name}` : ''}`);
+    }
+    function stopPlayback() {
+      if (!needPlayer('stop')) return;
+      guard(player.stop());
+      playerState = 'stopped';
+      syncChrome();
+      actionStatus('Stopped.');
+    }
+    function nextFrame() {
+      if (!needPlayer('step a frame')) return;
+      guard(player.nextFrame());
+      actionStatus('Next frame.');
+    }
+    const delayText = (s) => `${Math.round(s * 1000)} ms`;
+    function adjustAudioDelay(delta) {
+      if (!needPlayer('adjust the audio delay')) return;
+      audioDelay = Math.round((audioDelay + delta) * 1000) / 1000;
+      guard(player.setAudioDelay(audioDelay));
+      actionStatus(`Audio delay ${delayText(audioDelay)}`);
+    }
+    function adjustSubtitleDelay(delta) {
+      if (!needPlayer('adjust the subtitle delay')) return;
+      if (!selectedTrack('text')) { actionStatus('No active subtitle track.'); return; }
+      subtitleDelay = Math.round((subtitleDelay + delta) * 1000) / 1000;
+      guard(player.setSubtitleDelay(subtitleDelay));
+      actionStatus(`Subtitle delay ${delayText(subtitleDelay)}`);
+    }
+    function markSubtitleSync(which) {
+      if (!needPlayer('sync subtitles')) return;
+      subtitleMarks[which] = Number(player.currentTime) || 0;
+      actionStatus(which === 'audio' ? 'Subtitle sync: bookmarked the audio time.' : 'Subtitle sync: bookmarked the subtitle time.');
+    }
+    function applySubtitleSync() {
+      if (!needPlayer('sync subtitles')) return;
+      if (subtitleMarks.audio == null || subtitleMarks.subtitle == null) { actionStatus('Subtitle sync: set both bookmarks first (Shift+H, then Shift+J).'); return; }
+      subtitleDelay = Math.round((subtitleDelay + subtitleMarks.audio - subtitleMarks.subtitle) * 1000) / 1000;
+      subtitleMarks = { audio: null, subtitle: null };
+      guard(player.setSubtitleDelay(subtitleDelay));
+      actionStatus(`Subtitle sync: delay is now ${delayText(subtitleDelay)}`);
+    }
+    function resetSubtitleSync() {
+      if (!needPlayer('sync subtitles')) return;
+      subtitleDelay = 0;
+      subtitleMarks = { audio: null, subtitle: null };
+      guard(player.setSubtitleDelay(0));
+      actionStatus('Subtitle sync: delay reset.');
+    }
+    function setSubtitleScale(scale) {
+      if (!needPlayer('scale the subtitle text')) return;
+      subtitleScale = Math.min(5, Math.max(0.25, scale));
+      guard(player.setSubtitleScale(subtitleScale));
+      actionStatus(`Subtitle text scale ${Math.round(subtitleScale * 100)}%`);
+    }
+    const ASPECT_RATIOS = [null, '1:1', '4:3', '5:4', '16:9', '16:10', '2.21:1', '2.35:1', '2.39:1'];
+    const CROP_RATIOS = [null, '1:1', '4:3', '5:4', '16:9', '16:10', '2.21:1', '2.35:1', '2.39:1'];
+    function cycleAspectRatio() {
+      if (!needPlayer('change the aspect ratio')) return;
+      aspectIndex = (aspectIndex + 1) % ASPECT_RATIOS.length;
+      guard(player.setAspectRatio(ASPECT_RATIOS[aspectIndex]));
+      actionStatus(`Aspect ratio: ${ASPECT_RATIOS[aspectIndex] || 'default'}`);
+    }
+    function cycleCropRatio() {
+      if (!needPlayer('change the crop')) return;
+      cropIndex = (cropIndex + 1) % CROP_RATIOS.length;
+      cropBorder = [0, 0, 0, 0];
+      guard(CROP_RATIOS[cropIndex] ? player.setCrop({ ratio: CROP_RATIOS[cropIndex] }) : player.setCrop(null));
+      actionStatus(`Crop: ${CROP_RATIOS[cropIndex] || 'none'}`);
+    }
+    function cropPixel(side, delta) {
+      if (!needPlayer('crop the picture')) return;
+      cropBorder[side] = Math.max(0, cropBorder[side] + delta);
+      cropIndex = 0;
+      guard(cropBorder.every((v) => v === 0) ? player.setCrop(null) : player.setCrop({ border: [...cropBorder] }));
+      const [l, r, t, b] = cropBorder;
+      actionStatus(`Crop pixels — left ${l}, right ${r}, top ${t}, bottom ${b}`);
+    }
+    const DEINTERLACE_MODES = ['blend', 'bob', 'linear', 'x', 'yadif', 'yadif2x', 'phosphor', 'ivtc'];
+    function toggleDeinterlace() {
+      if (!needPlayer('toggle deinterlacing')) return;
+      deinterlaceOn = !deinterlaceOn;
+      guard(player.setDeinterlace(deinterlaceOn, DEINTERLACE_MODES[deinterlaceModeIndex]));
+      actionStatus(`Deinterlace ${deinterlaceOn ? 'on' : 'off'} (${DEINTERLACE_MODES[deinterlaceModeIndex]})`);
+    }
+    function cycleDeinterlaceMode() {
+      if (!needPlayer('change the deinterlace mode')) return;
+      deinterlaceModeIndex = (deinterlaceModeIndex + 1) % DEINTERLACE_MODES.length;
+      guard(player.setDeinterlace(deinterlaceOn, DEINTERLACE_MODES[deinterlaceModeIndex]));
+      actionStatus(`Deinterlace ${deinterlaceOn ? 'on' : 'off'} (${DEINTERLACE_MODES[deinterlaceModeIndex]})`);
+    }
+    function setVideoZoom(zoom) {
+      videoZoom = Math.min(4, Math.max(0.25, Math.round(zoom * 100) / 100));
+      q('#vlc-canvas').style.transform = videoZoom === 1 ? '' : `scale(${videoZoom})`;
+      actionStatus(`Zoom: ${formatRate(videoZoom)}`);
+    }
+    function cycleVideoZoom(direction) {
+      const modes = [0.25, 0.5, 1, 2];
+      let idx = modes.indexOf(videoZoom);
+      if (idx < 0) idx = 2;
+      setVideoZoom(modes[(idx + direction + modes.length) % modes.length]);
+    }
+    function toggleAutoscale() {
+      if (videoZoom !== 1) { setVideoZoom(1); return; }
+      autoscale = !autoscale;
+      const canvas = q('#vlc-canvas');
+      canvas.style.width = autoscale ? '' : '960px';
+      canvas.style.height = autoscale ? '' : '540px';
+      actionStatus(autoscale ? 'Scaled to screen.' : 'Original size.');
+    }
+    async function cycleProgram(direction) {
+      if (!needPlayer('switch program')) return;
+      try {
+        const programs = await player.programs();
+        if (!programs?.length) { actionStatus('This stream has no program Service IDs.'); return; }
+        const idx = programs.findIndex((p) => p.selected);
+        const next = idx < 0 ? (direction > 0 ? programs[0] : programs[programs.length - 1])
+          : programs[(idx + direction + programs.length) % programs.length];
+        await player.selectProgram(next.id);
+        actionStatus(`Program: ${next.name || next.id}`);
+      } catch (err) { actionStatus(`VLC could not switch program: ${err.message || err}`); }
+    }
+    function stepTitle(direction) {
+      if (!needPlayer('change title')) return;
+      const titles = player.chapters?.titles || [];
+      if (!titles.length) { actionStatus('This media has no titles.'); return; }
+      const next = Math.min(titles.length - 1, Math.max(0, (Number(player.title) || 0) + direction));
+      guard(player.setTitle(next));
+      actionStatus(`Title ${next + 1}${titles[next]?.name ? `: ${titles[next].name}` : ''}`);
+    }
+    function stepChapter(direction) {
+      if (!needPlayer('change chapter')) return;
+      const chapters = player.chapters?.chapters || [];
+      if (!chapters.length) { actionStatus('This media has no chapters.'); return; }
+      const next = Math.min(chapters.length - 1, Math.max(0, (Number(player.chapter) || 0) + direction));
+      guard(player.setChapter(next));
+      actionStatus(`Chapter ${next + 1}${chapters[next]?.name ? `: ${chapters[next].name}` : ''}`);
+    }
+    async function discMenu() {
+      if (!needPlayer('open the disc menu')) return;
+      const ok = await guard(player.menu());
+      actionStatus(ok ? 'Disc menu.' : 'This media has no disc menu.');
+    }
+    function navigateMenu(action) {
+      if (!needPlayer('navigate the menu')) return;
+      guard(player.navigate(action));
+    }
+    async function toggleRecording() {
+      if (!needPlayer('record')) return;
+      if (recording) {
+        try {
+          const file = await player.stopRecording();
+          recording = false;
+          MH.downloadBlob(file.name, file);
+          actionStatus('Recording saved.');
+        } catch (err) { recording = false; actionStatus(`Recording stopped: ${err.message || err}`); }
+        return;
+      }
+      try {
+        await player.startRecording();
+        recording = true;
+        actionStatus('Recording… press Shift+R again to save the recording.');
+      } catch (err) { actionStatus(`Recording is not available in this VLC engine build: ${err.message || err}`); }
+    }
+    function cycleRepeat() {
+      repeatMode = (repeatMode + 1) % 3;
+      syncChrome();
+      actionStatus(repeatMode === 2 ? 'Repeat one.' : repeatMode === 1 ? 'Repeat all.' : 'Repeat off.');
+    }
+    function toggleShuffle() {
+      shuffle = !shuffle;
+      syncChrome();
+      actionStatus(shuffle ? 'Shuffle on.' : 'Shuffle off.');
+    }
+    function togglePlaylist() {
+      const side = q('#vlc-playlist');
+      const show = side.style.display === 'none';
+      side.style.display = show ? '' : 'none';
+      actionStatus(show ? 'Playlist shown.' : 'Playlist hidden.');
+    }
+    function toggleMinimal() {
+      const shell = q('.vlc-shell');
+      shell.classList.toggle('vlc-minimal');
+      actionStatus(shell.classList.contains('vlc-minimal') ? 'Minimal interface. Press Ctrl+H to bring the controls back.' : 'Full interface.');
+    }
+    function openMenu(name) {
+      const menu = body.querySelector(`[data-menu="${name}"]`);
+      if (!menu) return;
+      const wasOpen = menu.hasAttribute('open');
+      body.querySelectorAll('.vlc-menu[open]').forEach((d) => d.removeAttribute('open'));
+      if (!wasOpen) {
+        menu.setAttribute('open', '');
+        menu.querySelector('.vlc-menu-items button')?.focus();
+      }
+    }
+    function showShortcuts() {
+      say(`<div class="vlc-shortcuts"><b>Keyboard shortcuts (desktop VLC defaults)</b><br>
+        <b>Playback</b> — Space play/pause · S stop · N next · P previous · E next frame · T show position · F fullscreen · Esc leave fullscreen / close a menu<br>
+        <b>Seek</b> — Shift+←/→ 3 seconds · Alt+←/→ 10 seconds · Ctrl+←/→ 1 minute · Ctrl+Alt+←/→ 5 minutes · Ctrl+T go to time<br>
+        <b>Audio &amp; subtitles</b> — B next audio track · V next subtitle track · Alt+V previous subtitle track · Shift+V subtitles on/off · M mute · Ctrl+↑/↓ volume · H/G subtitle delay ±50 ms · J/K audio delay ±50 ms · Shift+H, Shift+J, Shift+K subtitle sync · Ctrl+Shift+K reset sync · Ctrl+0 reset subtitle size (Ctrl+mouse wheel scales it)<br>
+        <b>Speed &amp; playlist</b> — +/− speed ±0.5× · [ ] speed ±0.1× · = normal speed · L repeat off/all/one · R shuffle · Ctrl+L show/hide playlist · Ctrl+W clear playlist · Ctrl+Y save playlist · F1–F10 play playlist bookmark · Ctrl+F1–F10 set playlist bookmark<br>
+        <b>Video</b> — A aspect ratio · C crop ratio · Alt+R/D/C/F crop a pixel (add Shift to uncrop) · D deinterlace · Shift+D deinterlace mode · Z / Shift+Z zoom modes · Alt+O / Alt+Shift+O scale · Alt+1–4 quarter/half/original/double · Shift+S snapshot · Shift+R record (needs a recording-capable engine)<br>
+        <b>Disc &amp; files</b> — arrow keys + Enter in disc menus · Shift+M disc menu · Shift+O / Shift+B title · Shift+P / Shift+N chapter · X / Shift+X program · Ctrl+O open file · Ctrl+F open folder · Ctrl+N network URL · Ctrl+V paste URL · Ctrl+I media info · Ctrl+J codec info · Ctrl+M messages · Ctrl+H minimal interface · Ctrl+Q quit VLC<br>
+        Keys work while the VLC window has focus; they never fire while you are typing in a text box or using a drop-down.</div>
+        <button class="btn sm" type="button" id="vlc-shortcuts-close" style="margin-top:6px">Close</button>`);
+      q('#vlc-shortcuts-close').onclick = () => say('');
+    }
+    function showMediaInfo(codecInfo = false) {
+      if (!current) { actionStatus('Nothing loaded.'); return; }
+      const tracks = player?.tracks || [];
+      const lines = tracks.map((t) => `${t.type}: ${trackName(t)}${t.codecName || t.codec ? ` (${t.codecName || t.codec})` : ''}${t.width && t.height ? ` ${t.width}×${t.height}` : ''}${t.channels ? ` ${t.channels}ch` : ''}${t.selected ? ' · selected' : ''}`);
+      say(`<b>${codecInfo ? 'Codec information' : 'Media information'}</b><br>${esc(current.name)}<br>
+        State: ${esc(playerState)} · ${player ? `${fmt(Number(player.currentTime) || 0)} / ${fmt(Number(player.duration) || 0)}` : 'VLC engine not started'} · Speed ${formatRate(playbackRate)} · Volume ${Math.round(volumeLevel * 100)}%${mutedWanted ? ' (muted)' : ''}<br>
+        ${lines.length ? lines.map((l) => esc(l)).join('<br>') : 'Track and codec details appear once VLC has opened the file.'}`);
+    }
+    function showMessages() {
+      say(`<b>VLC messages</b><br>Engine: ${esc(engineState)} · Cross-origin isolated: ${window.crossOriginIsolated ? 'yes' : 'no'} · Player state: ${esc(playerState)}<br>
+        ${current ? `Loaded: ${esc(current.name)}` : 'Nothing loaded.'} · Audio delay ${delayText(audioDelay)} · Subtitle delay ${delayText(subtitleDelay)} · Subtitle scale ${Math.round(subtitleScale * 100)}%`);
+    }
+    function savePlaylist() {
+      if (!queue.length) { actionStatus('The playlist is empty.'); return; }
+      const bodyText = ['#EXTM3U', ...queue.flatMap((item) => [`#EXTINF:-1,${item.name}`, item.kind === 'url' ? item.url : item.kind === 'vfs' ? item.path : item.name])].join('\n');
+      MH.downloadBlob('vlc-playlist.m3u', new Blob([bodyText], { type: 'audio/x-mpegurl' }));
+      actionStatus('Playlist saved as vlc-playlist.m3u.');
+    }
+    async function clearPlaylist() {
+      if (player) await guard(player.stop());
+      playerState = 'stopped';
+      playlistBookmarks = Array(10).fill(null);
+      setQueue([], -1);
+      showOverlay('VLC media player', player
+        ? 'Open an audio or video file. Playback is by libvlc compiled to WebAssembly.'
+        : window.crossOriginIsolated
+          ? 'Open an audio or video file, or start the VLC engine. Playback is by libvlc compiled to WebAssembly.'
+          : 'Open an audio or video file. VLC needs one reload with its cross-origin isolation shim before libvlc can start; after that, files play in the real VLC engine.',
+        player ? 'none' : window.crossOriginIsolated ? 'start' : 'enable');
+      actionStatus('Playlist cleared.');
+    }
+    function quitVlc() {
+      guard(player?.stop());
+      if (typeof options.close === 'function') options.close();
+      else actionStatus('Close the VLC window to quit.');
+    }
 
     function vfsPlaylist() {
       try {
@@ -225,7 +642,7 @@ registerApp({
       const dur = Number(player.duration) || 0, now = Number(player.currentTime) || 0;
       q('#vlc-time').textContent = `${fmt(now)} / ${fmt(dur)}`;
       q('#vlc-seek').value = dur > 0 ? String(Math.round((now / dur) * 1000)) : '0';
-      if (current) status(`${playerState} · ${fmt(now)} / ${fmt(dur)} · ${current.name}`);
+      if (current && Date.now() >= statusHoldUntil) status(`${playerState} · ${fmt(now)} / ${fmt(dur)} · ${current.name}`);
     }
 
     async function loadVlcModule() {
@@ -244,6 +661,11 @@ registerApp({
         vlc = await mod.createVLC({ logLevel: 'error' });
         player = await vlc.createPlayer({ canvas: q('#vlc-canvas'), fit: 'contain' });
         wirePlayer(player);
+        /* Keys pressed before the engine existed may already have set these. */
+        player.volume = volumeLevel;
+        player.muted = mutedWanted;
+        player.rate = playbackRate;
+        syncRateSelect();
         setEngineStatus('running (libvlc WebAssembly)');
         status('VLC engine ready.');
         hideOverlay();
@@ -273,14 +695,17 @@ registerApp({
       p.on('statechange', (state) => {
         playerState = state;
         syncChrome();
-        if (state === 'playing') hideOverlay();
+        if (state === 'playing') settleOverlay();
         if (state === 'stopped') updateProgress();
       });
       p.on('timeupdate', updateProgress);
       p.on('durationchange', updateProgress);
       p.on('tracks', renderTracks);
+      p.on('ratechange', (rate) => { playbackRate = Number(rate) || 1; syncRateSelect(); });
       p.on('volumechange', ({ volume, muted }) => {
-        q('#vlc-volume').value = String(Math.round((Number(volume) || 0) * 100));
+        volumeLevel = Number(volume) || 0;
+        mutedWanted = !!muted;
+        q('#vlc-volume').value = String(Math.round(volumeLevel * 100));
         q('#vlc-mute').textContent = muted ? 'Unmute' : 'Mute';
       });
       p.on('ended', handleEnded);
@@ -295,7 +720,13 @@ registerApp({
         const sel = q(`#vlc-track-${type}`);
         const list = groups[type];
         sel.innerHTML = `<option value="">${list.length ? 'Disable / none' : 'None'}</option>` + list.map((t) => `<option value="${esc(t.id)}" ${t.selected ? 'selected' : ''}>${esc(t.name || t.codecName || t.codec || t.id)}</option>`).join('');
-        sel.onchange = () => { if (!player) return; guard(sel.value ? player.selectTrack(sel.value) : player.disableTrack(type)); };
+        const chosen = list.find((t) => t.selected);
+        if (type === 'text' && chosen) lastSubtitleTrackId = chosen.id;
+        sel.onchange = () => {
+          if (!player) return;
+          if (type === 'text' && sel.value) lastSubtitleTrackId = sel.value;
+          guard(sel.value ? player.selectTrack(sel.value) : player.disableTrack(type));
+        };
         if (list.length) any = true;
       }
       q('#vlc-tracks').hidden = !any;
@@ -320,8 +751,19 @@ registerApp({
       try {
         status(`Opening ${entry.name} in VLC…`);
         await player.open(await sourceFor(entry), { autoplay: true });
+        /* A new input starts with VLC's neutral sync/video state. */
+        audioDelay = 0; subtitleDelay = 0; subtitleScale = 1;
+        subtitleMarks = { audio: null, subtitle: null };
+        lastSubtitleTrackId = null;
+        aspectIndex = 0; cropIndex = 0; cropBorder = [0, 0, 0, 0];
+        deinterlaceOn = false; deinterlaceModeIndex = 5;
+        videoZoom = 1; autoscale = true; recording = false;
+        const canvas = q('#vlc-canvas');
+        canvas.style.transform = ''; canvas.style.width = ''; canvas.style.height = '';
+        guard(player.setSubtitleDelay(0));
+        guard(player.setAudioDelay(0));
         playerState = 'playing';
-        hideOverlay();
+        settleOverlay();
         renderTracks();
         updateProgress();
         status(`Playing ${entry.name} with VLC.`);
@@ -409,6 +851,62 @@ registerApp({
       input.onkeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); q('#vlc-url-open').click(); } };
       input.focus();
     }
+    async function openFolder() {
+      const src = await MH.askFileSource('open');
+      if (src === 'vfs') {
+        const dir = await MH.vfsPick({ title: 'Open folder in VLC', folder: true });
+        if (!dir) return;
+        const entries = FS.find('', dir).filter((e) => e.type === 'file' && isMediaPath(e.path))
+          .map((e) => ({ name: e.name || FS.basename(e.path), kind: 'vfs', path: e.path }))
+          .sort((a, b) => a.name.localeCompare(b.name));
+        if (!entries.length) { MH.toast('No audio or video files in that folder.'); return; }
+        setQueue(entries, 0);
+        openEntry(queue[0]);
+      } else if (src === 'device') {
+        actionStatus('A browser file picker cannot queue a whole computer folder here; pick the first file instead.');
+        askOpen();
+      }
+    }
+    async function pasteLocation() {
+      try {
+        const text = await navigator.clipboard?.readText();
+        if (text && /^https?:\/\//i.test(text.trim())) { openUrl(text.trim()); return; }
+      } catch { /* clipboard unavailable or permission denied: use the form */ }
+      showUrlForm();
+      actionStatus('Paste a media URL, then choose Open in VLC.');
+    }
+    function parseClock(value) {
+      const text = String(value ?? '').trim();
+      if (/^\d+(?:\.\d+)?$/.test(text)) return Number(text);
+      const parts = text.split(':').map(Number);
+      if (parts.length < 2 || parts.length > 3 || parts.some((n) => !Number.isFinite(n) || n < 0)) return NaN;
+      return parts.reduce((sum, n) => sum * 60 + n, 0);
+    }
+    function showGoToTimeForm() {
+      if (!needPlayer('go to a specific time')) return;
+      const dur = Number(player.duration) || 0;
+      say(`<div class="vlc-urlrow"><label style="display:flex;gap:7px;align-items:center;flex:1">Go to
+          <input id="vlc-goto" type="text" value="${esc(fmt(Number(player.currentTime) || 0))}" placeholder="1:23 or 83" aria-label="Go to time" autocomplete="off" spellcheck="false"></label>
+        <span class="muted">/ ${esc(fmt(dur))}</span>
+        <button class="btn sm primary" type="button" id="vlc-goto-open">Go</button>
+        <button class="btn sm" type="button" id="vlc-goto-cancel">Cancel</button></div>`);
+      const input = q('#vlc-goto');
+      const go = () => {
+        const secs = parseClock(input.value);
+        if (!Number.isFinite(secs)) { actionStatus('Enter a time such as 1:23 or 83.'); input.focus(); return; }
+        say('');
+        seekTo(secs);
+        q('#vlc-stage-wrap').focus();
+      };
+      q('#vlc-goto-open').onclick = go;
+      q('#vlc-goto-cancel').onclick = () => { say(''); q('#vlc-stage-wrap').focus(); };
+      input.onkeydown = (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); go(); }
+        else if (e.key === 'Escape') { e.preventDefault(); say(''); q('#vlc-stage-wrap').focus(); }
+      };
+      input.focus();
+      input.select();
+    }
     async function addSlave(kind) {
       if (!player) { MH.toast('Start the VLC engine and open media first.'); return; }
       const file = await MH.devicePick(kind === 'subtitles' ? '.srt,.ass,.ssa,.vtt,.sub,.idx' : ACCEPT);
@@ -428,18 +926,28 @@ registerApp({
     function doAction(act) {
       body.querySelectorAll('.vlc-menu[open]').forEach((d) => d.removeAttribute('open'));
       if (act === 'open') askOpen();
+      else if (act === 'folder') openFolder();
       else if (act === 'url') showUrlForm();
       else if (act === 'files') { if (current?.kind === 'vfs') openApp('files', { path: FS.dirname(current.path), select: current.path }); }
       else if (act === 'download') saveCopy();
+      else if (act === 'save-playlist') savePlaylist();
+      else if (act === 'quit') quitVlc();
       else if (act === 'play') togglePlay();
-      else if (act === 'stop') guard(player?.stop());
+      else if (act === 'stop') stopPlayback();
       else if (act === 'prev') step(-1);
       else if (act === 'next') step(1);
-      else if (act === 'mute') { if (player) player.muted = !player.muted; }
+      else if (act === 'goto') showGoToTimeForm();
+      else if (act === 'mute') toggleMute();
       else if (act === 'audio-track') addSlave('audio');
       else if (act === 'subtitles') addSlave('subtitles');
+      else if (act === 'playlist') togglePlaylist();
+      else if (act === 'minimal') toggleMinimal();
       else if (act === 'fullscreen') fullscreen();
       else if (act === 'snapshot') snapshot();
+      else if (act === 'info') showMediaInfo(false);
+      else if (act === 'codec-info') showMediaInfo(true);
+      else if (act === 'messages') showMessages();
+      else if (act === 'shortcuts') showShortcuts();
       else if (act === 'engine') ensureEngine().then(() => { if (current) openEntry(current); }).catch(() => {});
       else if (act === 'enable') enableIsolation();
       else if (act === 'about') about();
@@ -472,30 +980,222 @@ registerApp({
     q('#vlc-enable').onclick = enableIsolation;
     q('#vlc-start').onclick = () => ensureEngine().then(() => { if (current) openEntry(current); }).catch(() => {});
     q('#vlc-play').onclick = togglePlay;
-    q('#vlc-stop').onclick = () => guard(player?.stop());
+    q('#vlc-stop').onclick = stopPlayback;
     q('#vlc-prev').onclick = () => step(-1);
     q('#vlc-next').onclick = () => step(1);
     q('#vlc-prev2').onclick = () => step(-1);
     q('#vlc-next2').onclick = () => step(1);
-    q('#vlc-repeat').onclick = () => { repeatMode = (repeatMode + 1) % 3; syncChrome(); status(repeatMode === 2 ? 'Repeat one.' : repeatMode === 1 ? 'Repeat all.' : 'Repeat off.'); };
-    q('#vlc-shuffle').onclick = () => { shuffle = !shuffle; syncChrome(); status(shuffle ? 'Shuffle on.' : 'Shuffle off.'); };
-    q('#vlc-mute').onclick = () => { if (player) player.muted = !player.muted; };
+    q('#vlc-repeat').onclick = cycleRepeat;
+    q('#vlc-shuffle').onclick = toggleShuffle;
+    q('#vlc-mute').onclick = toggleMute;
     q('#vlc-fullscreen').onclick = fullscreen;
-    q('#vlc-volume').oninput = (e) => { if (player) player.volume = Number(e.target.value) / 100; };
-    q('#vlc-speed').onchange = (e) => { if (player) player.rate = Number(e.target.value); };
+    q('#vlc-volume').oninput = (e) => setVolume(Number(e.target.value) / 100, false);
+    q('#vlc-speed').onchange = (e) => setRate(Number(e.target.value), false);
     q('#vlc-seek').oninput = () => { seeking = true; };
     q('#vlc-seek').onchange = (e) => { seeking = false; if (player && Number(player.duration) > 0) guard(player.seek((Number(e.target.value) / 1000) * Number(player.duration))); };
     q('#vlc-canvas').onclick = () => { if (current) togglePlay(); };
     body.querySelectorAll('[data-act]').forEach((b) => { b.onclick = () => doAction(b.dataset.act); });
+    /* Desktop VLC's default keyboard shortcuts. They only act while focus
+     * is inside this VLC window, and never while typing in a text field or
+     * using a drop-down — VLC's own keys are bare letters, so that guard
+     * is what keeps B/V/etc. out of the URL and Go-to-time boxes. */
     body.addEventListener('keydown', (e) => {
-      const tag = e.target?.tagName;
-      if (tag === 'TEXTAREA' || (tag === 'INPUT' && e.target.type === 'text') || (tag === 'INPUT' && e.target.type === 'url')) return;
-      if (e.key === ' ') { e.preventDefault(); togglePlay(); }
-      else if (e.key === 'ArrowRight' && player) { e.preventDefault(); guard(player.seek(Math.min(Number(player.duration) || 0, (Number(player.currentTime) || 0) + 5))); }
-      else if (e.key === 'ArrowLeft' && player) { e.preventDefault(); guard(player.seek(Math.max(0, (Number(player.currentTime) || 0) - 5))); }
-      else if (e.key.toLowerCase() === 'f') fullscreen();
-      else if (e.key.toLowerCase() === 'm' && player) player.muted = !player.muted;
+      if (destroyed) return;
+      const target = e.target;
+      const tag = target?.tagName;
+      const inputType = target?.type || '';
+      const editable = tag === 'TEXTAREA' || tag === 'SELECT' || !!target?.isContentEditable
+        || (tag === 'INPUT' && !['range', 'checkbox', 'radio', 'button', 'submit', 'file'].includes(inputType));
+      if (editable) return;
+      const key = e.key || '';
+      const codeLetter = /^Key([A-Z])$/.test(e.code || '') ? e.code.slice(3).toLowerCase() : '';
+      const letter = key.length === 1 ? key.toLowerCase() : codeLetter;
+      const ctrl = e.ctrlKey, meta = e.metaKey, alt = e.altKey, shift = e.shiftKey;
+      const done = (fn) => { e.preventDefault(); e.stopPropagation(); if (fn) fn(); return true; };
+      /* Space/Enter keep their native job on a focused button or menu. */
+      if ((tag === 'BUTTON' || tag === 'SUMMARY' || target?.closest?.('summary')) && (key === ' ' || key === 'Enter')) return;
+      /* Sliders keep their own arrow keys (except VLC's Ctrl+arrows). */
+      if (tag === 'INPUT' && inputType === 'range' && !ctrl && !meta && !alt && (key === 'ArrowUp' || key === 'ArrowDown')) return;
+      if (tag === 'INPUT' && inputType === 'range' && target.id === 'vlc-volume' && !ctrl && !meta && !alt && !shift && (key === 'ArrowLeft' || key === 'ArrowRight')) return;
+
+      /* Multimedia keys (bound by VLC on Linux). */
+      if (!ctrl && !meta && !alt) {
+        if (key === 'MediaPlayPause') return done(togglePlay);
+        if (key === 'MediaTrackNext') return done(() => step(1));
+        if (key === 'MediaTrackPrevious') return done(() => step(-1));
+        if (key === 'MediaStop') return done(stopPlayback);
+        if (key === 'AudioVolumeUp') return done(() => adjustVolume(0.05));
+        if (key === 'AudioVolumeDown') return done(() => adjustVolume(-0.05));
+        if (key === 'AudioVolumeMute') return done(toggleMute);
+        if (key === 'BrowserNext') return done(nextFrame);
+        if (key === 'BrowserRefresh') return done(() => { if (playbackRate !== 1) setRate(1); else togglePlay(); });
+        if (key === 'BrowserStop') return done(() => { if (player && playerState === 'playing') guard(player.pause()); });
+      }
+
+      if (key === 'Escape') {
+        if (document.fullscreenElement) return done(() => guard(document.exitFullscreen()));
+        const open = body.querySelector('.vlc-menu[open]');
+        if (open) return done(() => open.removeAttribute('open'));
+        if (!note.hidden) return done(() => say(''));
+        return;
+      }
+
+      /* Playlist bookmarks: F1–F10 play, Ctrl+F1–F10 set. */
+      const bookmark = /^F([1-9]|10)$/.exec(key);
+      if (bookmark) {
+        if (e.repeat) return done();
+        const slot = Number(bookmark[1]) - 1;
+        return done(() => {
+          if (ctrl) {
+            if (!current) { actionStatus('Nothing playing to bookmark.'); return; }
+            playlistBookmarks[slot] = current;
+            actionStatus(`Playlist bookmark ${slot + 1} set to ${current.name}.`);
+          } else {
+            const savedEntry = playlistBookmarks[slot];
+            if (!savedEntry) { actionStatus(`Playlist bookmark ${slot + 1} is empty. Set it with Ctrl+F${slot + 1}.`); return; }
+            const found = queue.find((item) => item === savedEntry
+              || (item.kind === savedEntry.kind && ((item.path && item.path === savedEntry.path)
+                || (item.url && item.url === savedEntry.url) || (item.file && item.file === savedEntry.file))));
+            if (found) openEntry(found);
+            else actionStatus('That bookmarked item is no longer in the playlist.');
+          }
+        });
+      }
+      if (key === 'F11') return done(fullscreen);
+      if (key === 'F12') return;
+
+      /* VLC's seek/volume ladders on the arrows. */
+      if ((ctrl || meta) && (key === 'ArrowLeft' || key === 'ArrowRight')) {
+        return done(() => seekBy((key === 'ArrowLeft' ? -1 : 1) * (alt ? 300 : 60)));
+      }
+      if ((ctrl || meta) && (key === 'ArrowUp' || key === 'ArrowDown')) {
+        return done(() => adjustVolume(key === 'ArrowUp' ? 0.05 : -0.05));
+      }
+      if (alt && (key === 'ArrowLeft' || key === 'ArrowRight')) {
+        return done(() => seekBy((key === 'ArrowLeft' ? -1 : 1) * 10));
+      }
+      if (ctrl && shift && letter === 'k') return done(resetSubtitleSync);
+      if (ctrl && shift && letter === 'o') return done(askOpen);
+      if (ctrl) {
+        if (shift) return;
+        if (key === '0') return done(() => setSubtitleScale(1));
+        switch (letter) {
+          case 'o': return done(askOpen);
+          case 'f': return done(openFolder);
+          case 'n': return done(showUrlForm);
+          case 'v': return done(pasteLocation);
+          case 't': return done(showGoToTimeForm);
+          case 'l': return done(togglePlaylist);
+          case 'h': return done(toggleMinimal);
+          case 'w': return done(clearPlaylist);
+          case 'y': return done(savePlaylist);
+          case 'i': return done(() => showMediaInfo(false));
+          case 'j': return done(() => showMediaInfo(true));
+          case 'm': return done(showMessages);
+          case 'p': return done(showShortcuts);
+          case 'q': return done(quitVlc);
+          default: return;
+        }
+      }
+      if (meta) return;
+      if (alt) {
+        if (letter === 'v') return done(() => { if (!e.repeat) cycleSubtitleTrack(-1); });
+        if (letter === 'o') return done(() => setVideoZoom(videoZoom + (shift ? -0.1 : 0.1)));
+        if (letter === 'r' || letter === 'd' || letter === 'c' || letter === 'f') {
+          const side = { r: 2, d: 0, c: 3, f: 1 }[letter];
+          return done(() => cropPixel(side, shift ? -1 : 1));
+        }
+        if (/^[1-4]$/.test(key)) return done(() => setVideoZoom([0.25, 0.5, 1, 2][Number(key) - 1]));
+        const menu = { m: 'media', l: 'playback', a: 'audio', t: 'subtitle', s: 'tools', i: 'view', h: 'help' }[letter];
+        if (menu) return done(() => openMenu(menu));
+        return;
+      }
+      if (shift && (key === 'ArrowLeft' || key === 'ArrowRight')) {
+        return done(() => seekBy((key === 'ArrowLeft' ? -1 : 1) * 3));
+      }
+
+      if (key === ' ' || key === 'Spacebar') {
+        if (e.repeat) return done();
+        return done(togglePlay);
+      }
+      if (key === 'Enter') {
+        if (player?.inMenu) return done(() => navigateMenu('activate'));
+        return;
+      }
+      if (key === '+') return done(() => setRate(playbackRate + 0.5));
+      if (key === '-') return done(() => setRate(playbackRate - 0.5));
+      if (key === '=') return done(() => setRate(1));
+      if (key === ']') return done(() => setRate(playbackRate + 0.1));
+      if (key === '[') return done(() => setRate(playbackRate - 0.1));
+      if (key === 'PageUp') return done(() => setVideoZoom(videoZoom + 0.1));
+      if (key === 'PageDown') return done(() => setVideoZoom(videoZoom - 0.1));
+      if (key === 'ArrowUp' || key === 'ArrowDown' || key === 'ArrowLeft' || key === 'ArrowRight') {
+        if (player?.inMenu) {
+          const action = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right' }[key];
+          return done(() => navigateMenu(action));
+        }
+        if (key === 'ArrowLeft') return done(() => seekBy(-10));
+        if (key === 'ArrowRight') return done(() => seekBy(10));
+        return;
+      }
+      if (!letter) return;
+
+      if (shift) {
+        if (e.repeat) return done();
+        switch (letter) {
+          case 'h': return done(() => markSubtitleSync('audio'));
+          case 'j': return done(() => markSubtitleSync('subtitle'));
+          case 'k': return done(applySubtitleSync);
+          case 'v': return done(toggleSubtitles);
+          case 'a': return done(() => actionStatus('Only one audio output is available in the browser, so there is no next audio device to cycle to.'));
+          case 'd': return done(cycleDeinterlaceMode);
+          case 's': return done(snapshot);
+          case 'r': return done(toggleRecording);
+          case 'm': return done(discMenu);
+          case 'o': return done(() => stepTitle(-1));
+          case 'b': return done(() => stepTitle(1));
+          case 'p': return done(() => stepChapter(-1));
+          case 'n': return done(() => stepChapter(1));
+          case 'x': return done(() => cycleProgram(-1));
+          case 'z': return done(() => cycleVideoZoom(-1));
+          default: return;
+        }
+      }
+
+      /* Holding a letter down should not machine-gun track switches. */
+      if (e.repeat && letter !== 'h' && letter !== 'g' && letter !== 'k' && letter !== 'j') return done();
+      switch (letter) {
+        case 's': return done(stopPlayback);
+        case 'n': return done(() => step(1));
+        case 'p': return done(() => step(-1));
+        case 't': return done(showPosition);
+        case 'e': return done(nextFrame);
+        case 'f': return done(fullscreen);
+        case 'm': return done(toggleMute);
+        case 'b': return done(cycleAudioTrack);
+        case 'v': return done(() => cycleSubtitleTrack(1));
+        case 'x': return done(() => cycleProgram(1));
+        case 'a': return done(cycleAspectRatio);
+        case 'c': return done(cycleCropRatio);
+        case 'o': return done(toggleAutoscale);
+        case 'd': return done(toggleDeinterlace);
+        case 'i': return done(() => actionStatus('The controls sit under the video. F toggles fullscreen; Esc leaves it.'));
+        case 'w': return done(() => actionStatus('Wallpaper mode is not available inside proton.'));
+        case 'r': return done(toggleShuffle);
+        case 'l': return done(cycleRepeat);
+        case 'h': return done(() => adjustSubtitleDelay(0.05));
+        case 'g': return done(() => adjustSubtitleDelay(-0.05));
+        case 'k': return done(() => adjustAudioDelay(0.05));
+        case 'j': return done(() => adjustAudioDelay(-0.05));
+        default: return;
+      }
     });
+    /* Ctrl+mouse wheel scales subtitle text, as in VLC. */
+    q('#vlc-stage-wrap').addEventListener('wheel', (e) => {
+      if (!(e.ctrlKey || e.metaKey)) return;
+      e.preventDefault();
+      setSubtitleScale(subtitleScale * (e.deltaY < 0 ? 1.1 : 1 / 1.1));
+    }, { passive: false });
 
     timer = setInterval(updateProgress, 500);
     body.openPath = ({ path: p } = {}) => { if (p) loadPath(p); };
@@ -511,6 +1211,7 @@ registerApp({
     if (options.path) loadPath(options.path);
     else if (!window.crossOriginIsolated) showOverlay('VLC media player', 'Open an audio or video file. VLC needs one reload with its cross-origin isolation shim before libvlc can start; after that, files play in the real VLC engine.', 'enable');
     else showOverlay('VLC media player', 'Open an audio or video file, or start the VLC engine. Playback is by libvlc compiled to WebAssembly.', 'start');
+    syncRateSelect();
     syncChrome();
   },
 });
