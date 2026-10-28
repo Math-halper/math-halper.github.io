@@ -281,6 +281,28 @@ VLC keyboard shortcuts (final implemented/documented set):
 - Help → **Keyboard shortcuts** inside the app lists the set. Browser/OS-reserved
   combinations may still be intercepted before the page sees them.
 
+VLC in a browser tab of its own (the "open the video in a new tab" request):
+
+- Media → **Open in a new browser tab**, the **New tab** toolbar button, and
+  **Alt+Enter** open `apps/media/media/player.html` with the loaded media. The tab
+  boots the *same* app module out of `app.html` (no second player): `player.js`
+  supplies the three globals `assets/core.js` normally provides (`registerApp`,
+  `bar`, `openApp`) and the page carries `<base href="../../../">` so every path is
+  written from the site root like the desktop's.
+- The handover is query-string only: `kind` (`vfs`/`url`), `src`, `name`, `user`,
+  `account`, plus `t` and `rate` so playback resumes where the desktop window was
+  (`options.startAt` / `options.rate` are applied once, in `openEntry`). The tab
+  restores the account from `proton2.*` **read-only**, with no password prompt.
+- Every VLC shortcut works in the tab because it is the same key handler, and the
+  tab enables cross-origin isolation itself by loading root `coi-serviceworker.js`
+  (one reload) before libvlc starts.
+- Honest limits kept in the UI: a computer-picked `File` cannot cross tabs (status
+  line points at Media → Download / save copy… into proton Files), and Alt+Enter
+  inside the tab says VLC is already in a browser tab.
+- `app.html` also gained `options.url` support and `body.tabUrl()` (what the button
+  would open); `quitVlc()` closes the tab when running in one. Do not rebuild this
+  as a duplicated standalone player — the point is one module, one key handler.
+
 ## Pull requests and merged history
 
 - PR #22 merged (`cb0f457`), PR #23 merged (`aa1bcaa`), PR #24 merged (`6a4958e`,
@@ -299,8 +321,11 @@ VLC keyboard shortcuts (final implemented/documented set):
 ## Testing, generation, and sandbox lessons
 
 - Current test suite: `tests/system-desktop.test.cjs`. It passed **28/28** after the
-  Terminal work and **29/29** after the VLC keyboard-shortcut work (including a new
-  behavioural shortcut test and the Terminal nano/file-command round trips).
+  Terminal work, **29/29** after the VLC keyboard-shortcut work, and **32/32** after
+  the VLC browser-tab work: the new tab's handover URL, a jsdom boot of
+  `player.html` (it renders the player, titles itself after the file, lists it on the
+  playlist and answers L, Ctrl+↑ and Alt+Enter), and the static wiring of
+  `player.html`/`player.js` onto the shared app module.
 - On a fresh snapshot, `npm test` may fail with `Error: Cannot find module 'jsdom'`.
   Fix with `npm ci --no-audit --no-fund`; that is an environment issue, not a code
   failure.

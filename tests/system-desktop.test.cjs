@@ -2252,7 +2252,7 @@ test('VLC is a port of the open-source VLC player (vendored libvlc)', () => {
     'cycleSubtitleTrack(-1)', 'function cycleAspectRatio()', 'function cycleCropRatio()',
     'function toggleDeinterlace()', 'function cycleProgram(direction)', 'function stepTitle(direction)',
     'function stepChapter(direction)', 'function showGoToTimeForm()', 'function savePlaylist()',
-    'function clearPlaylist()', 'Keyboard shortcuts (desktop VLC defaults)',
+    'function clearPlaylist()', 'function newTab()', 'Keyboard shortcuts (desktop VLC defaults)',
   ]) assert.ok(app.includes(needle), `VLC hotkey support is missing: ${needle}`);
   assert.match(app, /Shift\+←\/→ 3 seconds · Alt\+←\/→ 10 seconds · Ctrl\+←\/→ 1 minute · Ctrl\+Alt\+←\/→ 5 minutes/,
     'the shortcut help should state VLC\'s seek ladder');
@@ -2323,6 +2323,147 @@ test('VLC keyboard shortcuts follow desktop VLC and stay out of text fields', as
     w.closeWin('media', true);
   } finally {
     close();
+  }
+});
+
+test('VLC hands its video to a browser tab and the shortcuts go with it', async () => {
+  const { w, errors, settle, wins, close } = await bootDesktop();
+  try {
+    await w.eval("FS.writeBlob('/home/ada/clip.mp4', new Blob([new Uint8Array([0, 0, 0, 24, 102, 116, 121, 112])], { type: 'video/mp4' }))");
+    w.openApp('media', { path: '/home/ada/clip.mp4' });
+    await settle();
+    const media = wins.get('media').body;
+
+    // The toolbar button and Media → Open in a new browser tab both offer it.
+    assert.ok(media.querySelector('#md-newtab'), 'VLC should show a New tab button');
+    assert.deepEqual([...media.querySelectorAll('[data-menu="media"] [data-act]')].map((b) => b.dataset.act),
+      ['open', 'folder', 'url', 'newtab', 'files', 'download', 'save-playlist', 'quit']);
+
+    // The handover is a URL: the tab page, the proton path, the account, position, speed.
+    const url = new URL(media.tabUrl());
+    assert.equal(url.pathname, '/apps/media/media/player.html', 'the tab page lives beside the app');
+    assert.equal(url.searchParams.get('kind'), 'vfs');
+    assert.equal(url.searchParams.get('src'), '/home/ada/clip.mp4');
+    assert.equal(url.searchParams.get('name'), 'clip.mp4');
+    assert.equal(url.searchParams.get('user'), 'ada');
+    assert.equal(url.searchParams.get('account'), 'Ada');
+    assert.equal(url.searchParams.get('t'), null, 'nothing to resume before playback started');
+    assert.equal(url.searchParams.get('rate'), null, 'normal speed needs no parameter');
+
+    // Alt+Enter is the keyboard route (jsdom cannot follow the anchor itself).
+    media.querySelector('#vlc-stage-wrap').dispatchEvent(
+      new w.KeyboardEvent('keydown', { key: 'Enter', altKey: true, bubbles: true, cancelable: true }));
+    assert.match(media.querySelector('#vlc-status-text').textContent, /new browser tab/i,
+      'Alt+Enter should report the tab it opened');
+
+    // A network stream is handed over as its URL instead of a path.
+    w.eval("wins.get('media').body.openUrl('https://example.org/movie.mkv')");
+    await settle();
+    const remote = new URL(media.tabUrl());
+    assert.equal(remote.searchParams.get('kind'), 'url');
+    assert.equal(remote.searchParams.get('src'), 'https://example.org/movie.mkv');
+
+    // jsdom only refuses to navigate the new tab; that is not an app error.
+    assert.deepEqual(errors.filter((e) => !/navigation|window\.open/i.test(e)), []);
+    w.closeWin('media', true);
+  } finally {
+    close();
+  }
+});
+
+test('the VLC browser tab runs the same module, shortcuts and all', () => {
+  const page = source('apps/media/media/player.html');
+  const boot = source('apps/media/media/player.js');
+  const app = source('apps/media/media/app.html');
+
+  // A real page next to the app, with every path written from the site root.
+  assert.match(page, /<base href="\.\.\/\.\.\/\.\.\/">/, 'the tab page should resolve paths from the site root');
+  for (const file of ['assets/store.js', 'assets/icons.js', 'data/fs-manifest.js', 'assets/fs.js',
+    'apps/media/media/player.js']) {
+    assert.ok(page.includes(`<script src="${file}"></script>`), `the tab page should load ${file}`);
+  }
+  assert.ok(!page.includes('<script src="assets/core.js">'), 'the tab is not a desktop: it must not load the window manager');
+
+  // One player, not a second copy: the tab boots the desktop app module.
+  assert.match(boot, /apps\/media\/media\/app\.html/, 'the tab boots the VLC app module itself');
+  assert.match(boot, /window\.registerApp = /, 'the tab supplies registerApp (assets/core.js is not loaded)');
+  assert.match(boot, /tab: true/, 'the module should know it is running in a tab');
+  assert.match(boot, /startAt/, 'playback should resume where the desktop window was');
+  assert.match(boot, /coi-serviceworker\.js/, 'the tab enables cross-origin isolation for libvlc itself');
+  assert.match(boot, /MH\.accounts\(\)/, 'the tab reads the same account storage, read-only');
+
+  // The app side: menu, toolbar and Alt+Enter, and no offer to open a tab from a tab.
+  assert.match(app, /data-act="newtab"/, 'Media → Open in a new browser tab');
+  assert.match(app, /id="md-newtab"/, 'the toolbar button');
+  assert.match(app, /if \(alt && key === 'Enter'\) return done\(newTab\)/, 'Alt+Enter should open the tab');
+  assert.match(app, /const inTab = !!options\?\.tab/, 'the module should detect tab mode');
+  assert.match(app, /inTab \? '' :/, 'a tab should not offer to open itself in another tab');
+  assert.match(app, /Browser tab<\/b> — Alt\+Enter/, 'the shortcut help should list the new key');
+  assert.match(app, /came from your computer, and only this window can read it/,
+    'a computer-picked file should be explained, not silently refused');
+});
+
+test('the VLC tab boots the app, lists the handover file and keeps the hotkeys', async () => {
+  const virtualConsole = new VirtualConsole(), errors = [];
+  virtualConsole.on('jsdomError', (err) => errors.push(err.message));
+  /* The tab page's own markup, with its <base> — jsdom cannot fetch the
+   * <script src> tags, so the test runs those files itself below. */
+  const dom = new JSDOM('<!doctype html><html><head><base href="../../../"></head><body>'
+    + '<div id="vlc-tab-body"></div><div id="toasts"></div></body></html>', {
+    url: 'https://math-halper.github.io/apps/media/media/player.html'
+      + '?kind=vfs&src=%2Fhome%2Fada%2Fclip.mp4&name=clip.mp4&user=ada&account=Ada&t=42.5&rate=1.5',
+    runScripts: 'dangerously', pretendToBeVisual: true, virtualConsole,
+  });
+  const w = dom.window;
+  w.Element.prototype.scrollIntoView = function () {};
+  w.TextEncoder = TextEncoder;
+  w.TextDecoder = TextDecoder;
+  w.URL.createObjectURL = () => 'blob:mock';
+  w.URL.revokeObjectURL = () => {};
+  w.Blob.prototype.arrayBuffer = function () {
+    return new Promise((resolve, reject) => {
+      const reader = new w.FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(new Error('could not read the blob'));
+      reader.readAsArrayBuffer(this);
+    });
+  };
+  const run = (text) => { const s = w.document.createElement('script'); s.textContent = text; w.document.body.appendChild(s); s.remove(); };
+  try {
+    for (const p of ['assets/store.js', 'assets/icons.js', 'data/fs-manifest.js', 'assets/fs.js']) run(source(p));
+
+    // The account and the file VLC handed over, already in this browser's storage.
+    w.eval("currentUser = { username: 'Ada', usernameLower: 'ada', displayName: 'Ada' }; userData = MH.defaultData('Ada', 'ada');");
+    await w.eval("FS.writeBlob('/home/ada/clip.mp4', new Blob([new Uint8Array([0, 0, 0, 24])], { type: 'video/mp4' }))");
+    w.eval('saveDataNow()');
+
+    // The tab boots the desktop app module out of its own file.
+    w.fetch = async () => ({ ok: true, status: 200, text: async () => source('apps/media/media/app.html') });
+    run(source('apps/media/media/player.js'));
+    await new Promise((resolve) => setTimeout(resolve, 80));
+
+    const body = w.document.getElementById('vlc-tab-body');
+    assert.ok(body.querySelector('#vlc-canvas'), 'the tab should render the VLC player itself');
+    assert.equal(w.document.title, 'clip.mp4 — VLC', 'the tab is titled after the media');
+    assert.equal(body.querySelector('#vlc-file-name').textContent, 'clip.mp4',
+      'the handed-over file is the loaded media');
+    assert.ok(body.querySelector('#vlc-playlist-items [data-queue]'), 'the file is on the playlist');
+    assert.equal(body.querySelector('#md-newtab'), null, 'a tab does not offer to open itself in another tab');
+
+    // And the shortcut set is the same one, because it is the same module.
+    const stage = body.querySelector('#vlc-stage-wrap');
+    const key = (init) => stage.dispatchEvent(new w.KeyboardEvent('keydown', { bubbles: true, cancelable: true, ...init }));
+    key({ key: 'l' });
+    assert.equal(body.querySelector('#vlc-repeat').getAttribute('aria-pressed'), 'true', 'L still cycles repeat in the tab');
+    key({ key: 'ArrowUp', ctrlKey: true });
+    assert.equal(body.querySelector('#vlc-volume').value, '105', 'Ctrl+Up still drives the volume in the tab');
+    key({ key: 'Enter', altKey: true });
+    assert.match(body.querySelector('#vlc-status-text').textContent, /already in a browser tab/i,
+      'Alt+Enter in a tab explains itself instead of opening another');
+
+    assert.deepEqual(errors, [], 'booting the tab should raise no errors');
+  } finally {
+    w.close();
   }
 });
 
