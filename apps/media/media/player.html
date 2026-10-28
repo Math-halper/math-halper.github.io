@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- VLC in a browser tab of its own.
+     Opened by the VLC app: Media → Open in a new browser tab (or the New tab
+     button, or Alt+Enter). This is the same player as the desktop window —
+     apps/media/media/player.js boots the very same app module out of
+     app.html — so every keyboard shortcut in Help → Keyboard shortcuts
+     works here, and the page has the whole tab to play in.
+
+     The media travels in the query string:
+       ?kind=vfs&src=/home/you/Clip.mp4&name=Clip.mp4&user=you&t=42.5&rate=1.25
+       ?kind=url&src=https://example.org/movie.mkv&name=movie.mkv
+     kind=url is a network address; kind=vfs is a path in proton's virtual
+     file system (which this tab reads from the same browser storage). t is
+     the position in seconds and rate the speed, so playback continues where
+     the desktop window was.
+
+     The page sits in apps/media/media/, but every path below is written from
+     the site root, like the desktop's own: <base> makes that work. -->
+<base href="../../../">
+<title>VLC — proton</title>
+<link rel="icon" href="data/icons/vlc.png">
+<link rel="stylesheet" href="assets/styles.css">
+<style>
+  html,body{height:100%;margin:0;background:#000}
+  body{overflow:hidden;color:#fff}
+  #vlc-tab-body{display:flex;flex-direction:column;height:100%}
+  #vlc-tab-body>.appbar{flex:none}
+  #vlc-tab-body>.vlc-shell{flex:1;min-height:0}
+  .vlc-tab-note{margin:0;padding:18px 22px;font-size:14px;line-height:1.6;color:#ddd;max-width:760px}
+  .vlc-tab-note h1{font-size:19px;margin:0 0 8px;color:#fff}
+  .vlc-tab-note code{background:#1c1c1c;border:1px solid #333;border-radius:4px;padding:1px 5px}
+  .vlc-tab-note a{color:#ff7900}
+</style>
+</head>
+<body>
+<div id="vlc-tab-body"><p class="vlc-tab-note">Loading VLC…</p></div>
+<div id="toasts" aria-live="polite"></div>
+<noscript><p class="vlc-tab-note">proton's VLC needs JavaScript — playback is VLC's own engine (libvlc) compiled to WebAssembly, running in this tab.</p></noscript>
+<!-- The same core files the desktop loads, so FS, MH and the icon set are the
+     real ones (see index.html). assets/core.js is deliberately not loaded:
+     this tab has no desktop, no windows and no accounts screen, so
+     player.js supplies the three globals the app module expects from it
+     (registerApp, bar, openApp). -->
+<script src="assets/store.js"></script>
+<script src="assets/icons.js"></script>
+<script src="data/fs-manifest.js"></script>
+<script src="assets/fs.js"></script>
+<script src="apps/media/media/player.js"></script>
+</body>
+</html>

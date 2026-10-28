@@ -342,6 +342,25 @@ not be saved.", etc.).
   until the **Enable VLC engine** button has loaded the root
   `coi-serviceworker.js` shim and proton has reloaded once, the player
   shows that prompt and queues the chosen file instead of playing it.
+  - **Open in a new browser tab** — the **New tab** button beside
+    **Open…**, *Media → Open in a new browser tab*, or **Alt+Enter**
+    opens `apps/media/media/player.html` in a new tab with the loaded
+    media, where VLC gets the whole tab. That page boots this very app
+    module (`apps/media/media/player.js` supplies the three globals
+    `assets/core.js` normally provides: `registerApp`, `bar`,
+    `openApp`), so it is the same player, the same menus and the same
+    keyboard shortcuts — nothing is reimplemented. The handover rides in
+    the query string: `kind` (`vfs`/`url`), `src`, `name`, `user` and
+    `account` (the tab then reads that account's storage read-only, with
+    no password prompt), plus `t` and `rate` so playback resumes where
+    the desktop window was. In the tab the **New tab** button is not
+    shown and **Alt+Enter** says VLC is already in a browser tab of its
+    own. If the tab is not cross-origin isolated yet it registers the
+    root `coi-serviceworker.js` itself and reloads once, then plays.
+    A file picked from the computer cannot be handed over (only the
+    picking window holds it): the status line says so and points at
+    *Media → Download / save copy…* so the copy in proton Files can be
+    opened in a tab.
 
 ## 12. Tools
 

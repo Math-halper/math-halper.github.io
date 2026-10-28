@@ -48,7 +48,7 @@ game bundles and earlier built-in sites remain removed (except Test Page).
 | **Text Editor** (`text-editor`) | Open, edit and save text files in your home folder; proton's own files open read-only |
 | **PDF Viewer** (`pdf`) | Read PDF files in your browser's own viewer — no extra library, nothing uploaded |
 | **Image Viewer** (`image-viewer`) | View PNG, JPG, GIF, WebP, AVIF, BMP, ICO and SVG files with zoom and a folder playlist |
-| **VLC** (`media`) | The open-source VLC media player ported to WebAssembly (libvlc): menus, playlist, seek/volume/rate, tracks and subtitles; plays audio and video itself |
+| **VLC** (`media`) | The open-source VLC media player ported to WebAssembly (libvlc): menus, playlist, seek/volume/rate, tracks and subtitles; plays audio and video itself — and **Media → Open in a new browser tab** (or Alt+Enter) plays the loaded file in a tab of its own, with the same player and the same keyboard shortcuts |
 | **Ruffle Flash Player** (`ruffle-flash-player`) | Load and play your own Flash .swf files |
 | **Web Retro** (`web-retro`) | Play the bundled classics — or your own ROMs — N64, SNES, NES and Game Boy (webretro) |
 | **2048** (`game-2048`) | Play 2048 - join the tiles |
@@ -242,6 +242,29 @@ right-click anything in Files and choose **Add desktop shortcut**, or drag an
 entry out of Files onto the wallpaper. A shortcut is a link, never a copy — it
 follows renames, is marked when its target goes missing, and removing it never
 deletes the file.
+
+## VLC in a browser tab
+
+VLC plays inside its window, and it can also take over a whole tab: **Media →
+Open in a new browser tab**, the **New tab** button beside **Open…**, or
+**Alt+Enter** opens `apps/media/media/player.html` with the loaded file.
+That page is not a second player — `apps/media/media/player.js` boots the very
+same app module out of `app.html`, so the menus, the libvlc engine and **every
+keyboard shortcut** (Space, S, N/P, F, B/V, M, the seek ladders, the delay keys,
+speed, repeat/shuffle, the playlist bookmarks and the Ctrl set) work there
+unchanged.
+
+What it was playing travels in the tab's URL: the proton file system path or the
+network address, the account, the position and the playback rate — so the tab
+opens on the same file, at the same place, and reads that account's files
+read-only from the same browser storage, with no password prompt. If the tab is
+not cross-origin isolated yet it loads the root `coi-serviceworker.js` and
+reloads once, then plays (that is what libvlc's WebAssembly threads need).
+
+Two honest limits: a file picked from your computer stays in the window that
+picked it, so VLC tells you to *Media → Download / save copy…* it into proton
+Files and open that copy in a tab; and inside the tab, Alt+Enter reports that
+VLC is already in a browser tab of its own.
 
 ## Search
 
