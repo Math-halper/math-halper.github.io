@@ -148,6 +148,11 @@ registerApp({
         playBtn.textContent = 'Play back';
       }, total - (performance.now() - t0)));
     });
+
+    /* The keys take the keyboard as soon as the app opens (the Calculator does
+     * the same with its keypad): the computer keyboard plays notes straight
+     * away instead of waiting for a click on the keys. */
+    keysEl.focus();
   },
 });
 </script>

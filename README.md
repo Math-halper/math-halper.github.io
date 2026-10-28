@@ -43,12 +43,17 @@ game bundles and earlier built-in sites remain removed (except Test Page).
 | **Settings** (`settings`) | Account, wallpaper & accent, password, backup, other accounts |
 | **About** (`about`) | What this is, credits, licence |
 | **Browser** (`browser`) | Tabs, back/forward, bookmarks and history; a bar that **searches this repository** when you type words and visits an address when you type one; built-in websites, external addresses, HTML files from the virtual file system and a reader that marks your matches |
+| **System Monitor** (`system-monitor`) | Live CPU/memory readouts and the open windows, with a close button per window |
 | **Calculator** (`calculator`) | Do quick maths from the keypad or your keyboard |
+| **Clock** (`clock`) | The time and date, a stopwatch and a countdown timer that beeps when it finishes |
 | **Files** (`files`) | Browse `/` and your own `/home/<you>`: create, rename, move, copy, import, search, download (folders as ZIP) |
 | **Text Editor** (`text-editor`) | Open, edit and save text files in your home folder; proton's own files open read-only |
 | **PDF Viewer** (`pdf`) | Read PDF files in your browser's own viewer — no extra library, nothing uploaded |
 | **Image Viewer** (`image-viewer`) | View PNG, JPG, GIF, WebP, AVIF, BMP, ICO and SVG files with zoom and a folder playlist |
+| **Paint** (`paint`) | Draw with a brush, shapes, an eraser and a colour picker, then save the picture into either file system |
+| **Piano** (`piano`) | Play the keys, record a tune and play it back (the computer keyboard plays notes too) |
 | **VLC** (`media`) | The open-source VLC media player ported to WebAssembly (libvlc): menus, playlist, seek/volume/rate, tracks and subtitles; plays audio and video itself — and **Media → Open in a new browser tab** (or Alt+Enter) plays the loaded file in a tab of its own, with the same player and the same keyboard shortcuts |
+| **Terminal** (`terminal`) | A shell over the account's files: ls, cd, cat, nano, mkdir -p, touch, rm -r, cp, mv, find, stat, tree, open, clear |
 | **Ruffle Flash Player** (`ruffle-flash-player`) | Load and play your own Flash .swf files |
 | **Web Retro** (`web-retro`) | Play the bundled classics — or your own ROMs — N64, SNES, NES and Game Boy (webretro) |
 | **2048** (`game-2048`) | Play 2048 - join the tiles |
@@ -106,7 +111,7 @@ runtime dependencies or build step. Optional regression tests use jsdom:
 ## Project layout (everything is a module)
 
 - **Apps:** one folder + HTML file each — `apps/<category>/<name>/app.html`
-  (53 apps in five category folders — `system/`, `productivity/`, `media/`, `tools/`,
+  (59 apps in five category folders — `system/`, `productivity/`, `media/`, `tools/`,
   `games/` — matching the menu sections, plus one starting point:
   `apps/_template/` for a normal app). Embedded-page apps are not shipped:
   every app's files live in this repository.
@@ -139,8 +144,8 @@ runtime dependencies or build step. Optional regression tests use jsdom:
   `assets/html-loader.js` (loads the app modules at boot, or a `streamed=true`
   app's module on first launch), `assets/styles.css`, `assets/boot.js`.
 - **Tests:** `tests/system-desktop.test.cjs` — 16 tests. The catalogs are
-  exactly the 41 catalogued apps (five desktop System apps, the file system
-  suite, a Calculator, the two Tools, and the games) and the one test site;
+  exactly the 59 catalogued apps (six System apps, five Productivity, four
+  Media, four Tools and 40 games) and the one test site;
   every module is present, each app is filed in its category folder, the
   generated manifest matches the repository, and a jsdom desktop boots and
   opens each app (the Calculator is driven through real sums; Web Retro's
@@ -291,6 +296,25 @@ whether something plays:
 open lists what it found (or says it found no tracks at all — usually an
 incomplete file).
 
+## The keyboard, and which app opens which file
+
+- **The window in front takes the keyboard.** Clicking a window (or opening an
+  app) focuses its app surface, so apps that listen for keys on their own body
+  actually get them — Image Viewer's arrows and zoom keys, the Text Editor's
+  Ctrl+S, the Browser's Alt+←/→ history, VLC's whole hotkey set. Clicking a
+  field, a button or the video in the window already in front never moves the
+  caret. Calculator, Piano and Terminal focus their own keypad, keyboard and
+  prompt as they open, so they type straight away.
+- **Every audio and video extension goes to VLC.** `FS.MEDIA_AUDIO` /
+  `FS.MEDIA_VIDEO` in `assets/fs.js` are the single list the file system uses,
+  and every one of VLC's own extensions is in it — including `.wmv`, `.mpg`,
+  `.mpeg`, `.m4v`, `.3gp`, `.flv`, `.rm`, `.rmvb`, `.asf`, `.vob`, `.ts`,
+  `.m2ts`, `.mts`, `.opus`, `.weba`, `.mid`, `.midi`, `.aif`, `.aiff`, `.ac3`
+  and `.mka`, which used to fall through to the Text Editor as text. They are
+  binary for reading and saving, and carry their real MIME type.
+- **A typed save name is a name, not a path.** `/` and `\\` become `_` in every
+  save dialog, so a name can never leave the folder the dialog is showing.
+
 ## Search
 
 The Browser's bar is a search bar first: **type words and it searches, type an
@@ -358,10 +382,11 @@ Bookmarks and history are per-account data (`userData.bookmarks`,
   Viewer, Settings backups, Customize icons and Web Retro's ROM picker all
   work with either.
 - **Menu sections** — the start menu groups the apps by `cat=`: **System**
-  (App Center, Customize, Settings, About, Browser), **Productivity**
-  (Calculator, Files, Text Editor, PDF Viewer), **Media** (Image Viewer,
-  VLC), **Tools** (Ruffle Flash Player, Web Retro, plus the not-preinstalled
-  You Are An Idiot once installed) and **Games** (40 games: 2048, the Bloons TD series, the Henry Stickmin
+  (App Center, Customize, Settings, About, Browser, System Monitor),
+  **Productivity** (Calculator, Clock, Files, Text Editor, PDF Viewer),
+  **Media** (Image Viewer, VLC, Paint, Piano), **Tools** (Ruffle Flash Player,
+  Web Retro, Terminal, plus the not-preinstalled You Are An Idiot once
+  installed) and **Games** (40 games: 2048, the Bloons TD series, the Henry Stickmin
   series, Pacman, Tetris, Slope, Tunnel Rush, the Exst Arcade batch below and more), with **My Apps** for
   anything an account adds. The order is `CATS` in `assets/core.js`.
 - **Search** — the Browser's bar searches *this repository* with proton's own

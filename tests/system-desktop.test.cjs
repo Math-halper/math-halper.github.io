@@ -2468,6 +2468,160 @@ test('VLC makes its audio output on the first click and says when it is held bac
   }
 });
 
+test('the window in front takes the keyboard, so app shortcuts work', async () => {
+  const { w, settle, wins, close } = await bootDesktop();
+  try {
+    /* A window is a focus target: clicking the picture, or opening the app,
+     * leaves the keyboard on the app surface — otherwise an app listening for
+     * keys on its own body (Image Viewer, Text Editor, Browser, VLC) never
+     * heard one, because the document had the focus. */
+    await w.eval("FS.writeBlob('/home/ada/Pictures/a.png', new Blob([new Uint8Array([137,80,78,71])], { type: 'image/png' }))");
+    w.eval("openFSItem('/home/ada/Pictures/a.png')");
+    await settle();
+    const view = wins.get('image-viewer');
+    assert.equal(view.el.tabIndex, -1, 'the window is focusable');
+    assert.equal(view.body.tabIndex, -1, 'so is its app surface');
+    assert.equal(w.document.activeElement, view.body, 'opening an app puts the keyboard on it');
+
+    const status = () => view.body.querySelector('#iv-status').textContent.replace(/\s+/g, ' ');
+    assert.match(status(), /Fit to window/);
+    const press = (init) => w.document.activeElement.dispatchEvent(
+      new w.KeyboardEvent('keydown', { bubbles: true, cancelable: true, ...init }));
+    press({ key: '+' });
+    assert.match(status(), /125%/, '+ should zoom the picture the window in front is showing');
+    press({ key: '0' });
+    assert.match(status(), /Fit to window/, '0 fits it back');
+
+    /* Bringing another window forward takes the keyboard with it. */
+    w.openApp('calculator');
+    await settle();
+    const calc = wins.get('calculator');
+    assert.ok(calc.el.contains(w.document.activeElement),
+      'the app opened last is the one with the keyboard (Calculator focuses its own keypad)');
+    press({ key: '+', ctrlKey: true });
+    assert.match(status(), /Fit to window/, 'the picture behind must not act on another app’s keys');
+
+    /* Clicking a window in front again focuses its surface, but never steals
+     * the focus from a field the click went into. */
+    wins.get('image-viewer').el.dispatchEvent(new w.MouseEvent('pointerdown', { bubbles: true }));
+    assert.equal(w.document.activeElement, view.body, 'clicking a window focuses its app surface');
+    w.openApp('browser');
+    await settle();
+    const browser = wins.get('browser');
+    const bar = browser.body.querySelector('#b-url');
+    bar.focus();
+    browser.el.dispatchEvent(new w.MouseEvent('pointerdown', { bubbles: true }));
+    assert.equal(w.document.activeElement, bar, 'a click inside the window must keep the caret where it is');
+
+    w.closeWin('browser', true);
+    w.closeWin('calculator', true);
+    w.closeWin('image-viewer', true);
+  } finally {
+    close();
+  }
+});
+
+test('every audio and video extension VLC accepts opens in VLC, not the Text Editor', async () => {
+  const { w, close } = await bootDesktop();
+  try {
+    /* VLC's own picker list is the source of truth; the file system must
+     * route every one of them to the media app and treat the bytes as binary
+     * (before this, .mpg/.wmv/.flv/.midi fell through to the Text Editor). */
+    const listed = (source('apps/media/media/app.html')
+      .match(/const MEDIA_EXTS = \[([\s\S]*?)\];/)[1].match(/'([a-z0-9]+)'/g) || [])
+      .map((s) => s.replace(/'/g, ''));
+    assert.ok(listed.length > 25, 'VLC still declares its extensions');
+    const unhandled = listed.filter((ext) => {
+      const p = '/home/ada/clip.' + ext;
+      return w.eval(`FS.appFor('${p}')`) !== 'media'
+        || w.eval(`FS.isBinary('${p}')`) !== true
+        || w.eval(`FS.mediaKind('${p}')`) === 'null';
+    });
+    assert.deepEqual(unhandled, [], 'these extensions do not reach VLC');
+
+    // A few named ones, with their kind and MIME type.
+    assert.equal(w.eval("FS.mediaKind('/home/ada/movie.wmv')"), 'video');
+    assert.equal(w.eval("FS.mime('/home/ada/movie.wmv')"), 'video/x-ms-wmv');
+    assert.equal(w.eval("FS.mime('/home/ada/clip.3gp')"), 'video/3gpp');
+    assert.equal(w.eval("FS.mediaKind('/home/ada/tune.mid')"), 'audio');
+    assert.equal(w.eval("FS.mime('/home/ada/tune.midi')"), 'audio/midi');
+    assert.equal(w.eval("FS.mime('/home/ada/voice.opus')"), 'audio/ogg');
+
+    // And opening such a file really lands in VLC.
+    await w.eval("FS.writeBlob('/home/ada/movie.mpg', new Blob([new Uint8Array([0, 0, 1, 186])], { type: 'video/mpeg' }))");
+    w.eval("openFSItem('/home/ada/movie.mpg')");
+    await new Promise((resolve) => setTimeout(resolve, 30));
+    assert.equal(w.eval("wins.get('media')?.body.querySelector('#vlc-file-name').textContent"), 'movie.mpg');
+  } finally {
+    close();
+  }
+});
+
+test('the terminal parses flags and file lists like a shell', async () => {
+  const { w, settle, wins, close } = await bootDesktop();
+  try {
+    w.openApp('terminal');
+    await settle();
+    const term = wins.get('terminal').body;
+    const form = term.querySelector('#term-form');
+    const run = async (line) => {
+      term.querySelector('#term-in').value = line;
+      form.dispatchEvent(new w.Event('submit', { bubbles: true, cancelable: true }));
+      await settle();
+      return term.textContent.replace(/\s+/g, ' ');
+    };
+
+    await run('mkdir -p A/B/C');
+    assert.equal(w.eval("FS.isDir('/home/ada/A/B/C')"), true, 'mkdir -p makes the parents too');
+    assert.equal(w.eval("FS.exists('/home/ada/-p')"), false, 'mkdir -p must not create a folder called "-p"');
+    assert.equal(w.eval("FS.exists('/home/ada/-r')"), false, 'nor "-r"');
+
+    assert.match(await run('mkdir -q z'), /unknown option "-q"/, 'an unknown flag is reported, not used as a name');
+    assert.equal(w.eval("FS.exists('/home/ada/-q')"), false);
+
+    await run('touch a.txt b.txt');
+    assert.equal(w.eval("FS.exists('/home/ada/a.txt')"), true,
+      'touch makes every file it is given, in the current folder');
+    assert.equal(w.eval("FS.exists('/home/ada/b.txt')"), true, 'including the second name');
+
+    await run('cd A/B/C');
+    await run('touch one.txt two.txt');
+    assert.equal(w.eval("FS.exists('/home/ada/A/B/C/one.txt')"), true, 'touch works in a sub-folder');
+    assert.equal(w.eval("FS.exists('/home/ada/A/B/C/two.txt')"), true, 'for every name');
+
+    assert.match(await run('rm -rf .'), /refusing to remove/i, 'the terminal will not delete the folder it is standing in');
+    assert.equal(w.eval("FS.isDir('/home/ada/A/B/C')"), true, 'and that folder is still there');
+    await run('cd ~');
+    await run('rm -rf A');
+    assert.equal(w.eval("FS.exists('/home/ada/A')"), false, 'rm -rf removes a whole tree');
+
+    assert.match(await run('echo hi > note.txt'), /no pipes/i, 'redirection is explained instead of echoed back');
+    assert.equal(w.eval("FS.exists('/home/ada/hi')"), false);
+    w.closeWin('terminal', true);
+  } finally {
+    close();
+  }
+});
+
+test('a typed save name stays inside the folder the dialog shows', async () => {
+  const { w, close } = await bootDesktop();
+  try {
+    const promised = w.eval("MH.vfsPick({ title: 'Save here', save: true, name: 'untitled.txt' })");
+    const box = w.document.querySelector('.file-source-backdrop');
+    assert.ok(box, 'the save dialog opens');
+    const field = box.querySelector('[data-vfs-name]');
+    field.value = '../../../../escape.txt';
+    box.querySelector('[data-vfs-ok]').click();
+    const picked = await promised;
+    assert.equal(picked.split('/').includes('..'), false, 'no segment of the save path can walk out of the folder');
+    assert.equal(w.eval(`FS.dirname(${JSON.stringify(picked)})`), w.eval('FS.home()'),
+      `the save went straight into the folder the dialog showed: ${picked}`);
+    assert.match(picked, /escape\.txt$/);
+  } finally {
+    close();
+  }
+});
+
 test('the VLC browser tab runs the same module, shortcuts and all', () => {
   const page = source('apps/media/media/player.html');
   const boot = source('apps/media/media/player.js');

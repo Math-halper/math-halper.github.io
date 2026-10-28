@@ -327,6 +327,12 @@ registerApp({
     };
     function promptAudio() {
       if (audioPrompt || !player || !audioSuspended()) return;
+      /* Never throw away a form the user is in the middle of (the URL box,
+       * Go to time…): a toast says it instead, and Messages keeps the state. */
+      if (!note.hidden) {
+        MH.toast('VLC has no sound yet — click the video once to let the browser start its audio.');
+        return;
+      }
       audioPrompt = true;
       say(`<b>VLC is playing, but the browser is holding the audio back.</b>
         Browsers only allow sound after the page has been clicked — click the video
@@ -1178,14 +1184,19 @@ registerApp({
       if (dialog && !(winEl && winEl.contains(dialog))) return false;
       if (!winEl) return true;                       // VLC's own browser tab
       if (winEl.contains(target)) return true;
-      /* Keys pressed while VLC is the window in front belong to VLC only when
-       * nothing else has the focus: the panel, the start menu and the desktop
-       * menus all focus a control of their own before anyone types there. */
+      /* A key press targets whatever has the focus. When that is the page
+       * itself (nothing focused, or an event dispatched at the document), VLC
+       * answers if it is the window in front and the focus has not gone to
+       * another app, the panel or the start menu — those all focus a control
+       * of their own first. Keys aimed anywhere else belong to that element. */
       const tag = target?.tagName;
+      const onPage = target === document || target === document.body || target === document.documentElement
+        || tag === 'BODY' || tag === 'HTML';
+      if (!onPage) return false;
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || target?.isContentEditable) return false;
       if (!winEl.classList.contains('active')) return false;
       const focused = document.activeElement;
-      return !focused || focused === document.body || focused === document.documentElement;
+      return !focused || focused === document.body || focused === document.documentElement || winEl.contains(focused);
     }
     function onVlcKeydown(e) {
       if (destroyed) return;

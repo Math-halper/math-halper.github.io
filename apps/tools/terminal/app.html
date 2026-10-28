@@ -167,9 +167,9 @@ registerApp({
           'echo <text>     print text',
           'nano <file>     edit a text file (^S saves, ^X exits)',
           'tree [folder]   show a folder and everything inside it',
-          'mkdir <folder>  make a folder',
-          'touch <file>    make an empty file if there is none',
-          'rm [-r] <path>  delete a file (add -r for a folder)',
+          'mkdir [-p] <folder>…  make a folder (-p also makes its parents)',
+          'touch <file>…   make empty files where there are none',
+          'rm [-r] <path>…  delete files (add -r for a folder)',
           'cp <from> <to>  copy a file or folder',
           'mv <from> <to>  move or rename a file or folder',
           'find <text>     find files under here whose name matches',
@@ -236,19 +236,48 @@ registerApp({
         print(lines.join('\n'));
       },
       mkdir(args) {
-        if (!args[0]) { print('mkdir: which folder?'); return; }
-        try { FS.mkdir(resolve(args[0])); } catch (err) { fail('mkdir', err); }
+        /* Flags first, then every path: `mkdir -p A/B C` used to treat "-p"
+         * as the folder name and make a folder literally called "-p". */
+        const isFlag = (a) => a.startsWith('-') && a.length > 1 && !/^-\d/.test(a);
+        const flags = args.filter(isFlag).join('').replace(/-/g, '');
+        const paths = args.filter((a) => !isFlag(a));
+        const unknown = flags.replace(/p/gi, '');
+        if (unknown) { print(`mkdir: unknown option "-${unknown}" — the terminal knows -p (make the parents too)`); return; }
+        if (!paths.length) { print('mkdir: which folder?'); return; }
+        const recursive = /p/i.test(flags);
+        for (const path of paths) {
+          try { FS.mkdir(resolve(path), '/', recursive); } catch (err) { fail('mkdir', err); }
+        }
       },
       touch(args) {
-        if (!args[0]) { print('touch: which file?'); return; }
-        const target = resolve(args[0]);
-        try { if (!FS.exists(target)) FS.write(target, ''); } catch (err) { fail('touch', err); }
+        /* Every name, not just the first: `touch a.txt b.txt` made one file. */
+        const names = args.filter((a) => !(a.startsWith('-') && a.length > 1));
+        if (!names.length) { print('touch: which file?'); return; }
+        for (const name of names) {
+          const target = resolve(name);
+          try { if (!FS.exists(target)) FS.write(target, ''); } catch (err) { fail('touch', err); }
+        }
       },
       rm(args) {
-        const recursive = args.includes('-r');
-        const name = args.find((a) => a !== '-r');
-        if (!name) { print('rm: which file? (add -r for a folder)'); return; }
-        try { FS.rm(resolve(name), '/', recursive); } catch (err) { fail('rm', err); }
+        /* `rm -r`, `rm -rf`, `rm -f` and several paths, the way the flags are
+         * written in a real shell. */
+        const isFlag = (a) => a.startsWith('-') && a.length > 1 && !/^-\d/.test(a);
+        const flags = args.filter(isFlag).join('').replace(/-/g, '');
+        const names = args.filter((a) => !isFlag(a));
+        const unknown = flags.replace(/[rf]/gi, '');
+        if (unknown) { print(`rm: unknown option "-${unknown}" — the terminal knows -r (folders) and -f`); return; }
+        if (!names.length) { print('rm: which file? (add -r for a folder)'); return; }
+        const recursive = /r/i.test(flags);
+        for (const name of names) {
+          const target = resolve(name);
+          /* Deleting the folder you are standing in would leave the prompt
+           * pointing at nothing — a real shell refuses "." for this reason. */
+          if (target === cwd || cwd.startsWith(target + '/')) {
+            print(`rm: refusing to remove "${name}" — it is the folder you are in (or contains it)`);
+            continue;
+          }
+          try { FS.rm(target, '/', recursive); } catch (err) { fail('rm', err); }
+        }
       },
       async cp(args) {
         if (args.length < 2) { print('cp: cp <from> <to>'); return; }
@@ -295,6 +324,13 @@ registerApp({
       input.value = '';
       print(`${prompt()} ${line}`);
       if (!line) return;
+      /* There is no shell here — no pipes and no redirection — so say that
+       * plainly instead of echoing "hi > note.txt" back as if it worked. */
+      if (/[|>]/.test(line) && !/^['"]/.test(line)) {
+        print('This terminal runs one command at a time: no pipes (|) and no redirection (>). Write a file with nano <file>.');
+        promptEl.textContent = prompt();
+        return;
+      }
       history.push(line);
       histIdx = history.length;
       const [cmd, ...args] = line.split(/\s+/);

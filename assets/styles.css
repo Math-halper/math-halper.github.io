@@ -105,6 +105,11 @@ button{cursor:pointer}
 .windows-layer{position:absolute;inset:0;bottom:44px}
 .win{position:absolute;display:flex;flex-direction:column;background:var(--win-bg);border:1px solid var(--win-border);border-radius:7px 7px 4px 4px;box-shadow:0 16px 44px rgba(0,0,0,.45);min-width:300px;min-height:200px;overflow:hidden}
 .win.active{box-shadow:0 26px 70px rgba(0,0,0,.6)}
+/* A window and its app surface are focus targets (tabindex="-1") so app
+ * keyboard shortcuts work; their focus ring is the title bar shadow above,
+ * not an outline around the whole window. */
+.win:focus,.win-body:focus{outline:none}
+.win:focus-visible,.win-body:focus-visible{outline:none}
 .win.max{left:0!important;top:0!important;width:100%!important;height:100%!important;border-radius:0}
 .win.min{display:none}
 .win-head{height:38px;flex:none;display:flex;align-items:center;gap:8px;padding:0 6px 0 12px;background:linear-gradient(var(--titlebar-a),var(--titlebar-b));color:var(--titlebar-text);box-shadow:inset 0 -1px 0 rgba(0,0,0,.3);user-select:none;touch-action:none;cursor:default}

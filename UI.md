@@ -211,6 +211,13 @@ it a new file/URL via `openPath`).
   windows open centred with a small cascade offset. Apps may veto closing
   (`beforeClose`) and clean up (`onDestroy`). A crashing app shows an in-window
   error card: "«App» hit a snag" with the message.
+- **The window in front owns the keyboard** — both a window and its app body
+  are focus targets (`tabindex="-1"`, no outline; the active title bar shows
+  it), and `focusWin()` moves the focus onto the app body whenever a window
+  comes forward, so an app's own key listener (Image Viewer, Text Editor,
+  Browser, VLC) actually receives its keys. The focus is only moved when it is
+  not already inside that window, so clicking a text field or a video in the
+  window already in front keeps the caret where it is.
 - **Shared app chrome** — most apps begin with an **app bar** (`appbar`): a
   bold `h2` title followed by action buttons; content sits in `app-main`
   (optionally `.pad`). Common widgets throughout: `.btn` (`.sm`, `.primary`,
@@ -266,6 +273,10 @@ not be saved.", etc.).
   web": cards for each built-in website (icon, name, description, *Visit*).
   Saved websites are not listed on the start page any more. Pages load in a sandboxed
   iframe (`allow-scripts allow-same-origin allow-forms allow-popups`).
+- **System Monitor** — live CPU and memory readouts that refresh on a timer,
+  the open windows as rows (each with its **Close** button), and a stats line
+  (open windows, apps, storage). It watches the real desktop state, so closing
+  a window from here closes that window.
 - **About proton** — logo + "A complete desktop computer in your browser — no
   server edition"; sections **Your account**, **What's inside** and
   **Credits & licence**.
@@ -276,7 +287,7 @@ not be saved.", etc.).
   *proton system* tree of the whole site + the account's writable home folder):
   - **App bar**: New folder, New file, **Import** (copies real files in — text
     stays editable, anything else stores exact bytes, 2 MB each), Download,
-    **Tiles/列表 view toggle**, Refresh.
+    **Tiles/list view toggle**, Refresh.
   - **Nav bar**: **↑ Up** (Alt+↑), breadcrumb trail (`/ › Home › Documents`),
     a path field + **Go**, and a recursive **Search under here…**.
   - **Sidebar**: "Your folders" places and a "proton system (read-only)" list.
@@ -287,7 +298,9 @@ not be saved.", etc.).
     properties, add desktop shortcut…), and a **Properties** panel.
   - All prompts are **inline forms** (never `window.prompt`): rename/create
     with folder datalists, "(2)" de-duplication, read-only guards with clear
-    error toasts.
+    error toasts. Names typed into any save dialog are names, not paths —
+    `/` and `\\` in them become `_`, so a typed name can never leave the folder
+    the dialog is showing.
 - **Text Editor** — app bar with **Open…**, **New**, **Save…** (enabled once
   there is something to save), Copy, a status line and the edit area; when
   nothing is open it shows "Nothing open yet" plus a **"Your text files"** list.
@@ -299,6 +312,9 @@ not be saved.", etc.).
   AC, ⌫ (delete digit), ±, ÷ / 7 8 9 × / 4 5 6 − / 1 2 3 + / 0 . = with the
   operator column in the accent style. The keyboard drives the same state
   machine (digits, `+ - * /`, Enter = equals, Backspace, Esc/c = clear).
+- **Clock** — the live time and date, a **stopwatch** (Start/Pause, Reset) and
+  a **countdown timer** (minutes field, Start/Stop) that beeps when it reaches
+  zero.
 - **PDF Viewer** — app bar with **Open…**; empty state "No PDF open" and a
   **"Your PDFs"** list; opened PDFs render in the window with a status line.
 - *(Viewers share a pattern: Open… dialog with an inline path form +
@@ -378,8 +394,28 @@ not be saved.", etc.).
     *Media → Download / save copy…* so the copy in proton Files can be
     opened in a tab.
 
+- **Paint** — a canvas with a brush, shapes, an eraser and a colour picker,
+  **Clear**, and **Save** into either file system (a PNG in your files this
+  computer, or one in proton Files).
+- **Piano** — a two-octave keyboard drawn as real keys: click or drag across
+  them, or play them from the computer keyboard (the keys take the keyboard as
+  the app opens). **Record** captures what you play and **Play back** replays
+  it.
+
 ## 12. Tools
 
+- **Terminal** — a shell over the account's virtual file system: the app bar
+  names it, a scrollback pane prints the session and a prompt line takes the
+  command. Commands: `help`, `ls`, `cd`, `pwd`, `cat`, `echo`, `nano`, `tree`,
+  `mkdir`, `touch`, `rm`, `cp`, `mv`, `find`, `stat`, `open`, `date`,
+  `whoami`, `clear`, with **↑/↓** for history. Flags are parsed the way a
+  shell writes them — `mkdir -p A/B/C` makes the parents (it used to make a
+  folder called `-p`), `mkdir -q` says which option it does not know,
+  `touch a.txt b.txt` makes both files, `rm -rf A` removes a whole tree and
+  refuses to delete the folder it is standing in. There are no pipes and no
+  redirection, and the terminal says so instead of echoing `hi > file` back.
+  `nano <file>` opens the in-terminal editor (^S saves, ^X exits, with a
+  Save/Discard/Cancel prompt when the buffer is dirty).
 - **Web Retro** — the vendored webretro emulator launcher. Its front page
   is a black GUI with white text and two clickable tabs (the **ROMs** tab
   is the default); hovering any option turns it deep dark blue, and a
