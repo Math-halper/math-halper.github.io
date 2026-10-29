@@ -41,8 +41,14 @@ const FS = {
   /* file extensions served as raw bytes, never decoded as text */
   BINARY_EXT: new Set([
     'png', 'jpg', 'jpeg', 'gif', 'webp', 'avif', 'bmp', 'ico', 'pdf',
-    'ttf', 'otf', 'woff', 'woff2', 'mp3', 'm4a', 'aac', 'flac', 'mp4', 'wav',
-    'ogg', 'oga', 'ogv', 'mov', 'webm', 'avi', 'mkv', 'zip', 'gz', 'wasm', 'exe', 'dll', 'so',
+    'ttf', 'otf', 'woff', 'woff2', 'zip', 'gz', 'wasm', 'exe', 'dll', 'so',
+    'apk', 'jar', 'iso', 'bin', 'dat',
+    /* every audio and video extension VLC's own picker accepts — see
+     * MEDIA_AUDIO/MEDIA_VIDEO below; anything here is bytes, never text */
+    'mp3', 'm4a', 'aac', 'flac', 'wav', 'ogg', 'oga', 'opus', 'weba', 'wma',
+    'aif', 'aiff', 'mid', 'midi', 'amr', 'ape', 'ac3', 'mka',
+    'mp4', 'm4v', 'mov', 'webm', 'avi', 'ogv', 'mkv', 'wmv', 'mpg', 'mpeg',
+    '3gp', 'flv', 'rm', 'rmvb', 'asf', 'vob', 'ts', 'm2ts', 'mts', 'divx',
   ]),
   /* localStorage holds the account, not just its files. Larger media should
    * be opened with Media/PDF Viewer directly from the computer instead. */
@@ -108,16 +114,39 @@ const FS = {
       json: 'application/json', svg: 'image/svg+xml', pdf: 'application/pdf',
       png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif',
       webp: 'image/webp', avif: 'image/avif', bmp: 'image/bmp', ico: 'image/x-icon',
+      /* audio */
       mp3: 'audio/mpeg', m4a: 'audio/mp4', aac: 'audio/aac', flac: 'audio/flac',
-      wav: 'audio/wav', ogg: 'audio/ogg', oga: 'audio/ogg', ogv: 'video/ogg',
-      mp4: 'video/mp4', mov: 'video/quicktime', webm: 'video/webm', avi: 'video/x-msvideo', mkv: 'video/x-matroska',
+      wav: 'audio/wav', ogg: 'audio/ogg', oga: 'audio/ogg', opus: 'audio/ogg',
+      weba: 'audio/webm', wma: 'audio/x-ms-wma', aif: 'audio/aiff', aiff: 'audio/aiff',
+      mid: 'audio/midi', midi: 'audio/midi', amr: 'audio/amr', ape: 'audio/x-ape',
+      ac3: 'audio/ac3', mka: 'audio/x-matroska',
+      /* video */
+      mp4: 'video/mp4', m4v: 'video/x-m4v', mov: 'video/quicktime', webm: 'video/webm',
+      avi: 'video/x-msvideo', ogv: 'video/ogg', mkv: 'video/x-matroska', wmv: 'video/x-ms-wmv',
+      mpg: 'video/mpeg', mpeg: 'video/mpeg', '3gp': 'video/3gpp', flv: 'video/x-flv',
+      rm: 'application/vnd.rn-realmedia', rmvb: 'application/vnd.rn-realmedia-vbr',
+      asf: 'video/x-ms-asf', vob: 'video/x-ms-vob', ts: 'video/mp2t', m2ts: 'video/mp2t',
+      mts: 'video/mp2t', divx: 'video/x-msvideo',
     };
     return types[this.extname(path)] || (this.isBinary(path) ? 'application/octet-stream' : 'text/plain;charset=utf-8');
   },
+  /* Every audio/video extension both the browser picker and VLC accept. This
+   * is the one list FS.appFor() and FS.mediaKind() agree on, so a .mpg, .wmv,
+   * .flv or .midi opens in VLC instead of falling through to the Text Editor
+   * as text (the bug the old short list caused). Keep it in step with
+   * MEDIA_EXTS in apps/media/media/app.html. */
+  MEDIA_AUDIO: new Set([
+    'mp3', 'm4a', 'm4b', 'aac', 'flac', 'wav', 'ogg', 'oga', 'opus', 'weba', 'wma',
+    'aif', 'aiff', 'mid', 'midi', 'amr', 'ape', 'ac3', 'mka',
+  ]),
+  MEDIA_VIDEO: new Set([
+    'mp4', 'm4v', 'mov', 'webm', 'avi', 'ogv', 'mkv', 'wmv', 'mpg', 'mpeg', '3gp',
+    'flv', 'rm', 'rmvb', 'asf', 'vob', 'ts', 'm2ts', 'mts', 'divx',
+  ]),
   mediaKind(path) {
     const ext = this.extname(path);
-    if (['mp3', 'm4a', 'aac', 'flac', 'wav', 'ogg', 'oga'].includes(ext)) return 'audio';
-    if (['mp4', 'mov', 'webm', 'avi', 'ogv', 'mkv'].includes(ext)) return 'video';
+    if (this.MEDIA_AUDIO.has(ext)) return 'audio';
+    if (this.MEDIA_VIDEO.has(ext)) return 'video';
     return null;
   },
   /* Which app opens a file, by extension. The ids are catalog ids: an app
@@ -330,7 +359,7 @@ const FS = {
     this._assertWritable(p, 'create');
     if (!(blob instanceof Blob)) throw new Error('Expected a file or Blob');
     if (blob.size > this.MAX_BLOB_SIZE) {
-      throw new Error(`This file is too large for browser storage (limit ${Math.round(this.MAX_BLOB_SIZE / 1048576)} MB). Open large media directly in Media or PDF Viewer.`);
+      throw new Error(`This file is too large for browser storage (limit ${Math.round(this.MAX_BLOB_SIZE / 1048576)} MB). Open it from your computer instead — Open… in VLC (or the PDF Viewer) plays it without importing the bytes.`);
     }
     const bytes = new Uint8Array(await blob.arrayBuffer());
     if (userData !== owner) throw new Error('The account changed before the import finished; no file was saved.');

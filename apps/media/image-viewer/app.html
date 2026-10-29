@@ -223,10 +223,19 @@ registerApp({
     q('#iv-open').onclick = askOpen;
     q('#iv-prev').onclick = () => step(-1);
     q('#iv-next').onclick = () => step(1);
+    /* One place for the two fixed zoom levels, so the buttons and the keys
+     * cannot drift apart (pressing 0 or 1 used to change the picture but leave
+     * the old percentage in the status line). */
+    function setFixedZoom(level) {
+      zoom = level;
+      applyZoom(q('#iv-img'));
+      sync();
+      statusLine(null);
+    }
     q('#iv-in').onclick = () => zoomBy(1.25);
     q('#iv-out').onclick = () => zoomBy(0.8);
-    q('#iv-fit').onclick = () => { zoom = 0; applyZoom(q('#iv-img')); sync(); statusLine(null); };
-    q('#iv-actual').onclick = () => { zoom = 1; applyZoom(q('#iv-img')); sync(); statusLine(null); };
+    q('#iv-fit').onclick = () => setFixedZoom(0);
+    q('#iv-actual').onclick = () => setFixedZoom(1);
     q('#iv-download').onclick = async () => {
       if (!path && !deviceBlob) return;
       const dest = await MH.askFileSource('save');
@@ -260,8 +269,8 @@ registerApp({
       else if (e.key === 'ArrowRight') { e.preventDefault(); step(1); }
       else if (e.key === '+' || e.key === '=') { e.preventDefault(); zoomBy(1.25); }
       else if (e.key === '-') { e.preventDefault(); zoomBy(0.8); }
-      else if (e.key === '0') { e.preventDefault(); zoom = 0; applyZoom(q('#iv-img')); sync(); }
-      else if (e.key === '1') { e.preventDefault(); zoom = 1; applyZoom(q('#iv-img')); sync(); }
+      else if (e.key === '0') { e.preventDefault(); setFixedZoom(0); }
+      else if (e.key === '1') { e.preventDefault(); setFixedZoom(1); }
     });
     body.openPath = ({ path: p } = {}) => { if (p) load(p); };
     body.onDestroy = () => { token++; revoke(); };

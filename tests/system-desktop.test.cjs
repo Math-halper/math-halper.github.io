@@ -2371,6 +2371,257 @@ test('VLC hands its video to a browser tab and the shortcuts go with it', async 
   }
 });
 
+test('VLC hotkeys answer the keyboard wherever the focus is, like desktop VLC', async () => {
+  const { w, wins, close } = await bootDesktop();
+  try {
+    w.openApp('media');
+    const media = wins.get('media').body;
+    const status = () => media.querySelector('#vlc-status-text').textContent;
+    /* A real click on the video leaves the focus on the document (a proton
+     * window has no tabindex), so this is the key press that used to be lost. */
+    const press = (init) => w.document.body.dispatchEvent(
+      new w.KeyboardEvent('keydown', { bubbles: true, cancelable: true, ...init }));
+
+    media.querySelector('#vlc-playlist')?.click();
+    press({ key: 'l' });
+    assert.equal(media.querySelector('#vlc-repeat').getAttribute('aria-pressed'), 'true',
+      'L must cycle repeat with focus on the document, not only inside the app');
+    press({ key: 'r' });
+    assert.equal(media.querySelector('#vlc-shuffle').getAttribute('aria-pressed'), 'true', 'R must reach VLC too');
+
+    /* Clicking the picture puts the keyboard on VLC's stage. */
+    media.querySelector('#vlc-canvas').click();
+    assert.equal(w.document.activeElement, media.querySelector('#vlc-stage-wrap'),
+      'clicking the video should focus the VLC stage');
+
+    /* Keys never fire while typing in a text box inside VLC. */
+    media.querySelector('#vlc-stage-wrap').dispatchEvent(
+      new w.KeyboardEvent('keydown', { key: 'n', ctrlKey: true, bubbles: true, cancelable: true }));
+    const url = media.querySelector('#vlc-url');
+    assert.ok(url, 'Ctrl+N opens the network URL form');
+    const before = status();
+    url.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'l', bubbles: true, cancelable: true }));
+    assert.equal(media.querySelector('#vlc-repeat').getAttribute('aria-pressed'), 'true',
+      'typing L in a text field must not cycle repeat again');
+    assert.equal(status(), before, 'and it must not run the shortcut either');
+    media.querySelector('#vlc-url-cancel').click();
+
+    /* Another app in front owns the keyboard. */
+    w.openApp('text-editor');
+    const repeatBefore = media.querySelector('#vlc-repeat').getAttribute('aria-pressed');
+    press({ key: 'l' });
+    assert.equal(media.querySelector('#vlc-repeat').getAttribute('aria-pressed'), repeatBefore,
+      'VLC must not take letters while another window is in front');
+
+    w.closeWin('text-editor', true);
+    w.closeWin('media', true);
+  } finally {
+    close();
+  }
+});
+
+test('VLC makes its audio output on the first click and says when it is held back', async () => {
+  const { w, wins, close } = await bootDesktop();
+  try {
+    const made = [];
+    w.AudioContext = class {
+      constructor(opts = {}) { this.opts = opts; this.state = 'suspended'; this.resumed = 0; made.push(this); }
+      resume() { this.resumed += 1; this.state = 'running'; if (this.onstatechange) this.onstatechange(); return Promise.resolve(); }
+      close() { this.state = 'closed'; return Promise.resolve(); }
+    };
+    w.openApp('media');
+    const media = wins.get('media').body;
+    assert.equal(made.length, 0, 'VLC should not open an audio device before it is used');
+
+    // The first click inside VLC is what the browser counts as permission.
+    media.querySelector('#vlc-stage-wrap').dispatchEvent(new w.MouseEvent('pointerdown', { bubbles: true }));
+    assert.equal(made.length, 1, 'the first click inside VLC should create the AudioContext');
+    assert.equal(made[0].state, 'running', 'and resume it while the gesture still counts');
+
+    // Clicks in another window are none of VLC's business.
+    w.openApp('text-editor');
+    wins.get('text-editor').body.dispatchEvent(new w.MouseEvent('pointerdown', { bubbles: true }));
+    assert.equal(made.length, 1, 'VLC should not answer clicks in other windows');
+    w.closeWin('text-editor', true);
+
+    // Closing the window closes the output it owns.
+    w.closeWin('media', true);
+    assert.equal(made[0].state, 'closed', 'closing VLC should close its AudioContext');
+
+    // The engine is handed VLC's own context, so the output can be unlocked.
+    const app = source('apps/media/media/app.html');
+    assert.match(app, /createPlayer\(\{ canvas: q\('#vlc-canvas'\), fit: 'contain', audioContext/,
+      'the engine should use VLC’s own AudioContext');
+    assert.match(app, /function ensureAudioContext\(\)/);
+    assert.match(app, /document\.addEventListener\('pointerdown', unlockAudio, true\)/);
+    assert.match(app, /document\.addEventListener\('keydown', unlockAudio, true\)/);
+    assert.match(app, /VLC is playing, but the browser is holding the audio back/,
+      'a suspended context should be explained, not played silently');
+    assert.match(app, /id="vlc-audio-on"/, 'with a button that resumes it inside a click');
+
+    // A failure names what VLC actually saw, so an MKV report is diagnostic.
+    assert.match(app, /What VLC found in it: /, 'a failed open should list the tracks it read');
+    assert.match(app, /VLC read no tracks in it at all/, 'and say when it read none');
+    assert.match(app, /Audio output: \$\{esc\(audio\)\}/, 'Messages should report the audio output state');
+  } finally {
+    close();
+  }
+});
+
+test('the window in front takes the keyboard, so app shortcuts work', async () => {
+  const { w, settle, wins, close } = await bootDesktop();
+  try {
+    /* A window is a focus target: clicking the picture, or opening the app,
+     * leaves the keyboard on the app surface — otherwise an app listening for
+     * keys on its own body (Image Viewer, Text Editor, Browser, VLC) never
+     * heard one, because the document had the focus. */
+    await w.eval("FS.writeBlob('/home/ada/Pictures/a.png', new Blob([new Uint8Array([137,80,78,71])], { type: 'image/png' }))");
+    w.eval("openFSItem('/home/ada/Pictures/a.png')");
+    await settle();
+    const view = wins.get('image-viewer');
+    assert.equal(view.el.tabIndex, -1, 'the window is focusable');
+    assert.equal(view.body.tabIndex, -1, 'so is its app surface');
+    assert.equal(w.document.activeElement, view.body, 'opening an app puts the keyboard on it');
+
+    const status = () => view.body.querySelector('#iv-status').textContent.replace(/\s+/g, ' ');
+    assert.match(status(), /Fit to window/);
+    const press = (init) => w.document.activeElement.dispatchEvent(
+      new w.KeyboardEvent('keydown', { bubbles: true, cancelable: true, ...init }));
+    press({ key: '+' });
+    assert.match(status(), /125%/, '+ should zoom the picture the window in front is showing');
+    press({ key: '0' });
+    assert.match(status(), /Fit to window/, '0 fits it back');
+
+    /* Bringing another window forward takes the keyboard with it. */
+    w.openApp('calculator');
+    await settle();
+    const calc = wins.get('calculator');
+    assert.ok(calc.el.contains(w.document.activeElement),
+      'the app opened last is the one with the keyboard (Calculator focuses its own keypad)');
+    press({ key: '+', ctrlKey: true });
+    assert.match(status(), /Fit to window/, 'the picture behind must not act on another app’s keys');
+
+    /* Clicking a window in front again focuses its surface, but never steals
+     * the focus from a field the click went into. */
+    wins.get('image-viewer').el.dispatchEvent(new w.MouseEvent('pointerdown', { bubbles: true }));
+    assert.equal(w.document.activeElement, view.body, 'clicking a window focuses its app surface');
+    w.openApp('browser');
+    await settle();
+    const browser = wins.get('browser');
+    const bar = browser.body.querySelector('#b-url');
+    bar.focus();
+    browser.el.dispatchEvent(new w.MouseEvent('pointerdown', { bubbles: true }));
+    assert.equal(w.document.activeElement, bar, 'a click inside the window must keep the caret where it is');
+
+    w.closeWin('browser', true);
+    w.closeWin('calculator', true);
+    w.closeWin('image-viewer', true);
+  } finally {
+    close();
+  }
+});
+
+test('every audio and video extension VLC accepts opens in VLC, not the Text Editor', async () => {
+  const { w, close } = await bootDesktop();
+  try {
+    /* VLC's own picker list is the source of truth; the file system must
+     * route every one of them to the media app and treat the bytes as binary
+     * (before this, .mpg/.wmv/.flv/.midi fell through to the Text Editor). */
+    const listed = (source('apps/media/media/app.html')
+      .match(/const MEDIA_EXTS = \[([\s\S]*?)\];/)[1].match(/'([a-z0-9]+)'/g) || [])
+      .map((s) => s.replace(/'/g, ''));
+    assert.ok(listed.length > 25, 'VLC still declares its extensions');
+    const unhandled = listed.filter((ext) => {
+      const p = '/home/ada/clip.' + ext;
+      return w.eval(`FS.appFor('${p}')`) !== 'media'
+        || w.eval(`FS.isBinary('${p}')`) !== true
+        || w.eval(`FS.mediaKind('${p}')`) === 'null';
+    });
+    assert.deepEqual(unhandled, [], 'these extensions do not reach VLC');
+
+    // A few named ones, with their kind and MIME type.
+    assert.equal(w.eval("FS.mediaKind('/home/ada/movie.wmv')"), 'video');
+    assert.equal(w.eval("FS.mime('/home/ada/movie.wmv')"), 'video/x-ms-wmv');
+    assert.equal(w.eval("FS.mime('/home/ada/clip.3gp')"), 'video/3gpp');
+    assert.equal(w.eval("FS.mediaKind('/home/ada/tune.mid')"), 'audio');
+    assert.equal(w.eval("FS.mime('/home/ada/tune.midi')"), 'audio/midi');
+    assert.equal(w.eval("FS.mime('/home/ada/voice.opus')"), 'audio/ogg');
+
+    // And opening such a file really lands in VLC.
+    await w.eval("FS.writeBlob('/home/ada/movie.mpg', new Blob([new Uint8Array([0, 0, 1, 186])], { type: 'video/mpeg' }))");
+    w.eval("openFSItem('/home/ada/movie.mpg')");
+    await new Promise((resolve) => setTimeout(resolve, 30));
+    assert.equal(w.eval("wins.get('media')?.body.querySelector('#vlc-file-name').textContent"), 'movie.mpg');
+  } finally {
+    close();
+  }
+});
+
+test('the terminal parses flags and file lists like a shell', async () => {
+  const { w, settle, wins, close } = await bootDesktop();
+  try {
+    w.openApp('terminal');
+    await settle();
+    const term = wins.get('terminal').body;
+    const form = term.querySelector('#term-form');
+    const run = async (line) => {
+      term.querySelector('#term-in').value = line;
+      form.dispatchEvent(new w.Event('submit', { bubbles: true, cancelable: true }));
+      await settle();
+      return term.textContent.replace(/\s+/g, ' ');
+    };
+
+    await run('mkdir -p A/B/C');
+    assert.equal(w.eval("FS.isDir('/home/ada/A/B/C')"), true, 'mkdir -p makes the parents too');
+    assert.equal(w.eval("FS.exists('/home/ada/-p')"), false, 'mkdir -p must not create a folder called "-p"');
+    assert.equal(w.eval("FS.exists('/home/ada/-r')"), false, 'nor "-r"');
+
+    assert.match(await run('mkdir -q z'), /unknown option "-q"/, 'an unknown flag is reported, not used as a name');
+    assert.equal(w.eval("FS.exists('/home/ada/-q')"), false);
+
+    await run('touch a.txt b.txt');
+    assert.equal(w.eval("FS.exists('/home/ada/a.txt')"), true,
+      'touch makes every file it is given, in the current folder');
+    assert.equal(w.eval("FS.exists('/home/ada/b.txt')"), true, 'including the second name');
+
+    await run('cd A/B/C');
+    await run('touch one.txt two.txt');
+    assert.equal(w.eval("FS.exists('/home/ada/A/B/C/one.txt')"), true, 'touch works in a sub-folder');
+    assert.equal(w.eval("FS.exists('/home/ada/A/B/C/two.txt')"), true, 'for every name');
+
+    assert.match(await run('rm -rf .'), /refusing to remove/i, 'the terminal will not delete the folder it is standing in');
+    assert.equal(w.eval("FS.isDir('/home/ada/A/B/C')"), true, 'and that folder is still there');
+    await run('cd ~');
+    await run('rm -rf A');
+    assert.equal(w.eval("FS.exists('/home/ada/A')"), false, 'rm -rf removes a whole tree');
+
+    assert.match(await run('echo hi > note.txt'), /no pipes/i, 'redirection is explained instead of echoed back');
+    assert.equal(w.eval("FS.exists('/home/ada/hi')"), false);
+    w.closeWin('terminal', true);
+  } finally {
+    close();
+  }
+});
+
+test('a typed save name stays inside the folder the dialog shows', async () => {
+  const { w, close } = await bootDesktop();
+  try {
+    const promised = w.eval("MH.vfsPick({ title: 'Save here', save: true, name: 'untitled.txt' })");
+    const box = w.document.querySelector('.file-source-backdrop');
+    assert.ok(box, 'the save dialog opens');
+    const field = box.querySelector('[data-vfs-name]');
+    field.value = '../../../../escape.txt';
+    box.querySelector('[data-vfs-ok]').click();
+    const picked = await promised;
+    assert.equal(picked.split('/').includes('..'), false, 'no segment of the save path can walk out of the folder');
+    assert.equal(w.eval(`FS.dirname(${JSON.stringify(picked)})`), w.eval('FS.home()'),
+      `the save went straight into the folder the dialog showed: ${picked}`);
+    assert.match(picked, /escape\.txt$/);
+  } finally {
+    close();
+  }
+});
+
 test('the VLC browser tab runs the same module, shortcuts and all', () => {
   const page = source('apps/media/media/player.html');
   const boot = source('apps/media/media/player.js');
@@ -2455,6 +2706,11 @@ test('the VLC tab boots the app, lists the handover file and keeps the hotkeys',
     const key = (init) => stage.dispatchEvent(new w.KeyboardEvent('keydown', { bubbles: true, cancelable: true, ...init }));
     key({ key: 'l' });
     assert.equal(body.querySelector('#vlc-repeat').getAttribute('aria-pressed'), 'true', 'L still cycles repeat in the tab');
+    /* In a real tab nothing is focused to begin with, so the key press lands
+     * on the document: the tab must still answer it. */
+    w.document.body.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'r', bubbles: true, cancelable: true }));
+    assert.equal(body.querySelector('#vlc-shuffle').getAttribute('aria-pressed'), 'true',
+      'R must work in the tab before anything has been clicked');
     key({ key: 'ArrowUp', ctrlKey: true });
     assert.equal(body.querySelector('#vlc-volume').value, '105', 'Ctrl+Up still drives the volume in the tab');
     key({ key: 'Enter', altKey: true });

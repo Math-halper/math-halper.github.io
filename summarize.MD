@@ -303,6 +303,82 @@ VLC in a browser tab of its own (the "open the video in a new tab" request):
   would open); `quitVlc()` closes the tab when running in one. Do not rebuild this
   as a duplicated standalone player — the point is one module, one key handler.
 
+The "MKV plays but no audio and the shortcuts don't work" report (root causes
+found and fixed — these were app bugs, not MKV codec bugs):
+
+- **Shortcuts**: the key handler was mounted on the app's container (`body` of
+  the window), but a `.win` has no `tabindex`, so clicking the video left focus
+  on the document and *no* key ever reached VLC. The handler now lives on
+  `document` with an `ownsKeyboard(e)` guard: VLC answers when the window is in
+  front (`winEl.classList.contains('active')`) or when nothing else has focus
+  (`document.activeElement` is body/html), always in VLC's own tab (`no .win`),
+  never for text fields, never for a `[role="dialog"]` outside VLC, never for
+  the start menu/panel (they focus their own controls). Clicking `#vlc-canvas`
+  also focuses `#vlc-stage-wrap`.
+- **No audio**: browsers only allow sound after a page gesture, and libvlc's
+  audio output is also the clock that paces playback, so a suspended context
+  meant silence *and* a stalled picture/playhead. The app now owns the
+  `AudioContext` (`ensureAudioContext`/`resumeAudio`/`audioSuspended`/
+  `unlockAudio`), creates it on the first pointerdown or keydown **inside** VLC,
+  resumes it in `openEntry`/`togglePlay`, passes it to `createPlayer({ audioContext })`,
+  resumes on `visibilitychange`, closes it in `onDestroy`, and after a `playing`
+  statechange calls `promptAudio()` (button `#vlc-audio-on`) if it is still
+  suspended — never silent playback. Diagnostics: Messages shows audio state +
+  worklet level; an `error` event lists the tracks/codecs VLC read.
+- The vendored engine already retries `:demux=avformat` when its own demuxer
+  finds no streams or produces no output (`_retryWithFFmpeg`), so MKV container
+  oddities are covered there — do not add another fallback.
+- Tests: `VLC hotkeys answer the keyboard wherever the focus is` (document-level
+  keydown, canvas→stage focus, text-field and other-window guards) and `VLC makes
+  its audio output on the first click and says when it is held back` (fake
+  AudioContext: created on first click, resumed, only for clicks inside VLC,
+  closed on window close). Both were verified to fail on the pre-fix `app.html`.
+  Tab test also asserts a document-level key works before any click. Suite 34/34.
+
+Bug sweep after the VLC fix (everything found and fixed):
+
+- **Windows were not focus targets** (`tabindex=null`, `document.activeElement`
+  stayed BODY), so any app listening for keys on its own body never got one:
+  Image Viewer's arrows/zoom, Text Editor's Ctrl-S, the Browser's Alt+←/→ were
+  all dead outside a focused input. Fix in `assets/core.js`: `.win` gets
+  `tabIndex = -1`, the `.win-body` is the focus target (`body.tabIndex = -1`),
+  a new `focusWinBody()` focuses the *body* (not the frame — the frame is an
+  ancestor, so events would never reach a listener on the body), `openApp()`
+  focuses it before `render()` (so apps that focus their own field keep it) and
+  `focusWin()` only moves focus when it is not already inside that window.
+  `.win:focus,.win-body:focus{outline:none}` in styles.css. VLC's
+  `ownsKeyboard()` was reworked for this model (keys on the page answer when
+  VLC is the active window and focus is inside it or nowhere).
+- **20 media extensions were routed to the Text Editor**: `FS.mediaKind()`
+  only knew a short list, so `.wmv .mpg .mpeg .m4v .3gp .flv .rm .rmvb .asf
+  .vob .ts .m2ts .mts .opus .weba .mid .midi .aif .aiff .amr .ape` were "text"
+  (and `isBinary` false). `assets/fs.js` now has `MEDIA_AUDIO`/`MEDIA_VIDEO`
+  sets used by `mediaKind()`, every one of them is in `BINARY_EXT`, and `mime()`
+  maps them properly. A test cross-checks VLC's own `MEDIA_EXTS` list against
+  them so the two cannot drift.
+- **Terminal flags**: `mkdir -p A/B` created a folder literally called `-p`
+  and dropped the path; `touch a.txt b.txt` made only the first; `rm -rf` was
+  half-parsed. Now flags are parsed like a shell (`-p`, `-r`, `-f`, multi-path,
+  unknown option reported), `rm` refuses to delete the folder it is standing
+  in, and `|`/`>` get an explanation instead of being echoed back as text.
+- **Save dialog path escape**: a typed name like `../../../x` in `MH.vfsPick`
+  was joined as a path; now `/` and `\` in a typed name become `_`.
+- **Image Viewer status**: key `0`/`1` changed the zoom but left the old
+  percentage in the status line (buttons were fine) — both now go through
+  `setFixedZoom()`.
+- **Piano** now focuses its keys on open (like the Calculator's keypad), so the
+  computer keyboard plays immediately.
+- **VLC** no longer replaces a form in the note bar (URL / Go to time) with the
+  audio prompt — it toasts instead — and the "file too large for browser
+  storage" message now points at Open… in VLC rather than the retired wording.
+- Docs: README gained the five apps it never listed (System Monitor, Clock,
+  Paint, Piano, Terminal), the real counts (59 apps), a "keyboard, and which
+  app opens which file" section; UI.md documented Terminal, Paint, Piano, Clock
+  and System Monitor, the window-focus rule and the save-name rule; a stray
+  "列表" typo was fixed.
+- Suite: **38/38** (four new behavioural tests: window focus/keyboard routing,
+  the media-extension cross-check, terminal flag parsing, save-name escaping).
+
 ## Pull requests and merged history
 
 - PR #22 merged (`cb0f457`), PR #23 merged (`aa1bcaa`), PR #24 merged (`6a4958e`,
@@ -321,8 +397,10 @@ VLC in a browser tab of its own (the "open the video in a new tab" request):
 ## Testing, generation, and sandbox lessons
 
 - Current test suite: `tests/system-desktop.test.cjs`. It passed **28/28** after the
-  Terminal work, **29/29** after the VLC keyboard-shortcut work, and **32/32** after
-  the VLC browser-tab work: the new tab's handover URL, a jsdom boot of
+  Terminal work, **29/29** after the VLC keyboard-shortcut work, **32/32** after
+  the VLC browser-tab work, and **34/34** after the VLC audio/keyboard fix (which
+  also added the two behavioural tests described above). The browser-tab work
+  originally added: the new tab's handover URL, a jsdom boot of
   `player.html` (it renders the player, titles itself after the file, lists it on the
   playlist and answers L, Ctrl+↑ and Alt+Enter), and the static wiring of
   `player.html`/`player.js` onto the shared app module.

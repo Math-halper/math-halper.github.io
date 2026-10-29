@@ -277,12 +277,29 @@ function applyAccent() {
 const wins = new Map(); // appId -> {el, body, title}
 let zTop = 20, activeApp = null, clockTimer = null, locked = false;
 
+/* Put the keyboard on a window's app surface. Focusing the body (not the frame)
+ * is what makes an app's own key listener fire: the event targets that element
+ * and bubbles to its listener on the same node, while the window frame itself
+ * is an ancestor of the body and would never deliver it there. */
+function focusWinBody(el, body) {
+  if (!body) return;
+  try { body.focus({ preventScroll: true }); } catch { try { body.focus(); } catch { /* not focusable */ } }
+  if (document.activeElement === body) return;
+  /* Older engines: fall back to the window frame, still better than nothing. */
+  try { el.focus({ preventScroll: true }); } catch { /* leave the focus alone */ }
+}
+
 function focusWin(id) {
   const w = wins.get(id); if (!w) return;
   w.el.style.zIndex = ++zTop;
   w.el.classList.remove('min');
   activeApp = id;
   document.querySelectorAll('.win').forEach((e) => e.classList.toggle('active', e === w.el));
+  /* Keyboard focus follows the window that came to the front — unless the
+   * focus is already somewhere inside it (clicking a field, a button or the
+   * video in a window that was already in front must not move it). */
+  const focused = document.activeElement;
+  if (!focused || !w.el.contains(focused)) focusWinBody(w.el, w.body);
   renderPanelApps();
 }
 function closeWin(id, force = false) {
@@ -321,6 +338,7 @@ function openApp(id, options = {}) {
 
   const el = document.createElement('section');
   el.className = 'win'; el.dataset.app = id; el.dataset.win = key;
+  el.tabIndex = -1;
   const mobile = innerWidth < 760;
   const wpx = Math.min(options.w || app.w || 860, innerWidth - 16), hpx = Math.min(options.h || app.h || 560, innerHeight - 70);
   const off = (wins.size % 6) * 26;
@@ -336,9 +354,15 @@ function openApp(id, options = {}) {
     <div class="win-body"></div><div class="win-resize"></div>`;
   MH.$('windows').appendChild(el);
   const body = el.querySelector('.win-body');
+  /* The app surface is a focus target: an app that listens for keys on its own
+   * body (Image Viewer, Text Editor, Browser, VLC) then gets them when the
+   * window is in front, instead of the document swallowing every press. */
+  body.tabIndex = -1;
   wins.set(key, { el, body, appId: id });
   activeApp = key;
   document.querySelectorAll('.win').forEach((e) => e.classList.toggle('active', e === el));
+  /* Before render(), so an app that focuses its own field or stage keeps it. */
+  focusWinBody(el, body);
 
   el.addEventListener('pointerdown', () => focusWin(key));
   el.querySelector('[data-act="close"]').onclick = (e) => { e.stopPropagation(); closeWin(key); };

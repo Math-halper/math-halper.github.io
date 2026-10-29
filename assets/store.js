@@ -275,8 +275,12 @@ const MH = {
         if (b.hasAttribute('data-vfs-cancel')) return done(null);
         if (b.hasAttribute('data-vfs-ok')) {
           if (folder) return done(dir);
-          const n = wrap.querySelector('[data-vfs-name]').value.trim();
+          /* A typed name is a name, not a path: "…/…" here would otherwise walk
+           * out of the folder the dialog is showing. */
+          const typed = wrap.querySelector('[data-vfs-name]').value.trim();
+          const n = typed.replace(/[/\\]+/g, '_').replace(/^\.+$/, '');
           if (!n) { wrap.querySelector('[data-vfs-name]').focus(); return; }
+          if (n !== typed) wrap.querySelector('[data-vfs-name]').value = n;
           return done(FS.join(dir, n));
         }
         if (b.dataset.up) {

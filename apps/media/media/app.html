@@ -68,6 +68,10 @@ registerApp({
     let currentIndex = -1;
     let vlc = null;
     let player = null;
+    /* The page's own AudioContext, created at the first real click and handed
+     * to the engine (see ensureAudioContext). */
+    let audioCtx = null;
+    let audioPrompt = false;
     let enginePromise = null;
     let engineState = window.crossOriginIsolated ? 'ready to start' : 'needs cross-origin isolation';
     let playerState = 'idle';
@@ -281,6 +285,71 @@ registerApp({
      * that role here, so hold it briefly before the progress line resumes. */
     function actionStatus(text) { statusText.textContent = text; statusHoldUntil = Date.now() + 3200; }
     function currentTitle() { return current ? current.name : 'Nothing loaded'; }
+
+    /* ---------------- audio out ----------------
+     * libvlc's WebAssembly audio output feeds an AudioWorklet, and browsers
+     * only let a context run if the page made it (or resumed it) while the
+     * user was clicking. The desktop opens a file from the picker's change
+     * event and the browser tab opens it with no gesture at all, so a context
+     * created by the engine seconds later stays suspended: the file plays
+     * with no sound, and because VLC's audio output is the clock that drives
+     * playback, the picture and the playhead can stall with it. That is the
+     * "MKV plays but there is no audio and nothing responds" report.
+     *
+     * So the app owns the context: it is made on the first real pointer/key
+     * gesture, resumed by every later one, handed to createPlayer(), and if
+     * the browser still suspends it while a file is playing VLC says so and
+     * offers a button that resumes it inside a click. */
+    function ensureAudioContext() {
+      if (audioCtx || typeof window.AudioContext !== 'function') return audioCtx;
+      try { audioCtx = new window.AudioContext({ latencyHint: 'interactive' }); }
+      catch (err) { console.warn('VLC: could not create an AudioContext', err); return null; }
+      audioCtx.onstatechange = () => {
+        if (!audioCtx) return;
+        if (audioCtx.state === 'running') { clearAudioPrompt(); if (playerState === 'playing') status('Audio output is running.'); }
+        else if (playerState === 'playing') promptAudio();
+      };
+      return audioCtx;
+    }
+    function resumeAudio() {
+      const ctx = ensureAudioContext();
+      if (ctx && ctx.state !== 'running') guard(ctx.resume());
+      return ctx;
+    }
+    function audioSuspended() { return !!audioCtx && audioCtx.state !== 'running'; }
+    /* One click anywhere in VLC (or its tab) is all the browser needs. Clicks
+     * in other windows are none of this app's business. */
+    const unlockAudio = (e) => {
+      const win = body.closest ? body.closest('.win') : null;
+      if (win && e?.target && !win.contains(e.target)) return;
+      const ctx = resumeAudio();
+      if (ctx && ctx.state === 'running') clearAudioPrompt();
+    };
+    function promptAudio() {
+      if (audioPrompt || !player || !audioSuspended()) return;
+      /* Never throw away a form the user is in the middle of (the URL box,
+       * Go to time…): a toast says it instead, and Messages keeps the state. */
+      if (!note.hidden) {
+        MH.toast('VLC has no sound yet — click the video once to let the browser start its audio.');
+        return;
+      }
+      audioPrompt = true;
+      say(`<b>VLC is playing, but the browser is holding the audio back.</b>
+        Browsers only allow sound after the page has been clicked — click the video
+        or press the button, and VLC's audio output starts.
+        <button class="btn sm primary" type="button" id="vlc-audio-on" style="margin-top:6px">Enable audio</button>`);
+      const button = q('#vlc-audio-on');
+      if (button) button.onclick = () => {
+        resumeAudio();
+        if (audioSuspended()) actionStatus('The browser is still holding audio back — click the video picture once, then press this again.');
+        else clearAudioPrompt();
+      };
+    }
+    function clearAudioPrompt() {
+      if (!audioPrompt) return;
+      audioPrompt = false;
+      say('');
+    }
 
     /* ---------------- VLC hotkey helpers ----------------
      * The key handler at the bottom maps desktop VLC's default keys onto
@@ -589,7 +658,8 @@ registerApp({
         <b>Video</b> — A aspect ratio · C crop ratio · Alt+R/D/C/F crop a pixel (add Shift to uncrop) · D deinterlace · Shift+D deinterlace mode · Z / Shift+Z zoom modes · Alt+O / Alt+Shift+O scale · Alt+1–4 quarter/half/original/double · Shift+S snapshot · Shift+R record (needs a recording-capable engine)<br>
         <b>Disc &amp; files</b> — arrow keys + Enter in disc menus · Shift+M disc menu · Shift+O / Shift+B title · Shift+P / Shift+N chapter · X / Shift+X program · Ctrl+O open file · Ctrl+F open folder · Ctrl+N network URL · Ctrl+V paste URL · Ctrl+I media info · Ctrl+J codec info · Ctrl+M messages · Ctrl+H minimal interface · Ctrl+Q quit VLC<br>
         <b>Browser tab</b> — Alt+Enter opens the loaded media in a browser tab of its own (a proton addition; that tab is the same VLC, so every key above keeps working there)<br>
-        Keys work while the VLC window has focus; they never fire while you are typing in a text box or using a drop-down.</div>
+        Keys work while VLC is the window in front (clicking the video is enough) or in VLC's own browser tab; they never fire while you are typing in a text box or using a drop-down, and another app's window in front keeps them.<br>
+        <b>Audio</b> — browsers only let a page make sound after it has been clicked, so the first click or key on VLC starts its audio output; if the browser still holds it back, VLC says so and offers <i>Enable audio</i>.</div>
         <button class="btn sm" type="button" id="vlc-shortcuts-close" style="margin-top:6px">Close</button>`);
       q('#vlc-shortcuts-close').onclick = () => say('');
     }
@@ -602,7 +672,10 @@ registerApp({
         ${lines.length ? lines.map((l) => esc(l)).join('<br>') : 'Track and codec details appear once VLC has opened the file.'}`);
     }
     function showMessages() {
-      say(`<b>VLC messages</b><br>Engine: ${esc(engineState)} · Cross-origin isolated: ${window.crossOriginIsolated ? 'yes' : 'no'} · Player state: ${esc(playerState)}<br>
+      const audio = !player ? 'not started'
+        : !audioCtx ? 'no AudioContext in this browser'
+          : `${audioCtx.state}${audioCtx.state === 'running' ? '' : ' (click the video to let the browser start it)'} · ${player.audioLevel ? `${Math.round(player.audioLevel.rms * 100)}% rms` : 'no level yet'}`;
+      say(`<b>VLC messages</b><br>Engine: ${esc(engineState)} · Cross-origin isolated: ${window.crossOriginIsolated ? 'yes' : 'no'} · Player state: ${esc(playerState)} · Audio output: ${esc(audio)}<br>
         ${current ? `Loaded: ${esc(current.name)}` : 'Nothing loaded.'} · Audio delay ${delayText(audioDelay)} · Subtitle delay ${delayText(subtitleDelay)} · Subtitle scale ${Math.round(subtitleScale * 100)}%`);
     }
     function savePlaylist() {
@@ -718,7 +791,11 @@ registerApp({
         showOverlay('VLC media player', 'Loading the open-source VLC engine (libvlc) into a WebAssembly worker…', 'none');
         const mod = await loadVlcModule();
         vlc = await mod.createVLC({ logLevel: 'error' });
-        player = await vlc.createPlayer({ canvas: q('#vlc-canvas'), fit: 'contain' });
+        /* Our own context, so the audio output can be unlocked from a click
+         * (see ensureAudioContext). Older browsers without AudioContext keep
+         * the SDK's default behaviour. */
+        const audioContext = ensureAudioContext();
+        player = await vlc.createPlayer({ canvas: q('#vlc-canvas'), fit: 'contain', audioContext: audioContext || undefined });
         wirePlayer(player);
         /* Keys pressed before the engine existed may already have set these. */
         player.volume = volumeLevel;
@@ -754,7 +831,12 @@ registerApp({
       p.on('statechange', (state) => {
         playerState = state;
         syncChrome();
-        if (state === 'playing') settleOverlay();
+        if (state === 'playing') {
+          settleOverlay();
+          /* If the browser kept the audio output suspended, say so rather than
+           * letting the file play silently. */
+          setTimeout(promptAudio, 900);
+        }
         if (state === 'stopped') updateProgress();
       });
       p.on('timeupdate', updateProgress);
@@ -768,7 +850,20 @@ registerApp({
         q('#vlc-mute').textContent = muted ? 'Unmute' : 'Mute';
       });
       p.on('ended', handleEnded);
-      p.on('error', (err) => { status(`VLC error: ${err.message || err}`); say(`<b>VLC could not play this file.</b> ${esc(err.message || String(err))}`); });
+      /* A failure (a truncated download, a codec this build has no decoder
+       * for) says what VLC did see, so the next report is diagnostic. VLC
+       * tries its own demuxer first and FFmpeg's second, so a readable
+       * container still plays whatever its extension claims. */
+      p.on('error', (err) => {
+        status(`VLC error: ${err.message || err}`);
+        const codecs = (p.tracks || []).map((t) => `${t.type}: ${trackName(t)}`
+          + `${t.codecName || t.codec ? ` (${t.codecName || t.codec})` : ''}`
+          + `${t.width && t.height ? ` ${t.width}×${t.height}` : ''}`
+          + `${t.channels ? ` ${t.channels}ch` : ''}`);
+        say(`<b>VLC could not play this file.</b> ${esc(err.message || String(err))}
+          ${codecs.length ? `<br>What VLC found in it: ${codecs.map(esc).join(' · ')}` : '<br>VLC read no tracks in it at all — the file may be incomplete or not the container its name says.'}
+          <br>Media → <b>Media information</b> lists anything VLC could see, and <b>Messages</b> shows the engine state and the audio output.`);
+      });
     }
     function renderTracks() {
       if (!player) return;
@@ -803,6 +898,9 @@ registerApp({
       current = entry;
       syncChrome();
       say('');
+      /* Opening is nearly always a click or a key press: take the chance to
+       * unlock (or create) the audio output while the browser still counts it. */
+      resumeAudio();
       if (!player) {
         if (!window.crossOriginIsolated) { showEnable(entry); return; }
         try { await ensureEngine(); } catch { return; }
@@ -1020,6 +1118,8 @@ registerApp({
       else if (act === 'about') about();
     }
     async function togglePlay() {
+      /* A click or Space is exactly the gesture that unlocks sound. */
+      resumeAudio();
       if (!current) { askOpen(); return; }
       if (!player) { openEntry(current); return; }
       if (playerState === 'playing') await guard(player.pause());
@@ -1061,13 +1161,44 @@ registerApp({
     q('#vlc-speed').onchange = (e) => setRate(Number(e.target.value), false);
     q('#vlc-seek').oninput = () => { seeking = true; };
     q('#vlc-seek').onchange = (e) => { seeking = false; if (player && Number(player.duration) > 0) guard(player.seek((Number(e.target.value) / 1000) * Number(player.duration))); };
-    q('#vlc-canvas').onclick = () => { if (current) togglePlay(); };
+    /* Clicking the picture plays/pauses and puts the keyboard on VLC, so the
+     * next key is a shortcut, not a dead press. */
+    q('#vlc-canvas').onclick = () => { q('#vlc-stage-wrap').focus(); if (current) togglePlay(); };
     body.querySelectorAll('[data-act]').forEach((b) => { b.onclick = () => doAction(b.dataset.act); });
-    /* Desktop VLC's default keyboard shortcuts. They only act while focus
-     * is inside this VLC window, and never while typing in a text field or
-     * using a drop-down — VLC's own keys are bare letters, so that guard
-     * is what keeps B/V/etc. out of the URL and Go-to-time boxes. */
-    body.addEventListener('keydown', (e) => {
+    /* Desktop VLC's default keyboard shortcuts. They act while this VLC
+     * window is the one in front (or always, in VLC's own browser tab), and
+     * never while typing in a text field or using a drop-down — VLC's own
+     * keys are bare letters, so that guard is what keeps B/V/etc. out of the
+     * URL and Go-to-time boxes.
+     *
+     * The listener sits on the document, not on the app's container: clicking
+     * the video leaves the focus on the document (a window has no tabindex),
+     * so a listener inside the app never saw a key and every shortcut seemed
+     * dead. The window that is in front is the only one that may answer. */
+    const winEl = body.closest ? body.closest('.win') : null;
+    function ownsKeyboard(e) {
+      const target = e.target;
+      /* A dialog opened from VLC (the file-source chooser, the path picker)
+       * takes the keys until it closes. */
+      const dialog = target?.closest?.('[role="dialog"]');
+      if (dialog && !(winEl && winEl.contains(dialog))) return false;
+      if (!winEl) return true;                       // VLC's own browser tab
+      if (winEl.contains(target)) return true;
+      /* A key press targets whatever has the focus. When that is the page
+       * itself (nothing focused, or an event dispatched at the document), VLC
+       * answers if it is the window in front and the focus has not gone to
+       * another app, the panel or the start menu — those all focus a control
+       * of their own first. Keys aimed anywhere else belong to that element. */
+      const tag = target?.tagName;
+      const onPage = target === document || target === document.body || target === document.documentElement
+        || tag === 'BODY' || tag === 'HTML';
+      if (!onPage) return false;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || target?.isContentEditable) return false;
+      if (!winEl.classList.contains('active')) return false;
+      const focused = document.activeElement;
+      return !focused || focused === document.body || focused === document.documentElement || winEl.contains(focused);
+    }
+    function onVlcKeydown(e) {
       if (destroyed) return;
       const target = e.target;
       const tag = target?.tagName;
@@ -1259,6 +1390,19 @@ registerApp({
         case 'j': return done(() => adjustAudioDelay(-0.05));
         default: return;
       }
+    }
+    /* On the document, so keys work whatever has focus — and only the VLC
+     * window in front (or VLC's own tab) answers them. */
+    document.addEventListener('keydown', (e) => {
+      if (destroyed || !ownsKeyboard(e)) return;
+      onVlcKeydown(e);
+    });
+    /* The first real gesture is when the browser lets a page make sound, so
+     * every click or key press inside VLC also unlocks/revives its audio. */
+    document.addEventListener('pointerdown', unlockAudio, true);
+    document.addEventListener('keydown', unlockAudio, true);
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden && playerState === 'playing') resumeAudio();
     });
     /* Ctrl+mouse wheel scales subtitle text, as in VLC. */
     q('#vlc-stage-wrap').addEventListener('wheel', (e) => {
@@ -1279,6 +1423,9 @@ registerApp({
       if (vlc) guard(vlc.destroy());
       player = null;
       vlc = null;
+      /* The context is ours (createPlayer was given it), so it is ours to
+       * close: a window or tab left behind must not keep an audio output. */
+      if (audioCtx) { try { guard(audioCtx.close()); } catch { /* already closed */ } audioCtx = null; }
     };
 
     /* A tab opened by "Open in a new browser tab" arrives with the media and
