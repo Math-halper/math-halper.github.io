@@ -21,7 +21,7 @@ const ROOT = path.resolve(__dirname, '..');
 const source = (p) => fs.readFileSync(path.join(ROOT, p), 'utf8');
 /* The file system suite FS.appFor() resolves files to. */
 const FS_APPS = ['files', 'text-editor', 'image-viewer', 'media', 'pdf'];
-const SYSTEM_APPS = ['appcenter', 'customize', 'settings', 'about', 'browser', 'system-monitor', 'calculator', 'clock', 'files', 'text-editor', 'pdf', 'image-viewer', 'media', 'paint', 'piano', 'ruffle-flash-player', 'web-retro', 'terminal', 'you-are-an-idiot', 'game-2048', 'bloons-tower-defense-1', 'bloons-tower-defense-2', 'bloons-tower-defense-5', 'bloxorz', 'breaking-the-bank', 'celeste-hub', 'cookie-clicker', 'drive-mad', 'escaping-the-prison', 'fleeing-the-complex', 'grey-box-testing', 'infiltrating-the-airship', 'mari0', 'offline-paradise', 'pacman', 'slope', 'spacebar-clicker', 'stack', 'stealing-the-diamond', 'stickman-hook', 'sm64', 'tetris', 'the-impossible-quiz', 'tunnel-rush', 'baldis-basics', 'minesweeper', 'flappy-bird', 'retro-bowl', 'drift-boss', 'football-bros', 'five-nights-at-freddys-1', 'five-nights-at-freddys-4', 'five-nights-at-freddys-2', 'five-nights-at-freddys-3', 'backrooms', 'kart-bros', 'geometry-dash-lite', 'five-nights-at-freddys-sl', 'bitburner'];
+const SYSTEM_APPS = ['appcenter', 'customize', 'settings', 'about', 'browser', 'system-monitor', 'calculator', 'clock', 'files', 'text-editor', 'pdf', 'image-viewer', 'media', 'paint', 'piano', 'ruffle-flash-player', 'web-retro', 'terminal', 'you-are-an-idiot', 'game-2048', 'bloons-tower-defense-1', 'bloons-tower-defense-2', 'bloons-tower-defense-5', 'bloxorz', 'breaking-the-bank', 'celeste-hub', 'cookie-clicker', 'drive-mad', 'escaping-the-prison', 'fleeing-the-complex', 'grey-box-testing', 'infiltrating-the-airship', 'mari0', 'offline-paradise', 'pacman', 'slope', 'spacebar-clicker', 'stack', 'stealing-the-diamond', 'stickman-hook', 'sm64', 'tetris', 'the-impossible-quiz', 'tunnel-rush', 'baldis-basics', 'minesweeper', 'flappy-bird', 'retro-bowl', 'drift-boss', 'football-bros', 'five-nights-at-freddys-1', 'five-nights-at-freddys-4', 'five-nights-at-freddys-2', 'five-nights-at-freddys-3', 'backrooms', 'kart-bros', 'geometry-dash-lite', 'five-nights-at-freddys-sl', 'bitburner', 'bitlife', 'ampler-launcher', 'google-dino', 'granny', 'evolution', 'geometry-dash-web'];
 
 /* Menu sections for each app (data/applications.js cat=), in catalog order.
  * Every new app is filed here with its respective section — the catalog test
@@ -74,6 +74,12 @@ const SYSTEM_CATS = {
   'geometry-dash-lite': 'Games',
   "bitburner": 'Games',
   'five-nights-at-freddys-sl': 'Games',
+  'bitlife': 'Games',
+  'ampler-launcher': 'Games',
+  'google-dino': 'Games',
+  'granny': 'Games',
+  'evolution': 'Games',
+  'geometry-dash-web': 'Games',
 };
 /* Each game app frames the game page that ships in its own folder. */
 const GAME_PAGES = {
@@ -116,6 +122,12 @@ const GAME_PAGES = {
   'geometry-dash-lite': 'apps/games/geometry-dash-lite/index.html',
   'five-nights-at-freddys-sl': 'apps/games/five-nights-at-freddys-sl/index.html',
   "bitburner": 'apps/games/bitburner/index.html',
+  'bitlife': 'apps/games/bitlife/index.html',
+  'ampler-launcher': 'apps/games/ampler-launcher/index.html',
+  'google-dino': 'apps/games/google-dino/index.html',
+  'granny': 'apps/games/granny/index.html',
+  'evolution': 'apps/games/evolution/index.html',
+  'geometry-dash-web': 'apps/games/geometry-dash-web/index.html',
 };
 /* Celeste Hub is one app that frames eight Celeste pages (plus its own
  * standalone chooser page, apps/games/celeste-hub/index.html, which the
@@ -133,6 +145,17 @@ const CELESTE_HUB_PAGES = [
   'apps/games/celeste-community/downloads.html',
 ];
 const CELESTE_HUB_ALL_PAGES = ['apps/games/celeste-hub/index.html', ...CELESTE_HUB_PAGES];
+/* Ampler Launcher frames its own launcher page (in GAME_PAGES) and offers
+ * seven bundled offline Eaglercraft builds from website/js/clients.js. */
+const AMPLER_LAUNCHER_PAGES = [
+  'apps/games/ampler-launcher/website/mc/1.12.2/index.html',
+  'apps/games/ampler-launcher/website/mc/1.12.2-wasm/index.html',
+  'apps/games/ampler-launcher/website/mc/1.5.2/index.html',
+  'apps/games/ampler-launcher/website/mc/1.8.8/index.html',
+  'apps/games/ampler-launcher/website/mc/1.8.8-wasm/index.html',
+  'apps/games/ampler-launcher/website/mc/Alpha-1.2.6/index.html',
+  'apps/games/ampler-launcher/website/mc/Beta-1.3/index.html',
+];
 /* Games whose pages carry the source sites' href="../" all-games link. */
 const PICKER_LINKED = ['celeste-classic', 'celeste-two', 'celeste-community', 'cookie-clicker', 'sm64'];
 /* Every script index.html loads, in order, minus boot.js (which starts the
@@ -203,7 +226,7 @@ test('the catalog is the desktop apps, the file system suite, a calculator, web 
     'tetris': 'data/icons/tetris.png',
     'the-impossible-quiz': 'data/icons/the-impossible-quiz.png',
     'tunnel-rush': 'data/icons/tunnel-rush.png',
-    'web-retro': 'data/icons/webretro.png', 'baldis-basics': 'data/icons/baldis-basics.png', 'minesweeper': 'data/icons/minesweeper.png', 'flappy-bird': 'data/icons/flappy-bird.png', 'retro-bowl': 'data/icons/retro-bowl.png', 'drift-boss': 'data/icons/drift-boss.png', 'football-bros': 'data/icons/football-bros.png', 'five-nights-at-freddys-1': 'data/icons/five-nights-at-freddys-1.png', 'five-nights-at-freddys-4': 'data/icons/five-nights-at-freddys-4.png', 'five-nights-at-freddys-2': 'data/icons/five-nights-at-freddys-2.png', 'five-nights-at-freddys-3': 'data/icons/five-nights-at-freddys-3.png', 'backrooms': 'data/icons/backrooms.png', 'kart-bros': 'data/icons/kart-bros.png', 'geometry-dash-lite': 'data/icons/geometry-dash-lite.png', 'five-nights-at-freddys-sl': 'data/icons/five-nights-at-freddys-sl.png' };
+    'web-retro': 'data/icons/webretro.png', 'baldis-basics': 'data/icons/baldis-basics.png', 'minesweeper': 'data/icons/minesweeper.png', 'flappy-bird': 'data/icons/flappy-bird.png', 'retro-bowl': 'data/icons/retro-bowl.png', 'drift-boss': 'data/icons/drift-boss.png', 'football-bros': 'data/icons/football-bros.png', 'five-nights-at-freddys-1': 'data/icons/five-nights-at-freddys-1.png', 'five-nights-at-freddys-4': 'data/icons/five-nights-at-freddys-4.png', 'five-nights-at-freddys-2': 'data/icons/five-nights-at-freddys-2.png', 'five-nights-at-freddys-3': 'data/icons/five-nights-at-freddys-3.png', 'backrooms': 'data/icons/backrooms.png', 'kart-bros': 'data/icons/kart-bros.png', 'geometry-dash-lite': 'data/icons/geometry-dash-lite.png', 'five-nights-at-freddys-sl': 'data/icons/five-nights-at-freddys-sl.png', 'bitlife': 'data/icons/bitlife.png', 'ampler-launcher': 'data/icons/ampler-launcher.png', 'google-dino': 'data/icons/google-dino.png', 'granny': 'data/icons/granny.png', 'evolution': 'data/icons/evolution.png', 'geometry-dash-web': 'data/icons/geometry-dash-web.png' };
   assert.deepEqual(Array.from(apps, (a) => a.svgIcon), SYSTEM_APPS.map((id) => !RASTER_ICON_APPS[id]));
   const iconById = Object.fromEntries(Array.from(apps, (a) => [a.id, a.icon]));
   for (const [id, icon] of Object.entries(RASTER_ICON_APPS)) {
@@ -355,8 +378,17 @@ test('every catalog entry points at a real, syntactically valid app module', () 
     ['apps/games/mari0/game.data', 3000000],
     ['apps/games/sm64/sm64.us.f3dex2e.wasm', 15000000],
     ['apps/games/sm64/sm64.us.f3dex2e.js', 200000],
+    ['apps/games/bitlife/Build/BitLife.data.unityweb', 14000000],
+    ['apps/games/bitlife/Build/BitLife.wasm.code.unityweb', 5000000],
+    ['apps/games/granny/index.html', 50000000],
   ]) {
     assert.ok(fs.statSync(path.join(ROOT, p)).size >= min, `${p} is not the real game build`);
+  }
+  const amplerClients = source('apps/games/ampler-launcher/website/js/clients.js');
+  for (const page of AMPLER_LAUNCHER_PAGES) {
+    const rel = page.replace('apps/games/ampler-launcher/', '');
+    assert.ok(amplerClients.includes(rel), `ampler-launcher clients.js does not list ${rel}`);
+    assert.ok(fs.existsSync(path.join(ROOT, page)), `ampler-launcher client build missing: ${page}`);
   }
   /* The game pages are untouched: their "all games" links still go one level
    * up, and apps/games/index.html is the picker those links expect. */
@@ -413,8 +445,8 @@ test('every game HTML file is its own game and none of its assets are missing', 
   const pages = walk('apps/games', 'apps/games/')
     .filter((rel) => !rel.endsWith('/app.html') && rel !== 'apps/games/index.html')
     .sort();
-  assert.deepEqual([...Object.values(GAME_PAGES), ...CELESTE_HUB_ALL_PAGES].sort(), pages,
-    'every game HTML file should be its own catalogued game (the Celeste pages belong to Celeste Hub)');
+  assert.deepEqual([...Object.values(GAME_PAGES), ...CELESTE_HUB_ALL_PAGES, ...AMPLER_LAUNCHER_PAGES].sort(), pages,
+    'every game HTML file should be its own catalogued game (the Celeste and Ampler Launcher pages belong to their launchers)');
   for (const page of pages) {
     const html = source(page);
     assert.match(html, /<(?:html|head|body)[\s>]/i, `${page} does not look like an HTML page`);
@@ -1251,7 +1283,7 @@ test('Customize saves, displays and resets uploaded app icon images', async () =
     const browserWindow = w.eval('wins').get('browser');
     assert.equal(body.querySelector('#cust-files-shortcut'), null, 'Customize still offers a Files shortcut');
     assert.deepEqual([...body.querySelectorAll('#cust-modlist .card b')].map((b) => b.textContent).slice(0, SYSTEM_APPS.length),
-            ["App Center", "Customize", "Settings", "About", "Browser", "System Monitor", "Calculator", "Clock", "Files", "Text Editor", "PDF Viewer", "Image Viewer", "VLC", "Paint", "Piano", "Ruffle Flash Player", "Web Retro", "Terminal", "You Are An Idiot", "2048", "Bloons Tower Defense 1", "Bloons Tower Defense 2", "Bloons Tower Defense 5", "Bloxorz", "Breaking The Bank", "Celeste Hub", "Cookie Clicker", "Drive Mad", "Escaping The Prison", "Fleeing The Complex", "Grey Box Testing", "Infiltrating The Airship", "Mari0", "Offline Paradise", "Pacman", "Slope", "Spacebar Clicker", "Stack", "Stealing The Diamond", "Stickman Hook", "Super Mario 64", "Tetris", "The Impossible Quiz", "Tunnel Rush", "Baldi's Basics", "Minesweeper", "Flappy Bird", "Retro Bowl", "Drift Boss", "Football Bros", "Five Nights at Freddy's", "Five Nights at Freddy's 4", "Five Nights at Freddy's 2", "Five Nights at Freddy's 3", "Backrooms", "Kart Bros", "Geometry Dash Lite", "Five Nights at Freddy's: Sister Location", "Bitburner"]);
+            ["App Center", "Customize", "Settings", "About", "Browser", "System Monitor", "Calculator", "Clock", "Files", "Text Editor", "PDF Viewer", "Image Viewer", "VLC", "Paint", "Piano", "Ruffle Flash Player", "Web Retro", "Terminal", "You Are An Idiot", "2048", "Bloons Tower Defense 1", "Bloons Tower Defense 2", "Bloons Tower Defense 5", "Bloxorz", "Breaking The Bank", "Celeste Hub", "Cookie Clicker", "Drive Mad", "Escaping The Prison", "Fleeing The Complex", "Grey Box Testing", "Infiltrating The Airship", "Mari0", "Offline Paradise", "Pacman", "Slope", "Spacebar Clicker", "Stack", "Stealing The Diamond", "Stickman Hook", "Super Mario 64", "Tetris", "The Impossible Quiz", "Tunnel Rush", "Baldi's Basics", "Minesweeper", "Flappy Bird", "Retro Bowl", "Drift Boss", "Football Bros", "Five Nights at Freddy's", "Five Nights at Freddy's 4", "Five Nights at Freddy's 2", "Five Nights at Freddy's 3", "Backrooms", "Kart Bros", "Geometry Dash Lite", "Five Nights at Freddy's: Sister Location", "Bitburner", "BitLife", "Ampler Launcher", "Google Dino", "Granny", "Evolution", "Geometry Dash Web"]);
 
     const uploadBrowserIcon = async () => {
       const input = body.querySelector('[data-micon-file="browser"]');
@@ -1358,7 +1390,7 @@ test('embedded-page templates and remote-embedded games are not shipped', () => 
   assert.ok(!source('data/applications.js').includes('EMBED_URL'), 'app catalog still mentions EMBED_URL');
   assert.ok(!source('data/websites.js').includes('EMBED_URL'), 'site catalog still mentions EMBED_URL');
   /* No shipped game page frames a remote page as the game itself. */
-  for (const page of [...Object.values(GAME_PAGES), ...CELESTE_HUB_ALL_PAGES]) {
+  for (const page of [...Object.values(GAME_PAGES), ...CELESTE_HUB_ALL_PAGES, ...AMPLER_LAUNCHER_PAGES]) {
     const html = source(page);
     assert.ok(!/<iframe\b[^>]*\bsrc\s*=\s*["']https?:\/\//i.test(html), `${page} frames a remote page`);
     assert.ok(!/\.src\s*=\s*['"]https?:\/\//.test(html), `${page} points a frame at a remote page`);

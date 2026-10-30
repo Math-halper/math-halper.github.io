@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BitLife - proton app</title>
+</head>
+<body>
+<p>This file is a proton app. It is not meant to be opened on its own:
+open <a href="../../../index.html">proton</a> and launch <b>BitLife</b> from the
+proton menu. The script below is fetched and run by proton's HTML loader
+(assets/html-loader.js) at boot.</p>
+<!-- VENDORED GAME - proton's wrapper plus the game's own files.
+
+     Build/, TemplateData/, logo.png and style.css are copied byte-for-byte
+     from Lugapps-games/bitlife (also mirrored in bitlifefreeonline/bitlife).
+     index.html omits the broken root /js/main.js tag and includes empty local
+     gamemonetize-sdk and gamedistribution-jssdk script elements so the
+     Unity WebGL runtime keeps its remote ad SDK injectors dormant offline.
+
+     The wrapper frames this folder's own game page - a local page, so the
+     frame is NOT sandboxed and may use keyboard, mouse, audio and fullscreen
+     like any desktop app. Click the game once to give it focus. -->
+<script data-proton-app>
+(() => {
+/* proton app module: vendored game wrapper - edit this file to change this app.
+ * Loaded by index.html; calls registerApp() (see apps/README.md).
+ * Metadata (name, icon, cat, desc, w, h) lives in data/applications.js. */
+'use strict';
+
+/* =====================================================================
+   The game page that ships in this folder.
+   ===================================================================== */
+const GAME_PAGE = 'apps/games/bitlife/index.html';
+/* --------------------------------------------------------------------- */
+
+registerApp({
+  render(body) {
+    body.innerHTML = `${bar('BitLife', `<span class="muted embed-src" title="${MH.esc(GAME_PAGE)}">${MH.esc(GAME_PAGE)}</span>
+      <button class="btn sm" data-e="reload">${iconSvg('refresh')} Reload</button>
+      <button class="btn sm primary" data-e="ext">${iconSvg('external')} Open in new tab</button>`)}
+      <div class="app-main local-page"><iframe class="site-frame" title="BitLife" src="${MH.esc(GAME_PAGE)}"
+        allow="autoplay; fullscreen; pointer-lock; gamepad" allowfullscreen></iframe></div>
+      <p class="muted" style="flex:none;margin:0;padding:7px 14px;border-top:1px solid var(--line)">The game build ships with this app - copied from
+        <a href="https://github.com/Lugapps-games/bitlife" target="_blank" rel="noopener">Lugapps-games/bitlife</a>.</p>`;
+    const frame = body.querySelector('iframe');
+    body.querySelector('[data-e="reload"]').onclick = () => { frame.src = GAME_PAGE; };
+    body.querySelector('[data-e="ext"]').onclick = () => window.open(GAME_PAGE, '_blank', 'noopener');
+  },
+});
+})();
+</script>
+<style>
+/* The toolbar path, truncated like the Browser's. */
+.embed-src{max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}
+</style>
+</body>
+</html>

@@ -791,6 +791,78 @@ desc=Play Bitburner - the hacking programming RPG
 w=980
 h=640
 
+[application]
+id=bitlife
+name=BitLife
+path=apps/games/bitlife/app.html
+icon=data/icons/bitlife.png
+svg-icon=false
+cat=Games
+preinstalled=true
+desc=Play BitLife - Life Simulator in your browser
+w=980
+h=640
+
+[application]
+id=ampler-launcher
+name=Ampler Launcher
+path=apps/games/ampler-launcher/app.html
+icon=data/icons/ampler-launcher.png
+svg-icon=false
+cat=Games
+preinstalled=true
+desc=Play Eaglercraft with Ampler Launcher - seven offline Minecraft builds and skins
+w=980
+h=640
+
+[application]
+id=google-dino
+name=Google Dino
+path=apps/games/google-dino/app.html
+icon=data/icons/google-dino.png
+svg-icon=false
+cat=Games
+preinstalled=true
+desc=Play Google Dino - jump and duck through the endless desert runner
+w=980
+h=640
+
+[application]
+id=granny
+name=Granny
+path=apps/games/granny/app.html
+icon=data/icons/granny.png
+svg-icon=false
+cat=Games
+preinstalled=true
+desc=Play Granny - escape the house quietly before she hears you
+w=980
+h=640
+
+[application]
+id=evolution
+name=Evolution
+path=apps/games/evolution/app.html
+icon=data/icons/evolution.png
+svg-icon=false
+cat=Games
+preinstalled=true
+desc=Play Evolution - build creatures from joints, bones and muscles and evolve their brains
+w=980
+h=640
+
+[application]
+id=geometry-dash-web
+name=Geometry Dash Web
+path=apps/games/geometry-dash-web/app.html
+icon=data/icons/geometry-dash-web.png
+svg-icon=false
+cat=Games
+preinstalled=true
+desc=Play Geometry Dash Web - eight forms, six levels, chiptune music and a level editor
+w=980
+h=640
+
 /* Embedded-page apps are not shipped: every app is a local app
    (copy apps/_template/) whose files live in this repository. */
 `;

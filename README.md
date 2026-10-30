@@ -81,6 +81,12 @@ game bundles and earlier built-in sites remain removed (except Test Page).
 | **Tetris** (`tetris`) | Play Tetris - the falling-blocks classic |
 | **The Impossible Quiz** (`the-impossible-quiz`) | Play The Impossible Quiz - the wildly unfair quiz |
 | **Tunnel Rush** (`tunnel-rush`) | Play Tunnel Rush - dodge through the spinning tunnel |
+| **BitLife** (`bitlife`) | Play BitLife - Life Simulator in your browser |
+| **Ampler Launcher** (`ampler-launcher`) | Play Eaglercraft with Ampler Launcher - seven offline Minecraft builds and skins |
+| **Google Dino** (`google-dino`) | Play Google Dino - jump and duck through the endless desert runner |
+| **Granny** (`granny`) | Play Granny - escape the house quietly before she hears you |
+| **Evolution** (`evolution`) | Play Evolution - build creatures from joints, bones and muscles and evolve their brains |
+| **Geometry Dash Web** (`geometry-dash-web`) | Play Geometry Dash Web - eight forms, six levels, chiptune music and a level editor |
 
 Rows are listed in start-menu order: **System**, then **Productivity**, **Media**, **Tools** and **Games**.
 
