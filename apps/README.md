@@ -151,6 +151,12 @@ matching the menu sections (`cat=`, ordered by `CATS` in `assets/core.js`).
 | `games/` | Tetris (`tetris`) — the vendored Flash build and loader shim (from Gams-Offline/Gams `g/g/Ruffle/swfs/`; runs on the shared Ruffle player) plus its wrapper |
 | `games/` | The Impossible Quiz (`the-impossible-quiz`) — the vendored Flash build and loader shim (from Gams-Offline/Gams `g/g/Ruffle/swfs/`; runs on the shared Ruffle player) plus its wrapper |
 | `games/` | Tunnel Rush (`tunnel-rush`) — the vendored WebGL build (from Gams-Offline/Gams `g/g/`) plus its wrapper |
+| `games/` | BitLife (`bitlife`) — the vendored Unity WebGL build of BitLife (from Lugapps-games/bitlife) plus its wrapper |
+| `games/` | Ampler Launcher (`ampler-launcher`) — the vendored Eaglercraft launcher and seven offline Minecraft builds (from proton-arcade/proton-arcade.github.io & proton-arcade/AmplerLauncher) plus its wrapper |
+| `games/` | Google Dino (`google-dino`) — the vendored endless runner build (from proton-arcade/proton-arcade.github.io) plus its wrapper |
+| `games/` | Granny (`granny`) — the vendored Unity WebGL build (from proton-arcade/proton-arcade.github.io) plus its wrapper |
+| `games/` | Evolution (`evolution`) — the vendored web build of Evolution (from proton-arcade/evo) plus its wrapper |
+| `games/` | Geometry Dash Web (`geometry-dash-web`) — the vendored HTML5 canvas build and level editor (from proton-arcade/gdweb) plus its wrapper |
 | `_template/` | not an app — the starting point for a new one (copy it into its category folder) |
 
 ### Desktop shortcut workflow

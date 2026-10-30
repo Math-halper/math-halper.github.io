@@ -260,37 +260,73 @@ The app icons are the Gams collection's own icon images for each game, scaled
 into `data/icons/`.
 
 
-## Vendored Exst Arcade games (proton-arcade batch)
+## Vendored Exst Arcade & proton-arcade games
 
-Fourteen games were copied from
+Seventeen games ship from
 [proton-arcade/proton-arcade.github.io](https://github.com/proton-arcade/proton-arcade.github.io)
-(the "Exst Arcade" site), each into `apps/games/<id>/`: Baldi's
+(the "Exst Arcade" site), plus two standalone browser games from the same
+`proton-arcade` GitHub account, each into `apps/games/<id>/`: Baldi's
 Basics, Minesweeper, Flappy Bird, Retro Bowl, Drift Boss, Football Bros,
-Five Nights at Freddy's 1–4 and Sister Location, Backrooms, Kart Bros and
-Geometry Dash Lite. For every one of them:
+Five Nights at Freddy's 1–4 and Sister Location, Backrooms, Kart Bros,
+Geometry Dash Lite, Ampler Launcher, Google Dino, Granny, Evolution and
+Geometry Dash Web. For every one of them:
 
-- The game files (`index.html`, `icon.png`) are copied byte-for-byte from
-  `website/games/<folder>` in that repository; nothing was edited. Their
-  `icon.png` also serves as the catalog icon at `data/icons/<id>.png`.
+- The game files (`index.html`, `icon.png`) for the Exst Arcade titles are
+  copied byte-for-byte from `website/games/<folder>` in
+  `proton-arcade/proton-arcade.github.io`. Their `icon.png` also serves as
+  the catalog icon at `data/icons/<id>.png`.
+- **Ampler Launcher** (`apps/games/ampler-launcher/`) copies the browser
+  launcher, skins and all seven offline Eaglercraft builds (`1.12.2`,
+  `1.12.2-wasm`, `1.8.8`, `1.8.8-wasm`, `1.5.2`, `Beta-1.3`, `Alpha-1.2.6`)
+  from `website/games/Ealgercraft/Ampler-Launcher/` (the v2.7.4 superset of
+  [proton-arcade/AmplerLauncher](https://github.com/proton-arcade/AmplerLauncher)),
+  omitting non-browser CLI/server helper folders.
+- **Evolution** (`apps/games/evolution/`) copies the runtime web build of
+  Keiwan Donyagard's *Evolution* creature simulator from
+  [proton-arcade/evo](https://github.com/proton-arcade/evo) (`index.html`,
+  `favicon.svg`, `css/`, `js/`, `cc/`); its `favicon.svg` is rasterised to
+  `data/icons/evolution.png`.
+- **Geometry Dash Web** (`apps/games/geometry-dash-web/`) copies the HTML5
+  canvas rhythm-platformer and level editor from
+  [proton-arcade/gdweb](https://github.com/proton-arcade/gdweb); its
+  `website/assets/textures/favicon.svg` is rasterised to
+  `data/icons/geometry-dash-web.png`.
 - Each app folder adds only proton's `app.html` wrapper, which frames the
   game's own `index.html` unsandboxed like every other vendored game.
-- Two source folders omit files their pages reference, so those were
+- Three source folders omit files their pages reference, so those were
   supplied from the game's own icon to keep nothing missing:
   `football-bros` gained `favicon.png`, `manifest.json` and
-  `assets/bw_logo.gif`, and `kart-bros` gained `manifest.json`.
+  `assets/bw_logo.gif`, `kart-bros` gained `manifest.json`, and `granny`
+  gained `logo.jpg`.
   `football-bros/index.html` also framed remote pages twice (a Google
   Tag Manager tracking iframe and an email-signup overlay the game
   injects); both snippets were removed so no shipped game page frames
-  a remote page. Those are the only edits made to any of the fourteen
-  game pages.
-- The remaining game on that site, Ampler Launcher (an Eaglercraft
-  launcher bundling eight separate Minecraft client pages, ~116 MB), was
-  not vendored: this repository's rule is that every game page under
-  `apps/games/` is its own catalogued game. Its `Granny` and `Pong`
-  folders are not listed on the site or in its catalog, so they were not
-  added either.
+  a remote page. (The uncatalogued `Pong` folder in `proton-arcade.github.io`
+  contains only an HTML shell without its `script.js` or `style.css` and is
+  omitted.)
 - All rights in these games remain with their original creators; this
   repository grants no rights in that content.
+
+## Vendored BitLife
+
+`apps/games/bitlife/` ships the Unity 2019.4.21f1 WebGL browser build of
+**BitLife — Life Simulator** (by Candywriter), copied from
+[Lugapps-games/bitlife](https://github.com/Lugapps-games/bitlife) (the same
+`Build/` and `TemplateData/` binaries mirrored in
+[bitlifefreeonline/bitlife](https://github.com/bitlifefreeonline/bitlife)):
+
+- `Build/` (`BitLife.data.unityweb`, `BitLife.wasm.code.unityweb`,
+  `BitLife.wasm.framework.unityweb`, `BitLife.json`, `UnityLoader.js`),
+  `TemplateData/`, `logo.png` and `style.css` are copied byte-for-byte.
+- `index.html` omits the broken root `/js/main.js` script tag and adds empty
+  local `<script id="gamemonetize-sdk">` and
+  `<script id="gamedistribution-jssdk">` tags so the Unity framework's
+  `document.getElementById()` guards keep its remote ad SDK loaders dormant
+  without modifying the `.unityweb` archives.
+- `splash.png` (and `data/icons/bitlife.png`) is the 512×512 BitLife icon art.
+- BitLife is © **Candywriter, LLC**; the mirror carries no redistribution
+  licence, and no rights in Candywriter's game or artwork are claimed or
+  implied.
 
 ## Vendored game from incrediblerevived11.github.io
 
