@@ -89,6 +89,11 @@ shortcuts.
 - Two old requests remain ambiguous and must not be guessed if raised again:
   “add light” (no matching source was found; do not invent one) and “remove gem Dash”
   (only the full `geometry-dash` was deleted; `geometry-dash-lite` remains).
+- “remove Geometry Dash Web and add mox as well as AI button like copilot from
+  Windows” (2026-10-30): `geometry-dash-web` was deleted completely (folder, icon,
+  catalog block, picker entry, docs, tests). `geometry-dash-lite` stays. “mox” is the
+  user's own repo github.com/Math-halper/mox, vendored as the Mox app. The AI button
+  docks Mox in a Copilot-style pane (see Mox below).
 - A GUI-look complaint strengthening plan was discussed historically but remains
   unresolved if re-raised.
 
@@ -206,6 +211,31 @@ recoverable from git commit `0e4a8cd`.
 - Celeste links target `celesteclassic.github.io`; never
   `math-halper.github.io/Celeste` (404). The Celeste Hub covers the eight Celeste pages
   plus its chooser.
+
+### Mox and the AI button (`apps/productivity/mox/`, `assets/core.js`)
+
+- Mox = Math-halper/mox, a private in-browser AI (SmolLM2-135M Q4_1 GGUF on wllama).
+  `website/` holds its browser files byte-for-byte at commit `acd4ec7` (73 files,
+  ~105 MB including the 98,362,432-byte model). Left out: `sw.js`, launchers,
+  `tests/`, `tools/`, `.github/`, `_headers`, `.nojekyll`, `.gitignore`. Never edit
+  `website/`; to update it, copy the same files from a newer commit and regenerate.
+- The wrapper frames `apps/productivity/mox/website/index.html?nosw`. `?nosw` keeps
+  Mox's service worker away from the root coi-serviceworker. `registerApp({ page })`
+  publishes the page as `APPS.mox.page` for the AI button.
+- AI button: `#tray-copilot` after the clock opens `aside#copilot`, which docks on
+  the right above the panel. Alt+C toggles it, from inside the frame too. The frame
+  is lazy (Mox fetches 94 MB on page load) and is kept alive on close. The width is
+  320–960px, leaves the desktop 240px, and is saved in
+  `userData.settings.copilotWidth`. Component toggle: `components.copilotButton`.
+  The button hides when Mox is hidden. While docked (≥760px), `#desktop.copilot-open`
+  plus `--copilot-w` on `<html>` shrink the windows layer, icon area, hint, tools
+  and toasts.
+- `tools/gen-search-index.py` skips `apps/productivity/mox/website/`
+  (`VENDORED_SITES`): Mox's knowledge library would otherwise flood proton's search.
+  The emoji test exempts the same tree.
+- Verified live in headless Chromium: the model loads and answers in the pane
+  (about 6 tok/s on 2 vCPUs). The only console noise is Mox's optional
+  `vendor/wllama/compat/wllama.wasm` probe, a 404 that upstream has too.
 
 ### VLC / media player (`apps/media/media/app.html`)
 

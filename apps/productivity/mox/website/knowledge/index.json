@@ -1,0 +1,428 @@
+{
+  "version": 2,
+  "generated": "2026-10-30T21:46:35Z",
+  "categories": [
+    {
+      "id": "math",
+      "name": "Mathematics",
+      "description": "Arithmetic through calculus, plus a formula reference."
+    },
+    {
+      "id": "reading",
+      "name": "Reading & Writing",
+      "description": "Comprehension, grammar, style, vocabulary, and literature."
+    },
+    {
+      "id": "technology",
+      "name": "Technology",
+      "description": "Computers, the web, programming, AI, security, and data."
+    },
+    {
+      "id": "science",
+      "name": "Science",
+      "description": "Physics, chemistry, biology, Earth, and space."
+    },
+    {
+      "id": "humanities",
+      "name": "Humanities",
+      "description": "History, geography, cultures, and philosophy."
+    },
+    {
+      "id": "life",
+      "name": "Life & Skills",
+      "description": "Health, money, and learning how to learn."
+    },
+    {
+      "id": "",
+      "name": "General",
+      "description": "General notes and guides that do not belong to a category."
+    }
+  ],
+  "documents": [
+    {
+      "path": "humanities/geography-2-cities-climate-maps.md",
+      "title": "Geography II: cities, climate, and maps",
+      "category": "humanities",
+      "bytes": 6928,
+      "words": 1033
+    },
+    {
+      "path": "humanities/geography-and-cultures.md",
+      "title": "Geography and cultures",
+      "category": "humanities",
+      "bytes": 4154,
+      "words": 558
+    },
+    {
+      "path": "humanities/modern-history-1900-to-today.md",
+      "title": "Modern history: 1900 to today",
+      "category": "humanities",
+      "bytes": 5006,
+      "words": 787
+    },
+    {
+      "path": "humanities/philosophy-and-critical-thinking.md",
+      "title": "Philosophy and critical thinking",
+      "category": "humanities",
+      "bytes": 3572,
+      "words": 504
+    },
+    {
+      "path": "humanities/world-history-timeline.md",
+      "title": "World history: a working timeline",
+      "category": "humanities",
+      "bytes": 3701,
+      "words": 535
+    },
+    {
+      "path": "life/careers-jobs-and-interviews.md",
+      "title": "Careers, jobs, and interviews",
+      "category": "life",
+      "bytes": 6373,
+      "words": 1070
+    },
+    {
+      "path": "life/cooking-nutrition-and-food-safety.md",
+      "title": "Cooking, nutrition, and food safety",
+      "category": "life",
+      "bytes": 5623,
+      "words": 985
+    },
+    {
+      "path": "life/health-and-wellbeing.md",
+      "title": "Health and wellbeing",
+      "category": "life",
+      "bytes": 5813,
+      "words": 839
+    },
+    {
+      "path": "life/money-and-personal-finance.md",
+      "title": "Money and personal finance",
+      "category": "life",
+      "bytes": 4602,
+      "words": 705
+    },
+    {
+      "path": "life/personal-law-and-civics.md",
+      "title": "Everyday law, contracts, and civics",
+      "category": "life",
+      "bytes": 7086,
+      "words": 1076
+    },
+    {
+      "path": "life/study-skills-and-learning.md",
+      "title": "Study skills and learning",
+      "category": "life",
+      "bytes": 4092,
+      "words": 649
+    },
+    {
+      "path": "math/algebra.md",
+      "title": "Algebra",
+      "category": "math",
+      "bytes": 3986,
+      "words": 788
+    },
+    {
+      "path": "math/arithmetic-and-number-sense.md",
+      "title": "Arithmetic and number sense",
+      "category": "math",
+      "bytes": 4000,
+      "words": 750
+    },
+    {
+      "path": "math/calculus.md",
+      "title": "Calculus",
+      "category": "math",
+      "bytes": 4045,
+      "words": 700
+    },
+    {
+      "path": "math/geometry-and-trigonometry.md",
+      "title": "Geometry and trigonometry",
+      "category": "math",
+      "bytes": 3799,
+      "words": 711
+    },
+    {
+      "path": "math/math-reference-formulas.md",
+      "title": "Math formula and vocabulary reference",
+      "category": "math",
+      "bytes": 3202,
+      "words": 646
+    },
+    {
+      "path": "math/mathematics-2-functions-logs-discrete.md",
+      "title": "Mathematics II: functions, logs, sequences, and discrete math",
+      "category": "math",
+      "bytes": 6590,
+      "words": 1143
+    },
+    {
+      "path": "math/probability-and-statistics.md",
+      "title": "Probability and statistics",
+      "category": "math",
+      "bytes": 4065,
+      "words": 676
+    },
+    {
+      "path": "mox-starter-guide.md",
+      "title": "About this workspace",
+      "category": "",
+      "bytes": 8597,
+      "words": 1432
+    },
+    {
+      "path": "reading/grammar-and-punctuation.md",
+      "title": "Grammar and punctuation",
+      "category": "reading",
+      "bytes": 3933,
+      "words": 624
+    },
+    {
+      "path": "reading/literature-2-forms-and-analysis.md",
+      "title": "Literature II: forms, genres, and close reading",
+      "category": "reading",
+      "bytes": 7505,
+      "words": 1204
+    },
+    {
+      "path": "reading/literature-and-rhetoric.md",
+      "title": "Literature and rhetoric",
+      "category": "reading",
+      "bytes": 4274,
+      "words": 604
+    },
+    {
+      "path": "reading/reading-comprehension.md",
+      "title": "Reading comprehension",
+      "category": "reading",
+      "bytes": 4226,
+      "words": 636
+    },
+    {
+      "path": "reading/vocabulary-and-word-roots.md",
+      "title": "Vocabulary and word roots",
+      "category": "reading",
+      "bytes": 4397,
+      "words": 657
+    },
+    {
+      "path": "reading/writing-and-style.md",
+      "title": "Writing and style",
+      "category": "reading",
+      "bytes": 3888,
+      "words": 609
+    },
+    {
+      "path": "science/astronomy-and-space.md",
+      "title": "Astronomy and space",
+      "category": "science",
+      "bytes": 3999,
+      "words": 617
+    },
+    {
+      "path": "science/biology-and-earth.md",
+      "title": "Biology and Earth science",
+      "category": "science",
+      "bytes": 4675,
+      "words": 613
+    },
+    {
+      "path": "science/chemistry-2-reactions-and-materials.md",
+      "title": "Chemistry II: reactions, solutions, and organic basics",
+      "category": "science",
+      "bytes": 4468,
+      "words": 709
+    },
+    {
+      "path": "science/chemistry.md",
+      "title": "Chemistry",
+      "category": "science",
+      "bytes": 4467,
+      "words": 679
+    },
+    {
+      "path": "science/physics-2-electricity-waves-and-modern.md",
+      "title": "Physics II: electricity, waves, and modern physics",
+      "category": "science",
+      "bytes": 6486,
+      "words": 1009
+    },
+    {
+      "path": "science/physics.md",
+      "title": "Physics",
+      "category": "science",
+      "bytes": 4552,
+      "words": 707
+    },
+    {
+      "path": "technology/ai-and-machine-learning.md",
+      "title": "Artificial intelligence and machine learning",
+      "category": "technology",
+      "bytes": 4688,
+      "words": 675
+    },
+    {
+      "path": "technology/apis-http-and-json.md",
+      "title": "APIs, HTTP, and JSON \u2014 how programs talk to each other",
+      "category": "technology",
+      "bytes": 7317,
+      "words": 1091
+    },
+    {
+      "path": "technology/browser-games.md",
+      "title": "Classic browser games: mechanics and real reference implementations",
+      "category": "technology",
+      "bytes": 8545,
+      "words": 1421
+    },
+    {
+      "path": "technology/browser-model-runtimes-and-gguf.md",
+      "title": "Running a language model in the browser: wllama, llama.cpp, and GGUF",
+      "category": "technology",
+      "bytes": 6124,
+      "words": 992
+    },
+    {
+      "path": "technology/code-line-reference.md",
+      "title": "Line-of-code reference: HTML, CSS, JavaScript",
+      "category": "technology",
+      "bytes": 16714,
+      "words": 2446
+    },
+    {
+      "path": "technology/css-reference.md",
+      "title": "CSS reference \u2014 selectors, every property group, and layout",
+      "category": "technology",
+      "bytes": 19833,
+      "words": 2788
+    },
+    {
+      "path": "technology/cybersecurity-and-privacy.md",
+      "title": "Cybersecurity and privacy",
+      "category": "technology",
+      "bytes": 4634,
+      "words": 681
+    },
+    {
+      "path": "technology/data-databases-and-sql.md",
+      "title": "Data, databases, and SQL",
+      "category": "technology",
+      "bytes": 3950,
+      "words": 585
+    },
+    {
+      "path": "technology/data-visualization.md",
+      "title": "Charts, diagrams, and data visualization",
+      "category": "technology",
+      "bytes": 6469,
+      "words": 1167
+    },
+    {
+      "path": "technology/desktop-shell-in-the-browser.md",
+      "title": "Building a desktop environment in the browser",
+      "category": "technology",
+      "bytes": 9001,
+      "words": 1455
+    },
+    {
+      "path": "technology/emulators-and-flash-in-the-browser.md",
+      "title": "Old games in a new browser: Flash, retro consoles, and WebAssembly ports",
+      "category": "technology",
+      "bytes": 5686,
+      "words": 933
+    },
+    {
+      "path": "technology/git-and-github-automation.md",
+      "title": "Git and GitHub automation done safely",
+      "category": "technology",
+      "bytes": 5951,
+      "words": 976
+    },
+    {
+      "path": "technology/how-computers-work.md",
+      "title": "How computers work",
+      "category": "technology",
+      "bytes": 4383,
+      "words": 700
+    },
+    {
+      "path": "technology/html-reference.md",
+      "title": "HTML reference \u2014 every element, attribute, and pattern",
+      "category": "technology",
+      "bytes": 16163,
+      "words": 2217
+    },
+    {
+      "path": "technology/internet-and-web.md",
+      "title": "The internet and the web",
+      "category": "technology",
+      "bytes": 3908,
+      "words": 594
+    },
+    {
+      "path": "technology/javascript-reference.md",
+      "title": "JavaScript reference \u2014 language, DOM, APIs, and patterns",
+      "category": "technology",
+      "bytes": 26891,
+      "words": 3415
+    },
+    {
+      "path": "technology/local-ai-agents-and-tools.md",
+      "title": "Running a language model locally, and letting it use tools",
+      "category": "technology",
+      "bytes": 7357,
+      "words": 1137
+    },
+    {
+      "path": "technology/popular-websites.md",
+      "title": "Popular websites and online services",
+      "category": "technology",
+      "bytes": 13253,
+      "words": 2021
+    },
+    {
+      "path": "technology/programming-fundamentals.md",
+      "title": "Programming fundamentals",
+      "category": "technology",
+      "bytes": 4258,
+      "words": 650
+    },
+    {
+      "path": "technology/small-open-models.md",
+      "title": "Small open language models: SmolLM, Qwen, Llama",
+      "category": "technology",
+      "bytes": 5152,
+      "words": 872
+    },
+    {
+      "path": "technology/software-engineering-practices.md",
+      "title": "Software engineering practices",
+      "category": "technology",
+      "bytes": 5655,
+      "words": 915
+    },
+    {
+      "path": "technology/svg-and-vector-graphics.md",
+      "title": "SVG and vector graphics",
+      "category": "technology",
+      "bytes": 8439,
+      "words": 1397
+    },
+    {
+      "path": "technology/web-development-html-css-js.md",
+      "title": "Web development: HTML, CSS, and JavaScript in practice",
+      "category": "technology",
+      "bytes": 5069,
+      "words": 792
+    },
+    {
+      "path": "technology/website-design-references.md",
+      "title": "Website design references: how the famous layouts are built",
+      "category": "technology",
+      "bytes": 10051,
+      "words": 1673
+    }
+  ]
+}

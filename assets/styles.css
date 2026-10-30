@@ -121,6 +121,43 @@ button{cursor:pointer}
 .win-resize{position:absolute;right:0;bottom:0;width:20px;height:20px;cursor:nwse-resize;touch-action:none;z-index:5}
 .win.max .win-resize{display:none}
 
+/* ---------- the AI button and its docked pane (Copilot-style; assets/core.js) ----------
+ * The pane sits above every window and below the panel, start menu and
+ * desktop menus. While it is docked (wide screens) the desktop makes room:
+ * the windows layer — so maximised windows — the icon area, the date hint,
+ * the desktop tools and the toasts all end at its left edge. */
+.tray .tbtn.copilot-btn.on{background:rgba(255,255,255,.15);box-shadow:inset 0 -3px 0 var(--accent)}
+.copilot{position:absolute;top:0;right:0;bottom:44px;width:420px;max-width:100%;z-index:8800;display:flex;flex-direction:column;background:#050505;color:#ffffff;border-left:1px solid rgba(255,255,255,.24);box-shadow:-18px 0 50px rgba(0,0,0,.6)}
+.copilot[hidden]{display:none}
+.copilot:not([hidden]){animation:copilot-in .2s ease-out}
+@keyframes copilot-in{from{transform:translateX(32px);opacity:0}}
+.copilot-head{display:flex;align-items:center;gap:8px;height:44px;flex:none;padding:0 6px 0 12px;background:linear-gradient(#232323,#0a0a0a);box-shadow:inset 0 -1px 0 rgba(255,255,255,.14);user-select:none}
+.copilot-mark{display:grid;place-items:center;width:26px;height:26px;flex:none;border-radius:7px;background:var(--accent);color:var(--accent-ink)}
+.copilot-mark .icn{width:16px;height:16px}
+.copilot-title{display:flex;flex-direction:column;flex:1;min-width:0;line-height:1.25}
+.copilot-title b{font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.copilot-title span{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.copilot-head .wbtn{color:#ffffff}
+.copilot-head .wbtn:hover{background:rgba(255,255,255,.14)}
+.copilot-head .wbtn.close:hover{background:var(--danger)}
+.copilot-body{position:relative;flex:1;min-height:0;background:#000000}
+.copilot-frame{position:absolute;inset:0;display:block;width:100%;height:100%;border:0;background:#000000}
+.copilot-grip{position:absolute;left:-5px;top:0;bottom:0;width:9px;z-index:3;cursor:ew-resize;touch-action:none}
+.copilot-grip::after{content:"";position:absolute;left:4px;top:0;bottom:0;width:1px;transition:background .15s}
+.copilot-grip:hover::after,.copilot-grip:focus-visible::after,#desktop.copilot-resizing .copilot-grip::after{left:3px;width:3px;background:var(--accent)}
+.copilot-grip:focus{outline:none}
+#desktop.copilot-resizing,#desktop.copilot-resizing *{cursor:ew-resize!important;user-select:none}
+#desktop.copilot-resizing iframe{pointer-events:none}
+@media(min-width:760px){
+  #desktop.copilot-open .windows-layer,#desktop.copilot-open .desktop-icon-area{right:var(--copilot-w,420px)}
+  #desktop.copilot-open .desktop-hint{right:calc(var(--copilot-w,420px) + 16px)}
+  #desktop.copilot-open .desktop-tools{right:calc(var(--copilot-w,420px) + 18px);max-width:calc(100vw - var(--copilot-w,420px) - 20px)}
+  #desktop.copilot-open:not([hidden]) ~ .toasts{right:calc(var(--copilot-w,420px) + 14px)}
+}
+/* A phone-sized screen has no room to dock: the pane covers the desktop. */
+@media(max-width:759.98px){.copilot{width:100%!important;border-left:0}.copilot-grip{display:none}}
+@media(prefers-reduced-motion:reduce){.copilot:not([hidden]){animation:none}}
+
 /* ---------- shared app chrome ---------- */
 .appbar{display:flex;flex-wrap:wrap;align-items:center;gap:7px;padding:8px 12px;background:linear-gradient(#f6f6f5,#e9e9e7);border-bottom:1px solid var(--line);flex:none}
 .appbar h2{font-size:14.5px;margin:0 auto 0 2px}

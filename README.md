@@ -36,6 +36,15 @@ too, and **Web Retro** vendors the
 own ROM files too — and it carries the maintainer's own bundled ROM library (details in [`CREDITS.md`](CREDITS.md)). The other bundled apps,
 game bundles and earlier built-in sites remain removed (except Test Page).
 
+**Mox**, a private AI workspace, joins Productivity: its site is copied
+byte-for-byte from [Math-halper/mox](https://github.com/Math-halper/mox) into
+`apps/productivity/mox/website/`, model included, so a small language model
+(SmolLM2 135M) answers questions in your browser and nothing you type is
+sent anywhere. The panel has an **AI button**, like the Copilot button on
+Windows. Click the sparkle after the clock, or press **Alt+C**, and Mox
+docks along the right edge of the desktop. Your windows make room for it,
+and its left edge resizes it (see [AI button](#ai-button-mox)).
+
 | App (id) | What it does |
 | --- | --- |
 | **App Center** (`appcenter`) | Manage the built-in apps and anything saved on the account |
@@ -49,6 +58,7 @@ game bundles and earlier built-in sites remain removed (except Test Page).
 | **Files** (`files`) | Browse `/` and your own `/home/<you>`: create, rename, move, copy, import, search, download (folders as ZIP) |
 | **Text Editor** (`text-editor`) | Open, edit and save text files in your home folder; proton's own files open read-only |
 | **PDF Viewer** (`pdf`) | Read PDF files in your browser's own viewer — no extra library, nothing uploaded |
+| **Mox** (`mox`) | A private AI workspace whose small language model runs on your device. Chat that cites a 55-document library, a code workspace, SVG drawing and a calculator. The panel's AI button (Alt+C) docks it beside your windows |
 | **Image Viewer** (`image-viewer`) | View PNG, JPG, GIF, WebP, AVIF, BMP, ICO and SVG files with zoom and a folder playlist |
 | **Paint** (`paint`) | Draw with a brush, shapes, an eraser and a colour picker, then save the picture into either file system |
 | **Piano** (`piano`) | Play the keys, record a tune and play it back (the computer keyboard plays notes too) |
@@ -86,7 +96,6 @@ game bundles and earlier built-in sites remain removed (except Test Page).
 | **Google Dino** (`google-dino`) | Play Google Dino - jump and duck through the endless desert runner |
 | **Granny** (`granny`) | Play Granny - escape the house quietly before she hears you |
 | **Evolution** (`evolution`) | Play Evolution - build creatures from joints, bones and muscles and evolve their brains |
-| **Geometry Dash Web** (`geometry-dash-web`) | Play Geometry Dash Web - eight forms, six levels, chiptune music and a level editor |
 
 Rows are listed in start-menu order: **System**, then **Productivity**, **Media**, **Tools** and **Games**.
 
@@ -117,7 +126,7 @@ runtime dependencies or build step. Optional regression tests use jsdom:
 ## Project layout (everything is a module)
 
 - **Apps:** one folder + HTML file each — `apps/<category>/<name>/app.html`
-  (59 apps in five category folders — `system/`, `productivity/`, `media/`, `tools/`,
+  (65 apps in five category folders — `system/`, `productivity/`, `media/`, `tools/`,
   `games/` — matching the menu sections, plus one starting point:
   `apps/_template/` for a normal app). Embedded-page apps are not shipped:
   every app's files live in this repository.
@@ -149,9 +158,9 @@ runtime dependencies or build step. Optional regression tests use jsdom:
   `assets/desktop-icons.js` (shortcut layout, drag/drop and menus),
   `assets/html-loader.js` (loads the app modules at boot, or a `streamed=true`
   app's module on first launch), `assets/styles.css`, `assets/boot.js`.
-- **Tests:** `tests/system-desktop.test.cjs` — 16 tests. The catalogs are
-  exactly the 59 catalogued apps (six System apps, five Productivity, four
-  Media, four Tools and 40 games) and the one test site;
+- **Tests:** `tests/system-desktop.test.cjs` — 40 tests. The catalogs are
+  exactly the 65 catalogued apps (six System apps, six Productivity, four
+  Media, four Tools and 45 games) and the one test site;
   every module is present, each app is filed in its category folder, the
   generated manifest matches the repository, and a jsdom desktop boots and
   opens each app (the Calculator is driven through real sums; Web Retro's
@@ -166,7 +175,13 @@ runtime dependencies or build step. Optional regression tests use jsdom:
   and *reads* the right files; and tabs, bookmarks, history and every address
   scheme behave. The tests also verify each game app frames the game page that
   ships in its own folder and that the vendored builds are really there; Test
-  Page passes its own checks.
+  Page passes its own checks. Two cover Mox. One checks that the vendored
+  site is complete: the real model and engine, every library document, only
+  local files, and no service worker. The other drives the AI button: it
+  opens and closes the pane, checks the frame loads only on first open,
+  toggles it with Alt+C (from inside Mox too), resizes it within its limits,
+  hands Mox over to a window, and hides the button when the Customize toggle
+  is off or Mox is removed.
 
 ## Math Helper cover page
 
@@ -320,6 +335,42 @@ incomplete file).
   binary for reading and saving, and carry their real MIME type.
 - **A typed save name is a name, not a path.** `/` and `\\` become `_` in every
   save dialog, so a name can never leave the folder the dialog is showing.
+- **Alt+C opens and closes the AI pane** from anywhere on the desktop, inside
+  Mox too. Win+C belongs to the operating system, so proton uses Alt+C. On a
+  Mac, Option+C in a text field still types "ç".
+
+## AI button (Mox)
+
+The sparkle at the right end of the panel, after the clock, is proton's
+Copilot button. Clicking it, or pressing **Alt+C**, docks **Mox** along the
+right edge of the desktop, above the panel:
+
+- **The desktop makes room.** As with the docked Copilot on Windows, maximised
+  windows, the desktop icons, the date hint and toasts move to the pane's
+  left instead of hiding under it. New windows open centred in the space
+  that is left. On a phone-sized screen (under 760px wide) the pane covers
+  the desktop instead.
+- **Private and on-device.** The pane frames the vendored Mox site
+  (`apps/productivity/mox/website/`), and Mox runs its own model in this
+  browser with wllama (llama.cpp in WebAssembly). Nothing typed into it
+  leaves the browser, and its chats stay in this browser's IndexedDB.
+- **Loads on first use, then stays.** Mox starts reading its 94 MB model as
+  soon as its page opens, so the pane's frame is created the first time you
+  open it. A visit that never opens the pane never downloads the model.
+  Closing the pane only hides it, so the conversation and the loaded model
+  are still there next time.
+- **Resizable.** Drag the pane's left edge, or focus it and use ← / →
+  (Shift for bigger steps). It stays between 320px and 960px wide and always
+  leaves the desktop 240px. The width is saved with your account.
+- **Header buttons.** Reload restarts Mox, the window button hands Mox over
+  to a normal window (the Mox app), and × closes the pane.
+- **It is Mox's button.** It hides when Mox is removed from the menu, and
+  Customize → Desktop parts can turn it off. If you rename Mox, the pane and
+  the button's tooltip use the new name.
+
+The code is the "AI button" section of `assets/core.js` (styles in
+`assets/styles.css`). Mox itself is documented in
+[`apps/productivity/mox/README.md`](apps/productivity/mox/README.md).
 
 ## Search
 
@@ -331,7 +382,9 @@ you type never leaves the browser.
 `python3 tools/gen-search-index.py` reads the prose of every deployed file —
 the documentation, each app module's own comments, the built-in website pages
 and the source comments — and writes one inverted index to
-`data/search-index.js` (99 documents, ~5,400 terms, ~167 KB). Like
+`data/search-index.js` (101 documents, ~2,750 terms, ~102 KB). Vendored sites
+stay out of it: only proton's wrapper page speaks for each game, and Mox's own
+55-document knowledge library is Mox's corpus, not proton's. Like
 `data/fs-manifest.js` it is generated and committed: re-run it after changing
 documentation or an app's prose, then commit. Its output is deterministic (no
 timestamps, sorted documents and terms), so re-running writes the same bytes,
@@ -379,7 +432,8 @@ Bookmarks and history are per-account data (`userData.bookmarks`,
 ## What's inside
 
 - **Desktop** — movable, per-account shortcuts, a Mint-Y panel with pinned &
-  running apps, clock, searchable start menu (apps grouped into sections),
+  running apps, clock, an AI button that docks Mox like Windows' Copilot
+  (Alt+C), searchable start menu (apps grouped into sections),
   window
   manager (drag/resize/minimise/maximise), toasts.
 - **Two file systems, one chooser** — every open/save asks whether to use
@@ -389,10 +443,10 @@ Bookmarks and history are per-account data (`userData.bookmarks`,
   work with either.
 - **Menu sections** — the start menu groups the apps by `cat=`: **System**
   (App Center, Customize, Settings, About, Browser, System Monitor),
-  **Productivity** (Calculator, Clock, Files, Text Editor, PDF Viewer),
+  **Productivity** (Calculator, Clock, Files, Text Editor, PDF Viewer, Mox),
   **Media** (Image Viewer, VLC, Paint, Piano), **Tools** (Ruffle Flash Player,
   Web Retro, Terminal, plus the not-preinstalled You Are An Idiot once
-  installed) and **Games** (40 games: 2048, the Bloons TD series, the Henry Stickmin
+  installed) and **Games** (45 games: 2048, the Bloons TD series, the Henry Stickmin
   series, Pacman, Tetris, Slope, Tunnel Rush, the Exst Arcade batch below and more), with **My Apps** for
   anything an account adds. The order is `CATS` in `assets/core.js`.
 - **Search** — the Browser's bar searches *this repository* with proton's own
@@ -409,7 +463,8 @@ Bookmarks and history are per-account data (`userData.bookmarks`,
   `icon=globe` with `svg-icon=true` selects a built-in SVG. Invent your own **themes**
   (accent + wallpaper) and **wallpapers** (two-shade gradients) and apply them
   in one click; they also appear in Settings. Toggle desktop parts (clock,
-  desktop date/hint, lock & account buttons, menu search, panel labels)
+  desktop date/hint, lock & account buttons, menu search, panel labels, the
+  AI button)
   instantly, and reset all customisations (including shortcut layout) without
   touching anything else. App Center, Customize and Settings are protected so
   you can't lock yourself out.

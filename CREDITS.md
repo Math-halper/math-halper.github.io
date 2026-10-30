@@ -264,12 +264,15 @@ into `data/icons/`.
 
 Seventeen games ship from
 [proton-arcade/proton-arcade.github.io](https://github.com/proton-arcade/proton-arcade.github.io)
-(the "Exst Arcade" site), plus two standalone browser games from the same
+(the "Exst Arcade" site), plus one standalone browser game from the same
 `proton-arcade` GitHub account, each into `apps/games/<id>/`: Baldi's
 Basics, Minesweeper, Flappy Bird, Retro Bowl, Drift Boss, Football Bros,
 Five Nights at Freddy's 1–4 and Sister Location, Backrooms, Kart Bros,
-Geometry Dash Lite, Ampler Launcher, Google Dino, Granny, Evolution and
-Geometry Dash Web. For every one of them:
+Geometry Dash Lite, Ampler Launcher, Google Dino, Granny and Evolution.
+(Geometry Dash Web, from
+[proton-arcade/gdweb](https://github.com/proton-arcade/gdweb), shipped here
+too until it was removed in 2026-10, with its folder and icon; Geometry Dash
+Lite stays.) For every one of them:
 
 - The game files (`index.html`, `icon.png`) for the Exst Arcade titles are
   copied byte-for-byte from `website/games/<folder>` in
@@ -286,11 +289,6 @@ Geometry Dash Web. For every one of them:
   [proton-arcade/evo](https://github.com/proton-arcade/evo) (`index.html`,
   `favicon.svg`, `css/`, `js/`, `cc/`); its `favicon.svg` is rasterised to
   `data/icons/evolution.png`.
-- **Geometry Dash Web** (`apps/games/geometry-dash-web/`) copies the HTML5
-  canvas rhythm-platformer and level editor from
-  [proton-arcade/gdweb](https://github.com/proton-arcade/gdweb); its
-  `website/assets/textures/favicon.svg` is rasterised to
-  `data/icons/geometry-dash-web.png`.
 - Each app folder adds only proton's `app.html` wrapper, which frames the
   game's own `index.html` unsandboxed like every other vendored game.
 - Three source folders omit files their pages reference, so those were
@@ -481,3 +479,47 @@ and libretro authors) and are distributed here as a separate part of this
 AGPL-3.0-only repository — GPL-3.0 section 13 permits the combination. Their
 in-file source headers and upstream links are unchanged. Not affiliated with
 Nintendo or the libretro organisation.
+
+## Vendored AI workspace (Mox)
+
+The Mox app (`apps/productivity/mox/`) and the panel's AI button run
+**Mox**, a private AI workspace by Math-halper. Its browser files are copied
+byte-for-byte from [Math-halper/mox](https://github.com/Math-halper/mox) at
+commit `acd4ec7ab143f0c5a31b11dd19fb2a89cf5a8eb3` into
+`apps/productivity/mox/website/`:
+
+- **Mox's own files, © Math-halper.** These are the page and its modules
+  (`index.html`, `styles.css`, `app.js`, `calculator.js`, `model-store.js`,
+  `svg.js`, `workspace.js`), Mox's `README.md`, the model manifest, and the
+  knowledge library (`knowledge/`: 55 Markdown documents of original text
+  written for Mox, plus their `index.json`). Mox has no licence file of its
+  own yet (its README says so), so this repository grants no rights in them.
+  They ship here as the maintainer's own project.
+- **The model.** `models/smollm2-135m-instruct-q4_1.gguf` is a Q4_1 GGUF
+  quantisation of
+  [SmolLM2-135M-Instruct](https://huggingface.co/HuggingFaceTB/SmolLM2-135M-Instruct)
+  by Hugging Face (Apache-2.0).
+- **The engine.** `vendor/wllama/` is
+  [wllama](https://github.com/ngxson/wllama) (MIT, © the wllama authors), the
+  WebAssembly build of [llama.cpp](https://github.com/ggml-org/llama.cpp)
+  (MIT, © the ggml authors) that runs the model in the browser.
+- **PDF reading.** `vendor/pdfjs/` is Mozilla's
+  [PDF.js](https://github.com/mozilla/pdf.js) (Apache-2.0; `LICENSE` in that
+  folder), which Mox uses to read imported PDFs.
+- **Optional models are not bundled.** The larger models in Mox's picker are
+  Qwen (Apache-2.0) and Llama 3.2 1B (Llama 3.2 Community Licence). Mox
+  downloads them from Hugging Face only when a user asks for one.
+
+Some files are left out because they are not part of the page a browser
+runs: Mox's launchers (`run.py`, `start-mox.bat`, `start-mox.command`),
+`tests/`, `tools/`, `.github/`, `_headers`, `.nojekyll` and `.gitignore`.
+Mox's offline service worker, `sw.js`, is left out too, because it would sit
+between proton and the page. proton frames Mox with `?nosw`, Mox's own switch
+for not registering that worker. Nothing that ships is edited: proton adds
+only the wrapper (`app.html`) and a `README.md` next to `website/`.
+
+The AI button is proton's own code (`assets/core.js`, `assets/styles.css`):
+the sparkle in the panel and the docked, resizable pane that frames Mox the
+way the Copilot button does on Windows. The `sparkle` and `app-window` icons
+in `assets/icons.js` are proton's own drawings. Copilot and Windows are
+trademarks of Microsoft; proton is not affiliated with Microsoft.

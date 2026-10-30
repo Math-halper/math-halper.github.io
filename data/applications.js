@@ -5,7 +5,7 @@ in the proton menu. Nothing else needs editing: name, location (path),
 icon, category, description and default window size all live here.
 
   - Add an app:    copy the template block below (and the app's folder,
-                   under apps/inbuilt/).
+                   under apps/<category>/ - start from apps/_template/).
   - Remove an app: delete its block (or set enabled=false to keep the
                    block but hide the app).
   - icon= is either a named SVG icon, or a local raster path such as
@@ -15,13 +15,14 @@ icon, category, description and default window size all live here.
     auto-detected for compatibility with older catalog blocks.
   - cat= is the menu category — the start menu groups apps into its sections.
     Every app must be filed into its respective section: System, Productivity,
-    Media or Games (their order is CATS in assets/core.js). Never add an app
+    Media, Tools or Games (their order is CATS in assets/core.js). Never add an app
     without a cat=; a new name becomes a new section of its own. The app's
     folder goes in apps/<category>/ to match (system/, productivity/, media/,
-    games/) — the tests assert the path matches the section.
+    tools/, games/) — the tests assert the path matches the section.
   - preinstalled=true|false says whether the app comes preinstalled with
     proton. Every app in this catalog ships inside the repository, so every
-    block below says preinstalled=true; the parser exposes it to apps as the
+    block below says preinstalled=true except You Are An Idiot's
+    (preinstalled=false); the parser exposes it to apps as the
     boolean `preinstalled` (a missing or unreadable value counts as true).
   - w= / h= are the starting window size in pixels.
   - streamed=true loads a remote app's tiny module on first launch instead
@@ -29,24 +30,31 @@ icon, category, description and default window size all live here.
   - The app itself still lives in apps/<category>/<folder>/app.html; its render()
     code runs from there (apps/_template is the starting point).
 
-proton ships the five desktop System apps (App Center, Customize, Settings,
-About, Browser), the file system suite from main (Files, Text Editor, Image
-Viewer, Media, PDF Viewer — their ids are exactly the ones FS.appFor()
-returns, so double-clicking a file opens it in the right one), a Calculator,
-Web Retro and Ruffle Flash Player (the Tools — Web Retro carries the offline catalog’s classic ROMs and still loads your own) plus You Are An Idiot, the one app that is not preinstalled (preinstalled=false: it waits in App Center until someone installs it, then unleashes the classic bouncing-window menace inside the desktop), the
-Celeste Hub app (every Celeste Classic game in one place — Celeste Classic,
-Celeste Classic 2, the community hub, its practice mods, Webek and downloads,
-chosen inside the app; game files copied byte-for-byte from github.com/Math-halper/Celeste),
-the two Mario games (Mari0 and Super Mario 64 — game builds copied
-byte-for-byte from github.com/Math-halper/Mario, only the games) and Cookie
-Clicker (Orteil's idle game, copied byte-for-byte from the offline mirror in
-github.com/Gams-Offline/Gams) and 23 more games from that same Gams
-collection (Flash classics on the shared Ruffle player, Unity WebGL builds
-and single-file HTML5 games). Each game
-app folder is the game's own files plus a thin proton iframe wrapper (see CREDITS.md for provenance), and
+proton ships 65 apps. System: App Center, Customize, Settings, About,
+Browser and System Monitor. Productivity: a Calculator, a Clock, the file
+system suite's Files, Text Editor and PDF Viewer (with Image Viewer and VLC
+under Media, their ids are exactly the ones FS.appFor() returns, so
+double-clicking a file opens it in the right one) and Mox, the private AI
+workspace copied byte-for-byte from github.com/Math-halper/mox - its
+language model runs in the browser, and the AI button in the panel docks the
+same page beside the desktop, like the Copilot button on Windows. Media:
+Image Viewer, VLC, Paint and Piano. Tools: Ruffle Flash Player, Web Retro
+(the offline catalog's classic ROMs, or your own), Terminal, and You Are An
+Idiot, the one app that is not preinstalled (preinstalled=false: it waits in
+App Center until someone installs it, then unleashes the classic
+bouncing-window menace inside the desktop). Games: 45 vendored games - the
+Celeste Hub (every Celeste Classic game in one app, from
+github.com/Math-halper/Celeste), Mari0 and Super Mario 64 (from
+github.com/Math-halper/Mario), Cookie Clicker and 23 more from
+github.com/Gams-Offline/Gams (Flash classics on the shared Ruffle player,
+Unity WebGL builds and single-file HTML5 games), and the proton-arcade and
+other vendored builds. Each game app folder is the game's own files plus a
+thin proton iframe wrapper (see CREDITS.md for provenance), and
 apps/games/index.html is the picker their "all games" links expect.
 
-The start menu groups them by cat=: System (the desktop’s own five), Productivity (Calculator, Files, Text Editor, PDF Viewer), Media (Image Viewer, Media), Tools (Ruffle Flash Player, Web Retro — the players behind the Flash and cartridge games) and Games (40 games: 2048, Bloons Tower Defense 1, Bloons Tower Defense 2, Bloons Tower Defense 5, Bloxorz, Breaking The Bank, Celeste Hub, Cookie Clicker, Drive Mad, Escaping The Prison, Fleeing The Complex, Grey Box Testing, Infiltrating The Airship, Mari0, Offline Paradise, Pacman, Slope, Spacebar Clicker, Stack, Stealing The Diamond, Stickman Hook, Super Mario 64, Tetris, The Impossible Quiz, Tunnel Rush, Baldi's Basics, Minesweeper, Flappy Bird, Retro Bowl, Drift Boss, Football Bros, Five Nights at Freddy's, Five Nights at Freddy's 4, Five Nights at Freddy's 2, Five Nights at Freddy's 3, Backrooms, Kart Bros, Geometry Dash Lite, Five Nights at Freddy's: Sister Location, Bitburner). Block order below is menu order within each section.
+The start menu groups them by cat=, in the order of CATS in assets/core.js:
+System (6), Productivity (6), Media (4), Tools (4) and Games (45). Block
+order below is menu order within each section.
 
 IMPORTANT: an id must not be a bare number — JavaScript object key ordering
   hoists integer-like keys to the front of every APPS iteration (this is why
@@ -201,6 +209,18 @@ preinstalled=true
 desc=Read PDF files in your browser's own viewer - no extra library, nothing uploaded
 w=920
 h=680
+
+[application]
+id=mox
+name=Mox
+path=apps/productivity/mox/app.html
+icon=sparkle
+svg-icon=true
+cat=Productivity
+preinstalled=true
+desc=Ask a private AI that runs in your browser - a bundled language model, a cited knowledge library, a code workspace and a calculator
+w=1080
+h=720
 
 [application]
 id=image-viewer
@@ -848,18 +868,6 @@ svg-icon=false
 cat=Games
 preinstalled=true
 desc=Play Evolution - build creatures from joints, bones and muscles and evolve their brains
-w=980
-h=640
-
-[application]
-id=geometry-dash-web
-name=Geometry Dash Web
-path=apps/games/geometry-dash-web/app.html
-icon=data/icons/geometry-dash-web.png
-svg-icon=false
-cat=Games
-preinstalled=true
-desc=Play Geometry Dash Web - eight forms, six levels, chiptune music and a level editor
 w=980
 h=640
 

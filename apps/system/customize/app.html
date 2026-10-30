@@ -325,6 +325,7 @@ registerApp({
         ['userButton', iconSvg('user') + ' Account button in the panel'],
         ['startSearch', iconSvg('search') + ' Search box in the proton menu'],
         ['panelLabels', iconSvg('edit') + ' Names next to panel icons'],
+        ['copilotButton', iconSvg('sparkle') + ' AI button in the panel (Mox, Alt+C)'],
       ];
       body.querySelector('#cust-components').innerHTML = items.map(([key, label]) =>
         `<label style="display:flex;gap:9px;align-items:center;padding:7px 0;font-weight:600"><input type="checkbox" data-comp="${key}" ${c[key] ? 'checked' : ''} style="width:18px;height:18px;accent-color:var(--accent)"> ${label}</label>`).join('') +
@@ -384,7 +385,8 @@ registerApp({
       userData.customThemes = []; userData.customWallpapers = [];
       userData.settings.activeThemeId = 'proton-dark';
       userData.settings.accent = '#ffffff'; userData.settings.wallpaper = 'mint';
-      userData.settings.components = { clock: true, desktopHint: true, lockButton: true, userButton: true, startSearch: true, panelLabels: false };
+      userData.settings.components = { clock: true, desktopHint: true, lockButton: true, userButton: true, startSearch: true, panelLabels: false, copilotButton: true };
+      delete userData.settings.copilotWidth; // the AI pane's dragged width
       applyModuleOverrides(); saveData(); applyAccent(); applyWallpaper(); applyComponents(); refreshChrome();
       drawModules(); drawThemes(); drawWalls(); drawComponents(); drawShortcuts();
       MH.toast('Customisations reset to defaults.');

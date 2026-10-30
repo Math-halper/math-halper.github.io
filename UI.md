@@ -173,10 +173,36 @@ Left → right:
   (dimmed). Click behaviour: not running → open; running & not active → focus;
   running & active → minimise.
 - **Tray** — **Lock** padlock button, **Account & settings** button showing the
-  user's initials avatar (opens Settings), and the **clock**: bold `--:--` time
-  over a short date ("12 Oct"), refreshing every 15 seconds.
+  user's initials avatar (opens Settings), the **clock** (bold `--:--` time
+  over a short date, "12 Oct", refreshing every 15 seconds) and, at the far
+  right where Windows 11 keeps its Copilot button, the **AI button**: a
+  sparkle that opens and closes the AI pane (tooltip "Ask Mox (Alt+C)"). While
+  the pane is open it stays lit, with a tint and an accent underline.
+- **AI pane** (proton's Copilot) — Mox docked along the right edge of the
+  desktop, above the panel and every window, 420px wide by default:
+  - **Header** (44px): an accent sparkle tile, the app's name ("Mox") over
+    "AI on this device · Alt+C", then three icon buttons: **Reload**,
+    **Open in a window** (closes the pane and opens the Mox app) and **×
+    Close**.
+  - **Body**: Mox's own page in a frame. The frame is created the first time
+    the pane opens and survives closing, so a conversation and the loaded
+    model are still there next time.
+  - **Left edge**: a resize handle (`role="separator"`) that shows an accent
+    line on hover or focus. Drag it, or use ← / → (Shift for bigger steps).
+    The width stays between 320px and 960px, always leaves the desktop 240px,
+    and is saved with the account.
+  - **Docking**: while the pane is open on a screen at least 760px wide, the
+    windows layer, the icon area, the date hint, the desktop tools and the
+    toasts end at the pane's left edge, so maximised windows share the screen
+    with it. New windows open centred in the space that is left. On narrower
+    screens the pane covers the desktop and nothing moves.
+  - It slides in from the right (no animation with reduced motion). Opening
+    it closes the proton menu, and closing it hands the keyboard back to the
+    window in front.
 - **Toggles** (Customize → Desktop parts): clock, desktop hint, lock button,
-  user button, start-menu search, panel labels can each be shown or hidden.
+  user button, start-menu search, panel labels and the AI button can each be
+  shown or hidden. The AI button also hides when Mox is removed from the
+  menu.
 
 ## 6. Start menu (the "proton menu")
 
@@ -227,7 +253,8 @@ it a new file/URL via `openPath`).
 
 ## 8. Toasts
 
-Small messages stack at the **bottom-right**, above the panel (`aria-live`).
+Small messages stack at the **bottom-right**, above the panel (`aria-live`),
+moving left of the AI pane while it is docked.
 They fade out after ~3.4 seconds. Used for confirmations and errors ("Account
 created — welcome!", "File not found: …", "Storage is full — some changes could
 not be saved.", etc.).
@@ -317,6 +344,21 @@ not be saved.", etc.).
   zero.
 - **PDF Viewer** — app bar with **Open…**; empty state "No PDF open" and a
   **"Your PDFs"** list; opened PDFs render in the window with a status line.
+- **Mox** — the private AI workspace (vendored from Math-halper/mox), the
+  same page the AI pane docks:
+  - **App bar**: the title, the framed address
+    (`apps/productivity/mox/website/index.html?nosw`), **Reload** and
+    **Open in new tab**.
+  - **Body**: Mox's own black-and-white interface, unsandboxed. A sidebar
+    holds New chat, Search the library, Workspace, Calculator, saved chats,
+    the knowledge library's topics and your files. The main column has the
+    model card while SmolLM2 135M loads (94 MB, read from this site), "What
+    can I help with?" with starter chips, answers with source chips, Copy and
+    Regenerate, and an "Ask anything" composer.
+  - **Footer**: a credit line linking Math-halper/mox, noting that the model
+    runs on this device and nothing typed leaves the browser.
+  - The window and the AI pane share chats, because Mox keeps them in this
+    browser's IndexedDB.
 - *(Viewers share a pattern: Open… dialog with an inline path form +
   datalist, a list of matching home files, and a status line.)*
 
@@ -504,6 +546,10 @@ to embed you should use "Open in new tab" (proton never proxies it).
   menus/dialogs close.
 - Keyboard: calculator fully keyboard-driven; Alt+↑ in Files; Enter accepts
   path/search inputs; window close/min/max are real buttons (focusable).
+  **Alt+C** opens and closes the AI pane from anywhere on the desktop,
+  inside Mox too (Win+C belongs to the operating system). On a Mac,
+  Option+C in a text field still types "ç". The pane's resize edge is
+  focusable and answers ← / →.
 - Double-click opens desktop shortcuts; drag moves them; start-menu apps drag
   onto the desktop; Files entries can be dragged out or right-clicked for
   "Add desktop shortcut".

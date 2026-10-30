@@ -1,11 +1,13 @@
-/* proton — auth screens, desktop, panel, start menu and window manager.
+/* proton — auth screens, desktop, panel, start menu, window manager and the
+ * panel's AI button (a Copilot-style pane that docks Mox beside the desktop).
  * Every app lives in its own apps/<category>/<name>/app.html module (loaded via
  * assets/html-loader.js); the list of apps and all their metadata (name,
  * icon, category, description, window size) live in the catalog
- * data/applications.js, parsed by assets/config-loader.js. proton ships the
- * five desktop System apps, the file system suite (Files, Text Editor, Image
- * Viewer, Media, PDF Viewer), a Calculator, Web Retro and Ruffle Flash Player
- * (the Tools), the bundled games and the three Celeste Classics (41 apps).
+ * data/applications.js, parsed by assets/config-loader.js. proton ships 65
+ * apps: six System apps, six Productivity apps (Calculator, Clock, the file
+ * system suite's Files, Text Editor and PDF Viewer, and Mox, the private AI
+ * workspace), four Media apps (Image Viewer, VLC, Paint, Piano), four Tools
+ * (Ruffle Flash Player, Web Retro, Terminal, You Are An Idiot) and 45 games.
  * Built-in websites use the same catalog system (data/websites.js) and are
  * framed by the Browser app (Test Page is the only built-in site).
  * Window chrome/panel styling follows Mixt's Mint-Y theme.
@@ -95,9 +97,14 @@ function normalizeUserData() {
   if (!userData.settings.activeThemeId) userData.settings.activeThemeId = 'proton-dark';
   userData.settings.components = {
     clock: true, desktopHint: true, lockButton: true, userButton: true,
-    startSearch: true, panelLabels: false,
+    startSearch: true, panelLabels: false, copilotButton: true,
     ...(userData.settings.components || {}),
   };
+  /* The AI pane's width in pixels, when the user has dragged it; anything
+   * unreadable falls back to the default (see copilotWidth()). */
+  const copilotW = Number(userData.settings.copilotWidth);
+  if (Number.isFinite(copilotW) && copilotW >= COPILOT_W.min && copilotW <= 4096) userData.settings.copilotWidth = Math.round(copilotW);
+  else delete userData.settings.copilotWidth;
 }
 /* Turn "example.com" / "example.com/x" into a safe http(s) URL, or null. */
 function normalizeUrl(raw) {
@@ -208,6 +215,18 @@ function applyComponents() {
   set('tray-lock', c.lockButton !== false);
   set('tray-user', c.userButton !== false);
   set('clockbox', c.clock !== false);
+  /* The AI button follows its toggle and Mox itself: removing Mox from the
+   * menu takes the button (and an open pane, frame and all) with it. */
+  const copilot = copilotAvailable(), copilotBtn = MH.$('tray-copilot');
+  set('tray-copilot', copilot);
+  if (copilot && copilotBtn) { // a rename in Customize reaches the button and the open pane
+    const name = APPS[COPILOT_APP].name;
+    copilotBtn.title = `Ask ${name} (Alt+C)`;
+    copilotBtn.setAttribute('aria-label', `Ask ${name}`);
+    const label = MH.$('copilot-name'); if (label) label.textContent = name;
+    MH.$('copilot-frame')?.setAttribute('title', name);
+  }
+  if (!copilot) closeCopilot({ unload: true });
   const search = document.querySelector('.sm-search');
   if (search) search.style.display = c.startSearch !== false ? '' : 'none';
 }
@@ -340,9 +359,11 @@ function openApp(id, options = {}) {
   el.className = 'win'; el.dataset.app = id; el.dataset.win = key;
   el.tabIndex = -1;
   const mobile = innerWidth < 760;
-  const wpx = Math.min(options.w || app.w || 860, innerWidth - 16), hpx = Math.min(options.h || app.h || 560, innerHeight - 70);
+  /* With the AI pane docked, a new window opens in the space left of it. */
+  const areaW = innerWidth - (copilotDocked() ? copilotWidth() : 0);
+  const wpx = Math.min(options.w || app.w || 860, areaW - 16), hpx = Math.min(options.h || app.h || 560, innerHeight - 70);
   const off = (wins.size % 6) * 26;
-  el.style.cssText = `width:${wpx}px;height:${hpx}px;left:${Math.max(4, (innerWidth - wpx) / 2 + off - 40)}px;top:${Math.max(4, (innerHeight - 44 - hpx) / 2 + off - 20)}px;z-index:${++zTop}`;
+  el.style.cssText = `width:${wpx}px;height:${hpx}px;left:${Math.max(4, (areaW - wpx) / 2 + off - 40)}px;top:${Math.max(4, (innerHeight - 44 - hpx) / 2 + off - 20)}px;z-index:${++zTop}`;
   if (mobile) el.classList.add('max');
   el.innerHTML = `
     <header class="win-head">
@@ -468,6 +489,17 @@ function enterDesktop() {
     <div class="desktop-context" id="desktop-context" role="menu" hidden></div>
     <div class="desktop-picker" id="desktop-picker" hidden></div>
     <div class="windows-layer" id="windows"></div>
+    <aside class="copilot" id="copilot" aria-label="AI assistant" hidden>
+      <div class="copilot-grip" id="copilot-grip" role="separator" aria-orientation="vertical" aria-label="Resize the AI pane" aria-valuemin="${COPILOT_W.min}" aria-valuemax="${COPILOT_W.max}" tabindex="0" title="Drag to resize"></div>
+      <header class="copilot-head">
+        <span class="copilot-mark">${iconSvg('sparkle')}</span>
+        <span class="copilot-title"><b id="copilot-name">Mox</b><span>AI on this device · Alt+C</span></span>
+        <button class="wbtn" id="copilot-reload" type="button" title="Reload" aria-label="Reload">${iconSvg('refresh')}</button>
+        <button class="wbtn" id="copilot-window" type="button" title="Open in a window" aria-label="Open in a window">${iconSvg('app-window')}</button>
+        <button class="wbtn close" id="copilot-close" type="button" title="Close (Alt+C)" aria-label="Close">${iconSvg('x')}</button>
+      </header>
+      <div class="copilot-body" id="copilot-body"></div>
+    </aside>
     <div class="startmenu" id="startmenu" hidden></div>
     <footer class="panel">
       <button class="menu-btn" id="menubtn"><span class="lg">${iconSvg('atom')}</span> proton</button>
@@ -476,6 +508,7 @@ function enterDesktop() {
         <button class="tbtn" id="tray-lock" title="Lock">${iconSvg('lock')}</button>
         <button class="tbtn" id="tray-user" title="Account & settings"><span id="tray-avt"></span></button>
         <div class="clock" id="clockbox"><b id="clock-time">--:--</b><span id="clock-date"></span></div>
+        <button class="tbtn copilot-btn" id="tray-copilot" type="button" title="Ask Mox (Alt+C)" aria-label="Ask Mox" aria-controls="copilot" aria-expanded="false">${iconSvg('sparkle')}</button>
       </div>
     </footer>`;
   MH.$('tray-avt').textContent = userInitials(currentUser);
@@ -488,6 +521,7 @@ function enterDesktop() {
   };
   MH.$('tray-user').onclick = () => openApp('settings');
   MH.$('tray-lock').onclick = lockDesktop;
+  wireCopilot();
   tickClock(); clearInterval(clockTimer); clockTimer = setInterval(tickClock, 15000);
   if (!sessionStorage.getItem('proton2.welcomed.' + currentUser.usernameLower)) {
     sessionStorage.setItem('proton2.welcomed.' + currentUser.usernameLower, '1');
@@ -577,7 +611,8 @@ function signOut({ skipSave = false, force = false } = {}) {
   clearDynamicApps(); MH.setSession('');
   currentUser = null; userData = null; locked = false;
   clearInterval(clockTimer);
-  MH.$('desktop').hidden = true; MH.$('desktop').innerHTML = '';
+  MH.$('desktop').hidden = true; MH.$('desktop').innerHTML = ''; // the AI pane and its frame go too
+  MH.$('desktop').classList.remove('copilot-open', 'copilot-resizing');
   route();
   return true;
 }
@@ -585,6 +620,158 @@ function lockDesktop() {
   locked = true; saveDataNow();
   MH.$('desktop').hidden = true;
   renderLock();
+}
+
+/* ---------------- the AI button: Mox, docked like Windows' Copilot ----------------
+ * A sparkle at the right end of the panel, after the clock (where Windows 11
+ * keeps its Copilot button), docks an AI assistant along the right edge of
+ * the desktop, above the panel. The desktop makes room for it the way
+ * Windows does for its docked pane: maximised windows, the desktop icons and
+ * the date hint shrink to its left instead of hiding underneath, and new
+ * windows open centred in the space that is left. On a phone-sized screen
+ * the pane covers the desktop instead (styles.css) and nothing moves.
+ *
+ * The assistant is Mox (apps/productivity/mox/): the pane frames the page
+ * the Mox app publishes as APPS.mox.page, and Mox runs its own small language
+ * model in this browser, so nothing typed into it leaves the device. The
+ * frame is created the first time the pane opens — Mox starts reading its
+ * 94 MB model as soon as its page loads, so a visit that never opens the pane
+ * never downloads it — and closing only hides it: the conversation and the
+ * loaded model are still there when the pane comes back. Signing out clears
+ * #desktop, frame included.
+ *
+ * Alt+C toggles it from anywhere on the desktop, inside Mox too (Win+C
+ * belongs to the operating system). The left edge resizes it, by pointer or
+ * with ← / → once focused, and the width is saved on the account. "Open in a
+ * window" hands over to the Mox app. The button is Mox's: it hides when Mox
+ * is removed from the menu, and Customize → Desktop parts can hide it. */
+const COPILOT_APP = 'mox';
+const COPILOT_W = { min: 320, def: 420, max: 960 };
+function copilotAvailable() {
+  const app = APPS[COPILOT_APP];
+  return !!(currentUser && userData && app && app.page
+    && !(userData.hiddenApps || []).includes(COPILOT_APP)
+    && (userData.settings.components || {}).copilotButton !== false);
+}
+function copilotOpen() { const pane = MH.$('copilot'); return !!pane && !pane.hidden; }
+/* Docked = open beside the windows; below 760px wide the pane is a sheet. */
+function copilotDocked() { return copilotOpen() && innerWidth >= 760; }
+function copilotWidth() {
+  const max = Math.max(COPILOT_W.min, Math.min(COPILOT_W.max, innerWidth - 240));
+  const saved = Number(userData?.settings.copilotWidth);
+  const want = Number.isFinite(saved) && saved > 0 ? saved : COPILOT_W.def;
+  return Math.round(Math.min(max, Math.max(COPILOT_W.min, want)));
+}
+/* Size the pane and tell the desktop (via #desktop.copilot-open and
+ * --copilot-w, see styles.css) how much room to make for it. The width is
+ * set on the root so the toasts, a sibling of #desktop, can follow it too. */
+function layoutCopilot() {
+  const d = MH.$('desktop'), pane = MH.$('copilot'); if (!d || !pane) return;
+  const open = copilotOpen(), w = copilotWidth();
+  pane.style.width = w + 'px';
+  document.documentElement.style.setProperty('--copilot-w', w + 'px');
+  d.classList.toggle('copilot-open', open);
+  const btn = MH.$('tray-copilot');
+  if (btn) { btn.classList.toggle('on', open); btn.setAttribute('aria-expanded', String(open)); }
+  MH.$('copilot-grip')?.setAttribute('aria-valuenow', String(w));
+}
+function openCopilot() {
+  const pane = MH.$('copilot'); if (!pane || !copilotAvailable()) return false;
+  const app = APPS[COPILOT_APP];
+  MH.$('copilot-name').textContent = app.name;
+  let frame = MH.$('copilot-frame');
+  if (!frame) {
+    frame = document.createElement('iframe');
+    frame.id = 'copilot-frame'; frame.className = 'copilot-frame';
+    frame.title = app.name; frame.setAttribute('allow', 'clipboard-write');
+    /* The page is same-origin, so Alt+C is listened for inside it as well:
+     * the shortcut closes the pane while the caret is in Mox's composer. */
+    frame.addEventListener('load', () => {
+      try { frame.contentWindow.addEventListener('keydown', copilotKey); } catch { /* another origin */ }
+    });
+    frame.src = app.page;
+    MH.$('copilot-body').appendChild(frame);
+  }
+  pane.hidden = false;
+  MH.$('startmenu')?.setAttribute('hidden', ''); MH.$('menubtn')?.classList.remove('open');
+  layoutCopilot(); DesktopIcons.render();
+  try { frame.focus({ preventScroll: true }); } catch { /* the frame is not focusable yet */ }
+  return true;
+}
+/* Hide the pane (the frame stays, so Mox keeps its state); unload also
+ * drops the frame — "Open in a window", or Mox going away. */
+function closeCopilot({ unload = false } = {}) {
+  const pane = MH.$('copilot'); if (!pane) return;
+  const hadFocus = pane.contains(document.activeElement);
+  if (unload) MH.$('copilot-frame')?.remove();
+  if (pane.hidden) return;
+  pane.hidden = true;
+  layoutCopilot(); DesktopIcons.render();
+  /* Hand the keyboard back to the window in front. */
+  if (hadFocus) {
+    const w = wins.get(activeApp);
+    if (w) focusWinBody(w.el, w.body); else document.activeElement?.blur?.();
+  }
+}
+function toggleCopilot(force) {
+  if (force ?? !copilotOpen()) return openCopilot();
+  closeCopilot();
+  return false;
+}
+/* Alt+C, the stand-in for Win+C. On a Mac, Option+C types "ç": a text field
+ * keeps that keystroke. */
+function copilotKey(e) {
+  if (!e.altKey || e.ctrlKey || e.metaKey || e.shiftKey || e.code !== 'KeyC') return;
+  const t = e.target, typing = !!t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName || ''));
+  if (typing && String(e.key).toLowerCase() !== 'c') return;
+  if (locked || MH.$('desktop')?.hidden || !copilotAvailable()) return;
+  e.preventDefault();
+  if (!e.repeat) toggleCopilot();
+}
+document.addEventListener('keydown', copilotKey);
+/* A narrower browser window narrows the pane too (copilotWidth() clamps). */
+addEventListener('resize', () => { if (copilotOpen()) layoutCopilot(); });
+/* The pane's buttons and resize edge, wired each time the desktop is drawn. */
+function wireCopilot() {
+  MH.$('tray-copilot').onclick = () => toggleCopilot();
+  MH.$('copilot-close').onclick = () => closeCopilot();
+  MH.$('copilot-reload').onclick = () => {
+    const frame = MH.$('copilot-frame');
+    if (frame && APPS[COPILOT_APP]) frame.src = APPS[COPILOT_APP].page;
+  };
+  MH.$('copilot-window').onclick = () => {
+    closeCopilot({ unload: true });
+    if (APPS[COPILOT_APP]) openApp(COPILOT_APP);
+  };
+  const grip = MH.$('copilot-grip'), pane = MH.$('copilot'), d = MH.$('desktop');
+  const resized = () => { userData.settings.copilotWidth = copilotWidth(); layoutCopilot(); saveData(); };
+  grip.addEventListener('pointerdown', (e) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    const right = pane.getBoundingClientRect().right || innerWidth;
+    try { grip.setPointerCapture(e.pointerId); } catch { /* a synthetic event has no pointer to capture */ }
+    d.classList.add('copilot-resizing'); // frames stop swallowing the drag (styles.css)
+    const move = (ev) => { userData.settings.copilotWidth = right - ev.clientX; layoutCopilot(); };
+    const up = () => {
+      grip.removeEventListener('pointermove', move);
+      grip.removeEventListener('pointerup', up);
+      grip.removeEventListener('pointercancel', up);
+      d.classList.remove('copilot-resizing');
+      resized(); DesktopIcons.render();
+    };
+    grip.addEventListener('pointermove', move);
+    grip.addEventListener('pointerup', up);
+    grip.addEventListener('pointercancel', up);
+  });
+  grip.addEventListener('keydown', (e) => {
+    const step = e.shiftKey ? 80 : 20;
+    if (e.key === 'ArrowLeft') userData.settings.copilotWidth = copilotWidth() + step;
+    else if (e.key === 'ArrowRight') userData.settings.copilotWidth = copilotWidth() - step;
+    else return;
+    e.preventDefault();
+    resized(); DesktopIcons.render();
+  });
+  layoutCopilot();
 }
 
 /* ---------------- auth screens ---------------- */

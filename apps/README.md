@@ -22,6 +22,10 @@ Viewer), a small Calculator (new code in `apps/productivity/calculator/`) and We
 (`apps/tools/web-retro/`, a vendored webretro emulator build in
 `apps/tools/web-retro/webretro/` — see `CREDITS.md`; it also carries the
 maintainer's own bundled ROM library).
+Mox (`apps/productivity/mox/`) is a vendored app too. Its `website/` folder is
+the browser half of [Math-halper/mox](https://github.com/Math-halper/mox),
+copied byte-for-byte with its model, and the panel's AI button docks the
+same page beside the desktop (see `apps/productivity/mox/README.md`).
 The Celeste Hub app (`celeste-hub/`, with the game folders `celeste-classic/`,
 `celeste-two/` and `celeste-community/` beside it) carries the actual game
 files, copied byte-for-byte from
@@ -119,6 +123,7 @@ matching the menu sections (`cat=`, ordered by `CATS` in `assets/core.js`).
 | `productivity/` | Files (`files`) — browse, create, rename, move, import, search and download the virtual file system |
 | `productivity/` | Text Editor (`text-editor`) — edit text files in your home folder; proton's own files open read-only |
 | `productivity/` | PDF Viewer (`pdf`) — read PDFs in your browser's own viewer |
+| `productivity/` | Mox (`mox`) — the vendored Mox site from Math-halper/mox in `website/` (a private AI workspace whose small language model runs in the browser, model included), plus its wrapper. It also publishes the page as `APPS.mox.page` for the panel's AI button |
 | `media/` | Image Viewer (`image-viewer`) — PNG, JPG, GIF, WebP, AVIF, BMP, ICO and SVG with zoom and playlists |
 | `media/` | VLC (`media`) — the open-source VLC player (libvlc WebAssembly port): play audio and video from your home folder or this computer |
 | `media/` | Paint (`paint`) — draw on a canvas, save PNGs into Pictures |
@@ -156,7 +161,6 @@ matching the menu sections (`cat=`, ordered by `CATS` in `assets/core.js`).
 | `games/` | Google Dino (`google-dino`) — the vendored endless runner build (from proton-arcade/proton-arcade.github.io) plus its wrapper |
 | `games/` | Granny (`granny`) — the vendored Unity WebGL build (from proton-arcade/proton-arcade.github.io) plus its wrapper |
 | `games/` | Evolution (`evolution`) — the vendored web build of Evolution (from proton-arcade/evo) plus its wrapper |
-| `games/` | Geometry Dash Web (`geometry-dash-web`) — the vendored HTML5 canvas build and level editor (from proton-arcade/gdweb) plus its wrapper |
 | `_template/` | not an app — the starting point for a new one (copy it into its category folder) |
 
 ### Desktop shortcut workflow

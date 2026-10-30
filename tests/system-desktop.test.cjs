@@ -21,7 +21,7 @@ const ROOT = path.resolve(__dirname, '..');
 const source = (p) => fs.readFileSync(path.join(ROOT, p), 'utf8');
 /* The file system suite FS.appFor() resolves files to. */
 const FS_APPS = ['files', 'text-editor', 'image-viewer', 'media', 'pdf'];
-const SYSTEM_APPS = ['appcenter', 'customize', 'settings', 'about', 'browser', 'system-monitor', 'calculator', 'clock', 'files', 'text-editor', 'pdf', 'image-viewer', 'media', 'paint', 'piano', 'ruffle-flash-player', 'web-retro', 'terminal', 'you-are-an-idiot', 'game-2048', 'bloons-tower-defense-1', 'bloons-tower-defense-2', 'bloons-tower-defense-5', 'bloxorz', 'breaking-the-bank', 'celeste-hub', 'cookie-clicker', 'drive-mad', 'escaping-the-prison', 'fleeing-the-complex', 'grey-box-testing', 'infiltrating-the-airship', 'mari0', 'offline-paradise', 'pacman', 'slope', 'spacebar-clicker', 'stack', 'stealing-the-diamond', 'stickman-hook', 'sm64', 'tetris', 'the-impossible-quiz', 'tunnel-rush', 'baldis-basics', 'minesweeper', 'flappy-bird', 'retro-bowl', 'drift-boss', 'football-bros', 'five-nights-at-freddys-1', 'five-nights-at-freddys-4', 'five-nights-at-freddys-2', 'five-nights-at-freddys-3', 'backrooms', 'kart-bros', 'geometry-dash-lite', 'five-nights-at-freddys-sl', 'bitburner', 'bitlife', 'ampler-launcher', 'google-dino', 'granny', 'evolution', 'geometry-dash-web'];
+const SYSTEM_APPS = ['appcenter', 'customize', 'settings', 'about', 'browser', 'system-monitor', 'calculator', 'clock', 'files', 'text-editor', 'pdf', 'mox', 'image-viewer', 'media', 'paint', 'piano', 'ruffle-flash-player', 'web-retro', 'terminal', 'you-are-an-idiot', 'game-2048', 'bloons-tower-defense-1', 'bloons-tower-defense-2', 'bloons-tower-defense-5', 'bloxorz', 'breaking-the-bank', 'celeste-hub', 'cookie-clicker', 'drive-mad', 'escaping-the-prison', 'fleeing-the-complex', 'grey-box-testing', 'infiltrating-the-airship', 'mari0', 'offline-paradise', 'pacman', 'slope', 'spacebar-clicker', 'stack', 'stealing-the-diamond', 'stickman-hook', 'sm64', 'tetris', 'the-impossible-quiz', 'tunnel-rush', 'baldis-basics', 'minesweeper', 'flappy-bird', 'retro-bowl', 'drift-boss', 'football-bros', 'five-nights-at-freddys-1', 'five-nights-at-freddys-4', 'five-nights-at-freddys-2', 'five-nights-at-freddys-3', 'backrooms', 'kart-bros', 'geometry-dash-lite', 'five-nights-at-freddys-sl', 'bitburner', 'bitlife', 'ampler-launcher', 'google-dino', 'granny', 'evolution'];
 
 /* Menu sections for each app (data/applications.js cat=), in catalog order.
  * Every new app is filed here with its respective section — the catalog test
@@ -29,7 +29,7 @@ const SYSTEM_APPS = ['appcenter', 'customize', 'settings', 'about', 'browser', '
  * groups, so an unfiled app fails the suite. */
 const SYSTEM_CATS = {
   appcenter: 'System', customize: 'System', settings: 'System', about: 'System', browser: 'System', 'system-monitor': 'System',
-  calculator: 'Productivity', clock: 'Productivity', files: 'Productivity', 'text-editor': 'Productivity', pdf: 'Productivity',
+  calculator: 'Productivity', clock: 'Productivity', files: 'Productivity', 'text-editor': 'Productivity', pdf: 'Productivity', mox: 'Productivity',
   'image-viewer': 'Media', media: 'Media', paint: 'Media', piano: 'Media',
   'game-2048': 'Games',
   'bloons-tower-defense-1': 'Games',
@@ -79,7 +79,6 @@ const SYSTEM_CATS = {
   'google-dino': 'Games',
   'granny': 'Games',
   'evolution': 'Games',
-  'geometry-dash-web': 'Games',
 };
 /* Each game app frames the game page that ships in its own folder. */
 const GAME_PAGES = {
@@ -127,7 +126,6 @@ const GAME_PAGES = {
   'google-dino': 'apps/games/google-dino/index.html',
   'granny': 'apps/games/granny/index.html',
   'evolution': 'apps/games/evolution/index.html',
-  'geometry-dash-web': 'apps/games/geometry-dash-web/index.html',
 };
 /* Celeste Hub is one app that frames eight Celeste pages (plus its own
  * standalone chooser page, apps/games/celeste-hub/index.html, which the
@@ -226,7 +224,7 @@ test('the catalog is the desktop apps, the file system suite, a calculator, web 
     'tetris': 'data/icons/tetris.png',
     'the-impossible-quiz': 'data/icons/the-impossible-quiz.png',
     'tunnel-rush': 'data/icons/tunnel-rush.png',
-    'web-retro': 'data/icons/webretro.png', 'baldis-basics': 'data/icons/baldis-basics.png', 'minesweeper': 'data/icons/minesweeper.png', 'flappy-bird': 'data/icons/flappy-bird.png', 'retro-bowl': 'data/icons/retro-bowl.png', 'drift-boss': 'data/icons/drift-boss.png', 'football-bros': 'data/icons/football-bros.png', 'five-nights-at-freddys-1': 'data/icons/five-nights-at-freddys-1.png', 'five-nights-at-freddys-4': 'data/icons/five-nights-at-freddys-4.png', 'five-nights-at-freddys-2': 'data/icons/five-nights-at-freddys-2.png', 'five-nights-at-freddys-3': 'data/icons/five-nights-at-freddys-3.png', 'backrooms': 'data/icons/backrooms.png', 'kart-bros': 'data/icons/kart-bros.png', 'geometry-dash-lite': 'data/icons/geometry-dash-lite.png', 'five-nights-at-freddys-sl': 'data/icons/five-nights-at-freddys-sl.png', 'bitlife': 'data/icons/bitlife.png', 'ampler-launcher': 'data/icons/ampler-launcher.png', 'google-dino': 'data/icons/google-dino.png', 'granny': 'data/icons/granny.png', 'evolution': 'data/icons/evolution.png', 'geometry-dash-web': 'data/icons/geometry-dash-web.png' };
+    'web-retro': 'data/icons/webretro.png', 'baldis-basics': 'data/icons/baldis-basics.png', 'minesweeper': 'data/icons/minesweeper.png', 'flappy-bird': 'data/icons/flappy-bird.png', 'retro-bowl': 'data/icons/retro-bowl.png', 'drift-boss': 'data/icons/drift-boss.png', 'football-bros': 'data/icons/football-bros.png', 'five-nights-at-freddys-1': 'data/icons/five-nights-at-freddys-1.png', 'five-nights-at-freddys-4': 'data/icons/five-nights-at-freddys-4.png', 'five-nights-at-freddys-2': 'data/icons/five-nights-at-freddys-2.png', 'five-nights-at-freddys-3': 'data/icons/five-nights-at-freddys-3.png', 'backrooms': 'data/icons/backrooms.png', 'kart-bros': 'data/icons/kart-bros.png', 'geometry-dash-lite': 'data/icons/geometry-dash-lite.png', 'five-nights-at-freddys-sl': 'data/icons/five-nights-at-freddys-sl.png', 'bitlife': 'data/icons/bitlife.png', 'ampler-launcher': 'data/icons/ampler-launcher.png', 'google-dino': 'data/icons/google-dino.png', 'granny': 'data/icons/granny.png', 'evolution': 'data/icons/evolution.png' };
   assert.deepEqual(Array.from(apps, (a) => a.svgIcon), SYSTEM_APPS.map((id) => !RASTER_ICON_APPS[id]));
   const iconById = Object.fromEntries(Array.from(apps, (a) => [a.id, a.icon]));
   for (const [id, icon] of Object.entries(RASTER_ICON_APPS)) {
@@ -1283,7 +1281,7 @@ test('Customize saves, displays and resets uploaded app icon images', async () =
     const browserWindow = w.eval('wins').get('browser');
     assert.equal(body.querySelector('#cust-files-shortcut'), null, 'Customize still offers a Files shortcut');
     assert.deepEqual([...body.querySelectorAll('#cust-modlist .card b')].map((b) => b.textContent).slice(0, SYSTEM_APPS.length),
-            ["App Center", "Customize", "Settings", "About", "Browser", "System Monitor", "Calculator", "Clock", "Files", "Text Editor", "PDF Viewer", "Image Viewer", "VLC", "Paint", "Piano", "Ruffle Flash Player", "Web Retro", "Terminal", "You Are An Idiot", "2048", "Bloons Tower Defense 1", "Bloons Tower Defense 2", "Bloons Tower Defense 5", "Bloxorz", "Breaking The Bank", "Celeste Hub", "Cookie Clicker", "Drive Mad", "Escaping The Prison", "Fleeing The Complex", "Grey Box Testing", "Infiltrating The Airship", "Mari0", "Offline Paradise", "Pacman", "Slope", "Spacebar Clicker", "Stack", "Stealing The Diamond", "Stickman Hook", "Super Mario 64", "Tetris", "The Impossible Quiz", "Tunnel Rush", "Baldi's Basics", "Minesweeper", "Flappy Bird", "Retro Bowl", "Drift Boss", "Football Bros", "Five Nights at Freddy's", "Five Nights at Freddy's 4", "Five Nights at Freddy's 2", "Five Nights at Freddy's 3", "Backrooms", "Kart Bros", "Geometry Dash Lite", "Five Nights at Freddy's: Sister Location", "Bitburner", "BitLife", "Ampler Launcher", "Google Dino", "Granny", "Evolution", "Geometry Dash Web"]);
+            ["App Center", "Customize", "Settings", "About", "Browser", "System Monitor", "Calculator", "Clock", "Files", "Text Editor", "PDF Viewer", "Mox", "Image Viewer", "VLC", "Paint", "Piano", "Ruffle Flash Player", "Web Retro", "Terminal", "You Are An Idiot", "2048", "Bloons Tower Defense 1", "Bloons Tower Defense 2", "Bloons Tower Defense 5", "Bloxorz", "Breaking The Bank", "Celeste Hub", "Cookie Clicker", "Drive Mad", "Escaping The Prison", "Fleeing The Complex", "Grey Box Testing", "Infiltrating The Airship", "Mari0", "Offline Paradise", "Pacman", "Slope", "Spacebar Clicker", "Stack", "Stealing The Diamond", "Stickman Hook", "Super Mario 64", "Tetris", "The Impossible Quiz", "Tunnel Rush", "Baldi's Basics", "Minesweeper", "Flappy Bird", "Retro Bowl", "Drift Boss", "Football Bros", "Five Nights at Freddy's", "Five Nights at Freddy's 4", "Five Nights at Freddy's 2", "Five Nights at Freddy's 3", "Backrooms", "Kart Bros", "Geometry Dash Lite", "Five Nights at Freddy's: Sister Location", "Bitburner", "BitLife", "Ampler Launcher", "Google Dino", "Granny", "Evolution"]);
 
     const uploadBrowserIcon = async () => {
       const input = body.querySelector('[data-micon-file="browser"]');
@@ -1597,7 +1595,8 @@ test("proton's own UI uses image artwork instead of emoji glyphs", () => {
   const visit = (rel) => {
     const normalized = rel.split(path.sep).join('/');
     if (normalized === 'apps/games' || normalized.startsWith('apps/games/')
-      || normalized === 'apps/tools/web-retro/webretro' || normalized.startsWith('apps/tools/web-retro/webretro/')) return;
+      || normalized === 'apps/tools/web-retro/webretro' || normalized.startsWith('apps/tools/web-retro/webretro/')
+      || normalized === 'apps/productivity/mox/website' || normalized.startsWith('apps/productivity/mox/website/')) return;
     if (normalized.startsWith('apps/tools/ruffle-flash-player/') && !normalized.endsWith('/app.html')) return;
     const abs = path.join(ROOT, rel);
     if (fs.statSync(abs).isDirectory()) {
@@ -3203,6 +3202,246 @@ test('the Browser keeps tabs, bookmarks and history like a browser', async () =>
     body.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'ArrowRight', altKey: true, bubbles: true }));
     await settle();
     assert.equal(bar.value, before, 'Alt+→ came forward again');
+    assert.deepEqual(errors, []);
+  } finally { close(); }
+});
+
+/* Mox (github.com/Math-halper/mox), the desktop's AI, ships like the
+ * vendored games: its browser files are copied byte-for-byte into
+ * apps/productivity/mox/website/ — the real model and inference engine
+ * included — and proton's wrapper frames its page. */
+const MOX_DIR = 'apps/productivity/mox/website';
+const MOX_PAGE = `${MOX_DIR}/index.html?nosw`;
+test('Mox, the AI app, is vendored whole and framed by its own wrapper', () => {
+  const { apps } = catalog();
+  const mox = apps.find((a) => a.id === 'mox');
+  assert.ok(mox, 'Mox is in the catalog');
+  assert.deepEqual([mox.name, mox.path, mox.icon, mox.svgIcon, mox.cat, mox.preinstalled],
+    ['Mox', 'apps/productivity/mox/app.html', 'sparkle', true, 'Productivity', true]);
+
+  /* The wrapper frames Mox's own page unsandboxed, with Reload and Open in
+   * new tab, and publishes the page for the panel's AI button. */
+  const html = source(mox.path);
+  assert.ok(html.includes(`const MOX_PAGE = '${MOX_PAGE}';`), 'the wrapper frames Mox with ?nosw');
+  assert.match(html, /<iframe[^>]*src="\$\{MH\.esc\(MOX_PAGE\)\}"/, 'the wrapper frames MOX_PAGE');
+  assert.match(html, /page: MOX_PAGE/, 'the wrapper publishes the page as APPS.mox.page');
+  assert.ok(!/sandbox=/.test(html), 'Mox is a local page and is not sandboxed');
+  for (const hook of ['[data-e="reload"]', '[data-e="ext"]', 'https://github.com/Math-halper/mox']) {
+    assert.ok(html.includes(hook), `the wrapper lacks ${hook}`);
+  }
+
+  /* Every browser file is here, and the page only loads its own files ... */
+  for (const file of ['index.html', 'styles.css', 'app.js', 'calculator.js', 'model-store.js', 'svg.js', 'workspace.js',
+    'README.md', 'knowledge/index.json', 'models/manifest.json', 'vendor/wllama/wllama.js', 'vendor/wllama/wllama.wasm',
+    'vendor/pdfjs/pdf.min.js', 'vendor/pdfjs/pdf.worker.min.js', 'vendor/pdfjs/LICENSE']) {
+    assert.ok(fs.existsSync(path.join(ROOT, MOX_DIR, file)), `Mox is missing ${file}`);
+  }
+  const page = source(`${MOX_DIR}/index.html`);
+  for (const [, ref] of page.matchAll(/\b(?:src|href)="([^"#][^"]*)"/g)) {
+    assert.ok(!/^[a-z][a-z0-9+.-]*:/i.test(ref), `Mox's page loads a remote ${ref}`);
+    assert.ok(fs.existsSync(path.join(ROOT, MOX_DIR, ref)), `Mox's page references a missing ${ref}`);
+  }
+  const appJs = source(`${MOX_DIR}/app.js`);
+  const imports = [...appJs.matchAll(/from '\.\/([^']+)'/g)].map((m) => m[1]);
+  assert.deepEqual(imports.sort(), ['calculator.js', 'model-store.js', 'svg.js', 'workspace.js']);
+  assert.ok(appJs.includes("location.search.includes('nosw')"),
+    'Mox still honours ?nosw, so the frames proton opens register no service worker');
+  /* ... the knowledge library it cites ... */
+  const library = JSON.parse(source(`${MOX_DIR}/knowledge/index.json`));
+  assert.equal(library.documents.length, 55);
+  for (const doc of library.documents) {
+    assert.ok(fs.existsSync(path.join(ROOT, MOX_DIR, 'knowledge', doc.path)), `knowledge/${doc.path} is missing`);
+  }
+  /* ... and the real model and engine, not placeholders. */
+  const manifest = JSON.parse(source(`${MOX_DIR}/models/manifest.json`));
+  const model = manifest.models.find((m) => m.id === manifest.default);
+  const modelPath = path.join(ROOT, MOX_DIR, 'models', model.file);
+  assert.equal(fs.statSync(modelPath).size, model.bytes, `${model.file} is not the bundled model`);
+  const head = (p, n) => {
+    const fd = fs.openSync(p, 'r'), buf = Buffer.alloc(n);
+    try { fs.readSync(fd, buf, 0, n, 0); } finally { fs.closeSync(fd); }
+    return buf;
+  };
+  assert.equal(head(modelPath, 4).toString('latin1'), 'GGUF', 'the model is a GGUF file');
+  assert.deepEqual([...head(path.join(ROOT, MOX_DIR, 'vendor/wllama/wllama.wasm'), 4)], [0x00, 0x61, 0x73, 0x6d],
+    'wllama.wasm is WebAssembly');
+  /* Only the browser files: Mox's launchers, checks, tools, host settings
+   * and its service worker stay upstream (apps/productivity/mox/README.md). */
+  for (const gone of ['sw.js', 'run.py', 'start-mox.bat', 'start-mox.command', 'tests', 'tools', '.github', '_headers',
+    '.nojekyll', '.gitignore']) {
+    assert.equal(fs.existsSync(path.join(ROOT, MOX_DIR, gone)), false, `${MOX_DIR}/${gone} should not ship`);
+  }
+  /* Mox's library is Mox's corpus: proton's search index leaves the site out
+   * and lets the wrapper and its README speak for it. */
+  const index = source('data/search-index.js');
+  assert.ok(!index.includes(`'/${MOX_DIR}/`), 'the vendored Mox site is not in proton’s search index');
+  for (const p of ['/apps/productivity/mox/app.html', '/apps/productivity/mox/README.md']) {
+    assert.ok(index.includes(`p: '${p}'`), `${p} should be searchable`);
+  }
+});
+
+/* The panel's AI button is proton's Copilot: a sparkle after the clock docks
+ * Mox along the right edge of the desktop. */
+test('the AI button docks Mox beside the desktop, like Copilot on Windows', async () => {
+  const { w, errors, settle, saved, wins, close } = await bootDesktop();
+  try {
+    const $ = (id) => w.document.getElementById(id);
+    const pane = $('copilot'), button = $('tray-copilot'), desk = $('desktop');
+    const page = w.eval('APPS.mox.page');
+    assert.equal(page, MOX_PAGE, 'the pane frames the page the Mox app publishes');
+    /* The button sits at the right end of the panel, after the clock. */
+    assert.equal(button.parentElement.className, 'tray');
+    assert.equal(button.parentElement.lastElementChild, button, 'the AI button is the last thing in the panel');
+    assert.equal(button.previousElementSibling.id, 'clockbox');
+    assert.notEqual(button.style.display, 'none');
+    assert.match(button.innerHTML, /^<svg[\s\S]*currentColor/, 'the button draws the sparkle icon');
+    assert.equal(button.getAttribute('aria-expanded'), 'false');
+    assert.equal(button.title, 'Ask Mox (Alt+C)');
+    /* Nothing loads until the pane is first opened: Mox reads its 94 MB
+     * model as soon as its page opens. */
+    assert.equal(pane.hidden, true);
+    assert.equal($('copilot-frame'), null, 'the pane frame is created on first open, not at sign-in');
+
+    w.document.getElementById('menubtn').click();
+    assert.equal($('startmenu').hidden, false);
+    button.click();
+    assert.equal(pane.hidden, false, 'the button opens the pane');
+    assert.equal($('startmenu').hidden, true, 'opening the pane closes the proton menu');
+    assert.ok(desk.classList.contains('copilot-open'), 'the desktop makes room for the docked pane');
+    assert.ok(button.classList.contains('on'));
+    assert.equal(button.getAttribute('aria-expanded'), 'true');
+    const frame = $('copilot-frame');
+    assert.ok(frame, 'the pane frames Mox');
+    assert.equal(frame.getAttribute('src'), MOX_PAGE);
+    assert.equal(frame.hasAttribute('sandbox'), false, 'Mox is a local page and is not sandboxed');
+    assert.equal(frame.title, 'Mox');
+    assert.equal($('copilot-name').textContent, 'Mox');
+    assert.equal(pane.style.width, '420px', 'the pane opens at its default width');
+    assert.equal(w.document.documentElement.style.getPropertyValue('--copilot-w'), '420px');
+    assert.ok(w.document.querySelector('.copilot-head #copilot-window') && $('copilot-reload') && $('copilot-close'));
+
+    /* A window opened while the pane is docked opens in the space left of it. */
+    w.openApp('calculator');
+    const calc = wins.get('calculator').el;
+    assert.ok(parseFloat(calc.style.left) + parseFloat(calc.style.width) <= w.innerWidth - 420,
+      'a new window opens beside the docked pane, not under it');
+    w.closeWin('calculator');
+
+    /* Closing only hides the pane: the same frame, so Mox keeps its
+     * conversation and its loaded model. */
+    button.click();
+    assert.equal(pane.hidden, true, 'the button closes the pane again');
+    assert.ok(!desk.classList.contains('copilot-open'));
+    assert.equal(button.getAttribute('aria-expanded'), 'false');
+    assert.equal($('copilot-frame'), frame, 'closing the pane keeps Mox running');
+
+    /* Alt+C is the shortcut (Win+C belongs to the operating system). */
+    const altC = (target, init = {}) => {
+      const View = target.ownerDocument?.defaultView || target.defaultView;
+      const event = new View.KeyboardEvent('keydown', { key: 'c', code: 'KeyC', altKey: true, bubbles: true, cancelable: true, ...init });
+      target.dispatchEvent(event);
+      return event;
+    };
+    assert.equal(altC(w.document.body).defaultPrevented, true);
+    assert.equal(pane.hidden, false, 'Alt+C opens the pane');
+    assert.equal($('copilot-frame'), frame);
+    altC(w.document.body);
+    assert.equal(pane.hidden, true, 'Alt+C closes it');
+    /* Option+C types "ç" on a Mac: a text field keeps that keystroke. */
+    const field = $('sm-search-input');
+    const typed = altC(field, { key: 'ç' });
+    assert.equal(pane.hidden, true, 'Option+C in a text field types instead of toggling');
+    assert.equal(typed.defaultPrevented, false);
+    altC(field);
+    assert.equal(pane.hidden, false, 'Alt+C still works from a text field where it types no character');
+    /* Mox is same-origin, so the shortcut also closes the pane from inside it. */
+    frame.dispatchEvent(new w.Event('load'));
+    altC(frame.contentWindow.document);
+    assert.equal(pane.hidden, true, 'Alt+C inside Mox closes the pane');
+
+    /* The left edge resizes the pane, by keyboard or pointer, within limits,
+     * and the width is saved on the account. */
+    button.click();
+    const grip = $('copilot-grip');
+    assert.equal(grip.getAttribute('role'), 'separator');
+    grip.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true, cancelable: true }));
+    assert.equal(pane.style.width, '440px', '← widens the pane');
+    grip.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'ArrowRight', shiftKey: true, bubbles: true, cancelable: true }));
+    assert.equal(pane.style.width, '360px', 'Shift+→ narrows it in bigger steps');
+    for (let i = 0; i < 6; i++) grip.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'ArrowRight', shiftKey: true, bubbles: true }));
+    assert.equal(pane.style.width, '320px', 'the pane never gets narrower than 320px');
+    const pointer = (type, clientX) => grip.dispatchEvent(new w.MouseEvent(type, { button: 0, clientX, bubbles: true, cancelable: true }));
+    pointer('pointerdown', w.innerWidth - 320);
+    pointer('pointermove', w.innerWidth - 500);
+    assert.equal(pane.style.width, '500px', 'dragging the edge resizes the pane live');
+    assert.ok(desk.classList.contains('copilot-resizing'), 'frames stop swallowing the drag while it lasts');
+    pointer('pointermove', 10);
+    assert.equal(pane.style.width, `${w.innerWidth - 240}px`, 'the desktop always keeps 240px beside the pane');
+    pointer('pointermove', w.innerWidth - 480);
+    pointer('pointerup', w.innerWidth - 480);
+    assert.ok(!desk.classList.contains('copilot-resizing'));
+    assert.equal(w.document.documentElement.style.getPropertyValue('--copilot-w'), '480px');
+    await flush(); // saveData() is debounced
+    assert.equal(saved().settings.copilotWidth, 480, 'the width is saved with the account');
+    /* A saved width that makes no sense is dropped, not trusted. */
+    w.eval('userData.settings.copilotWidth = "wide"; normalizeUserData();');
+    assert.equal(w.eval('userData.settings.copilotWidth'), undefined);
+    w.eval('userData.settings.copilotWidth = 480;');
+
+    /* "Open in a window" hands over to the Mox app. */
+    $('copilot-window').click();
+    assert.equal(pane.hidden, true);
+    assert.equal($('copilot-frame'), null, 'the pane lets go of its frame when Mox moves to a window');
+    assert.ok(wins.has('mox'), 'Mox opens as a window');
+    assert.equal(wins.get('mox').body.querySelector('iframe').getAttribute('src'), MOX_PAGE);
+    w.closeWin('mox');
+    button.click();
+    assert.ok($('copilot-frame'), 'the next open frames Mox again');
+    assert.equal(pane.style.width, '480px', 'at the saved width');
+
+    /* Customize → Desktop parts can hide the button; hiding it closes the pane. */
+    w.openApp('customize');
+    const toggle = wins.get('customize').body.querySelector('[data-comp="copilotButton"]');
+    assert.ok(toggle && toggle.checked, 'Customize lists the AI button, on by default');
+    assert.match(toggle.parentElement.textContent, /AI button in the panel/);
+    toggle.checked = false; toggle.onchange();
+    assert.equal(button.style.display, 'none', 'the AI button can be hidden');
+    assert.equal(pane.hidden, true, 'hiding the button closes the pane');
+    assert.equal($('copilot-frame'), null);
+    altC(w.document.body);
+    assert.equal(pane.hidden, true, 'Alt+C does nothing while the button is hidden');
+    toggle.checked = true; toggle.onchange();
+    assert.notEqual(button.style.display, 'none');
+    w.closeWin('customize');
+
+    /* The button is Mox's: removing Mox from the menu takes it away. */
+    button.click();
+    w.eval("userData.hiddenApps.push('mox'); refreshChrome();");
+    assert.equal(button.style.display, 'none', 'no Mox, no AI button');
+    assert.equal(pane.hidden, true);
+    w.eval("userData.hiddenApps = userData.hiddenApps.filter((id) => id !== 'mox'); refreshChrome();");
+    assert.notEqual(button.style.display, 'none', 'restoring Mox brings the button back');
+    assert.equal(button.title, 'Ask Mox (Alt+C)');
+    /* A renamed Mox keeps its button, under the new name. */
+    button.click();
+    w.eval("APPS.mox.name = 'Copilot'; refreshChrome();");
+    assert.equal(button.title, 'Ask Copilot (Alt+C)');
+    assert.equal($('copilot-name').textContent, 'Copilot', 'the open pane follows the rename');
+    assert.equal(pane.hidden, false, 'a rename leaves the pane open');
+    w.eval("APPS.mox.name = 'Mox'; refreshChrome();");
+    button.click();
+
+    /* Signing out takes the pane with the desktop, and the next desktop
+     * starts with it closed. */
+    button.click();
+    w.eval('signOut()');
+    assert.ok(!desk.classList.contains('copilot-open'), 'a signed-out page keeps no room for the pane');
+    w.eval(`currentUser = {username:'Ada',usernameLower:'ada',displayName:'Ada',createdAt:Date.now()};
+      userData = JSON.parse(localStorage.getItem('proton2.user.ada.v1')); enterDesktop();`);
+    assert.equal($('copilot').hidden, true, 'a new desktop starts with the pane closed');
+    assert.equal($('copilot-frame'), null);
+    assert.ok(!$('desktop').classList.contains('copilot-open'));
+    assert.equal($('copilot').style.width, '480px', 'the saved width is kept');
     assert.deepEqual(errors, []);
   } finally { close(); }
 });

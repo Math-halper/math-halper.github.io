@@ -83,6 +83,9 @@ const ICON_PATHS = {
   shuffle: '<path d="M3 7h4.2L17 17h4M21 7h-4l-2.6 2.6M3 17h4.2l2.6-2.6"/><path d="M18.5 4 21 7l-2.5 3M18.5 14 21 17l-2.5 3"/>',
   reply: '<path d="M9 16.5 4 11.5 9 6.5"/><path d="M4.5 11.5H14a6 6 0 0 1 0 12h-2.5"/>',
   square: '<rect x="6" y="6" width="12" height="12" rx="1.5"/>',
+  /* The AI sparkle: Mox's catalog icon and the panel's AI button. */
+  sparkle: '<path d="M10 5.5c.75 4.3 3.2 6.75 7.5 7.5-4.3.75-6.75 3.2-7.5 7.5-.75-4.3-3.2-6.75-7.5-7.5 4.3-.75 6.75-3.2 7.5-7.5z"/><path d="M18 2.5c.3 1.7 1.3 2.7 3 3-1.7.3-2.7 1.3-3 3-.3-1.7-1.3-2.7-3-3 1.7-.3 2.7-1.3 3-3z"/>',
+  'app-window': '<rect x="3" y="4.5" width="18" height="15" rx="2"/><path d="M3 9h18"/>',
   crown: '<path d="M3.5 8.5 8 12l4-6 4 6 4.5-3.5L19.3 18H4.7z"/><path d="M5 21h14"/>',
   'chess-king': '<path d="M12 2.8v4.2M9.8 4.9h4.4"/><path d="M3.8 9.2 8.2 12 12 6.8 15.8 12l4.4-2.8-1.4 9.3H5.2z"/><path d="M5 21.2h14"/>',
   'chess-queen': '<circle cx="4" cy="7.8" r="1.5"/><circle cx="12" cy="5.4" r="1.5"/><circle cx="20" cy="7.8" r="1.5"/><path d="M5 10.5 8.4 12.6 12 8l3.6 4.6L19 10.5l-1.3 8H6.3z"/><path d="M5.2 21.2h13.6"/>',
@@ -109,6 +112,7 @@ const ICON_CHOICES = [
   ['flask', 'Test flask'], ['newspaper', 'Newspaper'], ['home', 'Home'], ['search', 'Search'],
   ['pin', 'Pin'], ['star', 'Star'], ['trophy', 'Trophy'], ['chart', 'Chart'], ['atom', 'Atom'],
   ['image', 'Image'], ['monitor', 'Monitor'], ['moon', 'Moon'], ['clock', 'Clock'], ['user', 'Person'],
+  ['sparkle', 'Sparkle (AI)'],
 ];
 
 /* Old accounts may still hold emoji icon values saved before this icon set

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mox - proton app</title>
+</head>
+<body>
+<p>This file is a proton app. It is not meant to be opened on its own:
+open <a href="../../../index.html">proton</a> and launch <b>Mox</b> from the
+proton menu, or click the AI button in the panel. The script below is fetched
+and run by proton's HTML loader (assets/html-loader.js) at boot.</p>
+<!-- VENDORED APP - proton's wrapper plus Mox's own files.
+
+     Mox is a private AI workspace: a small language model (SmolLM2 135M
+     Instruct, run by llama.cpp compiled to WebAssembly through wllama) answers
+     in this browser, with a 55-document knowledge library it cites, a code
+     workspace with live preview, an SVG drawing engine and a calculator.
+     Everything under website/ is copied byte-for-byte from
+     github.com/Math-halper/mox - the browser files only; README.md in this
+     folder lists what was left out and why.
+
+     The wrapper frames Mox's own page - a local page, so the frame is NOT
+     sandboxed: Mox keeps its chats in this browser (IndexedDB), reads its
+     bundled model from this site and runs WebAssembly like any desktop app.
+     The address carries ?nosw, Mox's own switch for leaving its offline
+     service worker unregistered, because a service worker of its own would
+     sit between proton and the page.
+
+     The panel's AI button docks this same page beside the desktop, the way
+     the Copilot button does on Windows (assets/core.js, toggleCopilot), so
+     it reads the page from here: registerApp() below publishes it as
+     APPS.mox.page. -->
+<script data-proton-app>
+(() => {
+/* proton app module: vendored app wrapper - edit this file to change this app.
+ * Loaded by index.html; calls registerApp() (see apps/README.md).
+ * Mox is the desktop's AI: a small language model that runs in this browser,
+ * so nothing typed into it leaves the device, answering from a knowledge
+ * library it cites, with a code workspace, SVG drawing and a calculator.
+ * Metadata (name, icon, cat, desc, w, h) lives in data/applications.js. */
+'use strict';
+
+/* =====================================================================
+   Mox's page, shipped in this folder. ?nosw keeps Mox's service worker
+   out of proton; the AI button in the panel frames the same address.
+   ===================================================================== */
+const MOX_PAGE = 'apps/productivity/mox/website/index.html?nosw';
+/* --------------------------------------------------------------------- */
+
+registerApp({
+  page: MOX_PAGE,
+  render(body) {
+    body.innerHTML = `${bar('Mox', `<span class="muted embed-src" title="${MH.esc(MOX_PAGE)}">${MH.esc(MOX_PAGE)}</span>
+      <button class="btn sm" data-e="reload">${iconSvg('refresh')} Reload</button>
+      <button class="btn sm primary" data-e="ext">${iconSvg('external')} Open in new tab</button>`)}
+      <div class="app-main local-page"><iframe class="site-frame" title="Mox" src="${MH.esc(MOX_PAGE)}"
+        allow="clipboard-write"></iframe></div>
+      <p class="muted" style="flex:none;margin:0;padding:7px 14px;border-top:1px solid var(--line)">Mox ships with this app - copied verbatim from
+        <a href="https://github.com/Math-halper/mox" target="_blank" rel="noopener">Math-halper/mox</a>.
+        Its model runs on this device: the first launch reads 94 MB from this site, and nothing you type leaves the browser.</p>`;
+    const frame = body.querySelector('iframe');
+    body.querySelector('[data-e="reload"]').onclick = () => { frame.src = MOX_PAGE; };
+    body.querySelector('[data-e="ext"]').onclick = () => window.open(MOX_PAGE, '_blank', 'noopener');
+  },
+});
+})();
+</script>
+<style>
+/* The toolbar path, truncated like the Browser's. */
+.embed-src{max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}
+</style>
+</body>
+</html>
