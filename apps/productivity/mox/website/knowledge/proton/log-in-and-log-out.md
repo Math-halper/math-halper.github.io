@@ -1,0 +1,3 @@
+# Log in and log out of proton (login, logout)
+
+To log in or log out of proton: log in is called Sign in, and log out is called Sign out, so you log out with Sign out. To log out (logout, log off), click Sign out at the bottom of the proton menu, or in Settings; when you log out, or refresh the page, proton goes back to the Math Helper cover page. To log in (login) again, click Sign in in the Math Helper header. Log out any time: nothing is lost, and your desktop, files and settings come back when you log in. Before any account exists on the device, log in by typing the desktop password into the header search bar and clicking Sign in; after that, no password is needed to log in. To step away without a log out, use Lock, the padlock in the panel.

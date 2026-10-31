@@ -79,8 +79,14 @@ see [`data/icons/README.md`](../data/icons/README.md).
    `My Apps`, then anything else you invent).
 3. Edit `apps/<category>/my-app/app.html` and write the `render` function
    (the app's code). Reload proton.
-4. Re-run `python3 tools/gen-fs-manifest.py` so the new file appears in the
-   virtual file system, then `npm test`.
+4. Tell the AI about it: add a `## my-app` section to
+   `tools/mox-knowledge/apps.md` that says what the app does and how to use
+   it, then run `python3 tools/gen-mox-knowledge.py`. The generator stops
+   while any catalogued app has no section, so Mox, the desktop's AI, never
+   misses an app.
+5. Re-run `python3 tools/gen-search-index.py` and then
+   `python3 tools/gen-fs-manifest.py`, so the new files appear in search and
+   in the virtual file system. Then run `npm test`.
 
 Your app can use: `userData` (the account's saved data), `saveData()`,
 `openApp(id)`, `MH.toast(...)`, `MH.download(...)`, `FS` (the virtual file
@@ -101,7 +107,10 @@ exactly where the old one left off.
   This hides it per account and it can be added back any time. App Center,
   Customize and Settings are protected so the desktop stays manageable.
 - **Permanently:** delete its `[application]` block from
-  `data/applications.js` (and optionally delete the folder), refresh
+  `data/applications.js` (and optionally delete the folder), delete its
+  section from `tools/mox-knowledge/apps.md` and any `{{names: …}}` mention
+  of it in `tools/mox-knowledge/guides/`, run
+  `python3 tools/gen-mox-knowledge.py`, refresh
   `data/search-index.js` and `data/fs-manifest.js`, and drop anything in
   `assets/` that only it used.
 
@@ -123,7 +132,7 @@ matching the menu sections (`cat=`, ordered by `CATS` in `assets/core.js`).
 | `productivity/` | Files (`files`) — browse, create, rename, move, import, search and download the virtual file system |
 | `productivity/` | Text Editor (`text-editor`) — edit text files in your home folder; proton's own files open read-only |
 | `productivity/` | PDF Viewer (`pdf`) — read PDFs in your browser's own viewer |
-| `productivity/` | Mox (`mox`) — the vendored Mox site from Math-halper/mox in `website/` (a private AI workspace whose small language model runs in the browser, model included), plus its wrapper. It also publishes the page as `APPS.mox.page` for the panel's AI button |
+| `productivity/` | Mox (`mox`) — the vendored Mox site from Math-halper/mox in `website/` (a private AI workspace whose small language model runs in the browser, model included), plus its wrapper. It also publishes the page as `APPS.mox.page` for the panel's AI button. Its library gains a "proton desktop" topic about every app, game and feature: run `python3 tools/gen-mox-knowledge.py` after adding, removing or changing an app, and give a new app a `## <id>` section in `tools/mox-knowledge/apps.md` |
 | `media/` | Image Viewer (`image-viewer`) — PNG, JPG, GIF, WebP, AVIF, BMP, ICO and SVG with zoom and playlists |
 | `media/` | VLC (`media`) — the open-source VLC player (libvlc WebAssembly port): play audio and video from your home folder or this computer |
 | `media/` | Paint (`paint`) — draw on a canvas, save PNGs into Pictures |

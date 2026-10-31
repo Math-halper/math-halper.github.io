@@ -52,11 +52,13 @@ EXCLUDE_DIRS = {'.git', '.arena', 'node_modules', '__pycache__', '.cache', '.pyt
 # not prose, and must never surface as a search result.
 EXCLUDE_FILES = {'package-lock.json', 'package.json', '.nojekyll', '.gitignore',
                  'data/fs-manifest.js', 'data/password.txt', SELF}
-# Vendored apps outside apps/games/ whose folders carry someone else's whole
-# site. Mox (github.com/Math-halper/mox) ships its own 55-document knowledge
-# library: that is Mox's corpus, which Mox searches and cites itself, not
-# proton's — its wrapper app.html and README.md speak for it here.
-VENDORED_SITES = ('apps/productivity/mox/website/',)
+# Mox's corpus, not proton's. Mox (github.com/Math-halper/mox) ships its own
+# 55-document knowledge library, which Mox searches and cites itself, and
+# tools/gen-mox-knowledge.py adds a topic about proton to that library,
+# written from tools/mox-knowledge/. Those pages retell proton's own docs for
+# the AI, so indexing them here would only echo every result; the Mox wrapper
+# (app.html), its README.md and the generator's own notes speak for them.
+MOX_CORPUS = ('apps/productivity/mox/website/', 'tools/mox-knowledge/')
 
 # Per-document caps keep one long file (LICENSE.txt, a big app module) from
 # dominating the index. Text beyond the cap is still on disk and still
@@ -384,7 +386,7 @@ def collect():
             # prose this repository speaks with.
             if '/vendor/' in rel:
                 continue
-            if rel.startswith(VENDORED_SITES):
+            if rel.startswith(MOX_CORPUS):
                 continue
             files.append(rel)
     files.sort()

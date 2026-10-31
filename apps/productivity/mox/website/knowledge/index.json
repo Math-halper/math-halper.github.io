@@ -1,7 +1,12 @@
 {
   "version": 2,
-  "generated": "2026-10-30T21:46:35Z",
+  "generated": "2026-10-30T21:46:35Z+proton.6be2ebd706c0",
   "categories": [
+    {
+      "id": "proton",
+      "name": "proton desktop",
+      "description": "proton, the desktop on this website: every app and game, the Math Helper cover page, and how everything works."
+    },
     {
       "id": "math",
       "name": "Mathematics",
@@ -169,8 +174,617 @@
       "path": "mox-starter-guide.md",
       "title": "About this workspace",
       "category": "",
-      "bytes": 8597,
-      "words": 1432
+      "bytes": 8636,
+      "words": 1437
+    },
+    {
+      "path": "proton/about-this-website.md",
+      "title": "About this website: proton and Math Helper",
+      "category": "proton",
+      "bytes": 2769,
+      "words": 482
+    },
+    {
+      "path": "proton/ai-button-and-mox.md",
+      "title": "The AI button (proton's Copilot) and Mox, the desktop's AI",
+      "category": "proton",
+      "bytes": 4060,
+      "words": 745
+    },
+    {
+      "path": "proton/all-apps.md",
+      "title": "Apps on this website",
+      "category": "proton",
+      "bytes": 2340,
+      "words": 405
+    },
+    {
+      "path": "proton/all-games.md",
+      "title": "Games on this website",
+      "category": "proton",
+      "bytes": 3035,
+      "words": 476
+    },
+    {
+      "path": "proton/apps/about.md",
+      "title": "About",
+      "category": "proton",
+      "bytes": 842,
+      "words": 149
+    },
+    {
+      "path": "proton/apps/ampler-launcher.md",
+      "title": "Ampler Launcher",
+      "category": "proton",
+      "bytes": 1044,
+      "words": 172
+    },
+    {
+      "path": "proton/apps/appcenter.md",
+      "title": "App Center",
+      "category": "proton",
+      "bytes": 1255,
+      "words": 227
+    },
+    {
+      "path": "proton/apps/backrooms.md",
+      "title": "Backrooms",
+      "category": "proton",
+      "bytes": 743,
+      "words": 128
+    },
+    {
+      "path": "proton/apps/baldis-basics.md",
+      "title": "Baldi's Basics",
+      "category": "proton",
+      "bytes": 818,
+      "words": 139
+    },
+    {
+      "path": "proton/apps/bitburner.md",
+      "title": "Bitburner",
+      "category": "proton",
+      "bytes": 784,
+      "words": 124
+    },
+    {
+      "path": "proton/apps/bitlife.md",
+      "title": "BitLife",
+      "category": "proton",
+      "bytes": 650,
+      "words": 114
+    },
+    {
+      "path": "proton/apps/bloons-tower-defense-1.md",
+      "title": "Bloons Tower Defense 1",
+      "category": "proton",
+      "bytes": 1086,
+      "words": 193
+    },
+    {
+      "path": "proton/apps/bloons-tower-defense-2.md",
+      "title": "Bloons Tower Defense 2",
+      "category": "proton",
+      "bytes": 956,
+      "words": 172
+    },
+    {
+      "path": "proton/apps/bloons-tower-defense-5.md",
+      "title": "Bloons Tower Defense 5",
+      "category": "proton",
+      "bytes": 975,
+      "words": 175
+    },
+    {
+      "path": "proton/apps/bloxorz.md",
+      "title": "Bloxorz",
+      "category": "proton",
+      "bytes": 979,
+      "words": 178
+    },
+    {
+      "path": "proton/apps/breaking-the-bank.md",
+      "title": "Breaking The Bank",
+      "category": "proton",
+      "bytes": 933,
+      "words": 166
+    },
+    {
+      "path": "proton/apps/browser.md",
+      "title": "Browser",
+      "category": "proton",
+      "bytes": 2494,
+      "words": 433
+    },
+    {
+      "path": "proton/apps/calculator.md",
+      "title": "Calculator",
+      "category": "proton",
+      "bytes": 813,
+      "words": 150
+    },
+    {
+      "path": "proton/apps/celeste-hub.md",
+      "title": "Celeste Hub",
+      "category": "proton",
+      "bytes": 1707,
+      "words": 297
+    },
+    {
+      "path": "proton/apps/clock.md",
+      "title": "Clock",
+      "category": "proton",
+      "bytes": 841,
+      "words": 156
+    },
+    {
+      "path": "proton/apps/cookie-clicker.md",
+      "title": "Cookie Clicker",
+      "category": "proton",
+      "bytes": 899,
+      "words": 154
+    },
+    {
+      "path": "proton/apps/customize.md",
+      "title": "Customize",
+      "category": "proton",
+      "bytes": 1909,
+      "words": 329
+    },
+    {
+      "path": "proton/apps/drift-boss.md",
+      "title": "Drift Boss",
+      "category": "proton",
+      "bytes": 704,
+      "words": 127
+    },
+    {
+      "path": "proton/apps/drive-mad.md",
+      "title": "Drive Mad",
+      "category": "proton",
+      "bytes": 720,
+      "words": 130
+    },
+    {
+      "path": "proton/apps/escaping-the-prison.md",
+      "title": "Escaping The Prison",
+      "category": "proton",
+      "bytes": 967,
+      "words": 171
+    },
+    {
+      "path": "proton/apps/evolution.md",
+      "title": "Evolution",
+      "category": "proton",
+      "bytes": 805,
+      "words": 133
+    },
+    {
+      "path": "proton/apps/files.md",
+      "title": "Files",
+      "category": "proton",
+      "bytes": 1636,
+      "words": 282
+    },
+    {
+      "path": "proton/apps/five-nights-at-freddys-1.md",
+      "title": "Five Nights at Freddy's",
+      "category": "proton",
+      "bytes": 951,
+      "words": 168
+    },
+    {
+      "path": "proton/apps/five-nights-at-freddys-2.md",
+      "title": "Five Nights at Freddy's 2",
+      "category": "proton",
+      "bytes": 821,
+      "words": 149
+    },
+    {
+      "path": "proton/apps/five-nights-at-freddys-3.md",
+      "title": "Five Nights at Freddy's 3",
+      "category": "proton",
+      "bytes": 844,
+      "words": 147
+    },
+    {
+      "path": "proton/apps/five-nights-at-freddys-4.md",
+      "title": "Five Nights at Freddy's 4",
+      "category": "proton",
+      "bytes": 889,
+      "words": 160
+    },
+    {
+      "path": "proton/apps/five-nights-at-freddys-sl.md",
+      "title": "Five Nights at Freddy's: Sister Location",
+      "category": "proton",
+      "bytes": 982,
+      "words": 158
+    },
+    {
+      "path": "proton/apps/flappy-bird.md",
+      "title": "Flappy Bird",
+      "category": "proton",
+      "bytes": 670,
+      "words": 121
+    },
+    {
+      "path": "proton/apps/fleeing-the-complex.md",
+      "title": "Fleeing The Complex",
+      "category": "proton",
+      "bytes": 942,
+      "words": 165
+    },
+    {
+      "path": "proton/apps/football-bros.md",
+      "title": "Football Bros",
+      "category": "proton",
+      "bytes": 697,
+      "words": 120
+    },
+    {
+      "path": "proton/apps/game-2048.md",
+      "title": "2048",
+      "category": "proton",
+      "bytes": 745,
+      "words": 149
+    },
+    {
+      "path": "proton/apps/geometry-dash-lite.md",
+      "title": "Geometry Dash Lite",
+      "category": "proton",
+      "bytes": 795,
+      "words": 144
+    },
+    {
+      "path": "proton/apps/google-dino.md",
+      "title": "Google Dino",
+      "category": "proton",
+      "bytes": 686,
+      "words": 121
+    },
+    {
+      "path": "proton/apps/granny.md",
+      "title": "Granny",
+      "category": "proton",
+      "bytes": 767,
+      "words": 140
+    },
+    {
+      "path": "proton/apps/grey-box-testing.md",
+      "title": "Grey Box Testing",
+      "category": "proton",
+      "bytes": 650,
+      "words": 117
+    },
+    {
+      "path": "proton/apps/image-viewer.md",
+      "title": "Image Viewer",
+      "category": "proton",
+      "bytes": 1022,
+      "words": 186
+    },
+    {
+      "path": "proton/apps/infiltrating-the-airship.md",
+      "title": "Infiltrating The Airship",
+      "category": "proton",
+      "bytes": 1000,
+      "words": 170
+    },
+    {
+      "path": "proton/apps/kart-bros.md",
+      "title": "Kart Bros",
+      "category": "proton",
+      "bytes": 668,
+      "words": 130
+    },
+    {
+      "path": "proton/apps/mari0.md",
+      "title": "Mari0",
+      "category": "proton",
+      "bytes": 898,
+      "words": 160
+    },
+    {
+      "path": "proton/apps/media.md",
+      "title": "VLC",
+      "category": "proton",
+      "bytes": 2426,
+      "words": 418
+    },
+    {
+      "path": "proton/apps/minesweeper.md",
+      "title": "Minesweeper",
+      "category": "proton",
+      "bytes": 715,
+      "words": 118
+    },
+    {
+      "path": "proton/apps/mox.md",
+      "title": "Mox",
+      "category": "proton",
+      "bytes": 2708,
+      "words": 465
+    },
+    {
+      "path": "proton/apps/offline-paradise.md",
+      "title": "Offline Paradise",
+      "category": "proton",
+      "bytes": 595,
+      "words": 99
+    },
+    {
+      "path": "proton/apps/pacman.md",
+      "title": "Pacman",
+      "category": "proton",
+      "bytes": 801,
+      "words": 148
+    },
+    {
+      "path": "proton/apps/paint.md",
+      "title": "Paint",
+      "category": "proton",
+      "bytes": 744,
+      "words": 142
+    },
+    {
+      "path": "proton/apps/pdf.md",
+      "title": "PDF Viewer",
+      "category": "proton",
+      "bytes": 752,
+      "words": 139
+    },
+    {
+      "path": "proton/apps/piano.md",
+      "title": "Piano",
+      "category": "proton",
+      "bytes": 772,
+      "words": 156
+    },
+    {
+      "path": "proton/apps/retro-bowl.md",
+      "title": "Retro Bowl",
+      "category": "proton",
+      "bytes": 819,
+      "words": 144
+    },
+    {
+      "path": "proton/apps/ruffle-flash-player.md",
+      "title": "Ruffle Flash Player",
+      "category": "proton",
+      "bytes": 1194,
+      "words": 203
+    },
+    {
+      "path": "proton/apps/settings.md",
+      "title": "Settings",
+      "category": "proton",
+      "bytes": 1299,
+      "words": 218
+    },
+    {
+      "path": "proton/apps/slope.md",
+      "title": "Slope",
+      "category": "proton",
+      "bytes": 629,
+      "words": 121
+    },
+    {
+      "path": "proton/apps/sm64.md",
+      "title": "Super Mario 64",
+      "category": "proton",
+      "bytes": 822,
+      "words": 143
+    },
+    {
+      "path": "proton/apps/spacebar-clicker.md",
+      "title": "Spacebar Clicker",
+      "category": "proton",
+      "bytes": 673,
+      "words": 118
+    },
+    {
+      "path": "proton/apps/stack.md",
+      "title": "Stack",
+      "category": "proton",
+      "bytes": 689,
+      "words": 132
+    },
+    {
+      "path": "proton/apps/stealing-the-diamond.md",
+      "title": "Stealing The Diamond",
+      "category": "proton",
+      "bytes": 937,
+      "words": 163
+    },
+    {
+      "path": "proton/apps/stickman-hook.md",
+      "title": "Stickman Hook",
+      "category": "proton",
+      "bytes": 687,
+      "words": 125
+    },
+    {
+      "path": "proton/apps/system-monitor.md",
+      "title": "System Monitor",
+      "category": "proton",
+      "bytes": 839,
+      "words": 149
+    },
+    {
+      "path": "proton/apps/terminal.md",
+      "title": "Terminal",
+      "category": "proton",
+      "bytes": 1069,
+      "words": 188
+    },
+    {
+      "path": "proton/apps/tetris.md",
+      "title": "Tetris",
+      "category": "proton",
+      "bytes": 815,
+      "words": 145
+    },
+    {
+      "path": "proton/apps/text-editor.md",
+      "title": "Text Editor",
+      "category": "proton",
+      "bytes": 1101,
+      "words": 199
+    },
+    {
+      "path": "proton/apps/the-impossible-quiz.md",
+      "title": "The Impossible Quiz",
+      "category": "proton",
+      "bytes": 915,
+      "words": 160
+    },
+    {
+      "path": "proton/apps/tunnel-rush.md",
+      "title": "Tunnel Rush",
+      "category": "proton",
+      "bytes": 621,
+      "words": 115
+    },
+    {
+      "path": "proton/apps/web-retro.md",
+      "title": "Web Retro",
+      "category": "proton",
+      "bytes": 1564,
+      "words": 284
+    },
+    {
+      "path": "proton/apps/you-are-an-idiot.md",
+      "title": "You Are An Idiot",
+      "category": "proton",
+      "bytes": 1141,
+      "words": 215
+    },
+    {
+      "path": "proton/built-in-sites.md",
+      "title": "Built-in sites and the Test Page",
+      "category": "proton",
+      "bytes": 1364,
+      "words": 240
+    },
+    {
+      "path": "proton/changing-the-look.md",
+      "title": "Changing the look: wallpaper, accent color, themes and icons",
+      "category": "proton",
+      "bytes": 2202,
+      "words": 382
+    },
+    {
+      "path": "proton/credits-and-license.md",
+      "title": "Who made this website: credits and license",
+      "category": "proton",
+      "bytes": 2242,
+      "words": 339
+    },
+    {
+      "path": "proton/files-and-storage.md",
+      "title": "Files, folders and the two file systems",
+      "category": "proton",
+      "bytes": 3167,
+      "words": 555
+    },
+    {
+      "path": "proton/how-proton-is-built.md",
+      "title": "How proton is built (for developers)",
+      "category": "proton",
+      "bytes": 2191,
+      "words": 319
+    },
+    {
+      "path": "proton/keyboard-shortcuts.md",
+      "title": "Keyboard shortcuts on proton",
+      "category": "proton",
+      "bytes": 2355,
+      "words": 441
+    },
+    {
+      "path": "proton/log-in-and-log-out.md",
+      "title": "Log in and log out of proton (login, logout)",
+      "category": "proton",
+      "bytes": 756,
+      "words": 152
+    },
+    {
+      "path": "proton/managing-apps.md",
+      "title": "Removing, restoring, renaming, pinning and installing apps",
+      "category": "proton",
+      "bytes": 1806,
+      "words": 338
+    },
+    {
+      "path": "proton/math-helper-cover-page.md",
+      "title": "The Math Helper cover page",
+      "category": "proton",
+      "bytes": 3122,
+      "words": 515
+    },
+    {
+      "path": "proton/math-helper-skills.md",
+      "title": "Math Helper skills and grades",
+      "category": "proton",
+      "bytes": 2380,
+      "words": 366
+    },
+    {
+      "path": "proton/panel-and-proton-menu.md",
+      "title": "The panel (taskbar) and the proton menu (start menu)",
+      "category": "proton",
+      "bytes": 2420,
+      "words": 449
+    },
+    {
+      "path": "proton/playing-games.md",
+      "title": "Playing games on proton",
+      "category": "proton",
+      "bytes": 2749,
+      "words": 464
+    },
+    {
+      "path": "proton/saving-backups-and-privacy.md",
+      "title": "Saving, backups and privacy on proton",
+      "category": "proton",
+      "bytes": 1935,
+      "words": 323
+    },
+    {
+      "path": "proton/signing-in.md",
+      "title": "Signing in and out of proton (log in, log out), accounts and locking",
+      "category": "proton",
+      "bytes": 2674,
+      "words": 480
+    },
+    {
+      "path": "proton/the-desktop.md",
+      "title": "The proton desktop and its shortcuts",
+      "category": "proton",
+      "bytes": 2366,
+      "words": 415
+    },
+    {
+      "path": "proton/troubleshooting.md",
+      "title": "Troubleshooting proton",
+      "category": "proton",
+      "bytes": 2985,
+      "words": 558
+    },
+    {
+      "path": "proton/web-retro-roms.md",
+      "title": "Web Retro's bundled ROM library",
+      "category": "proton",
+      "bytes": 1324,
+      "words": 228
+    },
+    {
+      "path": "proton/windows.md",
+      "title": "Using windows on proton",
+      "category": "proton",
+      "bytes": 2205,
+      "words": 407
     },
     {
       "path": "reading/grammar-and-punctuation.md",
@@ -265,7 +879,7 @@
     },
     {
       "path": "technology/apis-http-and-json.md",
-      "title": "APIs, HTTP, and JSON \u2014 how programs talk to each other",
+      "title": "APIs, HTTP, and JSON — how programs talk to each other",
       "category": "technology",
       "bytes": 7317,
       "words": 1091
@@ -293,7 +907,7 @@
     },
     {
       "path": "technology/css-reference.md",
-      "title": "CSS reference \u2014 selectors, every property group, and layout",
+      "title": "CSS reference — selectors, every property group, and layout",
       "category": "technology",
       "bytes": 19833,
       "words": 2788
@@ -349,7 +963,7 @@
     },
     {
       "path": "technology/html-reference.md",
-      "title": "HTML reference \u2014 every element, attribute, and pattern",
+      "title": "HTML reference — every element, attribute, and pattern",
       "category": "technology",
       "bytes": 16163,
       "words": 2217
@@ -363,7 +977,7 @@
     },
     {
       "path": "technology/javascript-reference.md",
-      "title": "JavaScript reference \u2014 language, DOM, APIs, and patterns",
+      "title": "JavaScript reference — language, DOM, APIs, and patterns",
       "category": "technology",
       "bytes": 26891,
       "words": 3415

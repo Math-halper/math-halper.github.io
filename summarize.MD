@@ -236,6 +236,44 @@ recoverable from git commit `0e4a8cd`.
 - Verified live in headless Chromium: the model loads and answers in the pane
   (about 6 tok/s on 2 vCPUs). The only console noise is Mox's optional
   `vendor/wllama/compat/wllama.wasm` probe, a 404 that upstream has too.
+- "give the AI context about every single thing on the website" (2026-10-30):
+  - `tools/gen-mox-knowledge.py` writes Mox's "proton desktop" library topic
+    to `website/knowledge/proton/` (87 pages) and rebuilds
+    `knowledge/index.json`, which lists Mox's own 55 documents plus the pack.
+    The index's `generated` is the upstream timestamp + `+proton.<hash12>`;
+    it is Mox's cache key.
+  - Sources: `tools/mox-knowledge/guides/*.md` (17 guides) and
+    `tools/mox-knowledge/apps.md` (one `## id` per catalog app; required),
+    plus extracts from the catalog, Web Retro's `BUNDLED`, the Celeste Hub's
+    `CELESTE_GAMES` and the `SKILLS` in math-helper.js.
+  - Placeholders: `{{app_count}}`, `{{game_count}}`, `{{other_count}}`,
+    `{{rom_count}}`, `{{sections}}` and `{{names: ids}}`.
+  - The generator refuses to write the site password. The search index
+    skips `tools/mox-knowledge/` too (`MOX_CORPUS`).
+  - Run order: gen-mox-knowledge, then gen-search-index, then gen-fs-manifest.
+- Lessons from tuning Mox retrieval (test with Mox's own `retrieve()`):
+  - The topic name counts as part of every passage title, so never put
+    "website" in it: it hijacked "how do I build a website". It is now
+    "proton desktop".
+  - Per-app headers avoid "website" and "proton".
+  - Mox's stop words include make, made, use, show and tell.
+  - The stemmer cannot match British and American spellings, or accents,
+    so write American spellings plus the UI labels, and give ASCII forms
+    ("Pokémon (Pokemon)").
+  - A single-word query is dropped when its word is in 22% or more of the
+    passages.
+- SmolLM2 135M ignores even perfect passages, so site answers were broken
+  even with good retrieval. proton therefore patches Mox's `app.js` with a
+  marked block, `siteGuideAnswer()`:
+  - It runs when the top passage is in the proton topic and the model is
+    small (its parameters end in M) or none is loaded.
+  - It quotes the best-matching paragraph of the full page, scored on query
+    terms covered, then heading hits, then frequency, from the cached text.
+  - The quote includes a list that follows a colon, and same-scoring
+    sections when the answer is short. "What is" questions get the page's
+    first paragraph.
+  - Regenerate asks the model. The test checks the hook comes before
+    `runGeneration`. Re-apply this block when Mox is re-vendored.
 
 ### VLC / media player (`apps/media/media/app.html`)
 

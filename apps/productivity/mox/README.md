@@ -12,7 +12,7 @@ button in Windows.
 | Path | What it is |
 | --- | --- |
 | `app.html` | proton's wrapper: frames `website/index.html?nosw` in a window, with Reload and Open in new tab, and publishes the page as `APPS.mox.page` for the AI button |
-| `website/` | Mox itself, copied **byte-for-byte** from [Math-halper/mox](https://github.com/Math-halper/mox) at commit `acd4ec7` (the browser files only) |
+| `website/` | Mox itself, copied **byte-for-byte** from [Math-halper/mox](https://github.com/Math-halper/mox) at commit `acd4ec7` (the browser files only), plus proton's two additions (below) |
 | `README.md` | this file |
 
 `website/` holds Mox's page (`index.html`, `styles.css`), its modules
@@ -41,10 +41,60 @@ Left out on purpose, because they are not part of the page a browser runs:
   worker — and, with the file absent, a direct visit simply runs without
   offline caching (Mox logs "Offline support unavailable" and carries on).
 
-Nothing under `website/` is edited. To update Mox, copy the same files again
-from the new commit of Math-halper/mox, then run
-`python3 tools/gen-search-index.py` and `python3 tools/gen-fs-manifest.py`
-from the repository root.
+Apart from proton's two additions below, nothing under `website/` is edited.
+
+## Mox knows this website
+
+proton gives Mox context about every part of the site. Two additions do it,
+and they are the only places where `website/` differs from upstream Mox.
+
+**1. A "proton desktop" topic in Mox's library.** `website/knowledge/proton/`
+holds pages written for the AI: guides to the cover page and signing in,
+the desktop, the panel and proton menu, windows, the AI button, files, the
+look, backups and privacy, keyboard shortcuts, games, troubleshooting, the
+credits and how proton is built, plus a page for every app and game, lists
+of all of them, Web Retro's ROM library and the Math Helper skills. Mox
+searches these pages for every question, like the rest of its library, and
+cites them as "proton desktop › …". They also appear as a topic chip in
+Mox's sidebar and under Browse the library.
+
+The pages are generated. Do not edit them by hand:
+
+- `tools/mox-knowledge/guides/*.md` holds the hand-written guides.
+- `tools/mox-knowledge/apps.md` holds the notes for every app and game, one
+  `## <app id>` section each.
+- `python3 tools/gen-mox-knowledge.py` adds the catalog facts from
+  `data/applications.js`, the Web Retro ROM list, the Celeste Hub's games and
+  the Math Helper skills. It writes `knowledge/proton/` and rebuilds
+  `knowledge/index.json`, which lists Mox's own 55 documents plus the pack.
+- The index's `generated` value is upstream's timestamp plus a hash of the
+  pack, because Mox caches its library under that value.
+- The generator stops if an app has no notes, if notes name an app that is
+  gone, or if the site password would end up in a page. Mox opens at its own
+  address without a sign-in, so the password must stay out.
+
+Run it after changing the catalog, an app or a guide, then run the other two
+generators (search index next, file manifest last). The tests check the pack
+against the catalog and run Mox's own retriever over it.
+
+**2. Answers about the site, straight from the guide.** The bundled model,
+SmolLM2 135M, is too small to restate a passage faithfully: given the right
+page, it still makes things up. So `website/app.js` has one marked block,
+`siteGuideAnswer()`, plus a five-line hook in `handleSubmit()`. When a
+question's best passage comes from the proton desktop topic, and the running
+model is a small one (its size counted in millions of parameters) or no
+model is running, Mox answers instantly with the page's own words: the
+paragraph that covers the question, under its heading, with the source pill
+and the note "From the proton desktop guide". Regenerate still asks the
+model. A larger model (Mox's model picker offers Qwen and Llama downloads)
+writes its own answer from the same passages, and questions on Mox's other
+subjects go to the model as before.
+
+To update Mox, copy the same files again from the new commit of
+Math-halper/mox, re-apply the `siteGuideAnswer()` block and its hook in
+`app.js`, then run `python3 tools/gen-mox-knowledge.py`,
+`python3 tools/gen-search-index.py` and `python3 tools/gen-fs-manifest.py`,
+in that order, from the repository root.
 
 ## How it behaves inside proton
 
@@ -61,8 +111,9 @@ from the repository root.
 - **Search-only mode** is Mox's fallback when the model cannot load (for
   example, a browser without WebAssembly): it still searches and cites the
   knowledge library.
-- proton's own search index skips `website/` (see
-  `tools/gen-search-index.py`) — Mox's library is Mox's corpus, not proton's.
+- proton's own search index skips `website/` and `tools/mox-knowledge/` (see
+  `tools/gen-search-index.py`): Mox's library, the proton desktop topic
+  included, is Mox's corpus, not proton's.
 
 ## The AI button
 

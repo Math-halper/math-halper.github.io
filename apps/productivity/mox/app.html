@@ -16,9 +16,13 @@ and run by proton's HTML loader (assets/html-loader.js) at boot.</p>
      Instruct, run by llama.cpp compiled to WebAssembly through wllama) answers
      in this browser, with a 55-document knowledge library it cites, a code
      workspace with live preview, an SVG drawing engine and a calculator.
-     Everything under website/ is copied byte-for-byte from
-     github.com/Math-halper/mox - the browser files only; README.md in this
-     folder lists what was left out and why.
+     website/ holds Mox's browser files, copied byte-for-byte from
+     github.com/Math-halper/mox, plus two additions of proton's own: a "proton
+     desktop" topic in its library (knowledge/proton/, built with
+     knowledge/index.json by tools/gen-mox-knowledge.py) so Mox knows every
+     part of this site, and a marked block in app.js that answers questions
+     about the site from that topic while the small bundled model runs.
+     README.md in this folder lists what was added, what was left out and why.
 
      The wrapper frames Mox's own page - a local page, so the frame is NOT
      sandboxed: Mox keeps its chats in this browser (IndexedDB), reads its
@@ -56,8 +60,8 @@ registerApp({
       <button class="btn sm primary" data-e="ext">${iconSvg('external')} Open in new tab</button>`)}
       <div class="app-main local-page"><iframe class="site-frame" title="Mox" src="${MH.esc(MOX_PAGE)}"
         allow="clipboard-write"></iframe></div>
-      <p class="muted" style="flex:none;margin:0;padding:7px 14px;border-top:1px solid var(--line)">Mox ships with this app - copied verbatim from
-        <a href="https://github.com/Math-halper/mox" target="_blank" rel="noopener">Math-halper/mox</a>.
+      <p class="muted" style="flex:none;margin:0;padding:7px 14px;border-top:1px solid var(--line)">Mox ships with this app, from
+        <a href="https://github.com/Math-halper/mox" target="_blank" rel="noopener">Math-halper/mox</a>, and its library knows every part of this desktop.
         Its model runs on this device: the first launch reads 94 MB from this site, and nothing you type leaves the browser.</p>`;
     const frame = body.querySelector('iframe');
     body.querySelector('[data-e="reload"]').onclick = () => { frame.src = MOX_PAGE; };

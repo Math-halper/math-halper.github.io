@@ -3246,9 +3246,10 @@ test('Mox, the AI app, is vendored whole and framed by its own wrapper', () => {
   assert.deepEqual(imports.sort(), ['calculator.js', 'model-store.js', 'svg.js', 'workspace.js']);
   assert.ok(appJs.includes("location.search.includes('nosw')"),
     'Mox still honours ?nosw, so the frames proton opens register no service worker');
-  /* ... the knowledge library it cites ... */
+  /* ... the knowledge library it cites (Mox's own 55 documents; the
+   * proton desktop topic proton adds is checked in the next test) ... */
   const library = JSON.parse(source(`${MOX_DIR}/knowledge/index.json`));
-  assert.equal(library.documents.length, 55);
+  assert.equal(library.documents.filter((doc) => doc.category !== 'proton').length, 55);
   for (const doc of library.documents) {
     assert.ok(fs.existsSync(path.join(ROOT, MOX_DIR, 'knowledge', doc.path)), `knowledge/${doc.path} is missing`);
   }
@@ -3275,6 +3276,7 @@ test('Mox, the AI app, is vendored whole and framed by its own wrapper', () => {
    * and lets the wrapper and its README speak for it. */
   const index = source('data/search-index.js');
   assert.ok(!index.includes(`'/${MOX_DIR}/`), 'the vendored Mox site is not in proton’s search index');
+  assert.ok(!index.includes(`'/tools/mox-knowledge/`), 'the sources of Mox’s proton desktop topic are Mox’s corpus too');
   for (const p of ['/apps/productivity/mox/app.html', '/apps/productivity/mox/README.md']) {
     assert.ok(index.includes(`p: '${p}'`), `${p} should be searchable`);
   }
@@ -3444,4 +3446,166 @@ test('the AI button docks Mox beside the desktop, like Copilot on Windows', asyn
     assert.equal($('copilot').style.width, '480px', 'the saved width is kept');
     assert.deepEqual(errors, []);
   } finally { close(); }
+});
+
+/* Mox knows this website. tools/gen-mox-knowledge.py writes a "proton
+ * desktop" topic into Mox's knowledge library (a page for every app and game,
+ * lists of them all, Web Retro's ROM library, the Math Helper skills and
+ * hand-written guides to every part of the desktop) and rebuilds
+ * knowledge/index.json so Mox loads it. */
+const KNOWLEDGE = path.join(ROOT, MOX_DIR, 'knowledge');
+const walkFiles = (dir) => fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) =>
+  entry.isDirectory() ? walkFiles(path.join(dir, entry.name)) : [path.join(dir, entry.name)]);
+const knowledgeRel = (abs) => path.relative(KNOWLEDGE, abs).split(path.sep).join('/');
+
+/* Mox's own retriever and proton's site answers, run over the library the way
+ * the page runs them. The code is read out of the vendored app.js, not copied
+ * into this test; readMeta() hands it the library cache the page would have. */
+function moxLibrary() {
+  const app = source(`${MOX_DIR}/app.js`);
+  const cut = (from, to, keep = '') => {
+    const start = app.indexOf(from), end = app.indexOf(to, start);
+    assert.ok(start >= 0 && end > start, `Mox's app.js no longer has ${from}`);
+    return app.slice(start, end) + keep;
+  };
+  const index = JSON.parse(source(`${MOX_DIR}/knowledge/index.json`));
+  const texts = Object.fromEntries(index.documents.map((doc) =>
+    [doc.path, fs.readFileSync(path.join(KNOWLEDGE, doc.path), 'utf8')]));
+  const ctx = vm.createContext({ texts });
+  vm.runInContext([
+    'const MAX_EXCERPTS = 4; let modelReady = true; let loadedModel = null;',
+    'async function readMeta(key) { return key === "libraryCache" ? { texts } : null; }',
+    cut('const QUERY_ALIASES = {', '\n};\n', '\n};'),
+    cut('const STOP_WORDS = new Set(', '\n);\n', '\n);'),
+    cut('function tokenize(value) {', 'function htmlToText('),
+    cut('const chunkCache = new WeakMap();', '/* ------------------------------------------------------------------ models */'),
+    cut('const SITE_TOPIC = ', 'function announce('),
+    'let libraryDocuments = []; function allKnowledge() { return libraryDocuments; }',
+    'globalThis.load = (docs) => { libraryDocuments = docs.map((d) => ({ ...d, chunks: makeChunks(d.text) })); };',
+    'globalThis.ask = (q) => retrieve(q).map((hit) => hit.doc.path);',
+    'globalThis.guide = (q, parameters, ready = true) => {',
+    '  loadedModel = parameters ? { parameters } : null; modelReady = ready;',
+    '  return siteGuideAnswer(q, retrieve(q));',
+    '};',
+  ].join('\n'), ctx);
+  const names = Object.fromEntries(index.categories.map((c) => [c.id, c.name]));
+  ctx.load(index.documents.map((doc) => ({
+    id: `lib:${doc.path}`, name: doc.title, path: doc.path, category: doc.category, bundled: true,
+    categoryLabel: doc.category ? names[doc.category] || doc.category : 'General', text: texts[doc.path],
+  })));
+  return ctx;
+}
+
+test('Mox knows this website: its proton desktop topic covers every app, game and feature', async () => {
+  const { apps } = catalog();
+  const pack = path.join(KNOWLEDGE, 'proton');
+  const page = (rel) => fs.readFileSync(path.join(pack, rel), 'utf8');
+
+  /* A page for every app and game in the catalog, and none for apps that are gone. */
+  assert.deepEqual(fs.readdirSync(path.join(pack, 'apps')).sort(), Array.from(apps, (a) => `${a.id}.md`).sort(),
+    'one page per catalogued app: run python3 tools/gen-mox-knowledge.py');
+  for (const app of apps) {
+    const text = page(`apps/${app.id}.md`);
+    assert.ok(text.startsWith(`# ${app.name}\n`), `${app.id}.md is headed with the app's name`);
+    assert.ok(text.includes(`the ${app.cat} section`), `${app.id}.md names its menu section`);
+    assert.ok(text.includes(app.desc), `${app.id}.md carries the catalog description`);
+    assert.ok(text.split(/\s+/).length > 70, `${app.id}.md explains how to use ${app.name}`);
+  }
+  /* Lists of every app and every game. */
+  const allApps = page('all-apps.md'), allGames = page('all-games.md');
+  for (const app of apps) {
+    assert.ok((app.cat === 'Games' ? allGames : allApps).includes(`**${app.name}**`), `${app.name} is listed`);
+  }
+  /* The guides, Web Retro's ROM library and the cover page's skills. */
+  const guides = fs.readdirSync(path.join(ROOT, 'tools/mox-knowledge/guides')).filter((f) => f.endsWith('.md'));
+  assert.ok(guides.length >= 15, 'hand-written guides cover the desktop');
+  for (const guide of guides) assert.ok(fs.existsSync(path.join(pack, guide)), `${guide} is in Mox's library`);
+  const roms = page('web-retro-roms.md');
+  for (const title of ['Mario Kart 64', 'Super Mario World', 'Pokémon Emerald (Pokemon Emerald)']) {
+    assert.ok(roms.includes(title), `Web Retro's library lists ${title}`);
+  }
+  assert.match(page('math-helper-skills.md'), /\*\*Times tables up to 12\*\* \(grade 3, Multiplication\)/);
+  const packText = walkFiles(pack).map((file) => fs.readFileSync(file, 'utf8'));
+  assert.ok(!packText.some((text) => /\{\{|\}\}/.test(text)), 'every placeholder is filled in');
+
+  /* Mox opens at its own address without a sign-in, so the pack never
+   * carries the desktop password. */
+  const secret = source('data/password.txt').split('\n').map((l) => l.trim()).find((l) => l && !l.startsWith('#'));
+  assert.ok(secret, 'data/password.txt has a password');
+  const leak = new RegExp(`(^|[^A-Za-z0-9])${secret.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}([^A-Za-z0-9]|$)`, 'i');
+  assert.ok(!packText.some((text) => leak.test(text)), 'the desktop password stays out of Mox');
+
+  /* knowledge/index.json lists every document, measured the way Mox's own
+   * builder measures them, under a topic that leads Mox's sidebar. */
+  const index = JSON.parse(source(`${MOX_DIR}/knowledge/index.json`));
+  const expected = walkFiles(KNOWLEDGE).map(knowledgeRel).filter((rel) =>
+    /\.(md|markdown|txt|csv|json|log|ya?ml|html?|xml)$/i.test(rel) && !/(^|\/)(README\.md|index\.json)$/.test(rel));
+  assert.deepEqual(index.documents.map((d) => d.path).sort(), expected.sort(), 'the index lists exactly the library');
+  for (const doc of index.documents) {
+    const data = fs.readFileSync(path.join(KNOWLEDGE, doc.path));
+    assert.equal(doc.bytes, data.length, `${doc.path} bytes`);
+    assert.equal(doc.words, data.toString('utf8').split(/\s+/).filter(Boolean).length, `${doc.path} words`);
+    assert.equal(doc.category, doc.path.includes('/') ? doc.path.split('/')[0] : '', `${doc.path} topic`);
+  }
+  assert.equal(index.categories[0].id, 'proton');
+  assert.equal(index.categories[0].name, 'proton desktop');
+  for (const id of ['math', 'reading', 'technology', 'science', 'humanities', 'life', '']) {
+    assert.ok(index.categories.some((c) => c.id === id), `Mox's own topic "${id}" stays`);
+  }
+  /* Mox caches the library under "generated", so it changes with the pack. */
+  const hash = require('node:crypto').createHash('sha256');
+  for (const rel of walkFiles(pack).map(knowledgeRel).sort()) {
+    hash.update(rel); hash.update('\0'); hash.update(fs.readFileSync(path.join(KNOWLEDGE, rel))); hash.update('\0');
+  }
+  assert.ok(index.generated.endsWith(`+proton.${hash.digest('hex').slice(0, 12)}`),
+    'the index is stamped with the pack it lists: run python3 tools/gen-mox-knowledge.py');
+
+  /* And it works: Mox's own retriever finds these pages for questions about
+   * the site, while questions on Mox's other subjects still find those. */
+  const mox = moxLibrary(), ask = mox.ask;
+  const expectFirst = (question, ...paths) => {
+    const first = ask(question)[0];
+    assert.ok(paths.includes(first), `"${question}" should find ${paths.join(' or ')} first, not ${first || 'nothing'}`);
+  };
+  expectFirst('How do I change the wallpaper?', 'proton/changing-the-look.md');
+  expectFirst('How do I play Slope?', 'proton/apps/slope.md');
+  expectFirst('Is Mario Kart on here?', 'proton/web-retro-roms.md');
+  expectFirst('How do I install You Are An Idiot?', 'proton/apps/you-are-an-idiot.md');
+  expectFirst('What terminal commands are there?', 'proton/apps/terminal.md');
+  expectFirst('Who made this website?', 'proton/about-this-website.md', 'proton/credits-and-license.md');
+  expectFirst('How do I resize the AI pane?', 'proton/ai-button-and-mox.md');
+  expectFirst('How do I make a desktop shortcut?', 'proton/the-desktop.md');
+  expectFirst('How do I back up my account?', 'proton/saving-backups-and-privacy.md');
+  expectFirst('List all the games', 'proton/all-games.md');
+  expectFirst('How do I take a screenshot in VLC?', 'proton/apps/media.md');
+  expectFirst('Explain photosynthesis', 'science/biology-and-earth.md');
+  assert.ok(!ask('How do I write a for loop in JavaScript?')[0].startsWith('proton/'),
+    'programming questions still find Mox’s technology pages');
+
+  /* The bundled 135M model cannot be trusted to restate a page, so while it
+   * (or no model) is running, a question whose best passage is about the site
+   * is answered with the page's own words: proton's addition to Mox's app.js.
+   * A larger model writes its own answer, and other subjects are unchanged. */
+  const wallpaper = await mox.guide('How do I change the wallpaper?', '135M');
+  assert.match(wallpaper, /^\*\*Changing the wallpaper\*\* \(Changing the look/);
+  assert.match(wallpaper, /Open Settings and pick a wallpaper under Wallpaper/);
+  assert.match(wallpaper, /From the proton desktop guide in Mox's library \[1\]\. Regenerate to have the model answer instead\./);
+  const pokemon = await mox.guide('Is Pokemon on here?', '135M');
+  for (const title of ['Pokémon Red', 'Pokémon Emerald', 'Pokémon Crystal']) {
+    assert.ok(pokemon.includes(title), `the Pokemon answer lists ${title} from every console that has one`);
+  }
+  assert.match(await mox.guide('What terminal commands are there?', '135M'), /mkdir \[-p\] <folder>/,
+    'a paragraph that ends in a colon brings its list');
+  assert.match(await mox.guide('How do I play Slope?', '135M'), /left and right arrow keys/);
+  assert.match(await mox.guide('What is the desktop?', '135M'), /^\*\*The proton desktop and its shortcuts\*\*\n\nThe desktop is the big area/,
+    '"what is" questions get the page’s opening paragraph');
+  assert.equal(await mox.guide('Explain photosynthesis', '135M'), '', 'other subjects still go to the model');
+  assert.equal(await mox.guide('How do I change the wallpaper?', '1.5B'), '', 'a larger model writes its own answer');
+  const searchOnly = await mox.guide('How do I change the wallpaper?', '', false);
+  assert.match(searchOnly, /Open Settings/);
+  assert.ok(!searchOnly.includes('Regenerate'), 'with no model running there is nothing to regenerate');
+  const app = source(`${MOX_DIR}/app.js`);
+  const asked = app.indexOf('await siteGuideAnswer(question, excerpts)');
+  assert.ok(asked > 0 && asked < app.indexOf('await runGeneration(question, excerpts, userRecord)'),
+    'Mox checks the guide before it asks the model');
 });

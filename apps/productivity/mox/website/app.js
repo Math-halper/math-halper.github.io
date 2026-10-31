@@ -1570,6 +1570,135 @@ function fallbackAnswer(excerpts) {
   ).join('\n\n')}`;
 }
 
+/* ----------------------------------------------- proton: answers about the site
+ * proton addition, not part of upstream Mox (see apps/productivity/mox/README.md
+ * in the proton repository). This copy of Mox lives inside proton, and the
+ * "proton desktop" topic of its library (knowledge/proton/, written by proton's
+ * tools/gen-mox-knowledge.py) explains every app, game and feature of the site.
+ * The bundled 135M model cannot be trusted to restate those pages: it drifts
+ * off into inventions however clear the passage. So while a small model (one
+ * measured in millions of parameters) is running, or none is, a question whose
+ * best passage comes from that topic is answered with the page's own words:
+ * the part of the page that covers the question, under its heading.
+ * Regenerate still asks the model, and a larger model always writes its own
+ * answer from the same passages. */
+const SITE_TOPIC = 'proton';
+const siteTexts = new Map();
+function smallModelRunning() {
+  return /^\s*\d+(?:\.\d+)?\s*M\s*$/i.test(String(loadedModel?.parameters || ''));
+}
+// The whole page, not just the passage: an answer should not stop where a
+// passage happens to end. The library cache already holds every page.
+async function siteText(doc) {
+  if (siteTexts.has(doc.path)) return siteTexts.get(doc.path);
+  let text = '';
+  try { text = (await readMeta('libraryCache'))?.texts?.[doc.path] || ''; } catch { /* no cache */ }
+  if (!text) {
+    try {
+      const response = await fetch(`knowledge/${doc.path}`);
+      if (response.ok) text = await response.text();
+    } catch { /* offline: fall back to the passages */ }
+  }
+  if (!text) text = doc.chunks.join('\n\n');
+  siteTexts.set(doc.path, text);
+  return text;
+}
+// Sections of a Markdown page: each heading with the paragraphs beneath it.
+// A run of list lines is one paragraph.
+function siteSections(text, title) {
+  const sections = [{ heading: title, level: 1, paragraphs: [] }];
+  let lines = [];
+  const flush = () => {
+    if (lines.length) sections[sections.length - 1].paragraphs.push(lines.join('\n'));
+    lines = [];
+  };
+  for (const raw of text.replace(/\r/g, '').split('\n')) {
+    const line = raw.trimEnd();
+    const heading = line.match(/^(#{1,6})\s+(.+)$/);
+    if (heading) {
+      flush();
+      if (heading[1].length === 1 && !sections[0].paragraphs.length && sections.length === 1) {
+        sections[0].heading = heading[2].trim();
+      } else {
+        sections.push({ heading: heading[2].trim(), level: heading[1].length, paragraphs: [] });
+      }
+    } else if (!line.trim()) flush();
+    else lines.push(line);
+  }
+  flush();
+  return sections.filter((section) => section.paragraphs.length);
+}
+async function siteGuideAnswer(question, excerpts) {
+  const best = excerpts?.[0];
+  if (!best?.doc?.bundled || best.doc.category !== SITE_TOPIC) return '';
+  if (modelReady && !smallModelRunning()) return '';
+  const wanted = [...new Set(tokenize(question).map(stem))];
+  if (!wanted.length) return '';
+  const counts = (value) => {
+    const found = new Map();
+    for (const word of tokenize(value)) { const key = stem(word); found.set(key, (found.get(key) || 0) + 1); }
+    return found;
+  };
+  // Score each paragraph: covering more of the question's words matters most,
+  // then words in its heading, then how often they occur in the paragraph.
+  // "How do I ...?" leans towards paragraphs that give steps.
+  const howTo = /^\s*how\b/i.test(question);
+  const sections = siteSections(await siteText(best.doc), best.doc.name);
+  const scored = [];
+  for (const section of sections) {
+    const inHeading = counts(section.heading);
+    section.paragraphs.forEach((paragraph, index) => {
+      const inBody = counts(paragraph);
+      let value = 0;
+      for (const term of wanted) {
+        const inTitle = inHeading.has(term), frequency = inBody.get(term) || 0;
+        if (inTitle || frequency) value += 6;
+        if (inTitle) value += 3;
+        if (frequency) value += 1 + Math.min(frequency, 3);
+      }
+      if (value && howTo && /\b(?:open|click|press|type|choose|drag|pick|select|tap)\b/i.test(paragraph)) value += 2;
+      scored.push({ section, index, value });
+    });
+  }
+  let pick = scored.reduce((winner, item) => (item.value > (winner?.value || 0) ? item : winner), null);
+  if (!pick || pick.value < 6) return '';
+  // "What is ...?" is best answered by the page's opening paragraph, when that
+  // paragraph is about the question at all.
+  if (/^\s*(?:what|who)(?:'s|\s)/i.test(question) && scored[0] !== pick && scored[0].value >= pick.value * 0.7) pick = scored[0];
+
+  // The paragraph that answers, plus what it introduces: one that ends in a
+  // colon takes the list after it, and a short one takes the next paragraph
+  // when that is about the question too.
+  const { section, index } = pick;
+  let text = section.paragraphs[index];
+  let limit = 1200, added = 0;
+  for (let at = index + 1; at < section.paragraphs.length && added < 2; at++, added++) {
+    const next = section.paragraphs[at];
+    const nextScore = scored.find((item) => item.section === section && item.index === at)?.value || 0;
+    const opens = /:\s*$/.test(text);
+    if (!opens && !(text.length < 220 && nextScore >= 6)) break;
+    if (/^\s*[-*\d]/.test(next)) limit = 3200;
+    if (text.length + next.length >= limit) break;
+    text += `\n\n${next}`;
+  }
+  if (!added && text.length < 200) {
+    // A one-line answer on a page of lists (say, one console's games) is
+    // joined by the other parts of the page that answer almost as well.
+    for (const item of scored) {
+      if (item === pick || item.value < pick.value * 0.85 || text.length > 900) continue;
+      text += `\n\n**${item.section.heading}**: ${item.section.paragraphs[item.index]}`;
+    }
+  }
+  if (text.length > limit) {
+    const cut = text.lastIndexOf('\n', limit) > limit / 2 ? text.lastIndexOf('\n', limit) : text.lastIndexOf('. ', limit) + 1;
+    text = `${text.slice(0, cut > 0 ? cut : limit).trim()}\n…`;
+  }
+  const title = sections[0].heading;
+  const heading = section === sections[0] || section.heading === title ? `**${title}**` : `**${section.heading}** (${title})`;
+  const note = modelReady ? ' Regenerate to have the model answer instead.' : '';
+  return `${heading}\n\n${text}\n\n*From the proton desktop guide in Mox's library [1].${note}*`;
+}
+
 function announce(text) {
   if (!elements.srStatus) return;
   elements.srStatus.textContent = '';
@@ -1667,6 +1796,20 @@ async function handleSubmit(event) {
 
   const excerpts = retrieve(question);
   updateComposer();
+
+  // proton addition: questions about the site are answered from its guide
+  // while the small bundled model is running (see siteGuideAnswer).
+  const guide = await siteGuideAnswer(question, excerpts);
+  if (guide) {
+    const record = addRecord('assistant', guide, excerpts);
+    record.stats = 'proton desktop guide';
+    attachActions(elements.messages.lastElementChild.querySelector('.message-body'), record);
+    history = chatRecordsToHistory(activeChat());
+    announce('Answer ready.');
+    updateComposer();
+    elements.input.focus();
+    return;
+  }
 
   if (!modelReady) {
     addRecord('assistant', fallbackAnswer(excerpts), excerpts);
